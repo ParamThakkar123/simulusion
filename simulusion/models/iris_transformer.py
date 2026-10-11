@@ -66,6 +66,15 @@ class KVCache:
         """Commit ``steps`` newly written positions."""
         self.length += steps
 
+    def reset(self) -> None:
+        """Empty the cache while keeping its buffers.
+
+        Re-priming a reset cache gives the same result as priming a fresh one:
+        positions past ``length`` are never read. Reusing the buffers keeps a
+        :class:`GraphedDecodeStep` captured against them valid.
+        """
+        self.length = 0
+
     # Note: there is deliberately no in-place `trim` method. Positional
     # embeddings here are absolute, so sliding cached entries down would leave
     # them encoding positions they were not computed at. Callers that outgrow
@@ -167,6 +176,92 @@ class GPTBlock(nn.Module):
         x = x + self.attn(self.ln_1(x), cache=cache, layer_idx=layer_idx)
         x = x + self.mlp(self.ln_2(x))
         return x
+
+
+class GraphedDecodeStep:
+    """One single-position forward against a :class:`KVCache`, as a CUDA graph.
+
+    Imagination decodes one position at a time, and each forward is about 160
+    small kernels. On a laptop GPU the CPU cost of launching them outweighs the
+    GPU work several times over. Capturing the step once and replaying it
+    launches it as one graph.
+
+    A graph needs fixed shapes, so instead of slicing the cache to its current
+    length the step writes the new key/value at a position tensor and attends
+    over the whole buffer with a mask hiding positions after it. Masked
+    positions contribute exactly zero weight, so this computes the same
+    function as :meth:`IRISTransformer._forward_positions` for one position
+    (inference only: dropout is not applied).
+
+    Capture writes to position 0 of ``cache``, so build the step before
+    priming the cache, and keep the same cache afterwards (:meth:`KVCache.reset`
+    instead of a new cache) so the captured buffers stay the ones in use.
+    """
+
+    def __init__(self, model: "IRISTransformer", cache: KVCache, batch_size: int):
+        device = cache.keys[0].device
+        self.model = model
+        self.cache = cache
+        self.blocks = model.gpt_blocks()
+        self.x = torch.zeros(
+            batch_size, 1, model.embed_dim, device=device, dtype=cache.keys[0].dtype
+        )
+        self.pos = torch.zeros(1, dtype=torch.long, device=device)
+        self.positions = torch.arange(cache.max_len, device=device)
+
+        # Warm up on a side stream (as CUDA graph capture requires), then capture.
+        side = torch.cuda.Stream(device)
+        side.wait_stream(torch.cuda.current_stream(device))
+        with torch.cuda.stream(side):
+            for _ in range(2):
+                self._step()
+        torch.cuda.current_stream(device).wait_stream(side)
+        self.graph = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(self.graph):
+            self.out: torch.Tensor = self._step()
+
+    @torch.no_grad()
+    def _step(self) -> torch.Tensor:
+        m = self.model
+        hidden = self.x + m.pos_embedding.index_select(1, self.pos)
+        visible = (self.positions <= self.pos).view(1, 1, 1, -1)
+        for layer, block in enumerate(self.blocks):
+            attn = block.attn
+            normed = block.ln_1(hidden)
+            B, T, E = normed.shape
+            q, k, v = attn.qkv(normed).split(E, dim=2)
+            q = q.view(B, T, attn.num_heads, attn.head_dim).transpose(1, 2)
+            k = k.view(B, T, attn.num_heads, attn.head_dim).transpose(1, 2)
+            v = v.view(B, T, attn.num_heads, attn.head_dim).transpose(1, 2)
+            self.cache.keys[layer].index_copy_(2, self.pos, k)
+            self.cache.values[layer].index_copy_(2, self.pos, v)
+            out = F.scaled_dot_product_attention(
+                q,
+                self.cache.keys[layer],
+                self.cache.values[layer],
+                attn_mask=visible,
+            )
+            out = out.transpose(1, 2).contiguous().view(B, T, E)
+            hidden = hidden + attn.proj(out)
+            hidden = hidden + block.mlp(block.ln_2(hidden))
+        return m.layer_norm(hidden)
+
+    def __call__(self, embedding: torch.Tensor, position: int) -> torch.Tensor:
+        """Forward ``embedding`` (B, 1, E) at ``position``, the cache's next slot."""
+        if position != self.cache.length:
+            raise ValueError(
+                f"position {position} is not the cache's next slot {self.cache.length}."
+            )
+        if position >= self.cache.max_len:
+            raise ValueError(
+                f"KV cache overflow: {position + 1} > {self.cache.max_len}."
+            )
+        self.x.copy_(embedding)
+        self.pos.fill_(position)
+        self.graph.replay()
+        self.cache.advance(1)
+        # The output buffer is overwritten by the next replay.
+        return self.out.clone()
 
 
 class IRISTransformer(ExportableAgentMixin, nn.Module):
@@ -544,6 +639,7 @@ class IRISTransformer(ExportableAgentMixin, nn.Module):
         start_pos: int,
         sample: bool = True,
         temperature: float = 1.0,
+        decode_step: Optional[GraphedDecodeStep] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, int]:
         """Generate one frame's K tokens incrementally, one position at a time.
 
@@ -562,10 +658,17 @@ class IRISTransformer(ExportableAgentMixin, nn.Module):
         K = self.tokens_per_frame
         pos = start_pos
 
+        def forward_one(embedding: torch.Tensor, position: int) -> torch.Tensor:
+            # A captured CUDA graph computes the same single-position forward
+            # with one launch instead of ~160 (see GraphedDecodeStep).
+            if decode_step is not None:
+                return decode_step(embedding, position)
+            return self._forward_positions(embedding, position, cache)
+
         # Step 1: the action position. Its hidden state both predicts the first
         # token of the next frame and feeds the reward / termination heads.
         act_emb = self.action_embedding(action).unsqueeze(1)  # (B, 1, E)
-        hidden = self._forward_positions(act_emb, pos, cache)
+        hidden = forward_one(act_emb, pos)
         pos += 1
         action_hidden = hidden[:, -1, :]
 
@@ -588,13 +691,13 @@ class IRISTransformer(ExportableAgentMixin, nn.Module):
                 # (z_{t+1}^{k+1} ~ p(. | ..., z_{t+1}^{<=k})). The final token
                 # needs no feed-forward pass -- nothing is predicted from it here.
                 tok_emb = self.token_embedding(next_token).unsqueeze(1)  # (B, 1, E)
-                hidden = self._forward_positions(tok_emb, pos, cache)
+                hidden = forward_one(tok_emb, pos)
                 pos += 1
 
         # Push the last generated token so the cache ends on a complete frame,
         # ready for the next action.
         last_emb = self.token_embedding(generated_list[-1]).unsqueeze(1)
-        self._forward_positions(last_emb, pos, cache)
+        forward_one(last_emb, pos)
         pos += 1
 
         step_logits = torch.stack(logits_list, dim=1)  # (B, K, vocab)

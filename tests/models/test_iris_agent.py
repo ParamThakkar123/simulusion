@@ -194,6 +194,75 @@ class TestIRISAgentImagineRollout:
         assert "total_loss" in metrics
 
 
+class TestGraphedDecodeStep:
+    """Imagination's CUDA-graph fast path must compute what the eager path does."""
+
+    @staticmethod
+    def _transformer(device):
+        from simulusion.models.iris_transformer import IRISTransformer
+
+        torch.manual_seed(0)
+        return (
+            IRISTransformer(
+                vocab_size=32,
+                tokens_per_frame=16,
+                action_size=4,
+                embed_dim=64,
+                num_layers=2,
+                num_heads=4,
+                dropout=0.0,
+            )
+            .to(device)
+            .eval()
+        )
+
+    def test_reset_cache_reprimes_like_a_fresh_one(self):
+        transformer = self._transformer("cpu")
+        tokens = torch.randint(0, 32, (2, 1, 16))
+        action = torch.tensor([1, 2])
+
+        reused = transformer.init_cache(2, torch.device("cpu"))
+        pos = transformer.prime_cache(tokens, None, reused, start_pos=0)
+        transformer.generate_frame_cached(action, reused, pos, sample=False)
+        reused.reset()
+
+        results = []
+        for cache in (reused, transformer.init_cache(2, torch.device("cpu"))):
+            pos = transformer.prime_cache(tokens, None, cache, start_pos=0)
+            results.append(
+                transformer.generate_frame_cached(action, cache, pos, sample=False)
+            )
+        assert torch.equal(results[0][1], results[1][1])
+        assert torch.allclose(results[0][0], results[1][0])
+
+    @pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+    def test_graphed_decode_matches_eager_decode(self):
+        from simulusion.models.iris_transformer import GraphedDecodeStep
+
+        device = torch.device("cuda")
+        transformer = self._transformer(device)
+        tokens = torch.randint(0, 32, (3, 1, 16), device=device)
+        actions = torch.randint(0, 4, (4, 3), device=device)
+
+        outputs = []
+        for graphed in (False, True):
+            cache = transformer.init_cache(3, device)
+            step = GraphedDecodeStep(transformer, cache, 3) if graphed else None
+            pos = transformer.prime_cache(tokens, None, cache, start_pos=0)
+            frames = []
+            for action in actions:
+                logits, generated, hidden, pos = transformer.generate_frame_cached(
+                    action, cache, pos, sample=False, decode_step=step
+                )
+                frames.append((logits, generated, hidden))
+            outputs.append(frames)
+
+        for eager, graphed in zip(*outputs):
+            assert torch.equal(eager[1], graphed[1])
+            assert torch.allclose(eager[0], graphed[0], atol=1e-5)
+            assert torch.allclose(eager[2], graphed[2], atol=1e-5)
+
+
 class TestIRISAgentCheckpointSecurity:
     @pytest.fixture
     def config(self):

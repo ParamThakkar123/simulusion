@@ -18,7 +18,7 @@ from simulusion.models.model_io import (
 from simulusion.vision.iris_encoder import IRISEncoder
 from simulusion.vision.iris_decoder import IRISDecoder
 from simulusion.vision.perceptual_loss import build_perceptual_loss
-from simulusion.models.iris_transformer import IRISTransformer
+from simulusion.models.iris_transformer import GraphedDecodeStep, IRISTransformer
 from simulusion.controller.iris_policy import (
     CNNFeatureExtractor,
 )
@@ -78,6 +78,9 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         self.config = coerce_config(IRISConfig, config)
         config = self.config
         self.action_size = action_size
+        #: Replay imagination's single-position decode steps as a CUDA graph.
+        #: Same computation, far fewer kernel launches; only used on CUDA.
+        self.use_cuda_graphs = True
         self.device = device
         self.logger = setup_logging("IRISAgent")
         self.use_amp = bool(
@@ -599,6 +602,12 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         # attends over the whole imagined history (paper 2.3, Fig 1):
         #   z_{t+1} ~ p(. | z_0, a_0, z_1, a_1, ..., z_t, a_t)
         cache = self.transformer.init_cache(B, self.device)
+        # Capture before priming: capture writes to position 0 of the cache.
+        decode_step = (
+            GraphedDecodeStep(self.transformer, cache, B)
+            if self.use_cuda_graphs and self.device.type == "cuda"
+            else None
+        )
         pos = self.transformer.prime_cache(
             current_tokens.unsqueeze(1), None, cache, start_pos=0
         )
@@ -656,7 +665,9 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             if pos + (K + 1) > self.transformer.max_seq_len:
                 token_history = token_history[-max_context:]
                 action_history = action_history[-(len(token_history) - 1) :]
-                cache = self.transformer.init_cache(B, self.device)
+                # Reset in place rather than allocating a new cache, so the
+                # captured decode graph keeps pointing at the buffers in use.
+                cache.reset()
                 pos = self.transformer.prime_cache(
                     torch.stack(token_history, dim=1),
                     (torch.stack(action_history, dim=1) if action_history else None),
@@ -675,6 +686,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
                         start_pos=pos,
                         sample=sample_tokens,
                         temperature=temperature,
+                        decode_step=decode_step,
                     )
                 )
 

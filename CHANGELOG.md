@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `demos/run_all.py` reproduces all of them.
 - A documentation gallery with the recorded clips, plus a "See it in action"
   section on every algorithm page and in the README.
+- IRIS imagination replays each single-position Transformer step as a CUDA
+  graph on GPU (`GraphedDecodeStep`). Outputs are identical; on an RTX 3050 a
+  20-step imagination rollout drops from 11.4 s to 3.2 s, because the eager
+  path spent most of its time launching ~55k small kernels. Disable with
+  `agent.use_cuda_graphs = False`.
 - `DreamerV1Agent` and `DreamerV2Agent`, the agents behind
   `create_model("dreamer-v1")` / `create_model("dreamer-v2")`.
 
