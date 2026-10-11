@@ -195,6 +195,14 @@ IRIS compresses every frame into 16 discrete tokens with a VQ autoencoder,
 then models the game as a sequence of tokens and actions with a Transformer. The
 policy learns from Transformer imagination only.
 
+Trained on Pong for 95 epochs (19,000 real environment steps, about six hours on
+the 4 GB laptop GPU), the world model is in good shape: frames survive the round
+trip through 16 tokens down to the one-pixel ball, and the Transformer predicts
+the next frame's tokens almost exactly (next-token loss 0.01). The policy is
+where the budget runs out. It scores -14 in the real game, against -21 for one
+that never returns the ball, so it has started to play but is still weak; the
+paper reaches +15 with about forty times more policy training.
+
 ```{raw} html
 <div class="demo-pair">
   <figure class="demo-media">
@@ -206,10 +214,16 @@ policy learns from Transformer imagination only.
     <figcaption>The policy acting inside the Transformer's imagination, starting from one real frame.</figcaption>
   </figure>
 </div>
-<figure class="demo-media">
-  <img src="_static/gallery/iris_curve.png" alt="IRIS losses over training" loading="lazy">
-  <figcaption>Autoencoder reconstruction loss and the Transformer's next-token loss over training.</figcaption>
-</figure>
+<div class="demo-pair">
+  <figure class="demo-media">
+    <video src="_static/gallery/iris_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <figcaption>The policy playing real Pong (the right paddle), from tokenized frames.</figcaption>
+  </figure>
+  <figure class="demo-media">
+    <img src="_static/gallery/iris_curve.png" alt="IRIS losses over training" loading="lazy">
+    <figcaption>Autoencoder reconstruction loss and the Transformer's next-token loss over training.</figcaption>
+  </figure>
+</div>
 ```
 
 ```bash

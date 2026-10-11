@@ -301,7 +301,7 @@ def main() -> None:
     t.add_argument("--run", default="demos/runs/iris")
     t.add_argument("--resume", action="store_true", help="continue a stopped run")
     t.add_argument(
-        "--save-every", type=int, default=5, help="epochs between checkpoints"
+        "--save-every", type=int, default=1, help="epochs between checkpoints"
     )
     t.add_argument("--autoencoder-steps", type=int, default=None, help="paper: 200")
     t.add_argument("--transformer-steps", type=int, default=None, help="paper: 200")
