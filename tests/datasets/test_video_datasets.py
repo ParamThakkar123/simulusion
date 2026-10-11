@@ -5,7 +5,7 @@ from pathlib import Path
 
 pytest.importorskip("cv2")
 pytest.importorskip("h5py")
-from synora.datasets import (
+from simulusion.datasets import (
     VideoFolderDataset,
     ImageFolderDataset,
     NumPyDataset,

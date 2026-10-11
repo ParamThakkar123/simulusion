@@ -1,10 +1,10 @@
 import re
 
 import pytest
-import synora
+import simulusion
 
 try:
-    import synora.cli as cli
+    import simulusion.cli as cli
 except ImportError:
     pytest.skip("click not installed", allow_module_level=True)
 
@@ -25,7 +25,7 @@ def test_version_shows_package_version():
     res = runner.invoke(cli.app, ["version"])
     assert res.exit_code == 0
     assert re.search(r"\d+\.\d+\.\d+", res.output)
-    assert synora.__version__ in res.output
+    assert simulusion.__version__ in res.output
 
 
 def test_envs_list_outputs_backends():
@@ -151,12 +151,12 @@ def test_console_entrypoint_run_is_exported():
 
 
 def test_train_lists_diamond_entrypoint():
-    assert cli.TRAINING_MODULES["diamond"] == "synora.training.train_diamond"
+    assert cli.TRAINING_MODULES["diamond"] == "simulusion.training.train_diamond"
 
 
 def test_dmlab_registered_in_backend_specs():
-    from synora.api import ENV_BACKEND_SPECS, EnvBackendSpec
-    from synora.catalog import ENV_BACKENDS
+    from simulusion.api import ENV_BACKEND_SPECS, EnvBackendSpec
+    from simulusion.catalog import ENV_BACKENDS
 
     dmlab_spec = ENV_BACKEND_SPECS["dmlab"]
 
@@ -167,15 +167,15 @@ def test_dmlab_registered_in_backend_specs():
 
 
 def test_dmlab_backend_specs_are_public_api():
-    import synora
+    import simulusion
 
-    assert synora.EnvBackendSpec is not None
-    assert "dmlab" in synora.ENV_BACKEND_SPECS
+    assert simulusion.EnvBackendSpec is not None
+    assert "dmlab" in simulusion.ENV_BACKEND_SPECS
 
 
 def test_play_supports_dreamer_as_well_as_diamond():
     assert set(cli.PLAY_MODULES) == {"diamond", "dreamer"}
-    assert cli.PLAY_MODULES["dreamer"] == "synora.inference.play_dreamer"
+    assert cli.PLAY_MODULES["dreamer"] == "simulusion.inference.play_dreamer"
     assert set(cli.PLAY_DEFAULT_GAMES) == set(cli.PLAY_MODULES)
 
 

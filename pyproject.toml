@@ -1,5 +1,5 @@
 [project]
-name = "synora-world"
+name = "simulusion"
 dynamic = ["version"]
 description = "A Modular Pytorch Based library for training world models"
 readme = "README.md"
@@ -29,14 +29,14 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/paramthakkar123/synora"
-Documentation = "https://paramthakkar123.github.io/synora/"
-Issues = "https://github.com/paramthakkar123/synora/issues"
-Changelog = "https://github.com/paramthakkar123/synora/releases"
+Homepage = "https://github.com/paramthakkar123/simulusion"
+Documentation = "https://paramthakkar123.github.io/simulusion/"
+Issues = "https://github.com/paramthakkar123/simulusion/issues"
+Changelog = "https://github.com/paramthakkar123/simulusion/releases"
 
 [project.scripts]
-synora = "synora.cli:run"
-synora-train = "synora.cli:run_train"
+simulusion = "simulusion.cli:run"
+simulusion-train = "simulusion.cli:run_train"
 
 [project.optional-dependencies]
 gym = [
@@ -60,7 +60,7 @@ gym = [
 # stuck on protobuf 3.20.3, which carries unpatched advisories with no fix in
 # the 3.x line. Newer mlagents-envs releases do not help: 1.1.0 still caps
 # `protobuf<3.21` and requires Python <= 3.10.12, so it cannot be installed on
-# the Python versions Synora supports. Synora therefore resolves a patched
+# the Python versions Simulusion supports. Simulusion therefore resolves a patched
 # protobuf, against which `mlagents_envs.environment` cannot be imported: the
 # default backend raises "Descriptors cannot be created directly", and
 # `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python` only trades that for an
@@ -75,7 +75,7 @@ ml-agents = [
 # source, which needs Bazel and a C++ toolchain. `labmaze-new` is the same
 # package with the Bazel extension made opt-in (LABMAZE_BUILD_BAZEL_EXTENSIONS=1),
 # so it installs as pure Python and provides the `labmaze` module that
-# `dm_control` imports. `dm_control.suite` -- everything Synora's dmc backend
+# `dm_control` imports. `dm_control.suite` -- everything Simulusion's dmc backend
 # uses -- does not need the compiled extension; only `dm_control.locomotion`
 # maze generation does.
 #
@@ -86,7 +86,7 @@ dmc = [
     # Scoped below 3.13: declaring dm-control there makes pip resolve its
     # `labmaze` pin and fail the whole install on the Bazel build. On 3.13 this
     # extra installs the pure-Python `labmaze-new` instead, and dm-control is
-    # added with --no-deps by `make install-dmc` / `python -m synora.install_dmc`.
+    # added with --no-deps by `make install-dmc` / `python -m simulusion.install_dmc`.
     "dm-control>=1.0.0; python_version < '3.13'",
     "labmaze-new>=0.0.2; python_version >= '3.13'",
     "gymnasium>=1.2.2",
@@ -94,14 +94,14 @@ dmc = [
 # uv-only variant: dm-control unconditionally, relying on the
 # `override-dependencies` entry below to drop its unbuildable `labmaze` pin on
 # 3.13. pip has no equivalent to that override, so pip users on 3.13 use
-# `python -m synora.install_dmc` instead.
+# `python -m simulusion.install_dmc` instead.
 dmc-uv = [
     "dm-control>=1.0.0",
     "labmaze-new>=0.0.2; python_version >= '3.13'",
     "gymnasium>=1.2.2",
 ]
 # Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
-# these, `synora.datasets.tinyworlds` imports fine but raises as soon as a
+# these, `simulusion.datasets.tinyworlds` imports fine but raises as soon as a
 # dataset is actually loaded, so Genie has no training data.
 genie = [
     "h5py>=3.11.0",
@@ -126,28 +126,28 @@ brax = [
     "brax>=0.13.0",
     "jax>=0.10.1",
 ]
-# No `procgen` extra: upstream Procgen wheels stop at Python 3.10, and Synora
+# No `procgen` extra: upstream Procgen wheels stop at Python 3.10, and Simulusion
 # requires >= 3.11, so the extra could only ever resolve to nothing. The
-# `synora.envs.procgen_env` adapter still works with a manual install on an
+# `simulusion.envs.procgen_env` adapter still works with a manual install on an
 # interpreter procgen supports.
 bsuite = [
     "bsuite>=0.3.5",
 ]
 # No `minerl` / `minedojo` extras: neither is installable on the Python versions
-# Synora supports. MineRL 1.x has no release compatible with Python >= 3.11,
+# Simulusion supports. MineRL 1.x has no release compatible with Python >= 3.11,
 # and MineDojo pins `gym==0.21.0`, whose sdist no longer builds under modern
 # setuptools. Declaring them made `uv lock` unresolvable for the whole project.
-# `synora.envs.minecraft_env` still works - see docs/source/iris.md for the
+# `simulusion.envs.minecraft_env` still works - see docs/source/iris.md for the
 # manual, Python <= 3.10 install path.
 viz = [
     "opencv-python>=4.12.0.88",
-    # H.264 MP4 output (synora.utils.Mp4Writer). OpenCV's pip wheels cannot
+    # H.264 MP4 output (simulusion.utils.Mp4Writer). OpenCV's pip wheels cannot
     # encode H.264 on Linux, and its mp4v fallback does not play in browsers.
     "imageio-ffmpeg>=0.5.1",
     "umap-learn>=0.5.11",
     "scikit-learn>=1.8.0",
     "plotly>=6.5.0",
-    # synora.datasets.video_datasets reads HDF5 clips.
+    # simulusion.datasets.video_datasets reads HDF5 clips.
     "h5py>=3.11.0",
 ]
 # Classic World Models (Ha & Schmidhuber): ConvVAE augmentations and the CMA-ES
@@ -160,7 +160,7 @@ worldmodels = [
 ]
 ml = [
     "torchaudio>=0.13.0",
-    # `python -m synora.benchmarks.cli` and the example scripts parse configs
+    # `python -m simulusion.benchmarks.cli` and the example scripts parse configs
     # with Hydra/OmegaConf.
     "hydra-core>=1.3.2",
     "omegaconf>=2.3.0",
@@ -183,7 +183,7 @@ dev = [
     "ruff==0.16.8",
 ]
 all = [
-    "synora-world[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,dev,docs]",
+    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -204,13 +204,13 @@ docs = [
 [tool.setuptools.packages.find]
 # `tools/` is repository tooling (stub generation, docs checks). Shipping it
 # installed a top-level package literally named `tools` into site-packages.
-include = ["synora", "synora.*"]
+include = ["simulusion", "simulusion.*"]
 
 [tool.setuptools.package-data]
 # PEP 561: ship the marker and the explicit stub for the lazy public surface.
-synora = ["py.typed", "__init__.pyi"]
+simulusion = ["py.typed", "__init__.pyi"]
 
-# Synora resolves from PyPI, whose torch wheels work on every supported
+# Simulusion resolves from PyPI, whose torch wheels work on every supported
 # platform. Making a CUDA-specific PyTorch index the default (as this used to)
 # routed *every* package through it and pinned contributors to one CUDA
 # version regardless of their hardware.
@@ -221,7 +221,7 @@ synora = ["py.typed", "__init__.pyi"]
 #     uv add torch torchvision torchaudio --index https://download.pytorch.org/whl/cu121
 
 [tool.uv]
-# Security floors for packages Synora pulls in only transitively. Without
+# Security floors for packages Simulusion pulls in only transitively. Without
 # these, a future `uv lock` could resolve back onto a version with a published
 # advisory, because nothing in our own dependency tree requires the fixed
 # release. Each entry is the first patched version for the advisories GitHub
@@ -257,12 +257,12 @@ requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "synora._version.__version__"}
+version = {attr = "simulusion._version.__version__"}
 
 [tool.ruff.format]
 # Generated by `python -m tools.gen_type_stub`, which CI checks byte for byte;
 # reformatting it would make that check fail.
-exclude = ["synora/__init__.pyi"]
+exclude = ["simulusion/__init__.pyi"]
 
 [tool.ruff.lint]
 # Pin the rule set. With no explicit selection the repository inherits Ruff's

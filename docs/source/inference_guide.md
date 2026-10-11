@@ -1,10 +1,10 @@
 # Inference Guide
 
-This guide covers how to use trained Synora models for inference and deployment.
+This guide covers how to use trained Simulusion models for inference and deployment.
 
 ## Overview
 
-Synora agents load from a checkpoint, run in `eval()` mode, and take the same
+Simulusion agents load from a checkpoint, run in `eval()` mode, and take the same
 tensors they were trained on. Each model's page documents the observation
 layout it expects; this guide covers the mechanics around it.
 
@@ -14,7 +14,7 @@ layout it expects; this guide covers the mechanics around it.
 ## Loading Trained Models
 
 ```python
-from synora import DreamerAgent
+from simulusion import DreamerAgent
 
 # Load from checkpoint
 agent = DreamerAgent.from_pretrained("path/to/checkpoint")
@@ -27,7 +27,7 @@ agent.eval()
 
 ```python
 import torch
-from synora import DreamerAgent
+from simulusion import DreamerAgent
 
 agent = DreamerAgent.from_pretrained("dreamer_checkpoint")
 
@@ -49,7 +49,7 @@ paper's linear-evaluation protocol does:
 
 ```python
 import torch
-from synora.training.eval_jepa import load_jepa_encoder, make_eval_transforms
+from simulusion.training.eval_jepa import load_jepa_encoder, make_eval_transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 encoder = load_jepa_encoder("results/jepa/jepa_run-latest.pth.tar", device)
@@ -62,7 +62,7 @@ with torch.no_grad():
 ```
 
 To reproduce the paper's ImageNet linear-probe number, use
-`synora.training.eval_jepa.jepa_linear_probe` instead, which trains the
+`simulusion.training.eval_jepa.jepa_linear_probe` instead, which trains the
 linear head on top of these features.
 
 ## Rollout and Imagination
@@ -71,7 +71,7 @@ Generate imagined trajectories:
 
 ```python
 # Dreamer imagination
-from synora import DreamerAgent
+from simulusion import DreamerAgent
 
 agent = DreamerAgent.from_pretrained("dreamer_checkpoint")
 
@@ -115,7 +115,7 @@ For interactive applications:
 
 ```python
 import torch
-from synora import DreamerAgent
+from simulusion import DreamerAgent
 
 
 class InferenceServer:
@@ -141,7 +141,7 @@ The {doc}`deployment_guide` covers this in depth. In short:
 
 ```python
 import torch
-from synora.inference import optimize_for_inference, make_stepper
+from simulusion.inference import optimize_for_inference, make_stepper
 
 # eval mode, no grad, bf16 where supported, torch.compile with CUDA graphs
 actor = optimize_for_inference(agent.dreamer.actor, precision="auto", compile=True)
@@ -154,14 +154,14 @@ with torch.inference_mode():
     action = stepper.act(state)
 ```
 
-Prefer `torch.compile` (via `optimize_for_inference` or `synora.maybe_compile`)
+Prefer `torch.compile` (via `optimize_for_inference` or `simulusion.maybe_compile`)
 over `torch.jit.script`, which is in maintenance mode upstream. Always run inference under
 `torch.inference_mode()`: it skips autograd bookkeeping that `no_grad` still
 performs.
 
 ## Exporting Models
 
-Every model class in the top-level `synora` namespace has a deployment-oriented `export()` method, and `synora.export_model(module, ...)` exports any other `nn.Module` with the same options. High-level wrapper agents such as Dreamer and PlaNet use the same exporter for their contained modules:
+Every model class in the top-level `simulusion` namespace has a deployment-oriented `export()` method, and `simulusion.export_model(module, ...)` exports any other `nn.Module` with the same options. High-level wrapper agents such as Dreamer and PlaNet use the same exporter for their contained modules:
 
 ```python
 model.export("model.pt2", format="exported_program", example_inputs=example_inputs)
@@ -176,8 +176,8 @@ agent.export("agent_actor.onnx", format="onnx")
 | `"torchscript"` | `"jit"`, `"ts"` | TorchScript `.pt` file (legacy) |
 | `"tensorrt"` | `"trt"` | Torch-TensorRT module, compiled through the dynamo IR (requires `torch-tensorrt`) |
 
-Load any artifact back with `synora.load_exported(path)`, and check it against
-the eager module with `synora.verify_export(module, path, example_inputs)`.
+Load any artifact back with `simulusion.load_exported(path)`, and check it against
+the eager module with `simulusion.verify_export(module, path, example_inputs)`.
 For whole deployment bundles (weights, config, artifacts and a manifest), see
 {doc}`deployment_guide`.
 
@@ -187,7 +187,7 @@ and returns actions:
 
 ```python
 import torch
-from synora import DreamerAgent
+from simulusion import DreamerAgent
 
 agent = DreamerAgent(env="cartpole_balance")
 agent.export("dreamer_actor.onnx", format="onnx")
@@ -212,17 +212,17 @@ agent.export("dreamer_encoder.onnx", format="onnx", target="obs_encoder")
 agent.export("dreamer_reward.pt", format="torchscript", target="reward_model")
 ```
 
-For any lower-level `torch.nn.Module` model, pass `example_inputs` explicitly if Synora cannot infer a safe default:
+For any lower-level `torch.nn.Module` model, pass `example_inputs` explicitly if Simulusion cannot infer a safe default:
 
 ```python
 import torch
-import synora
+import simulusion
 
-genie = synora.create_model("genie-small", image_size=32)
+genie = simulusion.create_model("genie-small", image_size=32)
 video = torch.randn(1, 3, genie.num_frames, genie.image_size, genie.image_size)
 genie.export("genie_small.onnx", format="onnx", example_inputs=video)
 
-vit = synora.VisionTransformer(img_size=[224])
+vit = simulusion.VisionTransformer(img_size=[224])
 images = torch.randn(1, 3, 224, 224)
 vit.export("vit.onnx", format="onnx", example_inputs=images)
 ```
@@ -245,10 +245,10 @@ single-pass policy, export `DreamerStepper(agent).step_module()` instead (see
 ### With Gym Environments
 
 ```python
-import synora
-from synora import DreamerAgent
+import simulusion
+from simulusion import DreamerAgent
 
-env = synora.make_env("Pendulum-v1", backend="gym")
+env = simulusion.make_env("Pendulum-v1", backend="gym")
 agent = DreamerAgent.from_pretrained("pendulum_checkpoint")
 
 obs, _ = env.reset()
@@ -301,7 +301,7 @@ for episode in range(10):
 - Move to GPU
 - Use `optimize_for_inference(..., compile=True)` (CUDA graphs) and bf16
 - Batch inputs when possible; for Genie generation pass `use_cache=True`
-- Measure with `synora.inference.benchmark_step` before and after each change
+- Measure with `simulusion.inference.benchmark_step` before and after each change
 
 ### Accuracy Issues
 - Ensure inputs are normalized the same way as during training

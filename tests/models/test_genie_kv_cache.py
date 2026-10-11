@@ -6,7 +6,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from synora.models.dynamics_model import DynamicsModel  # noqa: E402
+from simulusion.models.dynamics_model import DynamicsModel  # noqa: E402
 
 
 def _model() -> DynamicsModel:

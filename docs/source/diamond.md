@@ -1,6 +1,6 @@
 # DIAMOND
 
-DIAMOND (**DI**ffusion **A**s a **M**odel **O**f e**N**vironment **D**reams) is Synora's diffusion-based world-model agent for pixel-control reinforcement learning. It learns a conditional image generator that predicts the next observation from recent frames and actions, then trains an actor-critic policy inside imagined rollouts from that learned simulator.
+DIAMOND (**DI**ffusion **A**s a **M**odel **O**f e**N**vironment **D**reams) is Simulusion's diffusion-based world-model agent for pixel-control reinforcement learning. It learns a conditional image generator that predicts the next observation from recent frames and actions, then trains an actor-critic policy inside imagined rollouts from that learned simulator.
 
 Use DIAMOND when you want to study model-based RL with pixel-space generation rather than latent-state prediction. Dreamer learns compact latent dynamics; IRIS predicts discrete visual tokens; DIAMOND keeps the environment model in observation space and uses a denoising diffusion model to synthesize future frames.
 
@@ -38,7 +38,7 @@ graph TD
 
 The implementation is split into four main parts:
 
-| Part | Synora object | Purpose |
+| Part | Simulusion object | Purpose |
 |------|----------------|---------|
 | Configuration | `DiamondConfig` | Stores Atari preprocessing, diffusion, reward model, actor-critic, optimization, and logging settings. |
 | Environment path | `DiamondAtariWrapper`, `make_diamond_atari_env()` | Applies DIAMOND-compatible Atari preprocessing and returns resized RGB observations. |
@@ -83,8 +83,8 @@ The diffusion model predicts pixels only. DIAMOND separately trains `RewardTermi
 Create a small DIAMOND config and agent:
 
 ```python
-from synora import DiamondConfig
-from synora.training.train_diamond import DiamondAgent
+from simulusion import DiamondConfig
+from simulusion.training.train_diamond import DiamondAgent
 
 config = DiamondConfig(
     preset="small",
@@ -99,7 +99,7 @@ For configuration files or dictionaries, use `from_config`:
 
 ```python
 agent = DiamondAgent.from_config(
-    "synora/configs/experiments/diamond.yaml",
+    "simulusion/configs/experiments/diamond.yaml",
     preset="small",
     game="Pong-v5",
 )
@@ -107,22 +107,22 @@ agent = DiamondAgent.from_config(
 
 ## Training from the CLI
 
-Use the unified Synora CLI with the starter experiment config:
+Use the unified Simulusion CLI with the starter experiment config:
 
 ```bash
-synora train diamond --config synora/configs/experiments/diamond.yaml preset=small seed=1
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml preset=small seed=1
 ```
 
 You can also run the training module directly:
 
 ```bash
-python -m synora.training.train_diamond --game Breakout-v5 --preset small
+python -m simulusion.training.train_diamond --game Breakout-v5 --preset small
 ```
 
 Add `--print-config` to inspect the composed config before starting a long run:
 
 ```bash
-synora train diamond --config synora/configs/experiments/diamond.yaml preset=small --print-config
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml preset=small --print-config
 ```
 
 ## Training loop

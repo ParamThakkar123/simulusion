@@ -1,6 +1,6 @@
 # DiT: Diffusion Transformer and Diffusion Models
 
-This page covers the diffusion-based models in Synora: DDPM for image generation,
+This page covers the diffusion-based models in Simulusion: DDPM for image generation,
 DiT for scalable transformer-based diffusion, and DIAMOND for diffusion world models
 in reinforcement learning.
 
@@ -29,7 +29,7 @@ More clips are in the {ref}`gallery <gallery-dit>`.
 ## Overview
 
 Diffusion models learn to generate data by reversing a gradual noising process.
-In Synora, diffusion models serve two purposes:
+In Simulusion, diffusion models serve two purposes:
 
 1. **Image/video generation** (DDPM, DiT): High-quality unconditional or conditional sample generation.
 2. **World models for RL** (DIAMOND): Diffusion-based dynamics models that predict future observations.
@@ -153,7 +153,7 @@ adaLN, which is otherwise the same block.
 Table 1 configs, selected by name and patch size:
 
 ```python
-from synora import DiT, dit_preset_config
+from simulusion import DiT, dit_preset_config
 
 model = DiT.from_config(dit_preset_config("DiT-XL", patch_size=2))
 ```
@@ -232,7 +232,7 @@ No cross-attention — DiT is typically unconditional or class-conditional via A
 ### Training
 
 ```python
-from synora import DiTConfig, get_dit_config
+from simulusion import DiTConfig, get_dit_config
 
 cfg = get_dit_config(
     DATASET="CIFAR10",
@@ -322,12 +322,12 @@ for sigma in sigmas[:-1]:
 return denoised
 ```
 
-## Usage in Synora
+## Usage in Simulusion
 
 ### DiT quick start
 
 ```python
-from synora import DiTConfig, get_dit_config
+from simulusion import DiTConfig, get_dit_config
 
 cfg = get_dit_config(DATASET="CIFAR10", BATCH=128, EPOCHS=100, IMG_SIZE=32)
 ```
@@ -335,7 +335,7 @@ cfg = get_dit_config(DATASET="CIFAR10", BATCH=128, EPOCHS=100, IMG_SIZE=32)
 ### DIAMOND quick start
 
 ```python
-from synora import DiamondConfig
+from simulusion import DiamondConfig
 
 cfg = DiamondConfig(preset="small")  # small, medium, large
 cfg.game = "Breakout-v5"
@@ -345,14 +345,14 @@ cfg.obs_size = 64
 ### DIAMOND CLI
 
 ```bash
-synora train diamond --config synora/configs/experiments/diamond.yaml \
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml \
     preset=small seed=1
 ```
 
 Or directly:
 
 ```bash
-python -m synora.training.train_diamond --game Breakout-v5 --preset small
+python -m simulusion.training.train_diamond --game Breakout-v5 --preset small
 ```
 
 ### DIAMOND Training Loop

@@ -1,6 +1,6 @@
 # Environment Backends
 
-Synora ships environment adapters for pixel-based world-model training, model-based reinforcement learning, and benchmark collection. Each backend page explains the installation requirements, factory functions, observation and action conventions, configuration fields, and common troubleshooting steps for that backend.
+Simulusion ships environment adapters for pixel-based world-model training, model-based reinforcement learning, and benchmark collection. Each backend page explains the installation requirements, factory functions, observation and action conventions, configuration fields, and common troubleshooting steps for that backend.
 
 ```{toctree}
 :maxdepth: 1
@@ -37,11 +37,11 @@ Wrappers <wrappers>
 | [Unity ML-Agents](unity.md) | External Unity executable simulations with continuous-control behaviors | `UnityMLAgentsEnv`, `env_backend="unity_mlagents"` | Dict with `image` | Continuous `Box[-1, 1]` |
 | [Vectorized environments](vectorized.md) | Multiprocess/vector rollout collection and native ALE vectorization | `TorchVectorizedEnv`, `make_atari_vector_env` | Batched observations | Batched actions |
 | [World Model Env](world_model.md) | Model-based RL, policy optimization, and evaluation inside learned dynamics | `WorldModelEnv`, `make_world_model_env`, `env_backend="world-model"` | Adapter-defined Gymnasium space | Adapter-defined Gymnasium space |
-| [Wrappers](wrappers.md) | Shared preprocessing, action conversion, time limits, reward observations, and image transforms | `synora.envs.wrappers` | Backend-dependent | Backend-dependent |
+| [Wrappers](wrappers.md) | Shared preprocessing, action conversion, time limits, reward observations, and image transforms | `simulusion.envs.wrappers` | Backend-dependent | Backend-dependent |
 
 ## Shared conventions
 
-Most Synora training code expects image observations as a dictionary entry named `image` with channel-first shape `(3, H, W)` and `uint8` values. Backend adapters that wrap vector-only environments synthesize an image representation so pixel-based agents can still run.
+Most Simulusion training code expects image observations as a dictionary entry named `image` with channel-first shape `(3, H, W)` and `uint8` values. Backend adapters that wrap vector-only environments synthesize an image representation so pixel-based agents can still run.
 
 DIAMOND-style Atari support is documented on the Atari page as a preprocessing helper for Atari rollouts. It is not a separate environment backend.
 
@@ -51,4 +51,4 @@ Dreamer environment construction applies a standard wrapper stack after creating
 2. `NormalizeActions` exposes finite continuous action bounds as normalized `[-1, 1]` policy outputs.
 3. `TimeLimit` truncates episodes after `cfg.time_limit // cfg.action_repeat` wrapper steps.
 
-Use `synora envs list` to print the lightweight backend catalog used by the CLI.
+Use `simulusion envs list` to print the lightweight backend catalog used by the CLI.

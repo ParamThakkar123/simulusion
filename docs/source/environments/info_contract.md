@@ -1,10 +1,10 @@
 # Info dict contract
 
-Every Synora environment adapter and wrapper guarantees a minimum set of keys in the `info` dict returned by `step()`. Downstream code (value models, replay buffers, logging) may rely on these keys being present.
+Every Simulusion environment adapter and wrapper guarantees a minimum set of keys in the `info` dict returned by `step()`. Downstream code (value models, replay buffers, logging) may rely on these keys being present.
 
 ## Universally guaranteed keys
 
-The function `finalize_step_info()` in `synora.envs._contract` normalises every `step()` return. These three keys are **always** present:
+The function `finalize_step_info()` in `simulusion.envs._contract` normalises every `step()` return. These three keys are **always** present:
 
 | Key | Type | Description |
 |---|---|---|

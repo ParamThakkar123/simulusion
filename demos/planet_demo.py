@@ -53,7 +53,7 @@ class DMCPixelEnv:
     def _obs(self):
         import torch
 
-        from synora.utils.utils import preprocess_img
+        from simulusion.utils.utils import preprocess_img
 
         frame = self._env.physics.render(64, 64, camera_id=0)
         self.last_frame = frame
@@ -89,7 +89,7 @@ class DMCPixelEnv:
 
 
 def _make(args: argparse.Namespace, seed: int):
-    from synora.models.planet import Planet
+    from simulusion.models.planet import Planet
 
     domain, task = args.env.split("-", 1)
     env = DMCPixelEnv(domain, task, args.action_repeat, seed)
@@ -106,7 +106,7 @@ def _make(args: argparse.Namespace, seed: int):
 def train(args: argparse.Namespace) -> None:
     import torch
 
-    from synora.training.train_planet import train as planet_step
+    from simulusion.training.train_planet import train as planet_step
 
     run = Path(args.run)
     run.mkdir(parents=True, exist_ok=True)

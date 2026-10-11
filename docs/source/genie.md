@@ -157,12 +157,12 @@ Each video should contain at least `num_frames` frames.
 | `warmup_steps` | 5000 | Learning rate warmup steps |
 | `max_steps` | 125000 | Total training steps |
 
-## Usage in Synora
+## Usage in Simulusion
 
 ### Quick start
 
 ```python
-from synora import GenieConfig, create_genie_small
+from simulusion import GenieConfig, create_genie_small
 
 cfg = GenieConfig()
 cfg.num_frames = 16
@@ -203,7 +203,7 @@ actions = model.infer_actions(frames)
 ### CLI
 
 ```bash
-synora train genie --config path/to/genie_config.yaml
+simulusion train genie --config path/to/genie_config.yaml
 ```
 
 See {doc}`configs_reference` for the full GenieConfig field reference with defaults.

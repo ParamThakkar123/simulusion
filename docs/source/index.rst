@@ -1,7 +1,7 @@
-Synora Documentation
-======================
+Simulusion Documentation
+========================
 
-Synora is a modular PyTorch library for world models: agents that learn how
+Simulusion is a modular PyTorch library for world models: agents that learn how
 their environment works, then plan, act or generate inside that learned model.
 Dreamer, PlaNet, DIAMOND, IRIS, Genie, DiT and I-JEPA share one API, and their
 encoders, dynamics backbones and decoders are reusable parts.
@@ -31,22 +31,22 @@ Install
 
 .. code-block:: bash
 
-   pip install "synora-world[gym]"
+   pip install "simulusion[gym]"
 
 Train an agent
 --------------
 
 .. code-block:: python
 
-   import synora
+   import simulusion
 
-   # Dreamer from pixels on Pendulum; runs on ``pip install synora-world[gym]``.
-   agent = synora.create_model(
+   # Dreamer from pixels on Pendulum; runs on ``pip install simulusion[gym]``.
+   agent = simulusion.create_model(
        "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=5_000
    )
    agent.train()
 
-   print(synora.list_models())  # every model create_model() can build
+   print(simulusion.list_models())  # every model create_model() can build
 
 Continue with :doc:`getting_started` for a guided first run, or jump to a
 model under *Algorithms* in the sidebar.

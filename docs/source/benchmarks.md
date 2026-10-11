@@ -1,13 +1,13 @@
 # Benchmarking World Models
 
-Synora includes a lightweight benchmark harness for running standardized
+Simulusion includes a lightweight benchmark harness for running standardized
 evaluations of trained world-model agents and exporting results that can be used
 in experiment logs, reports, and papers.
 
 ## Quick Overview
 
-- Preferred CLI entrypoint: `synora benchmark`.
-- Benchmark adapters live in the Synora source tree under `synora/benchmarks/`.
+- Preferred CLI entrypoint: `simulusion benchmark`.
+- Benchmark adapters live in the Simulusion source tree under `simulusion/benchmarks/`.
 
 ## Supported adapters
 
@@ -22,13 +22,13 @@ checkpoint with `--checkpoint`. For multi-agent runs, pass one or more
 `--checkpoint-map AGENT=PATH` values, or use `--train-epochs` when you
 intentionally want the CLI to train before evaluating.
 
-## Synora CLI examples
+## Simulusion CLI examples
 
 Run IRIS on Pong for 3 episodes using seed 0 and write the standard result files
 to `results/bench`:
 
 ```bash
-synora benchmark \
+simulusion benchmark \
   --agent iris \
   --game ALE/Pong-v5 \
   --checkpoint checkpoints/iris/pong.pt \
@@ -39,7 +39,7 @@ synora benchmark \
 Run DIAMOND on Breakout with two explicit seeds and 5 episodes per seed:
 
 ```bash
-synora benchmark \
+simulusion benchmark \
   --agent diamond \
   --game Breakout-v5 \
   --checkpoint checkpoints/diamond/breakout.pt \
@@ -51,7 +51,7 @@ synora benchmark \
 Run DreamerV2 on a Gym environment:
 
 ```bash
-synora benchmark \
+simulusion benchmark \
   --agent dreamerv2 \
   --game Pong-v5 \
   --checkpoint checkpoints/dreamerv2/pong.pt \
@@ -64,7 +64,7 @@ synora benchmark \
 Run DreamerV1 on a DeepMind BSuite diagnostic task:
 
 ```bash
-synora benchmark \
+simulusion benchmark \
   --agent dreamerv1 \
   --game catch/0 \
   --env-backend bsuite \
@@ -74,15 +74,15 @@ synora benchmark \
   --device cpu
 ```
 
-The BSuite backend is optional. Install it with `pip install synora-world[bsuite]` or
-`pip install bsuite` before running BSuite tasks. Synora wraps BSuite's compact
+The BSuite backend is optional. Install it with `pip install simulusion[bsuite]` or
+`pip install bsuite` before running BSuite tasks. Simulusion wraps BSuite's compact
 `dm_env` observations as synthetic RGB images so the existing pixel-based
 Dreamer benchmark path can evaluate trained world-model agents.
 
 Run all registered adapters on the same game with per-agent checkpoints:
 
 ```bash
-synora benchmark \
+simulusion benchmark \
   --all-agents \
   --game ALE/Pong-v5 \
   --checkpoint-map iris=checkpoints/iris/pong.pt \
@@ -96,7 +96,7 @@ synora benchmark \
 
 ## CLI options
 
-Common `synora benchmark` options:
+Common `simulusion benchmark` options:
 
 - `--agent AGENT` / `-a AGENT`: run one adapter (`iris`, `diamond`, `dreamerv1`, or `dreamerv2`).
 - `--all-agents`: run every registered adapter on the same environment.
@@ -111,15 +111,15 @@ Common `synora benchmark` options:
 - `--preset PRESET`: optional adapter/model preset.
 - `--train-epochs N`: for `--all-agents`, train first when checkpoint maps are not supplied.
 
-You can also run `synora benchmark --help` to see the installed CLI help.
+You can also run `simulusion benchmark --help` to see the installed CLI help.
 
 ## Python usage
 
-For benchmark runs, prefer the main Synora CLI so commands are consistent with
+For benchmark runs, prefer the main Simulusion CLI so commands are consistent with
 the rest of the package:
 
 ```bash
-synora benchmark --agent iris --game ALE/Pong-v5 --checkpoint checkpoints/iris/pong.pt
+simulusion benchmark --agent iris --game ALE/Pong-v5 --checkpoint checkpoints/iris/pong.pt
 ```
 
 The command writes benchmark JSON reports under the configured output
@@ -140,10 +140,10 @@ To run the full Atari 100k benchmark on all configured games with the
 centralized benchmark module:
 
 ```bash
-python -m synora.benchmarks.atari_100k --benchmark
+python -m simulusion.benchmarks.atari_100k --benchmark
 ```
 
-This runs the Atari 100k evaluator from `synora/benchmarks`, computes
+This runs the Atari 100k evaluator from `simulusion/benchmarks`, computes
 human-normalized scores, and reports aggregate metrics across games and seeds.
 
 ## Outputs
@@ -168,14 +168,14 @@ IQM and confidence intervals from that array.
 
 ## Extending the harness
 
-- Create an adapter in `synora/benchmarks/adapters.py` that implements:
+- Create an adapter in `simulusion/benchmarks/adapters.py` that implements:
   - `load_checkpoint(path: str)`
   - `evaluate(num_episodes: int, render: bool = False)` returning `{"episode_returns": list[float]}`
-- Register your adapter in `synora/benchmarks/cli.py` to expose it through `synora benchmark`.
+- Register your adapter in `simulusion/benchmarks/cli.py` to expose it through `simulusion benchmark`.
 
 ## Compute benchmarks (no checkpoints required)
 
-`synora benchmark` measures *returns*, so it needs trained agents and a
+`simulusion benchmark` measures *returns*, so it needs trained agents and a
 Gymnasium install. To measure *cost* - parameters, latency, throughput and
 peak memory - use the auto-run sweep instead:
 
@@ -280,10 +280,10 @@ function producing its synthetic inputs.
 
 ## Tests and CI
 
-- Place smoke tests under `synora/benchmarks/tests/` so CI can run them quickly.
+- Place smoke tests under `simulusion/benchmarks/tests/` so CI can run them quickly.
 - The repo contains a `mocking_classes.py` helper for building fake agents and environments for fast unit tests.
 
 ## Where to start
 
-- Run the examples in `examples/benchmark_iris.py` or use `synora benchmark` directly.
+- Run the examples in `examples/benchmark_iris.py` or use `simulusion benchmark` directly.
 - If you need help wiring specific agent configs, use `--device`, `--preset`, and checkpoint options, or call the runner programmatically and pass `extra_kwargs`.

@@ -6,15 +6,15 @@ then shows where to go for each model family.
 ## 1. Install
 
 ```bash
-pip install "synora-world[gym]"
+pip install "simulusion[gym]"
 ```
 
-The package installs as `synora-world` and imports as `synora`. The `gym`
+The package installs as `simulusion` and imports as `simulusion`. The `gym`
 extra brings Gymnasium with its classic-control and Atari environments. Other
 extras add DeepMind Control (`dmc`), logging (`ml`), MuJoCo, Brax and more; see
 {doc}`installation`.
 
-Synora does not pin a PyTorch build. For GPU training, install the CUDA wheel
+Simulusion does not pin a PyTorch build. For GPU training, install the CUDA wheel
 that matches your driver from [pytorch.org](https://pytorch.org/get-started/locally/)
 first, and check it with:
 
@@ -28,9 +28,9 @@ Dreamer learns a model of the environment from raw pixels and trains its policy
 entirely inside that model:
 
 ```python
-import synora
+import simulusion
 
-agent = synora.create_model(
+agent = simulusion.create_model(
     "dreamer",
     env="Pendulum-v1",
     env_backend="gym",
@@ -52,13 +52,13 @@ Training prints a line per iteration and writes everything to one run folder,
 To see them all, build the config first:
 
 ```python
-cfg = synora.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
+cfg = simulusion.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
 print(cfg)
 ```
 
 ## 3. Watch what it learned
 
-The [demo scripts](https://github.com/ParamThakkar123/synora/tree/main/demos)
+The [demo scripts](https://github.com/ParamThakkar123/simulusion/tree/main/demos)
 turn a run into video. For Dreamer, `record` shows the real environment beside
 the world model's prediction of it, plus the policy acting:
 
@@ -73,14 +73,14 @@ python demos/dreamer_demo.py record --run runs/Pendulum-v1_Dreamerv1_<name>_<tim
 </figure>
 ```
 
-For a live session instead of a recording, `synora play --model dreamer -c
+For a live session instead of a recording, `simulusion play --model dreamer -c
 <checkpoint>` opens a window where you can take over the controls (needs a
 desktop session).
 
 ## 4. Choose a model
 
-Every model is built with `synora.create_model(name, ...)`. The names are those
-returned by `synora.list_models()`:
+Every model is built with `simulusion.create_model(name, ...)`. The names are those
+returned by `simulusion.list_models()`:
 
 | Model | `create_model` name | What it does | Demo |
 |---|---|---|---|
@@ -94,7 +94,7 @@ returned by `synora.list_models()`:
 | {doc}`ModularRSSM <modular_rssm_guide>` | `modular-rssm` | A world model assembled from swappable encoder, backbone and decoder | {ref}`video <gallery-modular-rssm>` |
 
 To run any of them on a different environment, pass `env=` and
-`env_backend=`. The same backend names work with `synora.make_env()`:
+`env_backend=`. The same backend names work with `simulusion.make_env()`:
 
 | Backend | Environments |
 |---|---|
@@ -112,11 +112,11 @@ To run any of them on a different environment, pass `env=` and
 Both are off by default. Install the `ml` extra, then set them on the config:
 
 ```python
-cfg = synora.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
+cfg = simulusion.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
 cfg.enable_tensorboard = True   # then: tensorboard --logdir runs
 cfg.enable_wandb = True         # needs WANDB_API_KEY in the environment
-cfg.wandb_project = "synora"
-agent = synora.create_model("dreamer", config=cfg)
+cfg.wandb_project = "simulusion"
+agent = simulusion.create_model("dreamer", config=cfg)
 ```
 
 ## Next steps

@@ -1,6 +1,6 @@
 import pytest
 import torch
-from synora.models.modular_rssm import (
+from simulusion.models.modular_rssm import (
     ModularRSSM,
     create_modular_rssm,
     ConvEncoder,

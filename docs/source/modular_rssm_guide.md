@@ -45,7 +45,7 @@ the factory, or can be provided manually.
 Use the factory for the most common combinations:
 
 ```python
-from synora.models.modular_rssm import create_modular_rssm
+from simulusion.models.modular_rssm import create_modular_rssm
 
 rssm = create_modular_rssm(
     encoder_type="conv",  # "conv" | "mlp" | "vit"
@@ -68,7 +68,7 @@ for direct construction.
 ### Encoders
 
 ```python
-from synora.models.modular_rssm import ConvEncoder, MLPEncoder, ViTEncoder
+from simulusion.models.modular_rssm import ConvEncoder, MLPEncoder, ViTEncoder
 
 # Convolutional encoder — Dreamer-style, for image observations
 enc = ConvEncoder(input_shape=(3, 64, 64), embed_size=1024, depth=32)
@@ -89,7 +89,7 @@ enc = ViTEncoder(input_shape=(3, 64, 64), embed_size=512, patch_size=8, depth=6)
 ### Backbones
 
 ```python
-from synora.models.modular_rssm import GRUBackbone, LSTMBackbone, TransformerBackbone
+from simulusion.models.modular_rssm import GRUBackbone, LSTMBackbone, TransformerBackbone
 
 # GRU — standard RSSM recurrent dynamics
 bb = GRUBackbone(
@@ -121,7 +121,7 @@ bb = TransformerBackbone(
 ### Decoders
 
 ```python
-from synora.models.modular_rssm import ConvDecoder, MLPDecoder
+from simulusion.models.modular_rssm import ConvDecoder, MLPDecoder
 
 # Convolutional decoder — reconstructs images from latent features
 dec = ConvDecoder(stoch_size=32, deter_size=200, output_shape=(3, 64, 64), depth=32)
@@ -139,7 +139,7 @@ When you need fine-grained control over component configuration, construct
 each piece and pass them to `ModularRSSM` directly:
 
 ```python
-from synora.models.modular_rssm import (
+from simulusion.models.modular_rssm import (
     ModularRSSM,
     ConvEncoder,
     ConvDecoder,
@@ -245,7 +245,7 @@ Subclass `EncoderBase`, `DecoderBase`, or `BackboneBase` and implement the
 required interface:
 
 ```python
-from synora.models.modular_rssm import EncoderBase
+from simulusion.models.modular_rssm import EncoderBase
 
 
 class MyEncoder(EncoderBase):
@@ -300,9 +300,9 @@ sequence dimensions and gradient flow in recurrent training.
 ## Available via the public API
 
 ```python
-import synora
+import simulusion
 
-rssm = synora.create_modular_rssm(
+rssm = simulusion.create_modular_rssm(
     encoder_type="vit",
     backbone_type="transformer",
     obs_shape=(3, 64, 64),
@@ -310,7 +310,7 @@ rssm = synora.create_modular_rssm(
 )
 
 # Or import directly
-from synora import ModularRSSM, create_modular_rssm
+from simulusion import ModularRSSM, create_modular_rssm
 ```
 
 ## See Also

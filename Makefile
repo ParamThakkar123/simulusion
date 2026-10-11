@@ -13,9 +13,9 @@ format:
 	$(PYTHON) -m ruff format .
 
 # DeepMind Control, including on CPython 3.13 where dm-control's `labmaze`
-# dependency has no wheel and would build with Bazel. See synora/install_dmc.py.
+# dependency has no wheel and would build with Bazel. See simulusion/install_dmc.py.
 install-dmc:
-	$(PYTHON) -m synora.install_dmc
+	$(PYTHON) -m simulusion.install_dmc
 
 # Compute benchmark (params, latency, throughput, memory) over every model.
 # The shell driver installs everything with uv and runs the sweep with uv run.

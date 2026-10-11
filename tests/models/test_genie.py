@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 import torch
-from synora.models import create_genie_small
-from synora.vision import create_video_tokenizer
-from synora.models.latent_action_model import create_latent_action_model
+from simulusion.models import create_genie_small
+from simulusion.vision import create_video_tokenizer
+from simulusion.models.latent_action_model import create_latent_action_model
 
 
 class TestVideoTokenizer:
@@ -207,7 +207,7 @@ class TestGenie:
 
 class TestGenieTraining:
     def test_training_step(self):
-        from synora.training.train_genie import create_genie_trainer, GenieConfig
+        from simulusion.training.train_genie import create_genie_trainer, GenieConfig
 
         config = GenieConfig()
         config.max_steps = 1
@@ -230,7 +230,7 @@ class TestGenieTraining:
 
     @staticmethod
     def _tiny_small_config():
-        from synora.configs.genie_config import GenieSmallConfig
+        from simulusion.configs.genie_config import GenieSmallConfig
 
         config = GenieSmallConfig()
         config.num_frames = 4
@@ -249,7 +249,7 @@ class TestGenieTraining:
         return config
 
     def test_trainer_builds_the_configured_head_counts(self):
-        from synora.training.train_genie import create_genie_trainer
+        from simulusion.training.train_genie import create_genie_trainer
 
         config = self._tiny_small_config()
         config.tokenizer_num_heads = 2
@@ -266,7 +266,7 @@ class TestGenieTraining:
     def test_checkpoint_after_warmup_loads_with_weights_only(self, tmp_path):
         """Past warmup the cosine schedule must not leave numpy scalars in the
         scheduler state, which `torch.load(weights_only=True)` rejects."""
-        from synora.training.train_genie import create_genie_trainer
+        from simulusion.training.train_genie import create_genie_trainer
 
         config = self._tiny_small_config()
         config.tokenizer_num_heads = 2
@@ -287,7 +287,7 @@ class TestGenieTraining:
         assert trainer.global_step == 3
 
     def test_video_dataset_loads_npy_clips(self, tmp_path):
-        from synora.training.train_genie import VideoDataset
+        from simulusion.training.train_genie import VideoDataset
 
         clip = np.random.rand(10, 48, 48, 3).astype(np.float32)
         path = tmp_path / "clip.npy"
@@ -407,7 +407,7 @@ class TestGenieInferActions:
 
 class TestGenieVideoTokenizer:
     def test_decode_indices(self):
-        from synora.vision import create_video_tokenizer
+        from simulusion.vision import create_video_tokenizer
 
         tokenizer = create_video_tokenizer(
             num_frames=8,

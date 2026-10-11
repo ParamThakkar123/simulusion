@@ -11,7 +11,7 @@ import pytest
 torch = pytest.importorskip("torch")
 nn = torch.nn
 
-from synora.inference import (  # noqa: E402
+from simulusion.inference import (  # noqa: E402
     DreamerStepModule,
     DreamerStepper,
     IRISStepper,
@@ -25,8 +25,8 @@ from synora.inference import (  # noqa: E402
     rollout_drift,
     save_bundle,
 )
-from synora.inference.quantize import Int8WeightOnlyLinear, weight_memory_bytes  # noqa: E402
-from synora.utils.memory_utils import maybe_compile  # noqa: E402
+from simulusion.inference.quantize import Int8WeightOnlyLinear, weight_memory_bytes  # noqa: E402
+from simulusion.utils.memory_utils import maybe_compile  # noqa: E402
 
 
 # --------------------------------------------------------------------------
@@ -38,13 +38,13 @@ class _TinyDreamer:
     """The attributes DreamerStepper reads, built from the real components."""
 
     def __init__(self, action_size: int = 3) -> None:
-        from synora.models.dreamer_rssm import RSSM
-        from synora.vision.dreamer_decoder import (
+        from simulusion.models.dreamer_rssm import RSSM
+        from simulusion.vision.dreamer_decoder import (
             ActionDecoder,
             ConvDecoder,
             DenseDecoder,
         )
-        from synora.vision.dreamer_encoder import ConvEncoder
+        from simulusion.vision.dreamer_encoder import ConvEncoder
 
         stoch, deter, embed = 8, 16, 1024
         self.device = torch.device("cpu")
@@ -384,7 +384,7 @@ def test_quantize_rejects_unknown_backend():
 
 
 def test_exported_program_round_trip_and_rollout_drift(dreamer, tmp_path):
-    from synora.export import export_model, load_exported, verify_export
+    from simulusion.export import export_model, load_exported, verify_export
 
     module = DreamerStepModule(dreamer).eval()
     inputs = module.example_inputs(batch_size=1)
@@ -414,15 +414,15 @@ def test_exported_program_round_trip_and_rollout_drift(dreamer, tmp_path):
 
 
 def test_unknown_export_format_lists_new_formats(tmp_path):
-    from synora.export import export_model
+    from simulusion.export import export_model
 
     with pytest.raises(ValueError, match="exported_program"):
         export_model(nn.Linear(2, 2), tmp_path / "x", format="nope")
 
 
-def test_importing_synora_does_not_patch_nn_module():
-    import synora  # noqa: F401
-    import synora.export  # noqa: F401
+def test_importing_simulusion_does_not_patch_nn_module():
+    import simulusion  # noqa: F401
+    import simulusion.export  # noqa: F401
 
     assert not hasattr(nn.Module, "export")
 
@@ -431,13 +431,13 @@ def test_every_public_module_class_is_exportable():
     """Public ``nn.Module`` classes carry ``.export()`` through the mixin."""
     import inspect
 
-    import synora
-    from synora.export import ExportableAgentMixin
+    import simulusion
+    from simulusion.export import ExportableAgentMixin
 
     missing = []
-    for name in synora.__all__:
+    for name in simulusion.__all__:
         try:
-            obj = getattr(synora, name)
+            obj = getattr(simulusion, name)
         except ImportError:  # optional backend not installed
             continue
         if (
@@ -450,7 +450,7 @@ def test_every_public_module_class_is_exportable():
 
 
 def test_public_module_export_method_round_trips(tmp_path):
-    from synora import RMSNorm, load_exported
+    from simulusion import RMSNorm, load_exported
 
     norm = RMSNorm(4).eval()
     x = torch.randn(2, 4)
@@ -510,7 +510,7 @@ def test_load_bundle_rejects_non_bundle(tmp_path):
 def test_cli_deploy_inspect_and_bench(tmp_path):
     from click.testing import CliRunner
 
-    from synora import cli
+    from simulusion import cli
 
     torch.manual_seed(0)
     save_bundle(

@@ -18,8 +18,8 @@ from PIL import Image
 import numpy as np
 from omegaconf import OmegaConf
 
-from synora.training.train_genie import create_genie_trainer
-from synora.datasets import create_tinyworlds_dataloader
+from simulusion.training.train_genie import create_genie_trainer
+from simulusion.datasets import create_tinyworlds_dataloader
 
 
 def tensor_to_uint8_img(t: torch.Tensor) -> np.ndarray:

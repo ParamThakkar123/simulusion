@@ -3,15 +3,15 @@ __pycache__/
 results/
 dist/
 pytorch_world.egg-info/
-synora/models/data/
+simulusion/models/data/
 cifar
 .pylintrc
-synora.egg-info/
+simulusion.egg-info/
 node_modules/
 .vite/
 docs/build/
-synora_ui/playwright-report/
-synora_ui/test-results/
+simulusion_ui/playwright-report/
+simulusion_ui/test-results/
 .env.example
 .env.production
 # uv.lock intentionally tracked for deterministic installs

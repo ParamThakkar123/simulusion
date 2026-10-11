@@ -1,8 +1,8 @@
-from synora.configs.dit_config import DiTConfig
-from synora.configs.dreamer_config import DreamerConfig
-from synora.configs.genie_config import GenieConfig, GenieSmallConfig
-from synora.configs.iris_config import IRISConfig
-from synora.configs.jepa_config import JEPAConfig
+from simulusion.configs.dit_config import DiTConfig
+from simulusion.configs.dreamer_config import DreamerConfig
+from simulusion.configs.genie_config import GenieConfig, GenieSmallConfig
+from simulusion.configs.iris_config import IRISConfig
+from simulusion.configs.jepa_config import JEPAConfig
 
 
 CONFIG_CASES = [

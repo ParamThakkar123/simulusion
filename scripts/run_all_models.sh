@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Train, then run inference, for every Synora model -- one model after another.
+# Train, then run inference, for every Simulusion model -- one model after another.
 #
 # Each model is a pair of stages: a training run scaled by --preset, followed by
 # a recorded inference pass that picks up the checkpoint that training just
@@ -38,7 +38,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 INFER_PY="${SCRIPT_DIR}/benchmark_infer.py"
-EXP_DIR="${REPO_ROOT}/synora/configs/experiments"
+EXP_DIR="${REPO_ROOT}/simulusion/configs/experiments"
 
 # Models with both a training entrypoint and a recorded-inference demo.
 ALL_MODELS="diamond dreamer iris genie dit jepa"
@@ -71,7 +71,7 @@ PYTHON_VERSION=""
 SYNC_EXTRAS=()
 CKPT_ROOT="${REPO_ROOT}/checkpoints"
 OUT_DIR="${REPO_ROOT}/results/model_runs"
-JEPA_DATA="${SYNORA_JEPA_DATA:-${IMAGENET_ROOT:-}}"
+JEPA_DATA="${SIMULUSION_JEPA_DATA:-${IMAGENET_ROOT:-}}"
 GENIE_DATASET="SONIC"
 GENIE_DRY_RUN=0
 GENIE_DATA_FILE=""
@@ -129,7 +129,7 @@ Run control:
   --dry-run            Print every command instead of running it.
 
 Data (models whose training needs a dataset):
-  --jepa-data PATH     Image folder for I-JEPA. Also read from SYNORA_JEPA_DATA
+  --jepa-data PATH     Image folder for I-JEPA. Also read from SIMULUSION_JEPA_DATA
                        or IMAGENET_ROOT. Without it JEPA trains on CIFAR-10,
                        which downloads itself.
   --genie-dataset NAME TinyWorlds dataset for Genie: SONIC (default), ZELDA or
@@ -406,7 +406,7 @@ build_train_cmd() {
 
     case "${model}" in
         diamond)
-            CMD=("${RUNNER[@]}" -m synora.training.train_diamond "seed=${SEED}"
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_diamond "seed=${SEED}"
                  "checkpoint_dir=${CKPT_ROOT}/diamond")
             case "${PRESET}" in
                 tiny)
@@ -436,7 +436,7 @@ build_train_cmd() {
             ;;
 
         dreamer)
-            CMD=("${RUNNER[@]}" -m synora.training.train_dreamer
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_dreamer
                  "logdir=${CKPT_ROOT}/dreamer" "seed=${SEED}")
             case "${PRESET}" in
                 tiny)
@@ -461,7 +461,7 @@ build_train_cmd() {
             ;;
 
         iris)
-            CMD=("${RUNNER[@]}" -m synora.training.train_iris
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_iris
                  "save_dir=${CKPT_ROOT}/iris" "seed=${SEED}")
             case "${PRESET}" in
                 tiny)
@@ -532,7 +532,7 @@ build_train_cmd() {
             else
                 # Only reachable via --genie-dry-run now: build the trainer and
                 # stop, without touching a dataset.
-                CMD=("${RUNNER[@]}" -m synora.training.train_genie --dry-run)
+                CMD=("${RUNNER[@]}" -m simulusion.training.train_genie --dry-run)
                 [ "${PRESET}" = "tiny" ] && CMD+=(--max-steps 20)
                 [ -n "${DEVICE}" ] && CMD+=(--device "${DEVICE}")
                 NOTE="trainer construction only (--genie-dry-run)"
@@ -540,7 +540,7 @@ build_train_cmd() {
             ;;
 
         jepa)
-            CMD=("${RUNNER[@]}" -m synora.training.train_jepa)
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_jepa)
             case "${PRESET}" in
                 tiny)
                     # batch_size is the only lever on run length here: I-JEPA
@@ -583,7 +583,7 @@ build_train_cmd() {
             ;;
 
         planet)
-            CMD=("${RUNNER[@]}" -m synora.training.train_planet
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_planet
                  --outdir "${CKPT_ROOT}/planet")
             case "${PRESET}" in
                 # Episode length is left alone: the trainer samples 50-step
@@ -596,12 +596,12 @@ build_train_cmd() {
             ;;
 
         rssm)
-            CMD=("${RUNNER[@]}" -m synora.training.train_rssm)
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_rssm)
             NOTE="no CLI knobs; length is fixed in the module -- use --timeout"
             ;;
 
         world-model)
-            CMD=("${RUNNER[@]}" -m synora.training.train_world_model
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_world_model
                  --env "${WM_ENV}"
                  --logdir "${CKPT_ROOT}/world_model"
                  --data_dir "${CKPT_ROOT}/world_model/data")
@@ -625,7 +625,7 @@ build_train_cmd() {
         dit)
             # CIFAR-10 downloads itself into ROOT_PATH, so this needs no
             # dataset flag. DiT.fit picks its own device; there is no override.
-            CMD=("${RUNNER[@]}" -m synora.training.train_dit
+            CMD=("${RUNNER[@]}" -m simulusion.training.train_dit
                  "WORKDIR=${CKPT_ROOT}/dit"
                  "ROOT_PATH=${REPO_ROOT}/data")
             case "${PRESET}" in
@@ -1065,7 +1065,7 @@ write_gallery() {
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Synora model runs</title>
+<title>Simulusion model runs</title>
 <style>
   :root { color-scheme: light dark; --fg: #16181d; --bg: #fbfbfa; --muted: #6b7280; --line: #e3e3e0; --card: #fff; }
   @media (prefers-color-scheme: dark) {
@@ -1089,7 +1089,7 @@ write_gallery() {
 </style>
 <main>
 HTML_HEAD
-        printf '<h1>Synora model runs</h1>
+        printf '<h1>Simulusion model runs</h1>
 '
         printf '<p class="sub">preset <b>%s</b> &middot; device %s &middot; %s</p>
 '             "${PRESET}" "${DEVICE:-auto}" "$(date '+%Y-%m-%d %H:%M')"

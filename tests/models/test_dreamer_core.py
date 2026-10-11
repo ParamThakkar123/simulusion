@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 import torch
 
-from synora.configs.dreamer_config import DreamerConfig
-from synora.models.dreamer import Dreamer
+from simulusion.configs.dreamer_config import DreamerConfig
+from simulusion.models.dreamer import Dreamer
 
 OBS_SHAPE = (3, 64, 64)
 ACTION_SIZE = 2
@@ -165,7 +165,7 @@ def test_discount_model_discounts_are_scaled_by_gamma():
 def test_dreamer_v2_trains_one_batch():
     """DreamerV2's two-hot reward/value heads must expose `.mean` as a tensor,
     like the torch distributions the rest of Dreamer reads it from."""
-    from synora.models.dreamer_v2 import DreamerV2
+    from simulusion.models.dreamer_v2 import DreamerV2
 
     torch.manual_seed(0)
     dreamer = DreamerV2(_tiny_config(), OBS_SHAPE, ACTION_SIZE, "cpu")
@@ -184,8 +184,8 @@ def test_dreamer_v2_trains_one_batch():
 def test_versioned_model_names_build_agents_for_that_version(name, core, algo):
     """`create_model("dreamer-v2")` used to resolve to the bare DreamerV2 core,
     whose constructor needs (args, obs_shape, action_size, device), so it raised."""
-    import synora.models as models
-    from synora.api import _load_object, get_model_spec
+    import simulusion.models as models
+    from simulusion.api import _load_object, get_model_spec
 
     agent_cls = _load_object(get_model_spec(name).import_path)
     assert issubclass(agent_cls, models.DreamerAgent)
@@ -198,7 +198,7 @@ def test_dreamer_v2_actor_maximises_the_lambda_returns_themselves():
 
     A symlog on the returns here made the actor saturate on cartpole swing-up
     (every action pinned at -1, actor gradient ~1e-8)."""
-    from synora.models.dreamer_v2 import DreamerV2
+    from simulusion.models.dreamer_v2 import DreamerV2
 
     torch.manual_seed(0)
     dreamer = DreamerV2(_tiny_config(), OBS_SHAPE, ACTION_SIZE, "cpu")

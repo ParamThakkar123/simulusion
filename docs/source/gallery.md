@@ -1,7 +1,7 @@
 # Gallery
 
-What every model in Synora looks like in action. Each clip below was produced by
-the scripts in [`demos/`](https://github.com/ParamThakkar123/synora/tree/main/demos),
+What every model in Simulusion looks like in action. Each clip below was produced by
+the scripts in [`demos/`](https://github.com/ParamThakkar123/simulusion/tree/main/demos),
 trained from scratch on a single **laptop GPU (RTX 3050, 4 GB)** for one to two
 hours. They show what the library does in a short budget, not the paper results,
 which need far more compute. Every section ends with the commands that
@@ -183,7 +183,7 @@ python demos/diamond_demo.py record
 ```
 
 To drive the model yourself with the keyboard, run
-`synora play --model diamond -c demos/runs/diamond/checkpoint_20.pt --game Breakout-v5`
+`simulusion play --model diamond -c demos/runs/diamond/checkpoint_20.pt --game Breakout-v5`
 and press `TAB` to switch between the real game and the dream. See {doc}`diamond`.
 
 ---
@@ -352,5 +352,5 @@ python demos/build_gallery.py      # copies the media into docs/source/_static/g
 
 Each demo runs on its own, one after another: several hold gigabytes of replay
 data in RAM and most of a 4 GB GPU. See
-[`demos/README.md`](https://github.com/ParamThakkar123/synora/blob/main/demos/README.md)
+[`demos/README.md`](https://github.com/ParamThakkar123/simulusion/blob/main/demos/README.md)
 for details and per-demo options.

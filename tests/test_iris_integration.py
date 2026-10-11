@@ -1,5 +1,5 @@
 import pytest
-from synora.configs.iris_config import IRISConfig
+from simulusion.configs.iris_config import IRISConfig
 
 
 @pytest.mark.integration

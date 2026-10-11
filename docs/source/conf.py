@@ -1,4 +1,4 @@
-"""Sphinx configuration for Synora documentation."""
+"""Sphinx configuration for Simulusion documentation."""
 
 from __future__ import annotations
 
@@ -8,15 +8,15 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-project = "Synora"
+project = "Simulusion"
 copyright = f"{datetime.now().year}, Param Thakkar"
 author = "Param Thakkar"
 
-# Auto-read version from the public synora package
+# Auto-read version from the public simulusion package
 
-import synora  # noqa: E402  (must follow the sys.path insertion above)
+import simulusion  # noqa: E402  (must follow the sys.path insertion above)
 
-release = synora.__version__
+release = simulusion.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -124,16 +124,16 @@ autodoc_mock_imports = [
 ]
 
 html_theme = "pydata_sphinx_theme"
-html_favicon = "_static/synora-favicon.svg"
+html_favicon = "_static/simulusion-favicon.svg"
 html_theme_options = {
-    "github_url": "https://github.com/paramthakkar123/synora",
+    "github_url": "https://github.com/paramthakkar123/simulusion",
     "navigation_depth": 3,
     "show_nav_level": 2,
     "logo": {
-        "image_light": "synora-logo-light.svg",
-        "image_dark": "synora-logo-dark.svg",
+        "image_light": "simulusion-logo-light.svg",
+        "image_dark": "simulusion-logo-dark.svg",
         # The logo image is the wordmark, so no separate text label.
-        "alt_text": "Synora",
+        "alt_text": "Simulusion",
     },
     # Keep the top navbar intentionally minimal: logo, documentation search,
     # the light/dark switch (the docs open in dark mode), and the GitHub link.
@@ -166,11 +166,11 @@ html_css_files = [
 # Canonical docs URL. Overridden in CI for PR previews.
 html_baseurl = os.getenv(
     "SPHINX_HTML_BASEURL",
-    "https://paramthakkar123.github.io/synora/",
+    "https://paramthakkar123.github.io/simulusion/",
 )
 
 # Open Graph metadata for social sharing cards/link previews.
 ogp_site_url = html_baseurl
-ogp_site_name = "Synora Documentation"
+ogp_site_name = "Simulusion Documentation"
 ogp_description_length = 200
 ogp_enable_meta_description = True

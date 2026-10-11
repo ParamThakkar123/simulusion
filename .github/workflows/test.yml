@@ -147,9 +147,9 @@ jobs:
         pip install swig
         # ``dmc`` is included now: on cp313 that extra installs the pure-Python
         # ``labmaze-new`` and leaves dm-control out, so nothing builds with
-        # Bazel. ``python -m synora.install_dmc`` adds dm-control itself.
+        # Bazel. ``python -m simulusion.install_dmc`` adds dm-control itself.
         pip install -e '.[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,dev]'
-        python -m synora.install_dmc
+        python -m simulusion.install_dmc
 
     - name: Report memory before the run
       run: free -m
@@ -195,14 +195,14 @@ jobs:
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        python -m venv "$RUNNER_TEMP/synora-wheel-smoke"
-        source "$RUNNER_TEMP/synora-wheel-smoke/bin/activate"
+        python -m venv "$RUNNER_TEMP/simulusion-wheel-smoke"
+        source "$RUNNER_TEMP/simulusion-wheel-smoke/bin/activate"
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        wheels=(dist/synora_world-*.whl)
+        wheels=(dist/simulusion-*.whl)
         if [ "${#wheels[@]}" -ne 1 ]; then
-          echo "Expected exactly one synora wheel in dist/, found ${#wheels[@]}"
+          echo "Expected exactly one simulusion wheel in dist/, found ${#wheels[@]}"
           ls -la dist
           exit 1
         fi
@@ -210,11 +210,11 @@ jobs:
         pip install "${wheels[0]}"
 
         pushd "$RUNNER_TEMP" >/dev/null
-        python -c "import synora"
-        synora version
+        python -c "import simulusion"
+        simulusion version
         popd >/dev/null
 
-        # Resolve the gym extra fresh, as `pip install synora-world[gym]` does, and
+        # Resolve the gym extra fresh, as `pip install simulusion[gym]` does, and
         # render the README's quick-start env. A dependency clash (pygame and
         # pygame-ce in one environment) once crashed exactly here, while the
         # locked dev environment and the unit tests looked fine.
@@ -227,14 +227,14 @@ jobs:
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        python -m venv "$RUNNER_TEMP/synora-sdist-smoke"
-        source "$RUNNER_TEMP/synora-sdist-smoke/bin/activate"
+        python -m venv "$RUNNER_TEMP/simulusion-sdist-smoke"
+        source "$RUNNER_TEMP/simulusion-sdist-smoke/bin/activate"
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        sdists=(dist/synora_world-*.tar.gz)
+        sdists=(dist/simulusion-*.tar.gz)
         if [ "${#sdists[@]}" -ne 1 ]; then
-          echo "Expected exactly one synora sdist in dist/, found ${#sdists[@]}"
+          echo "Expected exactly one simulusion sdist in dist/, found ${#sdists[@]}"
           ls -la dist
           exit 1
         fi
@@ -242,36 +242,36 @@ jobs:
         pip install "${sdists[0]}"
 
         pushd "$RUNNER_TEMP" >/dev/null
-        python -c "import synora"
-        synora version
+        python -c "import simulusion"
+        simulusion version
         popd >/dev/null
 
     - name: Install wheel into a clean virtualenv and smoke test it (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        python -m venv "$env:RUNNER_TEMP\synora-wheel-smoke"
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\python.exe" -m pip install --upgrade pip
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        python -m venv "$env:RUNNER_TEMP\simulusion-wheel-smoke"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        $wheels = Get-ChildItem dist\synora_world-*.whl
+        $wheels = Get-ChildItem dist\simulusion-*.whl
         if ($wheels.Count -ne 1) {
-          Write-Host "Expected exactly one synora wheel in dist/, found $($wheels.Count)"
+          Write-Host "Expected exactly one simulusion wheel in dist/, found $($wheels.Count)"
           Get-ChildItem dist
           exit 1
         }
 
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\pip.exe" install $wheels[0].FullName
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install $wheels[0].FullName
 
         Push-Location $env:RUNNER_TEMP
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\python.exe" -c "import synora"
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\synora.exe" version
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -c "import simulusion"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\simulusion.exe" version
         Pop-Location
 
         # See the Unix step: render the quick-start env from a fresh gym extra.
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\pip.exe" install "$($wheels[0].FullName)[gym]"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install "$($wheels[0].FullName)[gym]"
         Push-Location $env:RUNNER_TEMP
-        & "$env:RUNNER_TEMP\synora-wheel-smoke\Scripts\python.exe" -X faulthandler -c "import gymnasium as gym; e = gym.make('Pendulum-v1', render_mode='rgb_array'); e.reset(seed=0); print(e.render().shape)"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -X faulthandler -c "import gymnasium as gym; e = gym.make('Pendulum-v1', render_mode='rgb_array'); e.reset(seed=0); print(e.render().shape)"
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Pop-Location
 
@@ -279,22 +279,22 @@ jobs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        python -m venv "$env:RUNNER_TEMP\synora-sdist-smoke"
-        & "$env:RUNNER_TEMP\synora-sdist-smoke\Scripts\python.exe" -m pip install --upgrade pip
-        & "$env:RUNNER_TEMP\synora-sdist-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        python -m venv "$env:RUNNER_TEMP\simulusion-sdist-smoke"
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        $sdists = Get-ChildItem dist\synora_world-*.tar.gz
+        $sdists = Get-ChildItem dist\simulusion-*.tar.gz
         if ($sdists.Count -ne 1) {
-          Write-Host "Expected exactly one synora sdist in dist/, found $($sdists.Count)"
+          Write-Host "Expected exactly one simulusion sdist in dist/, found $($sdists.Count)"
           Get-ChildItem dist
           exit 1
         }
 
-        & "$env:RUNNER_TEMP\synora-sdist-smoke\Scripts\pip.exe" install $sdists[0].FullName
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\pip.exe" install $sdists[0].FullName
 
         Push-Location $env:RUNNER_TEMP
-        & "$env:RUNNER_TEMP\synora-sdist-smoke\Scripts\python.exe" -c "import synora"
-        & "$env:RUNNER_TEMP\synora-sdist-smoke\Scripts\synora.exe" version
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\python.exe" -c "import simulusion"
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\simulusion.exe" version
         Pop-Location
 
   # mypy type checks were moved to a dedicated workflow: .github/workflows/mypy.yml

@@ -64,7 +64,7 @@ jobs:
           from pathlib import Path
 
           version = os.environ["PACKAGE_VERSION"]
-          path = Path("synora/_version.py")
+          path = Path("simulusion/_version.py")
           text = path.read_text(encoding="utf-8")
           updated = re.sub(
               r'(?m)^(__version__\s*=\s*)["\'][^"\']+["\']',
@@ -73,7 +73,7 @@ jobs:
               count=1,
           )
           if updated == text:
-              raise SystemExit("Could not find __version__ in synora/_version.py")
+              raise SystemExit("Could not find __version__ in simulusion/_version.py")
           path.write_text(updated, encoding="utf-8")
           PY
 
@@ -86,9 +86,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add synora/_version.py
+          git add simulusion/_version.py
           if git diff --cached --quiet; then
-            echo "synora/_version.py already contains version ${PACKAGE_VERSION}."
+            echo "simulusion/_version.py already contains version ${PACKAGE_VERSION}."
             exit 0
           fi
 

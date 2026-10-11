@@ -1,12 +1,12 @@
 import pytest
 import torch
-from synora.configs.dreamer_config import DreamerConfig
+from simulusion.configs.dreamer_config import DreamerConfig
 
 
 @pytest.mark.integration
 def test_dreamer_pendulum_no_crash(tmp_path):
     pytest.importorskip("gymnasium")
-    from synora.models.dreamer import DreamerAgent
+    from simulusion.models.dreamer import DreamerAgent
 
     config = DreamerConfig()
     config.env = "Pendulum-v1"

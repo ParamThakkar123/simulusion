@@ -28,7 +28,7 @@ def _assert_image_observation(
 
 def test_real_brax_image_env_smoke():
     pytest.importorskip("brax")
-    from synora.envs.brax_env import BraxImageEnv
+    from simulusion.envs.brax_env import BraxImageEnv
 
     env = BraxImageEnv(
         "inverted_pendulum",
@@ -61,7 +61,7 @@ def test_real_brax_image_env_smoke():
 
 def test_real_robotics_env_smoke():
     pytest.importorskip("gymnasium_robotics")
-    from synora.envs.robotics_env import (
+    from simulusion.envs.robotics_env import (
         list_gymnasium_robotics_envs,
         make_robotics_env,
     )
@@ -126,7 +126,7 @@ def test_real_mlagents_sdk_importable():
 )
 def test_real_procgen_backend_if_supported_python():
     pytest.importorskip("procgen")
-    from synora.envs.procgen_env import ProcgenImageEnv
+    from simulusion.envs.procgen_env import ProcgenImageEnv
 
     env = ProcgenImageEnv("coinrun", seed=0, size=(16, 16), num_levels=1)
     try:
@@ -142,15 +142,16 @@ def test_real_procgen_backend_if_supported_python():
 
 
 @pytest.mark.skipif(
-    not os.getenv("SYNORA_UNITY_BINARY") or not os.getenv("SYNORA_UNITY_BEHAVIOR"),
-    reason="Set SYNORA_UNITY_BINARY and SYNORA_UNITY_BEHAVIOR to run against a real Unity build.",
+    not os.getenv("SIMULUSION_UNITY_BINARY")
+    or not os.getenv("SIMULUSION_UNITY_BEHAVIOR"),
+    reason="Set SIMULUSION_UNITY_BINARY and SIMULUSION_UNITY_BEHAVIOR to run against a real Unity build.",
 )
 def test_real_unity_backend_if_binary_provided():
-    from synora.envs.unity_env import UnityMLAgentsEnv
+    from simulusion.envs.unity_env import UnityMLAgentsEnv
 
     env = UnityMLAgentsEnv(
-        file_name=os.environ["SYNORA_UNITY_BINARY"],
-        behavior_name=os.environ["SYNORA_UNITY_BEHAVIOR"],
+        file_name=os.environ["SIMULUSION_UNITY_BINARY"],
+        behavior_name=os.environ["SIMULUSION_UNITY_BEHAVIOR"],
         seed=0,
         size=(32, 32),
         no_graphics=True,
@@ -174,15 +175,15 @@ def test_real_unity_backend_if_binary_provided():
 def test_real_dmc_backend_smoke():
     """DeepMind Control through the dmc backend, when it is installed.
 
-    `pip install synora-world[dmc]` covers Python <= 3.12; on 3.13 the backend is
-    installed by `python -m synora.install_dmc`, which supplies the `labmaze`
+    `pip install simulusion[dmc]` covers Python <= 3.12; on 3.13 the backend is
+    installed by `python -m simulusion.install_dmc`, which supplies the `labmaze`
     module through the pure-Python `labmaze-new`.
     """
     pytest.importorskip("dm_control")
 
-    import synora
+    import simulusion
 
-    env = synora.make_env("walker-walk", backend="dmc", seed=0, size=(32, 32))
+    env = simulusion.make_env("walker-walk", backend="dmc", seed=0, size=(32, 32))
     obs = env.reset()
     _assert_image_observation(obs, (3, 32, 32))
     # A rendered frame, not a blank one: offscreen GL actually worked.
@@ -198,7 +199,7 @@ def test_real_dmc_backend_smoke():
 
 
 def test_dmc_installer_never_resolves_upstream_labmaze():
-    from synora.install_dmc import DM_CONTROL_DEPS, install_steps
+    from simulusion.install_dmc import DM_CONTROL_DEPS, install_steps
 
     steps = install_steps()
     assert any("labmaze-new" in arg for step in steps for arg in step)

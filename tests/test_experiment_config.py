@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from synora.experiments import (
+from simulusion.experiments import (
     dotlist_to_dict,
     instantiate_dataclass,
     load_experiment_config,

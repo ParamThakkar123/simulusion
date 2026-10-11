@@ -2,9 +2,9 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in Synora, please report it privately by opening a security advisory on GitHub:
+If you discover a security vulnerability in Simulusion, please report it privately by opening a security advisory on GitHub:
 
-https://github.com/paramthakkar123/synora/security/advisories/new
+https://github.com/paramthakkar123/simulusion/security/advisories/new
 
 Please do **not** report security vulnerabilities through public GitHub issues, discussions, or pull requests.
 
@@ -23,7 +23,7 @@ Please do **not** report security vulnerabilities through public GitHub issues, 
 
 ## Scope
 
-Every `torch.load` in Synora, including the `synora eval` / `synora play` entry points, the scripts in `scripts/` and the demos in `demos/`, passes `weights_only=True`, and subprocesses run with `subprocess.run(shell=False)`. Only open checkpoints from sources you trust all the same. If you find any code path that deviates from these patterns, please report it.
+Every `torch.load` in Simulusion, including the `simulusion eval` / `simulusion play` entry points, the scripts in `scripts/` and the demos in `demos/`, passes `weights_only=True`, and subprocesses run with `subprocess.run(shell=False)`. Only open checkpoints from sources you trust all the same. If you find any code path that deviates from these patterns, please report it.
 
 ## Supported Versions
 

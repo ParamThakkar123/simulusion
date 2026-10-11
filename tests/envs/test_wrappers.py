@@ -3,8 +3,8 @@ import pytest
 
 gym = pytest.importorskip("gymnasium")
 
-from synora.envs._actions import clip_box_action, encode_discrete_action  # noqa: E402
-from synora.envs.wrappers import (  # noqa: E402
+from simulusion.envs._actions import clip_box_action, encode_discrete_action  # noqa: E402
+from simulusion.envs.wrappers import (  # noqa: E402
     ObsDict,
     OneHotAction,
     RenderImage,
@@ -403,7 +403,7 @@ class _ActionRepeatBaseEnv:
 
 class TestActionRepeat:
     def test_repeats_action_specified_amount(self):
-        from synora.envs.wrappers import ActionRepeat
+        from simulusion.envs.wrappers import ActionRepeat
 
         env = ActionRepeat(_ActionRepeatBaseEnv(max_steps=10), amount=3)
         env.reset()
@@ -413,7 +413,7 @@ class TestActionRepeat:
         assert info["action_repeat"] == 3
 
     def test_early_termination_reduces_repeat_count(self):
-        from synora.envs.wrappers import ActionRepeat
+        from simulusion.envs.wrappers import ActionRepeat
 
         env = ActionRepeat(_ActionRepeatBaseEnv(max_steps=2), amount=5)
         env.reset()

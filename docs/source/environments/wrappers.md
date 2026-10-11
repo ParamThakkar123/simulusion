@@ -1,6 +1,6 @@
 # Environment Wrappers
 
-`synora` exposes reusable environment wrappers used by Dreamer and other environment pipelines. The wrapper module contains reusable preprocessing wrappers used by Dreamer and other environment pipelines. These wrappers let you compose time limits, action repeats, action normalization, observation dictionaries, one-hot actions, reward observations, and image transforms.
+`simulusion` exposes reusable environment wrappers used by Dreamer and other environment pipelines. The wrapper module contains reusable preprocessing wrappers used by Dreamer and other environment pipelines. These wrappers let you compose time limits, action repeats, action normalization, observation dictionaries, one-hot actions, reward observations, and image transforms.
 
 ## Standard Dreamer wrapper stack
 
@@ -31,7 +31,7 @@ This creates a stable interface for policies that emit normalized actions and tr
 ## Example composition
 
 ```python
-from synora import ActionRepeat, NormalizeActions, TimeLimit, make_gym_env
+from simulusion import ActionRepeat, NormalizeActions, TimeLimit, make_gym_env
 
 env = make_gym_env("Pendulum-v1", size=(64, 64), render_mode="rgb_array")
 env = ActionRepeat(env, amount=2)

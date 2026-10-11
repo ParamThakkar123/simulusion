@@ -105,8 +105,8 @@ def _release_cache_between_phases(agent) -> None:
 
 
 def train(args: argparse.Namespace) -> None:
-    from synora.configs.iris_config import IRISConfig
-    from synora.training.train_iris import IRISTrainer
+    from simulusion.configs.iris_config import IRISConfig
+    from simulusion.training.train_iris import IRISTrainer
 
     run = Path(args.run)
     run.mkdir(parents=True, exist_ok=True)
@@ -173,9 +173,9 @@ def record(args: argparse.Namespace) -> None:
     import cv2
     import torch
 
-    from synora.configs.iris_config import IRISConfig
-    from synora.envs.ale_atari_env import make_atari_env
-    from synora.models.iris_agent import IRISAgent
+    from simulusion.configs.iris_config import IRISConfig
+    from simulusion.envs.ale_atari_env import make_atari_env
+    from simulusion.models.iris_agent import IRISAgent
 
     run = Path(args.run)
     out = run / "media"

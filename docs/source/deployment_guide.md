@@ -2,7 +2,7 @@
 
 This guide covers running trained world models fast, measuring what each
 optimization costs, and shipping them as self-contained artifacts. Everything
-here lives in `synora.inference` and `synora.export`, and every optimization
+here lives in `simulusion.inference` and `simulusion.export`, and every optimization
 is **opt-in**: with default settings, results are identical to calling the
 model directly.
 
@@ -46,7 +46,7 @@ tools in this guide follow from them:
 | Portable artifact | `export_model(module, path, format="exported_program")` |
 | Python-free / C++ | `format="aoti"` (AOTInductor) |
 | Ship everything together | `save_bundle(dir, module, example_inputs=...)` |
-| Inspect / time a bundle | `synora deploy inspect DIR`, `synora deploy bench DIR` |
+| Inspect / time a bundle | `simulusion deploy inspect DIR`, `simulusion deploy bench DIR` |
 
 ## In-process optimization
 
@@ -55,7 +55,7 @@ precision policy and optionally `torch.compile`:
 
 ```python
 import torch
-from synora.inference import optimize_for_inference
+from simulusion.inference import optimize_for_inference
 
 policy = optimize_for_inference(
     agent.dreamer.actor,
@@ -76,7 +76,7 @@ action = policy(features, deter=True)
 | `clone_outputs` | auto | CUDA-graph replays reuse output buffers. The wrapper clones outputs when compiling with CUDA graphs, so a value kept across steps is not overwritten. |
 
 The wrapped module keeps its identity and `state_dict` keys. The lower-level
-`synora.maybe_compile(fn_or_module, enabled=True)` does the same for a single
+`simulusion.maybe_compile(fn_or_module, enabled=True)` does the same for a single
 function or module. It swaps the module's `forward` rather than returning an
 `OptimizedModule`, so checkpoints keep loading into uncompiled models.
 
@@ -88,7 +88,7 @@ batch sizes fixed in a serving loop, and warm up before measuring.
 
 ### Precision
 
-`synora.inference.inference_context(device, precision)` is the single
+`simulusion.inference.inference_context(device, precision)` is the single
 precision policy used by every tool in this guide. It enters
 `torch.inference_mode()` plus autocast. At fp32 it enters no autocast region at
 all, so it is bit-identical to plain `inference_mode`.
@@ -107,7 +107,7 @@ shape, with state as an explicit `dict[str, Tensor]` whose batch is on dim 0:
 
 ```python
 import torch
-from synora.inference import make_stepper
+from simulusion.inference import make_stepper
 
 stepper = make_stepper(agent)  # DreamerStepper or IRISStepper
 state = stepper.init_state(batch_size=8)  # 8 environments, one batched step
@@ -177,7 +177,7 @@ mean.
 ## Measuring speed
 
 ```python
-from synora.inference import benchmark_step
+from simulusion.inference import benchmark_step
 
 report = benchmark_step(module, *inputs, warmup=20, iterations=200, batch_size=1)
 print(report.summary())
@@ -194,7 +194,7 @@ its own state.
 ## Measuring fidelity: rollout drift
 
 ```python
-from synora.inference import rollout_drift
+from simulusion.inference import rollout_drift
 
 
 def step(fn):
@@ -226,8 +226,8 @@ These change numerics, so measure them with rollout drift.
 ### Weight-only int8 quantization
 
 ```python
-from synora.inference import quantize_weights
-from synora.inference.quantize import weight_memory_bytes
+from simulusion.inference import quantize_weights
+from simulusion.inference.quantize import weight_memory_bytes
 
 before = weight_memory_bytes(module)
 quantized = quantize_weights(module)  # names of the replaced layers
@@ -279,14 +279,14 @@ lower-level API (`DynamicsModel.init_cache` / `forward_cached`, and
 forwards for evaluating a candidate frame repeatedly. It is off by default.
 
 IRIS already decodes with a preallocated KV cache (`IRISTransformer.init_cache`,
-`generate_frame_cached`), and every attention block in Synora uses
+`generate_frame_cached`), and every attention block in Simulusion uses
 `scaled_dot_product_attention`, so FlashAttention and memory-efficient kernels
 are selected automatically on supported GPUs.
 
 ## Exporting
 
 ```python
-from synora import export_model, load_exported, verify_export
+from simulusion import export_model, load_exported, verify_export
 
 path = export_model(
     module, "step.pt2", format="exported_program", example_inputs=inputs
@@ -311,8 +311,8 @@ See the {doc}`export_guide` for target resolution on agents
 (`agent.export(..., target="obs_encoder")`).
 
 :::{note}
-Synora's public models have an `export()` method. For any other module, use
-`synora.export_model(module, ...)`.
+Simulusion's public models have an `export()` method. For any other module, use
+`simulusion.export_model(module, ...)`.
 :::
 
 ## Deployment bundles
@@ -322,7 +322,7 @@ the input shapes and dtypes, and ideally a compiled artifact. A bundle is a
 directory holding all of that:
 
 ```python
-from synora.inference import save_bundle, load_bundle
+from simulusion.inference import save_bundle, load_bundle
 
 save_bundle(
     "dreamer_walker_bundle",
@@ -353,8 +353,8 @@ maximum error is recorded under `verification` in the manifest.
 From the command line:
 
 ```bash
-synora deploy inspect dreamer_walker_bundle
-synora deploy bench dreamer_walker_bundle --device cuda --iterations 500 --json
+simulusion deploy inspect dreamer_walker_bundle
+simulusion deploy bench dreamer_walker_bundle --device cuda --iterations 500 --json
 ```
 
 `deploy bench` builds zero inputs from the recorded input spec and times the
@@ -380,12 +380,12 @@ quality with the {doc}`evaluation_guide` metrics (PSNR, LPIPS, FVD).
 
 **Serving without the training code.** Export a step module to
 `exported_program`, or to `aoti` for C++. Ship it with `save_bundle` and verify
-it with `synora deploy bench` on the target machine.
+it with `simulusion deploy bench` on the target machine.
 
 ## Platform notes
 
 - **Windows**: `torch.compile` on CUDA needs Triton, which is not installed by
-  default. Synora warns and falls back to eager execution. AOTInductor needs
+  default. Simulusion warns and falls back to eager execution. AOTInductor needs
   MSVC. For production builds, use Linux.
 - **Optional packages**: `onnx`/`onnxscript` (ONNX export), `onnxruntime` (running
   ONNX artifacts), `torch-tensorrt`, `torchao` and `safetensors`. None are

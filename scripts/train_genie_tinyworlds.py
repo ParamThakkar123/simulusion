@@ -6,9 +6,9 @@ import os
 import torch
 from omegaconf import OmegaConf
 
-from synora.configs.genie_config import GenieSmallConfig
-from synora.training.train_genie import create_genie_trainer
-from synora.datasets import create_tinyworlds_dataloader
+from simulusion.configs.genie_config import GenieSmallConfig
+from simulusion.training.train_genie import create_genie_trainer
+from simulusion.datasets import create_tinyworlds_dataloader
 
 
 def main():

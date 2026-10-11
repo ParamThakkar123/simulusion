@@ -33,10 +33,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import numpy as np
 import torch
 
-from synora.configs.dit_config import DiTConfig
-from synora.models.diffusion.DDPM import DDPM
-from synora.models.diffusion.DiT import DiT
-from synora.utils.utils import StreamingVideoWriter
+from simulusion.configs.dit_config import DiTConfig
+from simulusion.models.diffusion.DDPM import DDPM
+from simulusion.models.diffusion.DiT import DiT
+from simulusion.utils.utils import StreamingVideoWriter
 
 
 def infer_architecture(state_dict: dict[str, Any]) -> dict[str, int]:

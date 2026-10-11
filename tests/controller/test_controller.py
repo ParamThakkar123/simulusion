@@ -2,11 +2,11 @@ import pytest
 import numpy as np
 import torch
 from unittest.mock import Mock, patch
-from synora.controller.rssm_policy import RSSMPolicy
+from simulusion.controller.rssm_policy import RSSMPolicy
 
 pytest.importorskip("cv2")
-from synora.controller.rollout_generator import RolloutGenerator
-from synora.memory.planet_memory import Episode
+from simulusion.controller.rollout_generator import RolloutGenerator
+from simulusion.memory.planet_memory import Episode
 
 
 class TestRSSMPolicy:
@@ -152,7 +152,7 @@ class TestRolloutGenerator:
 
         assert gen.episode_gen == Episode
 
-    @patch("synora.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_once_random_policy(self, mock_trange, mock_env):
         mock_trange.return_value = range(5)
 
@@ -166,7 +166,7 @@ class TestRolloutGenerator:
             mock_env.sample_random_action.assert_called()
             mock_env.reset.assert_called_once()
 
-    @patch("synora.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_n(self, mock_trange, mock_env):
         mock_trange.return_value = [0, 1, 2]
 
@@ -180,7 +180,7 @@ class TestRolloutGenerator:
 
         assert len(episodes) == 3
 
-    @patch("synora.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_eval_n(self, mock_trange, mock_env, mock_policy):
         mock_trange.return_value = range(5)
 

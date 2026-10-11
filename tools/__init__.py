@@ -1,7 +1,7 @@
-"""Tooling helpers for Synora.
+"""Tooling helpers for Simulusion.
 
-All heavyweight or optional helpers are exposed lazily so ``python -m synora.cli``
-and the installed ``synora`` command do not import documentation/browser tooling
+All heavyweight or optional helpers are exposed lazily so ``python -m simulusion.cli``
+and the installed ``simulusion`` command do not import documentation/browser tooling
 or pre-import the CLI module during package initialization.
 """
 

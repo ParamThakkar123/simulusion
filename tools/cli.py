@@ -1,11 +1,11 @@
-"""Backward-compatible wrapper around :mod:`synora.cli`."""
+"""Backward-compatible wrapper around :mod:`simulusion.cli`."""
 
 from __future__ import annotations
 
 from importlib import import_module
 from typing import Any
 
-_impl = import_module("synora.cli")
+_impl = import_module("simulusion.cli")
 
 for _name in dir(_impl):
     if not _name.startswith("__"):

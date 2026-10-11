@@ -1,9 +1,9 @@
-# Synora demos
+# Simulusion demos
 
 One script per model. Each trains the model from scratch on a single GPU in one
 to two hours and then records what it learned as video, images and a learning
 curve. The results are shown in the
-[documentation gallery](https://paramthakkar123.github.io/synora/gallery.html).
+[documentation gallery](https://paramthakkar123.github.io/simulusion/gallery.html).
 
 | Model | Script | Environment / data | Default budget | Records |
 |---|---|---|---|---|
@@ -31,7 +31,7 @@ python demos/dreamer_demo.py record    # writes demos/runs/dreamer/media/
 
 `--help` on either command lists its options, for example a different
 environment, budget or output folder. Run from a clone, the scripts use the
-repository's `synora`; otherwise they use the installed package.
+repository's `simulusion`; otherwise they use the installed package.
 
 To train and record everything, one demo after another, and copy the results
 into the docs:
@@ -52,11 +52,11 @@ demos that were interrupted start training again.
 ## Requirements
 
 ```bash
-pip install "synora-world[gym,dmc,viz]"   # Atari, DeepMind Control, H.264 encoder
+pip install "simulusion[gym,dmc,viz]"   # Atari, DeepMind Control, H.264 encoder
 pip install imageio matplotlib omegaconf  # video/plots, and the Genie trainer's CLI
 ```
 
-- **PyTorch with CUDA.** Synora does not pin a PyTorch build; install the wheel
+- **PyTorch with CUDA.** Simulusion does not pin a PyTorch build; install the wheel
   for your driver from [pytorch.org](https://pytorch.org/get-started/locally/).
   Check that it sees the GPU with
   `python -c "import torch; print(torch.cuda.is_available())"`.

@@ -1,7 +1,7 @@
 import torch
 
-from synora.configs.dit_config import DiTConfig
-from synora.models.diffusion.DiT import DiT, PatchEmbed, PatchUnEmbed, create_dit
+from simulusion.configs.dit_config import DiTConfig
+from simulusion.models.diffusion.DiT import DiT, PatchEmbed, PatchUnEmbed, create_dit
 
 
 def test_create_dit_builds_small_model_from_config_and_runs_forward():
@@ -63,7 +63,7 @@ def test_patch_embed_unembed_round_trip_shape():
 def test_ddpm_sample_passes_labels_to_class_conditional_model():
     """`DiT.fit` ends by sampling; for a class-conditional model that call used
     to omit `y`, which DiT rejects, so conditional training crashed at the end."""
-    from synora.models.diffusion.DDPM import DDPM
+    from simulusion.models.diffusion.DDPM import DDPM
 
     config = DiTConfig(
         IMG_SIZE=8,

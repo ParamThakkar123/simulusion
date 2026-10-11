@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 import torch
 
-from synora.configs.iris_config import IRISConfig
-from synora.memory.iris_memory import IRISReplayBuffer
-from synora.models.iris_agent import IRISAgent
+from simulusion.configs.iris_config import IRISConfig
+from simulusion.memory.iris_memory import IRISReplayBuffer
+from simulusion.models.iris_agent import IRISAgent
 
 
 @pytest.fixture

@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 
 _HERE = Path(__file__).resolve().parent
-# Run from a clone without installing: the repo root provides `synora`.
+# Run from a clone without installing: the repo root provides `simulusion`.
 sys.path[:0] = [str(_HERE), str(_HERE.parent)]
 from _media import hstack, label, plot_curves, read_metrics, upscale, write_mp4  # noqa: E402
 
@@ -65,7 +65,7 @@ def _latest_checkpoint(run: Path) -> Path:
 
 
 def train(args: argparse.Namespace) -> None:
-    import synora
+    import simulusion
 
     run = Path(args.run).resolve()
     steps, logdir, restore = args.steps, run, {}
@@ -84,7 +84,7 @@ def train(args: argparse.Namespace) -> None:
         restore = {"restore": True, "checkpoint_path": str(ckpt)}
         print(f"Resuming from {ckpt} ({done} steps done, {steps} to go)")
 
-    cfg = synora.create_config(
+    cfg = simulusion.create_config(
         args.algo,
         env_backend=args.backend,
         env=args.env,
@@ -109,7 +109,7 @@ def train(args: argparse.Namespace) -> None:
         logdir=str(logdir),
         **restore,
     )
-    agent = synora.create_model(args.algo, config=cfg)
+    agent = simulusion.create_model(args.algo, config=cfg)
     agent.train()
 
 
@@ -138,7 +138,7 @@ def _frame(obs) -> np.ndarray:
 def record(args: argparse.Namespace) -> None:
     import torch
 
-    from synora.inference.play_dreamer import DreamerPlayer
+    from simulusion.inference.play_dreamer import DreamerPlayer
 
     run = Path(args.run)
     out = run / "media"

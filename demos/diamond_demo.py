@@ -35,9 +35,9 @@ def train(args: argparse.Namespace) -> None:
     cmd = [
         sys.executable,
         "-m",
-        "synora.training.train_diamond",
+        "simulusion.training.train_diamond",
         "--config",
-        "synora/configs/experiments/diamond.yaml",
+        "simulusion/configs/experiments/diamond.yaml",
         f"game={args.game}",
         "preset=small",
         f"batch_size={args.batch_size}",
@@ -74,12 +74,12 @@ def _latest_checkpoint(run: Path) -> Path:
 def record(args: argparse.Namespace) -> None:
     import torch
 
-    from synora.inference.play_diamond import (
+    from simulusion.inference.play_diamond import (
         imagine_next_frame,
         make_agent,
         to_display_frame,
     )
-    from synora.training.train_diamond import _normalize_frame
+    from simulusion.training.train_diamond import _normalize_frame
 
     run = Path(args.run)
     out = run / "media"

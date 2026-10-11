@@ -75,7 +75,7 @@ def train(args: argparse.Namespace) -> None:
     ]
     print(" ".join(cmd), flush=True)
     with (run / "train.log").open("w", encoding="utf-8") as log:
-        # The trainer is a plain script, so make the repo's `synora` importable.
+        # The trainer is a plain script, so make the repo's `simulusion` importable.
         paths = [str(_HERE.parent), os.environ.get("PYTHONPATH", "")]
         env = {**os.environ, "PYTHONPATH": os.pathsep.join(p for p in paths if p)}
         subprocess.run(
@@ -99,8 +99,8 @@ def _clip_frames(video) -> list[np.ndarray]:
 def record(args: argparse.Namespace) -> None:
     import torch
 
-    from synora.datasets.tinyworlds import TinyWorldsDataset
-    from synora.models.genie import Genie
+    from simulusion.datasets.tinyworlds import TinyWorldsDataset
+    from simulusion.models.genie import Genie
 
     run = Path(args.run)
     out = run / "media"

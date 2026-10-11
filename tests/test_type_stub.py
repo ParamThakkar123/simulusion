@@ -1,6 +1,6 @@
 """The shipped stub must cover the whole public surface, and stay in sync.
 
-``synora`` ships ``py.typed``, so type checkers trust ``synora/__init__.pyi``
+``simulusion`` ships ``py.typed``, so type checkers trust ``simulusion/__init__.pyi``
 completely.  A stale stub is therefore worse than no stub: it silently hands
 users ``Any`` for symbols that do exist, or reports missing ones that do not.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-STUB_PATH = REPO_ROOT / "synora" / "__init__.pyi"
+STUB_PATH = REPO_ROOT / "simulusion" / "__init__.pyi"
 
 
 def _stub_tree() -> ast.Module:
@@ -33,9 +33,9 @@ def _stub_names() -> set[str]:
 
 
 def test_stub_declares_every_public_export():
-    import synora
+    import simulusion
 
-    missing = sorted(set(synora.__all__) - _stub_names())
+    missing = sorted(set(simulusion.__all__) - _stub_names())
     assert not missing, f"symbols missing from {STUB_PATH.name}: {missing}"
 
 
@@ -54,11 +54,11 @@ def test_stub_is_regenerated_from_the_current_export_map():
 
 def test_stub_re_exports_resolve_to_the_runtime_objects():
     # Every ``from X import Y as Z`` in the stub must name the module that
-    # really defines the object ``synora.Z`` returns, or editors send users to
+    # really defines the object ``simulusion.Z`` returns, or editors send users to
     # a symbol that is not there.
     import importlib
 
-    import synora
+    import simulusion
 
     mismatched = []
     checked = 0
@@ -67,11 +67,11 @@ def test_stub_re_exports_resolve_to_the_runtime_objects():
             continue
         for alias in node.names:
             exported = alias.asname or alias.name
-            if exported not in synora.__all__:
+            if exported not in simulusion.__all__:
                 continue
             try:
                 source = importlib.import_module(node.module)
-                runtime = getattr(synora, exported)
+                runtime = getattr(simulusion, exported)
             except ModuleNotFoundError:
                 # Backend for an extra that is not installed here - the stub
                 # entry cannot be wrong about an object nothing can import.
@@ -85,6 +85,6 @@ def test_stub_re_exports_resolve_to_the_runtime_objects():
 
 
 def test_package_ships_py_typed():
-    # ``synora`` ships ``py.typed`` so checkers trust ``__init__.pyi``; without
+    # ``simulusion`` ships ``py.typed`` so checkers trust ``__init__.pyi``; without
     # the marker they treat every import from the package as untyped.
-    assert (REPO_ROOT / "synora" / "py.typed").exists()
+    assert (REPO_ROOT / "simulusion" / "py.typed").exists()

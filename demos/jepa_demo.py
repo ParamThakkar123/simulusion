@@ -41,7 +41,7 @@ def train(args: argparse.Namespace) -> None:
     cmd = [
         sys.executable,
         "-m",
-        "synora.training.train_jepa",
+        "simulusion.training.train_jepa",
         "data.dataset=cifar10",
         f"data.root_path={args.data}",
         "data.download=false",
@@ -75,7 +75,7 @@ def record(args: argparse.Namespace) -> None:
     import torch.nn.functional as F
     from torchvision import datasets, transforms
 
-    from synora.helpers.jepa_helper import init_model
+    from simulusion.helpers.jepa_helper import init_model
 
     run = Path(args.run)
     out = run / "media"

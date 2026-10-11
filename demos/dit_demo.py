@@ -44,7 +44,7 @@ def train(args: argparse.Namespace) -> None:
     cmd = [
         sys.executable,
         "-m",
-        "synora.training.train_dit",
+        "simulusion.training.train_dit",
         "DATASET=cifar10",
         f"ROOT_PATH={args.data}",
         f"WORKDIR={run.as_posix()}",
@@ -72,9 +72,9 @@ def train(args: argparse.Namespace) -> None:
 def record(args: argparse.Namespace) -> None:
     import torch
 
-    from synora.configs.dit_config import DiTConfig
-    from synora.models.diffusion.DDPM import DDPM
-    from synora.models.diffusion.DiT import DiT
+    from simulusion.configs.dit_config import DiTConfig
+    from simulusion.models.diffusion.DDPM import DDPM
+    from simulusion.models.diffusion.DiT import DiT
 
     run = Path(args.run)
     out = run / "media"

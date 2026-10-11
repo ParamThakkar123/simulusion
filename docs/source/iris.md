@@ -188,15 +188,15 @@ for h in range(imagination_horizon):
 | **Discount (γ)** | 0.995 |
 | **λ for λ-return** | 0.95 |
 
-## Usage in Synora
+## Usage in Simulusion
 
 ### Quick start
 
 ```python
 import torch
-import synora
+import simulusion
 
-agent = synora.create_model(
+agent = simulusion.create_model(
     "iris",
     action_size=4,
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
@@ -206,7 +206,7 @@ agent = synora.create_model(
 ### Using config directly
 
 ```python
-from synora import IRISConfig
+from simulusion import IRISConfig
 
 config = IRISConfig()
 
@@ -227,13 +227,13 @@ config.env = "ALE/Pong-v5"
 ### CLI
 
 ```bash
-synora train iris --env ALE/Pong-v5 --device cuda
+simulusion train iris --env ALE/Pong-v5 --device cuda
 ```
 
 For custom research code:
 
 ```bash
-python -m synora.training.train_iris --game "ALE/Pong-v5"
+python -m simulusion.training.train_iris --game "ALE/Pong-v5"
 ```
 
 See {doc}`configs_reference` for the full IRISConfig field reference with defaults.
@@ -301,7 +301,7 @@ Every piece is exported from the top-level package, so the world model can be
 used without the Atari training loop:
 
 ```python
-from synora import (
+from simulusion import (
     IRISAgent,
     IRISConfig,
     IRISEncoder,
@@ -338,8 +338,8 @@ CHW inputs are all handled.
 ### Minecraft (MineRL / MineDojo)
 
 ```python
-from synora.envs import make_minecraft_env
-from synora.training.train_iris import IRISTrainer
+from simulusion.envs import make_minecraft_env
+from simulusion.training.train_iris import IRISTrainer
 
 env = make_minecraft_env("MineRLTreechop-v0")  # or backend="minedojo"
 trainer = IRISTrainer(game="MineRLTreechop-v0", config=cfg, env=env)
@@ -360,15 +360,15 @@ craft/place/equip actions, and without them an agent cannot progress past what
 tool-free play allows. Actions the task does not support become no-ops rather
 than errors, so the same set works across Treechop and Navigate.
 
-`minerl` and `minedojo` are **not** installable as Synora extras. MineRL 1.x
+`minerl` and `minedojo` are **not** installable as Simulusion extras. MineRL 1.x
 publishes no release compatible with Python 3.11+, and MineDojo pins
 `gym==0.21.0`, whose sdist no longer builds under modern setuptools -- so
-`pip install synora-world[minerl]` could only ever fail. Install them yourself in a
-Python 3.10 environment alongside Synora:
+`pip install simulusion[minerl]` could only ever fail. Install them yourself in a
+Python 3.10 environment alongside Simulusion:
 
 ```bash
-# Python 3.10 environment, separate from the one Synora is developed in.
-pip install synora-world
+# Python 3.10 environment, separate from the one Simulusion is developed in.
+pip install simulusion
 pip install "setuptools<66" wheel        # gym 0.21's sdist needs the old backend
 pip install minerl                       # or: pip install minedojo
 ```

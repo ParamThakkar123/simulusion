@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Changed
-- The PyPI distribution is now `synora-world`: install with
-  `pip install synora-world` (extras as `synora-world[gym]` and so on). The
-  import package, `import synora`, and the `synora` / `synora-train` CLI
-  commands are unchanged.
+### Renamed
+- **Synora is now Simulusion.** The distribution is `simulusion` on PyPI
+  (`pip install simulusion`, extras as `simulusion[gym]`), the package is
+  `import simulusion`, the CLI commands are `simulusion` / `simulusion-train`,
+  and environment variables use the `SIMULUSION_` prefix. Nothing was published
+  under the Synora name, so there is no `synora` import alias. Checkpoints load
+  unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
 - A demo per model in `demos/` (Dreamer, DreamerV2, PlaNet, ModularRSSM,

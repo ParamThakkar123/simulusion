@@ -1,7 +1,7 @@
 """Tests for World Models configuration classes."""
 
 import pytest
-from synora.configs.wm_config import (
+from simulusion.configs.wm_config import (
     WMVAEConfig,
     WMMDNRNNConfig,
     WMControllerConfig,

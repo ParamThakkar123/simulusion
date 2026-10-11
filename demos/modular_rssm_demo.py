@@ -58,9 +58,9 @@ def collect(env_name: str, episodes: int, action_repeat: int, seed: int):
 
 
 def _build(backbone: str, action_size: int):
-    import synora
+    import simulusion
 
-    return synora.create_model(
+    return simulusion.create_model(
         "modular-rssm",
         obs_shape=(3, 64, 64),
         action_size=action_size,

@@ -14,17 +14,17 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from synora.configs.jepa_config import JEPAConfig
-from synora.helpers.jepa_helper import (
+from simulusion.configs.jepa_config import JEPAConfig
+from simulusion.helpers.jepa_helper import (
     PAPER_PRED_DEPTH,
     init_model,
     resolve_pred_depth,
 )
-from synora.masks.multiblock import MaskCollator
-from synora.models.vit import VisionTransformer, vit_predictor
-from synora.training import train_jepa
-from synora.training.train_jepa import build_loss_fn
-from synora.utils.utils import apply_masks
+from simulusion.masks.multiblock import MaskCollator
+from simulusion.models.vit import VisionTransformer, vit_predictor
+from simulusion.training import train_jepa
+from simulusion.training.train_jepa import build_loss_fn
+from simulusion.utils.utils import apply_masks
 
 
 class TestMaskingDefaults:

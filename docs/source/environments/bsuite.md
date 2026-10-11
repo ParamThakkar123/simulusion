@@ -1,13 +1,13 @@
 # DeepMind BSuite
 
-The BSuite backend adapts DeepMind's Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to Synora's image-first interface. BSuite tasks provide compact ``dm_env`` observations and mostly discrete actions with known optimal reward profiles, making them useful for detecting fundamental issues in world-model training (e.g. credit assignment, memory, exploration).
+The BSuite backend adapts DeepMind's Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to Simulusion's image-first interface. BSuite tasks provide compact ``dm_env`` observations and mostly discrete actions with known optimal reward profiles, making them useful for detecting fundamental issues in world-model training (e.g. credit assignment, memory, exploration).
 
 Install: ``pip install bsuite``
 
 ## Main API
 
 ```python
-from synora import make_bsuite_env, list_available_bsuite_ids
+from simulusion import make_bsuite_env, list_available_bsuite_ids
 
 env = make_bsuite_env("catch/0", seed=42, size=(64, 64))
 obs = env.reset()

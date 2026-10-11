@@ -10,8 +10,8 @@ from omegaconf import OmegaConf
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from synora.benchmarks.runner import MultiAgentBenchmarkRunner
-from synora.benchmarks import adapters
+from simulusion.benchmarks.runner import MultiAgentBenchmarkRunner
+from simulusion.benchmarks import adapters
 
 
 def main():

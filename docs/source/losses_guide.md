@@ -1,10 +1,10 @@
 # Loss Functions
 
-The `synora.losses` module provides loss functions for the classic
+The `simulusion.losses` module provides loss functions for the classic
 World Models pipeline (VAE + MDNRNN). Both are importable from the top level:
 
 ```python
-from synora.losses import conv_vae_loss_fn, gmm_loss
+from simulusion.losses import conv_vae_loss_fn, gmm_loss
 ```
 
 ```{contents} Contents
@@ -35,7 +35,7 @@ Reconstruction + KL divergence for training a convolutional VAE:
 ```
 
 ```python
-from synora.losses import conv_vae_loss_fn
+from simulusion.losses import conv_vae_loss_fn
 
 reconst, mu, logsigma = vae(images)
 loss = conv_vae_loss_fn(reconst, images, mu, logsigma)
@@ -62,7 +62,7 @@ p(x \mid \{\pi_k, \mu_k, \sigma_k\}) = \sum_{k} \pi_k \cdot \mathcal{N}(x \mid \
 ```
 
 ```python
-from synora.losses import gmm_loss
+from simulusion.losses import gmm_loss
 
 # MDNRNN outputs mixture parameters for each timestep
 latent_next_obs = targets  # (B, T, latent_dim)
@@ -100,7 +100,7 @@ This avoids underflow when mixture components are far from the target.
 Both losses are used together in the complete World Models training script:
 
 ```python
-from synora.losses import conv_vae_loss_fn, gmm_loss
+from simulusion.losses import conv_vae_loss_fn, gmm_loss
 
 # --- Stage 1: Train VAE ---
 for images in dataloader:

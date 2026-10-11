@@ -32,10 +32,10 @@ import cv2
 import numpy as np
 import torch
 
-from synora.configs.iris_config import IRISConfig
-from synora.envs.ale_atari_env import make_atari_env
-from synora.models.iris_agent import IRISAgent
-from synora.utils.utils import StreamingVideoWriter
+from simulusion.configs.iris_config import IRISConfig
+from simulusion.envs.ale_atari_env import make_atari_env
+from simulusion.models.iris_agent import IRISAgent
+from simulusion.utils.utils import StreamingVideoWriter
 
 # Components the actor-critic path actually reads. Everything else in the
 # checkpoint (encoder/decoder/transformer, optimizers) is deliberately skipped.

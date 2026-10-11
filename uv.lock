@@ -4194,6 +4194,229 @@ wheels = [
 ]
 
 [[package]]
+name = "simulusion"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "einops" },
+    { name = "pyyaml" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "albumentations" },
+    { name = "ale-py" },
+    { name = "autorom" },
+    { name = "brax" },
+    { name = "bsuite" },
+    { name = "cma" },
+    { name = "dm-control", marker = "python_full_version < '3.13'" },
+    { name = "gitpython" },
+    { name = "gymnasium", extra = ["box2d"] },
+    { name = "gymnasium-robotics" },
+    { name = "h5py" },
+    { name = "huggingface-hub" },
+    { name = "hydra-core" },
+    { name = "imageio-ffmpeg" },
+    { name = "jax" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+    { name = "mistune" },
+    { name = "mlagents-envs" },
+    { name = "mujoco" },
+    { name = "mypy" },
+    { name = "myst-parser" },
+    { name = "nbconvert" },
+    { name = "nbsphinx" },
+    { name = "nvidia-ml-py" },
+    { name = "omegaconf" },
+    { name = "opencv-python" },
+    { name = "plotly" },
+    { name = "pre-commit" },
+    { name = "protobuf" },
+    { name = "pydata-sphinx-theme" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+    { name = "scikit-learn" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-rtd-theme" },
+    { name = "sphinx-thebe" },
+    { name = "sphinxcontrib-bibtex" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxext-opengraph" },
+    { name = "tensorboard" },
+    { name = "tensorboardx" },
+    { name = "torchaudio" },
+    { name = "umap-learn" },
+    { name = "wandb" },
+]
+brax = [
+    { name = "brax" },
+    { name = "jax" },
+]
+bsuite = [
+    { name = "bsuite" },
+]
+dev = [
+    { name = "gitpython" },
+    { name = "mypy" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+]
+dmc = [
+    { name = "dm-control", marker = "python_full_version < '3.13'" },
+    { name = "gymnasium" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+]
+dmc-uv = [
+    { name = "dm-control" },
+    { name = "gymnasium" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+]
+docs = [
+    { name = "mistune" },
+    { name = "myst-parser" },
+    { name = "nbconvert" },
+    { name = "nbsphinx" },
+    { name = "pydata-sphinx-theme" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-rtd-theme" },
+    { name = "sphinx-thebe" },
+    { name = "sphinxcontrib-bibtex" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxext-opengraph" },
+]
+genie = [
+    { name = "h5py" },
+    { name = "huggingface-hub" },
+    { name = "omegaconf" },
+]
+gym = [
+    { name = "ale-py" },
+    { name = "autorom" },
+    { name = "gymnasium", extra = ["box2d"] },
+    { name = "huggingface-hub" },
+]
+ml = [
+    { name = "hydra-core" },
+    { name = "nvidia-ml-py" },
+    { name = "omegaconf" },
+    { name = "tensorboard" },
+    { name = "tensorboardx" },
+    { name = "torchaudio" },
+    { name = "wandb" },
+]
+ml-agents = [
+    { name = "mlagents-envs" },
+    { name = "protobuf" },
+]
+mujoco = [
+    { name = "mujoco" },
+]
+robotics = [
+    { name = "gymnasium-robotics" },
+    { name = "mujoco" },
+]
+viz = [
+    { name = "h5py" },
+    { name = "imageio-ffmpeg" },
+    { name = "opencv-python" },
+    { name = "plotly" },
+    { name = "scikit-learn" },
+    { name = "umap-learn" },
+]
+worldmodels = [
+    { name = "albumentations" },
+    { name = "cma" },
+    { name = "imageio-ffmpeg" },
+    { name = "opencv-python" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "albumentations", marker = "extra == 'worldmodels'", specifier = ">=2.0.0" },
+    { name = "ale-py", marker = "extra == 'gym'", specifier = ">=0.10.1" },
+    { name = "autorom", marker = "extra == 'gym'", specifier = ">=0.6.1" },
+    { name = "brax", marker = "extra == 'brax'", specifier = ">=0.13.0" },
+    { name = "bsuite", marker = "extra == 'bsuite'", specifier = ">=0.3.5" },
+    { name = "click", specifier = ">=8.0.0" },
+    { name = "cma", marker = "extra == 'worldmodels'", specifier = ">=4.0.0" },
+    { name = "dm-control", marker = "python_full_version < '3.13' and extra == 'dmc'", specifier = ">=1.0.0" },
+    { name = "dm-control", marker = "extra == 'dmc-uv'", specifier = ">=1.0.0" },
+    { name = "einops", specifier = ">=0.8.2" },
+    { name = "gitpython", marker = "extra == 'dev'", specifier = ">=3.1.58" },
+    { name = "gymnasium", marker = "extra == 'dmc'", specifier = ">=1.2.2" },
+    { name = "gymnasium", marker = "extra == 'dmc-uv'", specifier = ">=1.2.2" },
+    { name = "gymnasium", extras = ["box2d"], marker = "extra == 'gym'", specifier = ">=1.2.2" },
+    { name = "gymnasium-robotics", marker = "extra == 'robotics'", specifier = ">=1.3.0" },
+    { name = "h5py", marker = "extra == 'genie'", specifier = ">=3.11.0" },
+    { name = "h5py", marker = "extra == 'viz'", specifier = ">=3.11.0" },
+    { name = "huggingface-hub", marker = "extra == 'genie'", specifier = ">=0.23.0" },
+    { name = "huggingface-hub", marker = "extra == 'gym'", specifier = ">=0.23.0" },
+    { name = "hydra-core", marker = "extra == 'ml'", specifier = ">=1.3.2" },
+    { name = "imageio-ffmpeg", marker = "extra == 'viz'", specifier = ">=0.5.1" },
+    { name = "imageio-ffmpeg", marker = "extra == 'worldmodels'", specifier = ">=0.5.1" },
+    { name = "jax", marker = "extra == 'brax'", specifier = ">=0.10.1" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc'", specifier = ">=0.0.2" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc-uv'", specifier = ">=0.0.2" },
+    { name = "mistune", marker = "extra == 'docs'", specifier = ">=3.3.0" },
+    { name = "mlagents-envs", marker = "extra == 'ml-agents'", specifier = ">=0.28.0,<0.29.0" },
+    { name = "mujoco", marker = "extra == 'mujoco'", specifier = ">=3.2.0" },
+    { name = "mujoco", marker = "extra == 'robotics'", specifier = ">=3.2.0,<3.12" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
+    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0,<5.0.0" },
+    { name = "nbconvert", marker = "extra == 'docs'", specifier = ">=7.17.1" },
+    { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.9.8" },
+    { name = "nvidia-ml-py", marker = "extra == 'ml'", specifier = ">=12.535.77" },
+    { name = "omegaconf", marker = "extra == 'genie'", specifier = ">=2.3.0" },
+    { name = "omegaconf", marker = "extra == 'ml'", specifier = ">=2.3.0" },
+    { name = "opencv-python", marker = "extra == 'viz'", specifier = ">=4.12.0.88" },
+    { name = "opencv-python", marker = "extra == 'worldmodels'", specifier = ">=4.12.0.88" },
+    { name = "plotly", marker = "extra == 'viz'", specifier = ">=6.5.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.0" },
+    { name = "protobuf", marker = "extra == 'ml-agents'", specifier = ">=5.29.6" },
+    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.15.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
+    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3.1" },
+    { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.16.8" },
+    { name = "scikit-learn", marker = "extra == 'viz'", specifier = ">=1.8.0" },
+    { name = "simulusion", extras = ["brax", "bsuite", "dev", "dmc", "docs", "gym", "ml", "ml-agents", "mujoco", "robotics", "viz", "worldmodels"], marker = "extra == 'all'" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0.0,<9.0.0" },
+    { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = "<1.26.0" },
+    { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = ">=0.5.2" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.1.0" },
+    { name = "sphinx-thebe", marker = "extra == 'docs'", specifier = ">=0.3.0" },
+    { name = "sphinxcontrib-bibtex", marker = "extra == 'docs'", specifier = ">=2.6.5" },
+    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = ">=0.9.0" },
+    { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = ">=0.13.0" },
+    { name = "tensorboard", marker = "extra == 'ml'", specifier = ">=2.20.0" },
+    { name = "tensorboardx", marker = "extra == 'ml'", specifier = ">=2.6.4" },
+    { name = "torch", specifier = ">=2.1.0" },
+    { name = "torchaudio", marker = "extra == 'ml'", specifier = ">=0.13.0" },
+    { name = "torchvision", specifier = ">=0.16.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "umap-learn", marker = "extra == 'viz'", specifier = ">=0.5.11" },
+    { name = "wandb", marker = "extra == 'ml'", specifier = ">=0.16.0" },
+]
+provides-extras = ["gym", "ml-agents", "dmc", "dmc-uv", "genie", "mujoco", "robotics", "brax", "bsuite", "viz", "worldmodels", "ml", "dev", "all", "docs"]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4601,229 +4824,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/83/d3/803453b36afefb7c2
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5", size = 6299353, upload-time = "2025-04-27T18:04:59.103Z" },
 ]
-
-[[package]]
-name = "synora-world"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "einops" },
-    { name = "pyyaml" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "tqdm" },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "albumentations" },
-    { name = "ale-py" },
-    { name = "autorom" },
-    { name = "brax" },
-    { name = "bsuite" },
-    { name = "cma" },
-    { name = "dm-control", marker = "python_full_version < '3.13'" },
-    { name = "gitpython" },
-    { name = "gymnasium", extra = ["box2d"] },
-    { name = "gymnasium-robotics" },
-    { name = "h5py" },
-    { name = "huggingface-hub" },
-    { name = "hydra-core" },
-    { name = "imageio-ffmpeg" },
-    { name = "jax" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-    { name = "mistune" },
-    { name = "mlagents-envs" },
-    { name = "mujoco" },
-    { name = "mypy" },
-    { name = "myst-parser" },
-    { name = "nbconvert" },
-    { name = "nbsphinx" },
-    { name = "nvidia-ml-py" },
-    { name = "omegaconf" },
-    { name = "opencv-python" },
-    { name = "plotly" },
-    { name = "pre-commit" },
-    { name = "protobuf" },
-    { name = "pydata-sphinx-theme" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-    { name = "scikit-learn" },
-    { name = "sphinx" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinx-thebe" },
-    { name = "sphinxcontrib-bibtex" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxext-opengraph" },
-    { name = "tensorboard" },
-    { name = "tensorboardx" },
-    { name = "torchaudio" },
-    { name = "umap-learn" },
-    { name = "wandb" },
-]
-brax = [
-    { name = "brax" },
-    { name = "jax" },
-]
-bsuite = [
-    { name = "bsuite" },
-]
-dev = [
-    { name = "gitpython" },
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-]
-dmc = [
-    { name = "dm-control", marker = "python_full_version < '3.13'" },
-    { name = "gymnasium" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-]
-dmc-uv = [
-    { name = "dm-control" },
-    { name = "gymnasium" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-]
-docs = [
-    { name = "mistune" },
-    { name = "myst-parser" },
-    { name = "nbconvert" },
-    { name = "nbsphinx" },
-    { name = "pydata-sphinx-theme" },
-    { name = "sphinx" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinx-thebe" },
-    { name = "sphinxcontrib-bibtex" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxext-opengraph" },
-]
-genie = [
-    { name = "h5py" },
-    { name = "huggingface-hub" },
-    { name = "omegaconf" },
-]
-gym = [
-    { name = "ale-py" },
-    { name = "autorom" },
-    { name = "gymnasium", extra = ["box2d"] },
-    { name = "huggingface-hub" },
-]
-ml = [
-    { name = "hydra-core" },
-    { name = "nvidia-ml-py" },
-    { name = "omegaconf" },
-    { name = "tensorboard" },
-    { name = "tensorboardx" },
-    { name = "torchaudio" },
-    { name = "wandb" },
-]
-ml-agents = [
-    { name = "mlagents-envs" },
-    { name = "protobuf" },
-]
-mujoco = [
-    { name = "mujoco" },
-]
-robotics = [
-    { name = "gymnasium-robotics" },
-    { name = "mujoco" },
-]
-viz = [
-    { name = "h5py" },
-    { name = "imageio-ffmpeg" },
-    { name = "opencv-python" },
-    { name = "plotly" },
-    { name = "scikit-learn" },
-    { name = "umap-learn" },
-]
-worldmodels = [
-    { name = "albumentations" },
-    { name = "cma" },
-    { name = "imageio-ffmpeg" },
-    { name = "opencv-python" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "albumentations", marker = "extra == 'worldmodels'", specifier = ">=2.0.0" },
-    { name = "ale-py", marker = "extra == 'gym'", specifier = ">=0.10.1" },
-    { name = "autorom", marker = "extra == 'gym'", specifier = ">=0.6.1" },
-    { name = "brax", marker = "extra == 'brax'", specifier = ">=0.13.0" },
-    { name = "bsuite", marker = "extra == 'bsuite'", specifier = ">=0.3.5" },
-    { name = "click", specifier = ">=8.0.0" },
-    { name = "cma", marker = "extra == 'worldmodels'", specifier = ">=4.0.0" },
-    { name = "dm-control", marker = "python_full_version < '3.13' and extra == 'dmc'", specifier = ">=1.0.0" },
-    { name = "dm-control", marker = "extra == 'dmc-uv'", specifier = ">=1.0.0" },
-    { name = "einops", specifier = ">=0.8.2" },
-    { name = "gitpython", marker = "extra == 'dev'", specifier = ">=3.1.58" },
-    { name = "gymnasium", marker = "extra == 'dmc'", specifier = ">=1.2.2" },
-    { name = "gymnasium", marker = "extra == 'dmc-uv'", specifier = ">=1.2.2" },
-    { name = "gymnasium", extras = ["box2d"], marker = "extra == 'gym'", specifier = ">=1.2.2" },
-    { name = "gymnasium-robotics", marker = "extra == 'robotics'", specifier = ">=1.3.0" },
-    { name = "h5py", marker = "extra == 'genie'", specifier = ">=3.11.0" },
-    { name = "h5py", marker = "extra == 'viz'", specifier = ">=3.11.0" },
-    { name = "huggingface-hub", marker = "extra == 'genie'", specifier = ">=0.23.0" },
-    { name = "huggingface-hub", marker = "extra == 'gym'", specifier = ">=0.23.0" },
-    { name = "hydra-core", marker = "extra == 'ml'", specifier = ">=1.3.2" },
-    { name = "imageio-ffmpeg", marker = "extra == 'viz'", specifier = ">=0.5.1" },
-    { name = "imageio-ffmpeg", marker = "extra == 'worldmodels'", specifier = ">=0.5.1" },
-    { name = "jax", marker = "extra == 'brax'", specifier = ">=0.10.1" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc'", specifier = ">=0.0.2" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc-uv'", specifier = ">=0.0.2" },
-    { name = "mistune", marker = "extra == 'docs'", specifier = ">=3.3.0" },
-    { name = "mlagents-envs", marker = "extra == 'ml-agents'", specifier = ">=0.28.0,<0.29.0" },
-    { name = "mujoco", marker = "extra == 'mujoco'", specifier = ">=3.2.0" },
-    { name = "mujoco", marker = "extra == 'robotics'", specifier = ">=3.2.0,<3.12" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
-    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0,<5.0.0" },
-    { name = "nbconvert", marker = "extra == 'docs'", specifier = ">=7.17.1" },
-    { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.9.8" },
-    { name = "nvidia-ml-py", marker = "extra == 'ml'", specifier = ">=12.535.77" },
-    { name = "omegaconf", marker = "extra == 'genie'", specifier = ">=2.3.0" },
-    { name = "omegaconf", marker = "extra == 'ml'", specifier = ">=2.3.0" },
-    { name = "opencv-python", marker = "extra == 'viz'", specifier = ">=4.12.0.88" },
-    { name = "opencv-python", marker = "extra == 'worldmodels'", specifier = ">=4.12.0.88" },
-    { name = "plotly", marker = "extra == 'viz'", specifier = ">=6.5.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.0" },
-    { name = "protobuf", marker = "extra == 'ml-agents'", specifier = ">=5.29.6" },
-    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.15.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
-    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3.1" },
-    { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.16.8" },
-    { name = "scikit-learn", marker = "extra == 'viz'", specifier = ">=1.8.0" },
-    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0.0,<9.0.0" },
-    { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = "<1.26.0" },
-    { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = ">=0.5.2" },
-    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.1.0" },
-    { name = "sphinx-thebe", marker = "extra == 'docs'", specifier = ">=0.3.0" },
-    { name = "sphinxcontrib-bibtex", marker = "extra == 'docs'", specifier = ">=2.6.5" },
-    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = ">=0.9.0" },
-    { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = ">=0.13.0" },
-    { name = "synora-world", extras = ["brax", "bsuite", "dev", "dmc", "docs", "gym", "ml", "ml-agents", "mujoco", "robotics", "viz", "worldmodels"], marker = "extra == 'all'" },
-    { name = "tensorboard", marker = "extra == 'ml'", specifier = ">=2.20.0" },
-    { name = "tensorboardx", marker = "extra == 'ml'", specifier = ">=2.6.4" },
-    { name = "torch", specifier = ">=2.1.0" },
-    { name = "torchaudio", marker = "extra == 'ml'", specifier = ">=0.13.0" },
-    { name = "torchvision", specifier = ">=0.16.0" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "umap-learn", marker = "extra == 'viz'", specifier = ">=0.5.11" },
-    { name = "wandb", marker = "extra == 'ml'", specifier = ">=0.16.0" },
-]
-provides-extras = ["gym", "ml-agents", "dmc", "dmc-uv", "genie", "mujoco", "robotics", "brax", "bsuite", "viz", "worldmodels", "ml", "dev", "all", "docs"]
 
 [[package]]
 name = "tensorboard"

@@ -10,60 +10,60 @@ Public package surface
 
 These modules expose the most common imports and lazy constructors.
 
-Use ``synora`` for common workflows::
+Use ``simulusion`` for common workflows::
 
-   import synora
-   agent = synora.create_model("dreamer", env="walker-walk")
+   import simulusion
+   agent = simulusion.create_model("dreamer", env="walker-walk")
 
-**Primary modules:** ``synora``, ``synora.models``, ``synora.configs``, ``synora.catalog``, and ``synora.envs``.
+**Primary modules:** ``simulusion``, ``simulusion.models``, ``simulusion.configs``, ``simulusion.catalog``, and ``simulusion.envs``.
 
-.. automodule:: synora
+.. automodule:: simulusion
    :no-index:
 
-.. automodule:: synora.api
+.. automodule:: simulusion.api
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.export
+.. automodule:: simulusion.export
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.runtime
+.. automodule:: simulusion.inference.runtime
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.precision
+.. automodule:: simulusion.inference.precision
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.steppers
+.. automodule:: simulusion.inference.steppers
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.benchmark
+.. automodule:: simulusion.inference.benchmark
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.quantize
+.. automodule:: simulusion.inference.quantize
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.inference.bundle
+.. automodule:: simulusion.inference.bundle
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models
+.. automodule:: simulusion.models
    :no-index:
 
-.. automodule:: synora.catalog
+.. automodule:: simulusion.catalog
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,72 +76,72 @@ Core model families
 
 **Key classes:** ``Dreamer``, ``DreamerAgent``, ``RSSM``, ``RecurrentStateSpaceModel``, ``Planet``, ``ModularRSSM``, ``JEPAAgent``, ``VisionTransformer``, ``IRISAgent``, ``IRISTransformer``, ``IRISWorldModel``, ``Genie``, ``LatentActionModel``, and ``DynamicsModel``.
 
-.. automodule:: synora.models.dreamer
+.. automodule:: simulusion.models.dreamer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.dreamer_rssm
+.. automodule:: simulusion.models.dreamer_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.rssm
+.. automodule:: simulusion.models.rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.planet
+.. automodule:: simulusion.models.planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.mdrnn
+.. automodule:: simulusion.models.mdrnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.controller
+.. automodule:: simulusion.models.controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.modular_rssm
+.. automodule:: simulusion.models.modular_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.jepa_agent
+.. automodule:: simulusion.models.jepa_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.vit
+.. automodule:: simulusion.models.vit
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.iris_agent
+.. automodule:: simulusion.models.iris_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.iris_transformer
+.. automodule:: simulusion.models.iris_transformer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.genie
+.. automodule:: simulusion.models.genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.latent_action_model
+.. automodule:: simulusion.models.latent_action_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.dynamics_model
+.. automodule:: simulusion.models.dynamics_model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -151,34 +151,34 @@ Diffusion and DIAMOND components
 
 **Key classes:** ``DiamondAgent``, ``DDPM``, ``DiT``, ``DiffusionUNet``, ``EDMPreconditioner``, ``EulerSampler``, ``RewardTerminationModel``, and ``ActorCriticNetwork``.
 
-DIAMOND exposes ``DiamondAgent`` from ``synora.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
+DIAMOND exposes ``DiamondAgent`` from ``simulusion.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
 
-.. automodule:: synora.models.diffusion
+.. automodule:: simulusion.models.diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.diffusion.DDPM
+.. automodule:: simulusion.models.diffusion.DDPM
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.diffusion.DiT
+.. automodule:: simulusion.models.diffusion.DiT
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.diffusion.diamond_diffusion
+.. automodule:: simulusion.models.diffusion.diamond_diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.diffusion.reward_termination
+.. automodule:: simulusion.models.diffusion.reward_termination
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.models.diffusion.actor_critic
+.. automodule:: simulusion.models.diffusion.actor_critic
    :members:
    :undoc-members:
    :show-inheritance:
@@ -188,62 +188,62 @@ Vision, tokenization, and layers
 
 **Key classes:** ``ConvEncoder``, ``ConvDecoder``, ``DenseDecoder``, ``ActionDecoder``, ``CNNEncoder``, ``CNNDecoder``, ``IRISEncoder``, ``IRISDecoder``, ``DiscreteAutoencoder``, ``VectorQuantizer``, ``VectorQuantizerEMA``, ``VideoTokenizer``, ``MultiHeadSelfAttention``, and ``STTransformer``.
 
-.. automodule:: synora.vision.VAE.ConvVAE
+.. automodule:: simulusion.vision.VAE.ConvVAE
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.dreamer_encoder
+.. automodule:: simulusion.vision.dreamer_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.dreamer_decoder
+.. automodule:: simulusion.vision.dreamer_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.planet_encoder
+.. automodule:: simulusion.vision.planet_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.planet_decoder
+.. automodule:: simulusion.vision.planet_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.iris_encoder
+.. automodule:: simulusion.vision.iris_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.iris_decoder
+.. automodule:: simulusion.vision.iris_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.vq_layer
+.. automodule:: simulusion.vision.vq_layer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.vision.video_tokenizer
+.. automodule:: simulusion.vision.video_tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.blocks
+.. automodule:: simulusion.blocks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.blocks.mhsa
+.. automodule:: simulusion.blocks.mhsa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.blocks.st_transformer
+.. automodule:: simulusion.blocks.st_transformer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -251,40 +251,40 @@ Vision, tokenization, and layers
 Configuration objects
 ---------------------
 
-.. automodule:: synora.configs
+.. automodule:: simulusion.configs
    :no-index:
 
-.. automodule:: synora.configs.wm_config
+.. automodule:: simulusion.configs.wm_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.dreamer_config
+.. automodule:: simulusion.configs.dreamer_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.jepa_config
+.. automodule:: simulusion.configs.jepa_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.iris_config
+.. automodule:: simulusion.configs.iris_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.genie_config
+.. automodule:: simulusion.configs.genie_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.dit_config
+.. automodule:: simulusion.configs.dit_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.configs.diamond_config
+.. automodule:: simulusion.configs.diamond_config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -294,62 +294,62 @@ Training entry points
 
 **Key classes and functions:** ``DiamondAgent``, ``train_diamond``, ``train_dreamer``, ``GenieTrainer``, ``IRISTrainer``, and related training entry points.
 
-.. automodule:: synora.training
+.. automodule:: simulusion.training
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_world_model
+.. automodule:: simulusion.training.train_world_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_convvae
+.. automodule:: simulusion.training.train_convvae
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_mdn_rnn
+.. automodule:: simulusion.training.train_mdn_rnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_controller
+.. automodule:: simulusion.training.train_controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_jepa
+.. automodule:: simulusion.training.train_jepa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_iris
+.. automodule:: simulusion.training.train_iris
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_genie
+.. automodule:: simulusion.training.train_genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_planet
+.. automodule:: simulusion.training.train_planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_rssm
+.. automodule:: simulusion.training.train_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.train_diamond
+.. automodule:: simulusion.training.train_diamond
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.training.rl_harness
+.. automodule:: simulusion.training.rl_harness
    :members:
    :undoc-members:
    :show-inheritance:
@@ -357,32 +357,32 @@ Training entry points
 Memory and controllers
 ----------------------
 
-.. automodule:: synora.memory.dreamer_memory
+.. automodule:: simulusion.memory.dreamer_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.memory.planet_memory
+.. automodule:: simulusion.memory.planet_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.memory.iris_memory
+.. automodule:: simulusion.memory.iris_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.controller.rssm_policy
+.. automodule:: simulusion.controller.rssm_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.controller.iris_policy
+.. automodule:: simulusion.controller.iris_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.controller.rollout_generator
+.. automodule:: simulusion.controller.rollout_generator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -399,60 +399,60 @@ DIAMOND-style Atari support is intentionally not listed as an environment
 adapter because it is Atari preprocessing rather than a separate environment
 family.
 
-.. automodule:: synora.envs
+.. automodule:: simulusion.envs
    :no-index:
 
-.. automodule:: synora.envs.dmc
+.. automodule:: simulusion.envs.dmc
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.dmlab
+.. automodule:: simulusion.envs.dmlab
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.gym_env
+.. automodule:: simulusion.envs.gym_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.ale_atari_env
+.. automodule:: simulusion.envs.ale_atari_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.ale_atari_vector_env
+.. automodule:: simulusion.envs.ale_atari_vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.procgen_env
+.. automodule:: simulusion.envs.procgen_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.mujoco_env
+.. automodule:: simulusion.envs.mujoco_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.robotics_env
+.. automodule:: simulusion.envs.robotics_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.unity_env
+.. automodule:: simulusion.envs.unity_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.vector_env
+.. automodule:: simulusion.envs.vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.envs.wrappers
+.. automodule:: simulusion.envs.wrappers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -463,7 +463,7 @@ Atari preprocessing helpers
 These helpers wrap Atari environments for specific training recipes. They are
 not separate environment families.
 
-.. automodule:: synora.envs.diamond_atari
+.. automodule:: simulusion.envs.diamond_atari
    :members:
    :undoc-members:
    :show-inheritance:
@@ -471,42 +471,42 @@ not separate environment families.
 Datasets and transforms
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: synora.datasets.wm_dataset
+.. automodule:: simulusion.datasets.wm_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.video_datasets
+.. automodule:: simulusion.datasets.video_datasets
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.tinyworlds
+.. automodule:: simulusion.datasets.tinyworlds
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.diamond_dataset
+.. automodule:: simulusion.datasets.diamond_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.cifar10
+.. automodule:: simulusion.datasets.cifar10
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.imagenet1k
+.. automodule:: simulusion.datasets.imagenet1k
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.datasets.nuplan
+.. automodule:: simulusion.datasets.nuplan
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.transforms.image
+.. automodule:: simulusion.transforms.image
    :members:
    :undoc-members:
    :show-inheritance:
@@ -514,27 +514,27 @@ Datasets and transforms
 Masking and JEPA helpers
 ------------------------
 
-.. automodule:: synora.masks
+.. automodule:: simulusion.masks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.masks.default
+.. automodule:: simulusion.masks.default
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.masks.multiblock
+.. automodule:: simulusion.masks.multiblock
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.masks.random
+.. automodule:: simulusion.masks.random
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.helpers.jepa_helper
+.. automodule:: simulusion.helpers.jepa_helper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -542,27 +542,27 @@ Masking and JEPA helpers
 Benchmarks and reports
 ----------------------
 
-.. automodule:: synora.benchmarks
+.. automodule:: simulusion.benchmarks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.benchmarks.runner
+.. automodule:: simulusion.benchmarks.runner
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.benchmarks.adapters
+.. automodule:: simulusion.benchmarks.adapters
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.benchmarks.metrics
+.. automodule:: simulusion.benchmarks.metrics
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.benchmarks.reporting
+.. automodule:: simulusion.benchmarks.reporting
    :members:
    :undoc-members:
    :show-inheritance:
@@ -570,47 +570,47 @@ Benchmarks and reports
 Utilities
 ---------
 
-.. automodule:: synora.losses.convae_loss
+.. automodule:: simulusion.losses.convae_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.losses.gmm_loss
+.. automodule:: simulusion.losses.gmm_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.train_utils
+.. automodule:: simulusion.utils.train_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.dreamer_utils
+.. automodule:: simulusion.utils.dreamer_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.jepa_utils
+.. automodule:: simulusion.utils.jepa_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.data_utils
+.. automodule:: simulusion.utils.data_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.memory_utils
+.. automodule:: simulusion.utils.memory_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.logging_utils
+.. automodule:: simulusion.utils.logging_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: synora.utils.utils
+.. automodule:: simulusion.utils.utils
    :members:
    :undoc-members:
    :show-inheritance:
