@@ -29,9 +29,52 @@ sys.path[:0] = [str(_HERE), str(_HERE.parent)]
 from _media import hstack, label, plot_curves, upscale, write_mp4  # noqa: E402
 
 
+def _checkpoints(run: Path) -> list[tuple[int, Path]]:
+    """Every checkpoint of the run as (global epoch, path), oldest first.
+
+    The trainer counts epochs from 0 in each segment, so a continued run lives
+    in ``continue_<epoch>/`` and its epochs are offset by where it started.
+    """
+    found = []
+    for ckpt in run.glob("checkpoint_*.pt"):
+        found.append((int(ckpt.stem.split("_")[1]), ckpt))
+    for seg in run.glob("continue_*"):
+        offset = int(seg.name.split("_")[1])
+        for ckpt in seg.glob("checkpoint_*.pt"):
+            found.append((offset + int(ckpt.stem.split("_")[1]), ckpt))
+    return sorted(found)
+
+
 def train(args: argparse.Namespace) -> None:
     run = Path(args.run)
     run.mkdir(parents=True, exist_ok=True)
+    if args.resume and _checkpoints(run):
+        done, ckpt = _checkpoints(run)[-1]
+        # Start one past the checkpoint's epoch; the continuation's epoch 0 is it.
+        start = done + 1
+        cmd = [
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "continue",
+            "--checkpoint",
+            str(ckpt),
+            "--out",
+            str(run / f"continue_{start}"),
+            "--game",
+            args.game,
+            "--epochs",
+            str(args.epochs),
+            "--steps-per-epoch",
+            str(args.steps_per_epoch),
+            "--save-interval",
+            str(args.save_interval),
+        ]
+        print(f"Continuing from {ckpt} (epoch {done})", flush=True)
+        with (run / "train.log").open("a", encoding="utf-8") as log:
+            subprocess.run(
+                cmd, check=True, stdout=log, stderr=subprocess.STDOUT, cwd=_HERE.parent
+            )
+        return
     cmd = [
         sys.executable,
         "-m",
@@ -64,11 +107,37 @@ def train(args: argparse.Namespace) -> None:
         )
 
 
+def continue_training(args: argparse.Namespace) -> None:
+    """Load a checkpoint (models, optimizers, replay buffer) and keep training."""
+    import torch
+
+    from simulusion.configs.diamond_config import DiamondConfig
+    from simulusion.training.train_diamond import DiamondAgent
+
+    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+    config = DiamondConfig(**ckpt["config"])
+    config.game = args.game
+    config.num_epochs = args.epochs
+    config.training_steps_per_epoch = args.steps_per_epoch
+    config.save_interval = args.save_interval
+    config.eval_interval = args.save_interval
+    config.checkpoint_dir = args.out
+    if args.device:
+        config.device = args.device
+    agent = DiamondAgent(config)
+    agent.load_checkpoint(args.checkpoint)
+    print(
+        f"Loaded {args.checkpoint}; replay holds {agent.replay_buffer.size} steps",
+        flush=True,
+    )
+    agent.train()
+
+
 def _latest_checkpoint(run: Path) -> Path:
-    ckpts = sorted(run.glob("checkpoint_*.pt"), key=lambda p: int(p.stem.split("_")[1]))
+    ckpts = _checkpoints(run)
     if not ckpts:
         raise SystemExit(f"No checkpoints in {run}")
-    return ckpts[-1]
+    return ckpts[-1][1]
 
 
 def record(args: argparse.Namespace) -> None:
@@ -153,7 +222,13 @@ def record(args: argparse.Namespace) -> None:
     print("wrote", write_mp4(frames, out / "play_in_dream.mp4", fps=args.fps))
 
     log = (run / "train.log").read_text(encoding="utf-8", errors="replace")
-    epochs = [int(m) for m in re.findall(r"^Epoch (\d+):", log, flags=re.M)]
+    epochs, offset, previous = [], 0, -1
+    for m in re.findall(r"^Epoch (\d+):", log, flags=re.M):
+        epoch = int(m)
+        if epoch <= previous:  # a continued segment restarts its count
+            offset += previous + 1
+        epochs.append(offset + epoch)
+        previous = epoch
     losses = [float(m) for m in re.findall(r"Diffusion loss: ([\d.]+)", log)]
     if losses:
         plot_curves(
@@ -179,6 +254,21 @@ def main() -> None:
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--run", default="demos/runs/diamond")
 
+    t.add_argument(
+        "--resume",
+        action="store_true",
+        help="continue from the newest checkpoint (models, optimizers, replay buffer)",
+    )
+
+    c = sub.add_parser("continue", help=argparse.SUPPRESS)
+    c.add_argument("--checkpoint", required=True)
+    c.add_argument("--out", required=True)
+    c.add_argument("--game", default="Breakout-v5")
+    c.add_argument("--epochs", type=int, default=21)
+    c.add_argument("--steps-per-epoch", type=int, default=100)
+    c.add_argument("--save-interval", type=int, default=5)
+    c.add_argument("--device", default=None)
+
     r = sub.add_parser("record")
     r.add_argument("--run", default="demos/runs/diamond")
     r.add_argument("--game", default="Breakout-v5")
@@ -198,7 +288,9 @@ def main() -> None:
     r.add_argument("--seed", type=int, default=7)
 
     args = parser.parse_args()
-    {"train": train, "record": record}[args.command](args)
+    {"train": train, "continue": continue_training, "record": record}[args.command](
+        args
+    )
 
 
 if __name__ == "__main__":
