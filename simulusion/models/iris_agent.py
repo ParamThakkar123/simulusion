@@ -81,6 +81,8 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         #: Replay imagination's single-position decode steps as a CUDA graph.
         #: Same computation, far fewer kernel launches; only used on CUDA.
         self.use_cuda_graphs = True
+        #: Frames per autoencoder pass in :meth:`reconstruct`.
+        self.reconstruct_chunk_size = 128
         self.device = device
         self.logger = setup_logging("IRISAgent")
         self.use_amp = bool(
@@ -546,8 +548,16 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         self.encoder.eval()
         self.decoder.eval()
         try:
-            z_q, _, _ = self.encoder(flat)
-            recon = self.decoder(z_q).clamp(0.0, 1.0)
+            # Chunked so a long burn-in batch (B x 20 frames) does not need the
+            # decoder's full activation memory at once; on a small GPU that
+            # spills to system memory and runs several times slower.
+            chunk = self.reconstruct_chunk_size
+            recon = torch.cat(
+                [
+                    self.decoder(self.encoder(part)[0]).clamp(0.0, 1.0)
+                    for part in flat.split(chunk)
+                ]
+            )
         finally:
             self.encoder.train(encoder_was_training)
             self.decoder.train(decoder_was_training)
@@ -601,7 +611,12 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         # Prime the world model's KV cache with z_0. Every subsequent step
         # attends over the whole imagined history (paper 2.3, Fig 1):
         #   z_{t+1} ~ p(. | z_0, a_0, z_1, a_1, ..., z_t, a_t)
-        cache = self.transformer.init_cache(B, self.device)
+        # Sized to what this rollout can fill: z_0 plus ``horizon`` (action +
+        # frame) blocks. The graphed decode step attends over the whole buffer,
+        # so unused capacity would cost time without changing the result.
+        cache = self.transformer.init_cache(
+            B, self.device, max_len=K + horizon * (K + 1)
+        )
         # Capture before priming: capture writes to position 0 of the cache.
         decode_step = (
             GraphedDecodeStep(self.transformer, cache, B)
@@ -618,7 +633,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         # the step that follows needs another K+1. So the window must satisfy
         # T*(K+1) + K <= max_seq_len, otherwise a rebuild would leave no room to
         # generate and immediately overflow again.
-        capacity_limit = (self.transformer.max_seq_len - K) // (K + 1)
+        capacity_limit = (cache.max_len - K) // (K + 1)
         max_context = max(1, min(self.config.transformer_timesteps, capacity_limit))
 
         # LSTM state for the policy, initialised from the frames preceding x_0.
@@ -662,7 +677,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             # from the most recent ``max_context`` timesteps. Absolute positional
             # embeddings make in-place trimming incorrect, so the window is
             # re-primed from scratch instead.
-            if pos + (K + 1) > self.transformer.max_seq_len:
+            if pos + (K + 1) > cache.max_len:
                 token_history = token_history[-max_context:]
                 action_history = action_history[-(len(token_history) - 1) :]
                 # Reset in place rather than allocating a new cache, so the

@@ -175,6 +175,49 @@ class TestIRISAgentImagineRollout:
                 assert pos == K + (step + 1) * (K + 1)
                 assert cache.length == pos
 
+    def test_rollout_cache_sized_to_horizon_matches_full_cache(self, agent):
+        """Sizing the KV cache to the rollout must not change the rollout."""
+        agent.transformer.termination_head.bias.data.copy_(torch.tensor([10.0, -10.0]))
+        initial_frame = torch.rand(2, 3, 64, 64)
+        sized = agent.transformer.init_cache
+
+        def full(batch_size, device, dtype=None, max_len=None):
+            return sized(batch_size, device, dtype)
+
+        results = []
+        for init_cache in (full, sized):
+            with patch.object(agent.transformer, "init_cache", init_cache):
+                torch.manual_seed(0)
+                with torch.no_grad():
+                    results.append(
+                        agent.imagine_rollout(
+                            initial_frame, horizon=4, stop_on_termination=False
+                        )
+                    )
+        for key in ("frames", "actions", "rewards", "continues"):
+            assert torch.allclose(results[0][key].float(), results[1][key].float())
+
+    def test_init_cache_max_len_never_exceeds_context(self, agent):
+        transformer = agent.transformer
+        cpu = torch.device("cpu")
+        assert transformer.init_cache(1, cpu).max_len == transformer.max_seq_len
+        assert transformer.init_cache(1, cpu, max_len=20).max_len == 20
+        too_long = transformer.max_seq_len + 50
+        assert (
+            transformer.init_cache(1, cpu, max_len=too_long).max_len
+            == transformer.max_seq_len
+        )
+
+    def test_reconstruct_in_chunks_matches_one_pass(self, agent):
+        frames = torch.rand(2, 5, 3, 64, 64)
+        with torch.no_grad():
+            agent.reconstruct_chunk_size = 1000
+            whole = agent.reconstruct(frames)
+            agent.reconstruct_chunk_size = 3
+            chunked = agent.reconstruct(frames)
+        assert chunked.shape == frames.shape
+        assert torch.allclose(whole, chunked, atol=1e-5)
+
     def test_update_actor_critic_with_imagined_trajectory(self, agent):
         B, T, C, H, W = 2, 5, 3, 64, 64
         frames = torch.randn(B, T + 1, C, H, W)

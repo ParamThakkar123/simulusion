@@ -549,14 +549,19 @@ class IRISTransformer(ExportableAgentMixin, nn.Module):
         batch_size: int,
         device: torch.device,
         dtype: Optional[torch.dtype] = None,
+        max_len: Optional[int] = None,
     ) -> KVCache:
-        """Allocate an empty KV cache sized to this model's context capacity."""
+        """Allocate an empty KV cache.
+
+        It holds ``max_len`` positions, by default this model's full context
+        capacity, and never more than it.
+        """
         return KVCache(
             num_layers=self.num_layers,
             batch_size=batch_size,
             num_heads=self.num_heads,
             head_dim=self.embed_dim // self.num_heads,
-            max_len=self.max_seq_len,
+            max_len=min(max_len or self.max_seq_len, self.max_seq_len),
             device=device,
             dtype=dtype or self.pos_embedding.dtype,
         )
