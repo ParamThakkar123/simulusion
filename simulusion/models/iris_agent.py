@@ -640,6 +640,9 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
 
         # LSTM state for the policy, initialised from the frames preceding x_0.
         hidden = self.burn_in(burn_in_frames) if burn_in_frames is not None else None
+        # The policy update must start from this same state (see
+        # update_actor_critic), so it is returned with the trajectory.
+        initial_hidden = hidden
 
         # Lists to store trajectory. The policy consumes reconstructed frames, so
         # every stored frame is a decode of the current tokens (no raw/decoded
@@ -756,6 +759,9 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             "continues": (
                 torch.stack(continues_imagined, dim=1) if continues_imagined else None
             ),
+            # LSTM state after the burn-in, the state the first action was
+            # chosen from; None when the rollout started from a zero state.
+            "initial_hidden": initial_hidden,
         }
 
     def update_autoencoder(self, frames: torch.Tensor) -> dict:
@@ -952,8 +958,17 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             # bootstrap value V(x_H) for the lambda-return. Previously only the
             # first T frames were forwarded and the bootstrap was hardcoded to
             # zero, which biased every return target toward 0.
+            # Start from the burned-in LSTM state the rollout acted from (paper
+            # A.3). Re-running the trajectory from a zero state instead scores
+            # the taken actions under a policy that never chose them, and gives
+            # the early steps values from a cold LSTM and the late ones from a
+            # warm one; that systematic gap turned into spurious advantages
+            # that drove the policy's entropy to zero.
+            initial_hidden = imagined_trajectory.get("initial_hidden")
+            if initial_hidden is not None:
+                initial_hidden = tuple(h.detach() for h in initial_hidden)
             all_logits, all_values, _ = self.forward_actor_critic(
-                frames
+                frames, hidden=initial_hidden
             )  # (B, T+1, A), (B, T+1)
             action_logits = all_logits[:, :-1]  # (B, T, A)
             values = all_values[:, :-1]  # (B, T)
@@ -1020,6 +1035,8 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
                 "value_loss": value_loss,
                 "entropy": entropy,
                 "total_loss": loss,
+                "value_mean": values.float().mean(),
+                "return_mean": lambda_returns.float().mean(),
             }
         )
         self.logger.debug(f"Actor-critic update: {losses}")

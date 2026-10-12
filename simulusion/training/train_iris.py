@@ -390,6 +390,8 @@ class IRISTrainer:
             metrics["actor_loss"] = ac_metrics.get("actor_loss", 0)
             metrics["value_loss"] = ac_metrics.get("value_loss", 0)
             metrics["entropy"] = ac_metrics.get("entropy", 0)
+            metrics["value_mean"] = ac_metrics.get("value_mean", 0)
+            metrics["return_mean"] = ac_metrics.get("return_mean", 0)
 
         self.agent.current_epoch = epoch
         self.agent.global_step += self.config.env_steps_per_epoch

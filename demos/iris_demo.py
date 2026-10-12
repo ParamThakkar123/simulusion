@@ -81,6 +81,30 @@ def _load_state(trainer, run: Path) -> int:
     return int(state["epoch"])
 
 
+def _snapshot(run: Path, epoch: int, keep: int = 3) -> None:
+    """Copy the latest checkpoint to ``snapshots/`` and keep the newest few.
+
+    ``iris.pt`` is overwritten every save, so without snapshots a run whose
+    policy collapses has nothing earlier to go back to.
+    """
+    import shutil
+
+    folder = run / "snapshots"
+    folder.mkdir(exist_ok=True)
+    shutil.copy2(run / "iris.pt", folder / f"iris_epoch{epoch:04d}.pt")
+    for old in sorted(folder.glob("iris_epoch*.pt"))[:-keep]:
+        old.unlink()
+
+
+def _reset_policy(agent) -> None:
+    """Re-initialise the actor-critic and its optimizer; the world model stays."""
+    for module in (agent.cnn, agent.lstm, agent.actor_head, agent.critic_head):
+        for layer in module.modules():
+            if hasattr(layer, "reset_parameters"):
+                layer.reset_parameters()
+    agent.ac_opt.state.clear()
+
+
 def _release_cache_between_phases(agent) -> None:
     """Free PyTorch's cached GPU memory whenever training switches phase.
 
@@ -151,6 +175,9 @@ def train(args: argparse.Namespace) -> None:
     epoch = _load_state(trainer, run) if resuming else 0
     if resuming:
         print(f"Resuming at epoch {epoch} ({trainer.env_steps} env steps)", flush=True)
+        if args.reset_policy:
+            _reset_policy(trainer.agent)
+            print("Policy re-initialised; the world model is kept", flush=True)
 
     deadline = time.time() + args.minutes * 60
     while time.time() < deadline and epoch < config.total_epochs:
@@ -166,6 +193,8 @@ def train(args: argparse.Namespace) -> None:
         epoch += 1
         if epoch % args.save_every == 0:
             _save_state(trainer, run, epoch)
+        if args.snapshot_every and epoch % args.snapshot_every == 0:
+            _snapshot(run, epoch)
     _save_state(trainer, run, epoch)
 
 
@@ -311,6 +340,17 @@ def main() -> None:
         type=int,
         default=None,
         help="imagined trajectories per policy update (default 16; paper: 64)",
+    )
+    t.add_argument(
+        "--snapshot-every",
+        type=int,
+        default=10,
+        help="epochs between kept snapshots in <run>/snapshots (newest 3; 0: off)",
+    )
+    t.add_argument(
+        "--reset-policy",
+        action="store_true",
+        help="with --resume: start the policy afresh on the trained world model",
     )
 
     r = sub.add_parser("record")

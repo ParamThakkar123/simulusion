@@ -208,6 +208,40 @@ class TestIRISAgentImagineRollout:
             == transformer.max_seq_len
         )
 
+    def test_policy_update_starts_from_the_burned_in_state(self, agent):
+        """Paper A.3: the update scores actions from the state they were taken in.
+
+        The rollout acts from the LSTM state left by the burn-in frames, so the
+        actor-critic loss must re-run the trajectory from that state rather than
+        from zeros.
+        """
+        agent.transformer.termination_head.bias.data.copy_(torch.tensor([10.0, -10.0]))
+        burn_in = torch.rand(2, 3, 3, 64, 64)
+        with torch.no_grad():
+            trajectory = agent.imagine_rollout(
+                torch.rand(2, 3, 64, 64),
+                horizon=3,
+                burn_in_frames=burn_in,
+                stop_on_termination=False,
+            )
+            expected = agent.burn_in(burn_in)
+        assert trajectory["initial_hidden"] is not None
+        for got, want in zip(trajectory["initial_hidden"], expected):
+            assert torch.allclose(got, want)
+
+        seen = []
+        forward = agent.forward_actor_critic
+
+        def recording_forward(frames, hidden=None):
+            seen.append(hidden)
+            return forward(frames, hidden=hidden)
+
+        with patch.object(agent, "forward_actor_critic", recording_forward):
+            agent.update_actor_critic(trajectory)
+        assert seen[0] is not None
+        for got, want in zip(seen[0], expected):
+            assert torch.allclose(got, want)
+
     def test_act_with_epsilon_samples_from_the_policy(self, agent):
         """Paper Table 5: epsilon-greedy is combined with sampling, not argmax.
 
