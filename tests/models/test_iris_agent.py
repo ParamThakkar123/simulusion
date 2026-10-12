@@ -208,6 +208,27 @@ class TestIRISAgentImagineRollout:
             == transformer.max_seq_len
         )
 
+    def test_act_with_epsilon_samples_from_the_policy(self, agent):
+        """Paper Table 5: epsilon-greedy is combined with sampling, not argmax.
+
+        With near-uniform logits and a small epsilon, collection must still
+        spread over the actions; an argmax would repeat the top one.
+        """
+        batch = 512
+        logits = torch.zeros(batch, 1, agent.action_size)
+        logits[..., 0] = 0.1  # argmax would always pick action 0
+
+        def fake_forward(frames, hidden=None):
+            return logits, torch.zeros(batch, 1), hidden
+
+        with patch.object(agent, "forward_actor_critic", fake_forward):
+            torch.manual_seed(0)
+            actions = agent.act(torch.rand(batch, 3, 64, 64), epsilon=0.01)
+
+        assert actions.shape == (batch,)
+        assert (actions == 0).float().mean() < 0.5
+        assert len(actions.unique()) == agent.action_size
+
     def test_reconstruct_in_chunks_matches_one_pass(self, agent):
         frames = torch.rand(2, 5, 3, 64, 64)
         with torch.no_grad():

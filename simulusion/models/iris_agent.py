@@ -450,17 +450,19 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
                 )
                 action_logits = action_logits.squeeze(1) / temperature
 
-                # Epsilon-greedy
+                # Sample from the policy (paper Table 5: epsilon-greedy combined
+                # with sampling), then replace a fraction ``epsilon`` with
+                # uniformly random actions. Taking the argmax here instead made
+                # collection almost deterministic: an untrained policy repeated
+                # one action for thousands of steps and never explored.
+                probs = torch.softmax(action_logits, dim=-1)
+                actions = torch.multinomial(probs, 1).squeeze(-1)
                 if epsilon > 0:
                     random_mask = torch.rand(B, device=self.device) < epsilon
                     random_actions = torch.randint(
                         0, self.action_size, (B,), device=self.device
                     )
-                    greedy_actions = action_logits.argmax(dim=-1)
-                    actions = torch.where(random_mask, random_actions, greedy_actions)
-                else:
-                    probs = torch.softmax(action_logits, dim=-1)
-                    actions = torch.multinomial(probs, 1).squeeze(-1)
+                    actions = torch.where(random_mask, random_actions, actions)
         finally:
             # Don't leave the module in eval mode if the caller was training.
             self.train(was_training)
