@@ -75,6 +75,22 @@ is wrong. DIAMOND's `play_in_dream.mp4` and IRIS's `dream.mp4` go one step
 further: the agent acts on the model's generated frames, with no emulator
 involved at all.
 
+## Playing in the browser
+
+`export_web_diamond.py` turns a DIAMOND checkpoint into files a web page can
+run with ONNX Runtime Web: one graph per dream frame (the whole three-step
+sampler), one per policy step, and a few real opening frames to start dreams
+from. Both graphs are checked against the eager model before the script exits.
+
+```bash
+python demos/export_web_diamond.py -c demos/runs/diamond/continue_21/checkpoint_30.pt \
+    --out ../TorchWMUI/public/play/diamond
+```
+
+The export pads convs whose input width is not a multiple of 4 with zero
+channels: ONNX Runtime Web 1.30's WebGPU Conv got DIAMOND's 15-channel input
+conv wrong (3, 12 and 16 channels were exact).
+
 ## Notes from building these
 
 - **Run one demo at a time.** Dreamer's replay buffer and the Atari replays hold

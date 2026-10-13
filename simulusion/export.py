@@ -22,6 +22,7 @@ Simulusion's public models and agents get ``.export()`` from
 
 from __future__ import annotations
 
+import copy
 from importlib import import_module, util
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -159,6 +160,122 @@ class IRISActorCriticExport(nn.Module):
         return action_logits, values
 
 
+class _ZeroPaddedConv(nn.Module):
+    """A Conv2d that takes one or more extra all-zero input channels.
+
+    Numerically identical to the wrapped conv. ONNX Runtime Web's WebGPU Conv
+    (1.30) returns wrong values for some input widths that are not a multiple
+    of 4 (DIAMOND's 15-channel input conv: noisy frame + 4 context frames),
+    while 3, 12 and 16 are exact; padding to a multiple of 4 sidesteps it.
+    """
+
+    def __init__(self, conv: nn.Conv2d):
+        super().__init__()
+        extra = -conv.in_channels % 4
+        self.extra = extra
+        # Callers that check their input width against the conv see the
+        # original width.
+        self.in_channels = conv.in_channels
+        self.out_channels = conv.out_channels
+        self.conv = nn.Conv2d(
+            conv.in_channels + extra,
+            conv.out_channels,
+            conv.kernel_size,  # type: ignore[arg-type]
+            stride=conv.stride,  # type: ignore[arg-type]
+            padding=conv.padding,  # type: ignore[arg-type]
+            dilation=conv.dilation,  # type: ignore[arg-type]
+            groups=conv.groups,
+            bias=conv.bias is not None,
+        ).to(conv.weight.device, conv.weight.dtype)
+        with torch.no_grad():
+            self.conv.weight.zero_()
+            self.conv.weight[:, : conv.in_channels] = conv.weight
+            if conv.bias is not None:
+                self.conv.bias.copy_(conv.bias)  # type: ignore[union-attr]
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        zeros = x.new_zeros(x.shape[0], self.extra, x.shape[2], x.shape[3])
+        return self.conv(torch.cat([x, zeros], dim=1))
+
+
+def _pad_conv_inputs(module: nn.Module) -> nn.Module:
+    """Copy of ``module`` with every Conv2d's input widened to a multiple of 4."""
+    module = copy.deepcopy(module)
+    for name, child in list(module.named_modules()):
+        if (
+            isinstance(child, nn.Conv2d)
+            and child.groups == 1
+            and child.in_channels > 4
+            and child.in_channels % 4
+        ):
+            parent_name, _, attr = name.rpartition(".")
+            parent = module.get_submodule(parent_name) if parent_name else module
+            setattr(parent, attr, _ZeroPaddedConv(child))
+    return module
+
+
+class DiamondDreamStepExport(nn.Module):
+    """One DIAMOND dream frame as a single graph: the whole Euler sampler.
+
+    ``EulerSampler.sample`` draws its starting noise with ``torch.randn``; here
+    the caller passes ``noise`` (unit Gaussian) instead, so the graph is pure
+    and the runtime owns the randomness. The sigma schedule is baked in as
+    constants, so the exported step matches ``imagine_next_frame`` for the
+    same noise. Convs are input-padded for WebGPU (see ``_ZeroPaddedConv``);
+    the agent's own model is not modified.
+    """
+
+    def __init__(self, agent: Any):
+        super().__init__()
+        self.model = _pad_conv_inputs(agent.diffusion_model)
+        sampler = agent.sampler
+        self.precond = sampler.edm_precond
+        self.t_steps = [float(t) for t in sampler.t_steps]
+        self.t_next = [float(t) for t in sampler.t_next]
+
+    def forward(
+        self, obs_history: torch.Tensor, actions: torch.Tensor, noise: torch.Tensor
+    ) -> torch.Tensor:
+        """obs_history [B, L, C, H, W] in [-1, 1], actions [B, L], noise [B, C, H, W]."""
+        x = noise * self.t_steps[0]
+        for t_cur, t_nxt in zip(self.t_steps, self.t_next):
+            sigma = torch.full((x.shape[0],), t_cur, device=x.device, dtype=x.dtype)
+            denoised = self.precond.denoise(
+                self.model, x, sigma, obs_history=obs_history, actions=actions
+            )
+            x = x + (t_nxt - t_cur) * (x - denoised) / t_cur
+        return x.clamp(-1.0, 1.0)
+
+
+class DiamondPolicyStepExport(nn.Module):
+    """One DIAMOND actor-critic step with the LSTM state passed explicitly."""
+
+    def __init__(self, actor_critic: nn.Module):
+        super().__init__()
+        self.actor_critic = actor_critic
+
+    def forward(
+        self, frame: torch.Tensor, h: torch.Tensor, c: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """frame [B, C, H, W] in [-1, 1], h and c [1, B, lstm_dim]."""
+        logits, _, (h, c) = self.actor_critic(frame.unsqueeze(1), (h, c))
+        return logits[:, 0], h, c
+
+
+def _is_diamond(obj: Any) -> bool:
+    return hasattr(obj, "diffusion_model") and hasattr(obj, "sampler")
+
+
+def _diamond_default(obj: Any, target: str | None) -> nn.Module | None:
+    if not _is_diamond(obj):
+        return None
+    if target in {None, "dream_step"}:
+        return DiamondDreamStepExport(obj)
+    if target == "policy_step":
+        return DiamondPolicyStepExport(obj.actor_critic)
+    return None
+
+
 def _dreamer_default(obj: Any, target: str | None) -> nn.Module | None:
     dreamer = getattr(obj, "dreamer", None)
     if dreamer is None:
@@ -189,7 +306,7 @@ def _jepa_default(obj: Any, target: str | None) -> nn.Module | None:
 
 
 def _resolve_export_module(obj: Any, target: str | None = None) -> nn.Module:
-    for adapter in (_dreamer_default, _iris_default, _jepa_default):
+    for adapter in (_dreamer_default, _iris_default, _jepa_default, _diamond_default):
         module = adapter(obj, target)
         if module is not None:
             return module
@@ -269,6 +386,18 @@ def _infer_example_inputs(
     if hasattr(obj, "forward_actor_critic") and target in {None, "actor_critic"}:
         frame_shape = obj.config.get_frame_shape()
         return torch.zeros(1, 1, *frame_shape, device=obj.device)
+    if _is_diamond(obj) and target in {None, "dream_step", "policy_step"}:
+        cfg = obj.config
+        frame = (1, 3, cfg.obs_size, cfg.obs_size)
+        if target == "policy_step":
+            hidden = torch.zeros(1, 1, cfg.actor_lstm_dim, device=obj.device)
+            return torch.zeros(*frame, device=obj.device), hidden, hidden.clone()
+        n = cfg.num_conditioning_frames
+        return (
+            torch.zeros(1, n, *frame[1:], device=obj.device),
+            torch.zeros(1, n, dtype=torch.long, device=obj.device),
+            torch.zeros(*frame, device=obj.device),
+        )
     if type(obj).__name__ == "JEPAAgent" and target in {None, "encoder"}:
         device = next(module.parameters(), torch.empty(0)).device
         return torch.zeros(1, 3, obj.cfg.crop_size, obj.cfg.crop_size, device=device)
