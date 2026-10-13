@@ -272,7 +272,13 @@ class VideoTokenizer(ExportableAgentMixin, nn.Module):
         x = self.decoder(x)
 
         x = x.reshape(B, T, H_dec, W_dec, self.decoder_dim)
-        x = x.permute(0, 4, 1, 2, 3).reshape(B * T, self.decoder_dim, H_dec, W_dec)
+        # (B, T, H', W', D) -> (B, T, D, H', W') -> (B*T, D, H', W'). Permuting to
+        # (B, D, T, H', W') first and then flattening B*T interleaved channels of
+        # different frames, so every decoded frame mixed features from the whole
+        # clip: the decoder stopped being causal and the tokenizer learned to
+        # spread each frame's content across time, which made tokens flicker
+        # between frames and left the dynamics model nothing stable to predict.
+        x = x.permute(0, 1, 4, 2, 3).reshape(B * T, self.decoder_dim, H_dec, W_dec)
 
         x = self.decoder_proj(x)
 

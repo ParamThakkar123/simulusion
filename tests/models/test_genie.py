@@ -44,6 +44,35 @@ class TestVideoTokenizer:
         assert "recon_loss" in loss_dict
         assert "vq_loss" in loss_dict
 
+    def test_decode_is_causal_in_time(self):
+        """A frame's pixels depend only on that frame's and earlier latents.
+
+        The decoder's temporal attention is causal, so changing the last frame's
+        latents must leave every earlier decoded frame untouched.
+        """
+        torch.manual_seed(0)
+        tokenizer = create_video_tokenizer(
+            num_frames=4,
+            image_size=16,
+            encoder_dim=32,
+            decoder_dim=64,
+            encoder_depth=1,
+            decoder_depth=2,
+            num_heads=4,
+            vocab_size=32,
+            embedding_dim=8,
+        ).eval()
+        z = torch.randn(1, 4, 4, 4, 8)
+        changed = z.clone()
+        changed[:, -1] = torch.randn_like(changed[:, -1])
+
+        with torch.no_grad():
+            before = tokenizer.decode(z)
+            after = tokenizer.decode(changed)
+
+        assert torch.allclose(before[:, :, :-1], after[:, :, :-1], atol=1e-6)
+        assert not torch.allclose(before[:, :, -1], after[:, :, -1])
+
     def test_encode_decode(self):
         tokenizer = create_video_tokenizer(
             num_frames=8,
