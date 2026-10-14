@@ -2,6 +2,7 @@
 
     python demos/iris_demo.py train  --minutes 600
     python demos/iris_demo.py train  --minutes 600 --resume   # continue a stopped run
+    python demos/iris_demo.py train  --until-epoch 200 --resume  # stop at a fixed epoch
     python demos/iris_demo.py record --run demos/runs/iris
 
 The paper configuration is used unchanged, including its schedule: the
@@ -180,7 +181,11 @@ def train(args: argparse.Namespace) -> None:
             print("Policy re-initialised; the world model is kept", flush=True)
 
     deadline = time.time() + args.minutes * 60
-    while time.time() < deadline and epoch < config.total_epochs:
+    # --until-epoch is an absolute target, so a resumed run stops at the same
+    # epoch however many times it was restarted; --minutes restarts its clock
+    # on every launch.
+    last_epoch = min(config.total_epochs, args.until_epoch or config.total_epochs)
+    while time.time() < deadline and epoch < last_epoch:
         started = time.time()
         metrics = trainer.train_epoch(epoch)
         row = {"epoch": epoch, "seconds": time.time() - started}
@@ -325,7 +330,15 @@ def main() -> None:
 
     t = sub.add_parser("train")
     t.add_argument("--game", default="ALE/Pong-v5")
-    t.add_argument("--minutes", type=float, default=600)
+    t.add_argument(
+        "--minutes", type=float, default=600, help="time limit for this launch"
+    )
+    t.add_argument(
+        "--until-epoch",
+        type=int,
+        default=None,
+        help="stop once this epoch is reached; unlike --minutes, survives --resume",
+    )
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--run", default="demos/runs/iris")
     t.add_argument("--resume", action="store_true", help="continue a stopped run")
