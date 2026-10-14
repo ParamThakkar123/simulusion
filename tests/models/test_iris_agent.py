@@ -263,6 +263,15 @@ class TestIRISAgentImagineRollout:
         assert (actions == 0).float().mean() < 0.5
         assert len(actions.unique()) == agent.action_size
 
+    def test_burn_in_in_chunks_matches_one_pass(self, agent):
+        frames = torch.rand(2, 5, 3, 64, 64)
+        agent.reconstruct_chunk_size = 1000
+        whole = agent.burn_in(frames)
+        agent.reconstruct_chunk_size = 3
+        chunked = agent.burn_in(frames)
+        for a, b in zip(whole, chunked):
+            assert torch.allclose(a, b, atol=1e-5)
+
     def test_reconstruct_in_chunks_matches_one_pass(self, agent):
         frames = torch.rand(2, 5, 3, 64, 64)
         with torch.no_grad():

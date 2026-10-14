@@ -378,9 +378,16 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         """
         B, T, C, H, W = frames.shape
 
-        # CNN features
+        # CNN features. Without gradients (burn-in, acting) the frames go through
+        # in chunks: a 64 x 20-frame burn-in in one pass needs ~640 MB for the
+        # first conv's activations alone, enough to exhaust a 4 GB card.
         frames_flat = frames.reshape(B * T, C, H, W)
-        features = self.cnn(frames_flat)
+        if torch.is_grad_enabled():
+            features = self.cnn(frames_flat)
+        else:
+            features = torch.cat(
+                [self.cnn(part) for part in frames_flat.split(self.reconstruct_chunk_size)]
+            )
         features = features.reshape(B, T, -1)
 
         # LSTM
