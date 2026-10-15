@@ -386,7 +386,10 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             features = self.cnn(frames_flat)
         else:
             features = torch.cat(
-                [self.cnn(part) for part in frames_flat.split(self.reconstruct_chunk_size)]
+                [
+                    self.cnn(part)
+                    for part in torch.split(frames_flat, self.reconstruct_chunk_size)
+                ]
             )
         features = features.reshape(B, T, -1)
 
@@ -564,7 +567,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             recon = torch.cat(
                 [
                     self.decoder(self.encoder(part)[0]).clamp(0.0, 1.0)
-                    for part in flat.split(chunk)
+                    for part in torch.split(flat, chunk)
                 ]
             )
         finally:

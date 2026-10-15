@@ -210,7 +210,7 @@ class GraphedDecodeStep:
         self.positions = torch.arange(cache.max_len, device=device)
 
         # Warm up on a side stream (as CUDA graph capture requires), then capture.
-        side = torch.cuda.Stream(device)
+        side = torch.cuda.Stream(device)  # type: ignore[no-untyped-call]
         side.wait_stream(torch.cuda.current_stream(device))
         with torch.cuda.stream(side):
             for _ in range(2):

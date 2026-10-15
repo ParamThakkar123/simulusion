@@ -89,7 +89,11 @@ enc = ViTEncoder(input_shape=(3, 64, 64), embed_size=512, patch_size=8, depth=6)
 ### Backbones
 
 ```python
-from simulusion.models.modular_rssm import GRUBackbone, LSTMBackbone, TransformerBackbone
+from simulusion.models.modular_rssm import (
+    GRUBackbone,
+    LSTMBackbone,
+    TransformerBackbone,
+)
 
 # GRU — standard RSSM recurrent dynamics
 bb = GRUBackbone(
