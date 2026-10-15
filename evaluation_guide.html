@@ -8,17 +8,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta property="og:title" content="Evaluation Guide" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://paramthakkar123.github.io/synora/evaluation_guide.html" />
-<meta property="og:site_name" content="Synora Documentation" />
-<meta property="og:description" content="Synora provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024, App..." />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/evaluation_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Simulusion provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024,..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/synora/_images/social_previews/summary_evaluation_guide_fd481128.png" />
-<meta property="og:image:alt" content="Synora provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024, App..." />
-<meta name="description" content="Synora provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024, App..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/_images/social_previews/summary_evaluation_guide_ff65fdc9.png" />
+<meta property="og:image:alt" content="Simulusion provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024,..." />
+<meta name="description" content="Simulusion provides a general-purpose evaluation package for measuring the quality of generative world models. It implements the three metrics used in the DIAMOND paper(Alonso et al., NeurIPS 2024,..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Evaluation Guide &#8212; Synora 1.0.0 documentation</title>
+    <title>Evaluation Guide &#8212; Simulusion 1.0.0 documentation</title>
   
   
   
@@ -37,18 +37,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=20cffb5b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
     <script src="_static/documentation_options.js?v=8d563738"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
@@ -61,13 +61,14 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'evaluation_guide';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="_static/fix_navbar.js?v=7a566309"></script>
-    <link rel="canonical" href="https://paramthakkar123.github.io/synora/evaluation_guide.html" />
-    <link rel="icon" href="_static/synora-favicon.svg"/>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/evaluation_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Memory &amp; Replay Buffers" href="memory_guide.html" />
     <link rel="prev" title="Efficient Inference and Deployment" href="deployment_guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -139,8 +140,8 @@
     
     
     
-    <img src="_static/synora-logo-dark.svg" class="logo__image only-dark" alt="Synora"/>
-    <img src="_static/synora-logo-light.svg" class="logo__image only-light pst-js-only" alt="Synora"/>
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
   
 </a></div>
@@ -196,7 +197,7 @@
           
           
           
-          <a href="https://github.com/paramthakkar123/synora" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
 </ul></div>
       
@@ -276,7 +277,7 @@
           
           
           
-          <a href="https://github.com/paramthakkar123/synora" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
         </li>
 </ul></div>
         
@@ -299,6 +300,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
@@ -311,11 +313,11 @@
 <li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cli.html">Synora CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
 <li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
 <li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Synora world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
@@ -404,7 +406,7 @@
                   
   <section id="evaluation-guide">
 <h1>Evaluation Guide<a class="headerlink" href="#evaluation-guide" title="Link to this heading">#</a></h1>
-<p>Synora provides a general-purpose evaluation package for measuring the quality of
+<p>Simulusion provides a general-purpose evaluation package for measuring the quality of
 generative world models. It implements the three metrics used in the DIAMOND paper
 (Alonso et al., NeurIPS 2024, Appendix M):</p>
 <ul class="simple">
@@ -420,7 +422,7 @@ not just DIAMOND.</p>
 <section id="python-api">
 <h3>Python API<a class="headerlink" href="#python-api" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">synora.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FID</span><span class="p">,</span> <span class="n">FVD</span><span class="p">,</span> <span class="n">LPIPS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FID</span><span class="p">,</span> <span class="n">FVD</span><span class="p">,</span> <span class="n">LPIPS</span>
 
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
 
@@ -448,16 +450,16 @@ not just DIAMOND.</p>
 <section id="cli">
 <h3>CLI<a class="headerlink" href="#cli" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Evaluate a DIAMOND world model</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>path/to/model.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>path/to/model.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
 
 <span class="c1"># Specify which metrics to compute</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--metrics<span class="w"> </span>fid,lpips
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--metrics<span class="w"> </span>fid,lpips
 
 <span class="c1"># Record real and generated videos</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>eval_video.mp4
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>eval_video.mp4
 
 <span class="c1"># Full control</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span><span class="se">\</span>
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--game<span class="w"> </span>Breakout-v5<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--num-videos<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--trajectory-length<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
@@ -467,7 +469,7 @@ synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </spa
 <span class="w">    </span>--record<span class="w"> </span>eval_video.mp4
 
 <span class="c1"># Linear-probe an I-JEPA checkpoint (frozen encoder; no FID/FVD involved)</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>jepa<span class="w"> </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>jepa<span class="w"> </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--root-path<span class="w"> </span>/data/imagenet<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--model-name<span class="w"> </span>vit_base<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--output<span class="w"> </span>probe.json
@@ -477,19 +479,19 @@ synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </spa
 rollout to compare against the environment, so <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">jepa</span></code> freezes the EMA
 target-encoder and trains a linear head on its average-pooled patch tokens,
 following Appendix A.2 of the paper. See <a class="reference internal" href="jepa.html"><span class="doc">JEPA: Joint Embedding Predictive Architecture</span></a> for the protocol and the
-Python API (<code class="docutils literal notranslate"><span class="pre">synora.jepa_linear_probe</span></code>).</p>
+Python API (<code class="docutils literal notranslate"><span class="pre">simulusion.jepa_linear_probe</span></code>).</p>
 </section>
 <section id="interactive-play">
 <h3>Interactive Play<a class="headerlink" href="#interactive-play" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Watch the agent play in the real environment</span>
-synora<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>path/to/model.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
+simulusion<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>path/to/model.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
 
 <span class="c1"># Switch to dream mode (TAB) to watch the agent inside its imagination</span>
 <span class="c1"># Press arrow keys / WASD to override the agent's actions</span>
-synora<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt
+simulusion<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt
 
 <span class="c1"># Record gameplay video</span>
-synora<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>gameplay.mp4
+simulusion<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>gameplay.mp4
 </pre></div>
 </div>
 </section>
@@ -524,7 +526,7 @@ for numerical stability.</p></li>
 </section>
 <section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">synora.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FID</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FID</span>
 
 <span class="n">fid</span> <span class="o">=</span> <span class="n">FID</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 
@@ -590,7 +592,7 @@ statistics, and passed through R3D-18 truncated before the final FC layer, produ
 </section>
 <section id="id3">
 <h3>Usage<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">synora.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FVD</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">FVD</span>
 
 <span class="n">fvd</span> <span class="o">=</span> <span class="n">FVD</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">clip_length</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
 
@@ -658,7 +660,7 @@ summed across channels. Layer scores are averaged to produce the final score.</p
 </section>
 <section id="id7">
 <h3>Usage<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">synora.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">LPIPS</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">LPIPS</span>
 
 <span class="n">lpips</span> <span class="o">=</span> <span class="n">LPIPS</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 
@@ -700,9 +702,9 @@ summed across channels. Layer scores are averaged to produce the final score.</p
 <hr class="docutils" />
 <section id="python-api-reference">
 <h2>Python API Reference<a class="headerlink" href="#python-api-reference" title="Link to this heading">#</a></h2>
-<section id="synora-evals-package">
-<h3><code class="docutils literal notranslate"><span class="pre">synora.evals</span></code> Package<a class="headerlink" href="#synora-evals-package" title="Link to this heading">#</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">synora</span><span class="o">/</span><span class="n">evals</span><span class="o">/</span>
+<section id="simulusion-evals-package">
+<h3><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code> Package<a class="headerlink" href="#simulusion-evals-package" title="Link to this heading">#</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">simulusion</span><span class="o">/</span><span class="n">evals</span><span class="o">/</span>
   <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>     <span class="c1"># Exports FID, FVD, LPIPS</span>
   <span class="n">fid</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># Fréchet Inception Distance</span>
   <span class="n">fvd</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># Fréchet Video Distance</span>
@@ -791,8 +793,8 @@ summed across channels. Layer scores are averaged to produce the final score.</p
 <hr class="docutils" />
 <section id="model-specific-evaluation-scripts">
 <h2>Model-Specific Evaluation Scripts<a class="headerlink" href="#model-specific-evaluation-scripts" title="Link to this heading">#</a></h2>
-<section id="diamond-synora-inference-eval-diamond-py">
-<h3>DIAMOND (<code class="docutils literal notranslate"><span class="pre">synora/inference/eval_diamond.py</span></code>)<a class="headerlink" href="#diamond-synora-inference-eval-diamond-py" title="Link to this heading">#</a></h3>
+<section id="diamond-simulusion-inference-eval-diamond-py">
+<h3>DIAMOND (<code class="docutils literal notranslate"><span class="pre">simulusion/inference/eval_diamond.py</span></code>)<a class="headerlink" href="#diamond-simulusion-inference-eval-diamond-py" title="Link to this heading">#</a></h3>
 <p>The DIAMOND eval script provides a full evaluation pipeline:</p>
 <ol class="arabic simple">
 <li><p><strong>Load checkpoint</strong>: reconstructs the diffusion model, EDM preconditioner, and
@@ -808,25 +810,25 @@ diffusion model autoregressively generates future frames using the EDM sampler.<
 <h3>Extending to Other Models<a class="headerlink" href="#extending-to-other-models" title="Link to this heading">#</a></h3>
 <p>To add evaluation for a new model:</p>
 <ol class="arabic simple">
-<li><p>Create <code class="docutils literal notranslate"><span class="pre">synora/inference/eval_&lt;model&gt;.py</span></code> with a <code class="docutils literal notranslate"><span class="pre">run_eval()</span></code> function matching the
-signature in <a class="reference internal" href="cli.html"><span class="doc">Synora CLI</span></a>.</p></li>
-<li><p>Register it in <code class="docutils literal notranslate"><span class="pre">EVAL_MODULES</span></code> in <code class="docutils literal notranslate"><span class="pre">synora/cli.py</span></code>:</p></li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">simulusion/inference/eval_&lt;model&gt;.py</span></code> with a <code class="docutils literal notranslate"><span class="pre">run_eval()</span></code> function matching the
+signature in <a class="reference internal" href="cli.html"><span class="doc">Simulusion CLI</span></a>.</p></li>
+<li><p>Register it in <code class="docutils literal notranslate"><span class="pre">EVAL_MODULES</span></code> in <code class="docutils literal notranslate"><span class="pre">simulusion/cli.py</span></code>:</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">EVAL_MODULES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"diamond"</span><span class="p">:</span> <span class="s2">"synora.inference.eval_diamond"</span><span class="p">,</span>
-    <span class="s2">"jepa"</span><span class="p">:</span> <span class="s2">"synora.training.eval_jepa"</span><span class="p">,</span>
-    <span class="s2">"my_model"</span><span class="p">:</span> <span class="s2">"synora.inference.eval_my_model"</span><span class="p">,</span>
+    <span class="s2">"diamond"</span><span class="p">:</span> <span class="s2">"simulusion.inference.eval_diamond"</span><span class="p">,</span>
+    <span class="s2">"jepa"</span><span class="p">:</span> <span class="s2">"simulusion.training.eval_jepa"</span><span class="p">,</span>
+    <span class="s2">"my_model"</span><span class="p">:</span> <span class="s2">"simulusion.inference.eval_my_model"</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>If the new model needs options the others do not, list them in
 <code class="docutils literal notranslate"><span class="pre">EVAL_MODEL_OPTIONS</span></code> so passing them to a different <code class="docutils literal notranslate"><span class="pre">--model</span></code> is an error
 rather than a silent no-op.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">synora</span> <span class="pre">eval</span></code> command will then accept <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">my_model</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">eval</span></code> command will then accept <code class="docutils literal notranslate"><span class="pre">--model</span> <span class="pre">my_model</span></code>.</p>
 </section>
 <section id="trajectory-collection-utilities">
 <h3>Trajectory Collection Utilities<a class="headerlink" href="#trajectory-collection-utilities" title="Link to this heading">#</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">synora.evals.diamond_utils</span></code> module provides helper functions for DIAMOND evaluation:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">simulusion.evals.diamond_utils</span></code> module provides helper functions for DIAMOND evaluation:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">generate_trajectories()</span></code> — autoregressively generates frames from a diffusion model
 conditioned on real trajectory data.</p></li>
@@ -839,10 +841,10 @@ an Atari environment using random actions.</p></li>
 <hr class="docutils" />
 <section id="video-recording">
 <h2>Video Recording<a class="headerlink" href="#video-recording" title="Link to this heading">#</a></h2>
-<p>Both <code class="docutils literal notranslate"><span class="pre">synora</span> <span class="pre">eval</span></code> and <code class="docutils literal notranslate"><span class="pre">synora</span> <span class="pre">play</span></code> support the <code class="docutils literal notranslate"><span class="pre">--record</span></code> flag to save videos.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">eval</span></code> and <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">play</span></code> support the <code class="docutils literal notranslate"><span class="pre">--record</span></code> flag to save videos.</p>
 <section id="eval-recording">
 <h3>Eval Recording<a class="headerlink" href="#eval-recording" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>results.mp4
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>results.mp4
 </pre></div>
 </div>
 <p>This saves two files:</p>
@@ -853,7 +855,7 @@ an Atari environment using random actions.</p></li>
 </section>
 <section id="play-recording">
 <h3>Play Recording<a class="headerlink" href="#play-recording" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>synora<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>gameplay.mp4<span class="w"> </span>--record-fps<span class="w"> </span><span class="m">20</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model.pt<span class="w"> </span>--record<span class="w"> </span>gameplay.mp4<span class="w"> </span>--record-fps<span class="w"> </span><span class="m">20</span>
 </pre></div>
 </div>
 <p>Records the gameplay window in real-time. The recording includes the HUD overlay
@@ -878,8 +880,8 @@ an Atari environment using random actions.</p></li>
 mismatches between training and evaluation resolution can bias results.</p></li>
 <li><p><strong>Use the same random seed</strong> when comparing different models to control for
 sampling noise:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model_a.pt<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
-synora<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model_b.pt<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model_a.pt<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>--checkpoint<span class="w"> </span>model_b.pt<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </pre></div>
 </div>
 </li>
@@ -998,7 +1000,7 @@ all frames are blurry in the same way).</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-api-reference">Python API Reference</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#synora-evals-package"><code class="docutils literal notranslate"><span class="pre">synora.evals</span></code> Package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion-evals-package"><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code> Package</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-parameters">Common Parameters</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fvd-specific">FVD-specific</a></li>
@@ -1007,7 +1009,7 @@ all frames are blurry in the same way).</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-specific-evaluation-scripts">Model-Specific Evaluation Scripts</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diamond-synora-inference-eval-diamond-py">DIAMOND (<code class="docutils literal notranslate"><span class="pre">synora/inference/eval_diamond.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diamond-simulusion-inference-eval-diamond-py">DIAMOND (<code class="docutils literal notranslate"><span class="pre">simulusion/inference/eval_diamond.py</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#extending-to-other-models">Extending to Other Models</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#trajectory-collection-utilities">Trajectory Collection Utilities</a></li>
 </ul>
@@ -1048,8 +1050,8 @@ all frames are blurry in the same way).</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1082,7 +1084,7 @@ all frames are blurry in the same way).</p></li>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

@@ -1,6 +1,6 @@
 # DeepMind Lab
 
-Synora supports DeepMind Lab through `DMLabEnv`, a lightweight adapter around the
+Simulusion supports DeepMind Lab through `DMLabEnv`, a lightweight adapter around the
 native `deepmind_lab` Python module. It converts Lab RGB observations into the
 channel-first image dictionary used by Dreamer and other pixel-based world-model
 code.
@@ -12,7 +12,7 @@ Dreamer uses `cfg.env_backend = "dmlab"` to select this backend. DMLab-specific 
 ## Direct usage
 
 ```python
-from synora import make_dmlab_env
+from simulusion import make_dmlab_env
 
 env = make_dmlab_env("rooms_collect_good_objects_train", seed=0, size=(64, 64))
 obs = env.reset()
@@ -34,6 +34,6 @@ of navigation actions. You can pass `action_set=` to `DMLabEnv` or set
 | `cfg.dmlab_config` | `None` | Extra Lab config values. Width and height are derived from `cfg.image_size`. |
 | `cfg.dmlab_renderer` | `"hardware"` | Renderer argument forwarded to `deepmind_lab.Lab`. |
 
-Synora's shared Dreamer wrapper stack still applies `cfg.action_repeat` outside
+Simulusion's shared Dreamer wrapper stack still applies `cfg.action_repeat` outside
 the DMLab adapter. If you only want native Lab frame repeat, leave
 `cfg.action_repeat = 1`.

@@ -1,20 +1,20 @@
 # DeepMind Control Suite
 
-The DeepMind Control Suite (DMC) backend is the default Dreamer environment path in Synora. It wraps `dm_control.suite` tasks with a Gym-like interface, keeps all native DMC state observations, and adds a rendered RGB image so image-based world models can train on a consistent observation contract.
+The DeepMind Control Suite (DMC) backend is the default Dreamer environment path in Simulusion. It wraps `dm_control.suite` tasks with a Gym-like interface, keeps all native DMC state observations, and adds a rendered RGB image so image-based world models can train on a consistent observation contract.
 
 ## Install
 
 ```bash
-pip install "synora[dmc]"          # pip, Python 3.12 and below
-python -m synora.install_dmc       # pip or uv, any version, including 3.13
+pip install "simulusion[dmc]"          # pip, Python 3.12 and below
+python -m simulusion.install_dmc       # pip or uv, any version, including 3.13
 uv sync --extra dmc-uv              # uv, any version
 ```
 
 On CPython 3.13 the extra alone is not enough. dm-control requires the `labmaze`
 distribution, whose newest release (1.0.6) publishes wheels only through CPython
 3.12, so resolving it on 3.13 builds labmaze from source with Bazel and the
-install fails. Synora therefore leaves dm-control out of the `dmc` extra on 3.13
-— so the extra always installs cleanly — and `python -m synora.install_dmc`
+install fails. Simulusion therefore leaves dm-control out of the `dmc` extra on 3.13
+— so the extra always installs cleanly — and `python -m simulusion.install_dmc`
 finishes the job:
 
 1. installs [`labmaze-new`](https://pypi.org/project/labmaze-new/), the same
@@ -24,7 +24,7 @@ finishes the job:
 2. installs `dm-control` with `--no-deps`, so pip never resolves that pin;
 3. installs dm-control's remaining dependencies explicitly.
 
-`python -m synora.install_dmc --check` verifies an existing environment, and
+`python -m simulusion.install_dmc --check` verifies an existing environment, and
 `--dry-run` prints the commands; it uses `uv pip` automatically inside a
 uv-managed virtualenv.
 
@@ -53,13 +53,13 @@ available, or use a Python 3.12 environment.
 ## Main API
 
 ```python
-from synora import DeepMindControlEnv
+from simulusion import DeepMindControlEnv
 
 env = DeepMindControlEnv("cheetah-run", seed=0, size=(64, 64))
 obs = env.reset()
 ```
 
-The environment name uses a `domain-task` string. Synora splits the string at the first hyphen. For example, `cheetah-run` maps to `domain="cheetah"` and `task="run"`. The special shorthand `cup-*` maps to DMC's `ball_in_cup` domain.
+The environment name uses a `domain-task` string. Simulusion splits the string at the first hyphen. For example, `cheetah-run` maps to `domain="cheetah"` and `task="run"`. The special shorthand `cup-*` maps to DMC's `ball_in_cup` domain.
 
 Dreamer uses `cfg.env_backend = "dmc"` to select this backend. See {doc}`../dreamer` for the full Dreamer config reference.
 
@@ -101,7 +101,7 @@ assert (obs_a == obs_b).all()
 
 ## Cameras and rendering
 
-Pass `camera=<id>` when constructing `DeepMindControlEnv` directly. If no camera is provided, Synora uses camera `2` for `quadruped` and camera `0` for other domains. Only `rgb_array` rendering is supported.
+Pass `camera=<id>` when constructing `DeepMindControlEnv` directly. If no camera is provided, Simulusion uses camera `2` for `quadruped` and camera `0` for other domains. Only `rgb_array` rendering is supported.
 
 ## Troubleshooting
 

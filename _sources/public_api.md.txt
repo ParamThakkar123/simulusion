@@ -1,20 +1,20 @@
 # Public API Quick Reference
 
-Synora exposes `synora` as the friendly public namespace for both
+Simulusion exposes `simulusion` as the friendly public namespace for both
 application code and direct component imports. Use it for factory helpers,
 model classes, config classes, and environment constructors.
 
 ## Common Workflow
 
 ```python
-import synora
+import simulusion
 
 # Discover supported factories.
-models = synora.list_models()
-backends = synora.list_env_backends()
+models = simulusion.list_models()
+backends = simulusion.list_env_backends()
 
 # Configure and create a model in one step.
-agent = synora.create_model(
+agent = simulusion.create_model(
     "dreamer",
     env_backend="dmc",
     env="walker-walk",
@@ -22,7 +22,7 @@ agent = synora.create_model(
 )
 
 # Create standalone environments through a consistent backend selector.
-env = synora.make_env("CartPole-v1", backend="gym")
+env = simulusion.make_env("CartPole-v1", backend="gym")
 ```
 
 ## Factory Helpers
@@ -39,10 +39,10 @@ env = synora.make_env("CartPole-v1", backend="gym")
 ## Direct Imports Still Work
 
 The factory API is a convenience layer. Advanced and research workflows can keep
-using direct imports from `synora`:
+using direct imports from `simulusion`:
 
 ```python
-from synora import DreamerAgent, DreamerConfig, RSSM
+from simulusion import DreamerAgent, DreamerConfig, RSSM
 
 cfg = DreamerConfig()
 cfg.env = "walker-walk"

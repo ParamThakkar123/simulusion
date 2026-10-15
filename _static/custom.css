@@ -691,3 +691,104 @@ section {
     animation: none;
   }
 }
+
+/* === DEMO MEDIA & GALLERY === */
+.demo-media {
+  margin: 1.25rem 0 1.5rem;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.demo-media video,
+.demo-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.demo-media figcaption {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--pst-color-text-muted);
+  background: var(--pst-color-surface);
+  border-top: 1px solid var(--pst-color-border);
+}
+
+.demo-media figcaption code {
+  font-size: 0.8rem;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.demo-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--pst-color-surface);
+  color: inherit;
+  text-decoration: none !important;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.demo-card:hover {
+  border-color: var(--pst-color-primary);
+  transform: translateY(-2px);
+}
+
+.demo-card video,
+.demo-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #0f172a;
+  image-rendering: pixelated;
+}
+
+.demo-card .demo-card-body {
+  padding: 0.7rem 0.9rem 0.85rem;
+}
+
+.demo-card .demo-card-title {
+  display: block;
+  font-weight: 600;
+  color: var(--pst-color-text-base);
+  margin-bottom: 0.2rem;
+}
+
+.demo-card .demo-card-text {
+  display: block;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--pst-color-text-muted);
+}
+
+.demo-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.demo-pair .demo-media {
+  margin: 0.5rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-card {
+    transition: none;
+  }
+  .demo-card:hover {
+    transform: none;
+  }
+}

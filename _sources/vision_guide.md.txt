@@ -1,6 +1,6 @@
 # Vision Components
 
-Synora provides a family of reusable vision modules — encoders, decoders,
+Simulusion provides a family of reusable vision modules — encoders, decoders,
 tokenizers, quantization layers, and distribution transforms — that serve as
 building blocks for world models and representation learning.
 
@@ -10,15 +10,15 @@ building blocks for world models and representation learning.
 
 ## Overview
 
-All components live under `synora.vision` and are accessible from the
+All components live under `simulusion.vision` and are accessible from the
 top-level package:
 
 ```python
-import synora
+import simulusion
 
 # Imports
-from synora import ConvEncoder, ConvDecoder, VideoTokenizer
-from synora import VectorQuantizer, VectorQuantizerEMA
+from simulusion import ConvEncoder, ConvDecoder, VideoTokenizer
+from simulusion import VectorQuantizer, VectorQuantizerEMA
 ```
 
 | Category | Component | Used by |
@@ -44,7 +44,7 @@ from synora import VectorQuantizer, VectorQuantizerEMA
 ### `ConvEncoder` — Dreamer convolutional encoder
 
 ```python
-from synora import ConvEncoder
+from simulusion import ConvEncoder
 
 encoder = ConvEncoder(
     input_shape=(3, 64, 64),  # (C, H, W)
@@ -64,7 +64,7 @@ Input values in `[-0.5, 0.5]`.
 ### `CNNEncoder` — PlaNet encoder
 
 ```python
-from synora import CNNEncoder
+from simulusion import CNNEncoder
 
 encoder = CNNEncoder(embedding_size=256, activation_function="relu")
 ```
@@ -75,7 +75,7 @@ channels and no configurable depth parameter.
 ### `IRISEncoder` — IRIS discrete encoder
 
 ```python
-from synora import IRISEncoder
+from simulusion import IRISEncoder
 
 encoder = IRISEncoder(
     vocab_size=512,  # codebook size
@@ -95,7 +95,7 @@ discrete token indices. Input should be 64×64 images.
 ### `ConvDecoder` — Dreamer convolutional decoder
 
 ```python
-from synora import ConvDecoder
+from simulusion import ConvDecoder
 
 decoder = ConvDecoder(
     stoch_size=30,  # stochastic latent dimension
@@ -119,7 +119,7 @@ compute `log_prob` directly.
 ### `DenseDecoder` — reward/value/discount head
 
 ```python
-from synora import DenseDecoder
+from simulusion import DenseDecoder
 
 # Regression (reward, value)
 decoder = DenseDecoder(
@@ -167,7 +167,7 @@ decoder = DenseDecoder(
 ### `ActionDecoder` — Dreamer policy head
 
 ```python
-from synora import ActionDecoder
+from simulusion import ActionDecoder
 
 actor = ActionDecoder(
     action_size=6,
@@ -195,7 +195,7 @@ deployment; the stochastic mode is used during training.
 ### `VectorQuantizer` and `VectorQuantizerEMA`
 
 ```python
-from synora import VectorQuantizer, VectorQuantizerEMA
+from simulusion import VectorQuantizer, VectorQuantizerEMA
 
 # Standard VQ (gradient-based codebook updates)
 vq = VectorQuantizer(vocab_size=512, embedding_dim=64, commitment_weight=0.25)
@@ -224,7 +224,7 @@ descent, which typically produces higher codebook utilization.
 ### `VideoTokenizer` — Genie-style VQ-VAE
 
 ```python
-from synora import VideoTokenizer
+from simulusion import VideoTokenizer
 
 tokenizer = VideoTokenizer(
     num_frames=16,
@@ -269,7 +269,7 @@ embeddings = tokenizer.decode_indices(indices)  # (B, T, 16, 16, 32)
 recon = tokenizer.decode(z_q)
 
 # Factory shortcut
-from synora.vision.video_tokenizer import create_video_tokenizer
+from simulusion.vision.video_tokenizer import create_video_tokenizer
 
 tokenizer = create_video_tokenizer(num_frames=16, image_size=64)
 ```
@@ -283,7 +283,7 @@ internally by `ActionDecoder`.
 
 ```python
 from torch.distributions import TransformedDistribution, Normal
-from synora import TanhBijector
+from simulusion import TanhBijector
 
 dist = TransformedDistribution(Normal(mean, std), TanhBijector())
 action = dist.sample()  # bounded to [-1, 1]
@@ -302,7 +302,7 @@ encodes targets into a categorical distribution over `num_buckets` evenly
 spaced bins within `[-symlog_range, symlog_range]`, then decodes via symexp.
 
 ```python
-from synora.vision.dreamer_decoder import _TwoHotDistribution
+from simulusion.vision.dreamer_decoder import _TwoHotDistribution
 
 dist = _TwoHotDistribution(logits, num_buckets=255, symlog_range=10.0)
 dist.log_prob(target)  # categorical cross-entropy in symlog space
@@ -312,7 +312,7 @@ dist.mean()  # expectation decoded via symexp
 ## ConvVAE
 
 ```python
-from synora.vision.VAE.ConvVAE import ConvVAE
+from simulusion.vision.VAE.ConvVAE import ConvVAE
 
 vae = ConvVAE(
     latent_dim=32,

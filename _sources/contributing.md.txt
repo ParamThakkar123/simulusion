@@ -1,13 +1,13 @@
 # Contributing
 
-We welcome contributions to Synora! This guide covers how to get started.
+We welcome contributions to Simulusion! This guide covers how to get started.
 
 ## Development Setup
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/ParamThakkar123/synora.git
-   cd synora
+   git clone https://github.com/ParamThakkar123/simulusion.git
+   cd simulusion
    ```
 
 2. **Install in development mode**
@@ -63,7 +63,7 @@ pytest -m "not slow and not gpu and not integration"
 pytest tests/masks/test_masks.py
 
 # With coverage
-pytest --cov=synora --cov-report=html
+pytest --cov=simulusion --cov-report=html
 ```
 
 ## Documentation
@@ -80,15 +80,15 @@ Open `docs/build/html/index.html` in your browser.
 
 ### 1. New Models
 
-1. Create model class in `synora/models/`
-2. Add config class in `synora/configs/`
-3. Export both from `synora/__init__.py`
+1. Create model class in `simulusion/models/`
+2. Add config class in `simulusion/configs/`
+3. Export both from `simulusion/__init__.py`
 4. Update training scripts
 5. Add documentation and tests
 
 ### 2. New Environments
 
-1. Implement environment wrapper in `synora/envs/`
+1. Implement environment wrapper in `simulusion/envs/`
 2. Add to environment registry
 3. Update documentation
 

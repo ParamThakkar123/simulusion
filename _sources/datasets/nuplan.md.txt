@@ -8,14 +8,14 @@ The NuPlan dataset backend provides a PyTorch interface to the [Motional NuPlan]
 pip install nuplan-devkit
 ```
 
-NuPlan is not part of Synora's minimal dependencies. You also need a local copy of the NuPlan dataset. Download it from [nuplan.org](https://www.nuplan.org/nuplan) and unpack it to `~/nuplan/dataset` (or set `$NUPLAN_DATA_ROOT`).
+NuPlan is not part of Simulusion's minimal dependencies. You also need a local copy of the NuPlan dataset. Download it from [nuplan.org](https://www.nuplan.org/nuplan) and unpack it to `~/nuplan/dataset` (or set `$NUPLAN_DATA_ROOT`).
 
 The dataset is ~1.8 TB for the full split. For prototyping, use the mini split (`~/nuplan/dataset/mini`, ~13 GB).
 
 ## Main API
 
 ```python
-from synora.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
+from simulusion.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
 
 # Build a dataset over the mini split.
 dataset = NuPlanDataset(
@@ -63,7 +63,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Sample structure
 
 ```{eval-rst}
-.. autoclass:: synora.datasets.nuplan.NuPlanSample
+.. autoclass:: simulusion.datasets.nuplan.NuPlanSample
    :members:
    :noindex:
 ```
@@ -71,7 +71,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Dataset class
 
 ```{eval-rst}
-.. autoclass:: synora.datasets.nuplan.NuPlanDataset
+.. autoclass:: simulusion.datasets.nuplan.NuPlanDataset
    :members:
    :noindex:
 ```
@@ -79,7 +79,7 @@ dataset, loader = make_nuplan_dataloader(
 ## DataLoader factory
 
 ```{eval-rst}
-.. autofunction:: synora.datasets.nuplan.make_nuplan_dataloader
+.. autofunction:: simulusion.datasets.nuplan.make_nuplan_dataloader
    :noindex:
 ```
 

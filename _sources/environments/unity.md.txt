@@ -1,13 +1,13 @@
 # Unity ML-Agents
 
-The Unity ML-Agents backend connects Synora to an external Unity executable. It supports continuous-action ML-Agents behaviors, extracts visual observations when available, and converts vector observations into image-like inputs when necessary.
+The Unity ML-Agents backend connects Simulusion to an external Unity executable. It supports continuous-action ML-Agents behaviors, extracts visual observations when available, and converts vector observations into image-like inputs when necessary.
 
-Install: `pip install synora[ml-agents]` (requires a Unity executable at runtime)
+Install: `pip install simulusion[ml-agents]` (requires a Unity executable at runtime)
 
 ## Main API
 
 ```python
-from synora import UnityMLAgentsEnv
+from simulusion import UnityMLAgentsEnv
 
 env = UnityMLAgentsEnv(
     file_name="/path/to/UnityEnvironment.x86_64",
@@ -23,7 +23,7 @@ env = UnityMLAgentsEnv(
 )
 ```
 
-If `behavior_name` is omitted, Synora uses the first behavior advertised by the Unity executable. The wrapper currently supports continuous action spaces only.
+If `behavior_name` is omitted, Simulusion uses the first behavior advertised by the Unity executable. The wrapper currently supports continuous action spaces only.
 
 Dreamer uses `cfg.env_backend = "unity_mlagents"` (or `"unity"`, `"mlagents"`) to select this backend. Requires `cfg.unity_file_name`. See {doc}`../dreamer` for the full Dreamer config reference.
 
@@ -43,11 +43,11 @@ The action space is a continuous Gymnasium `Box` with shape `(continuous_size,)`
 
 ## Engine settings
 
-Synora configures Unity through `EngineConfigurationChannel`:
+Simulusion configures Unity through `EngineConfigurationChannel`:
 
 | Setting | Source / behavior |
 |---|---|
-| `width` / `height` | Derived from the requested Synora image size |
+| `width` / `height` | Derived from the requested Simulusion image size |
 | `quality_level` | Controls graphics quality |
 | `time_scale` | Speeds up or slows down simulation |
 | `no_graphics=True` | Improves throughput for headless training when the executable supports it |

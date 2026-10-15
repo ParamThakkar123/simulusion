@@ -1,13 +1,13 @@
 # Procgen
 
-The Procgen backend adapts the `procgen.ProcgenEnv` vector API to Synora's single-environment image interface for procedurally generated benchmark games such as CoinRun, Maze, Heist, and StarPilot.
+The Procgen backend adapts the `procgen.ProcgenEnv` vector API to Simulusion's single-environment image interface for procedurally generated benchmark games such as CoinRun, Maze, Heist, and StarPilot.
 
-Install: `pip install procgen` manually. Upstream Procgen wheels only support Python <= 3.10, while Synora requires Python >= 3.11, so there is no `synora[procgen]` extra.
+Install: `pip install procgen` manually. Upstream Procgen wheels only support Python <= 3.10, while Simulusion requires Python >= 3.11, so there is no `simulusion[procgen]` extra.
 
 ## Main APIs
 
 ```python
-from synora.envs.procgen_env import make_procgen_env, list_procgen_envs
+from simulusion.envs.procgen_env import make_procgen_env, list_procgen_envs
 
 env = make_procgen_env("coinrun", seed=0, size=(64, 64))
 obs = env.reset()
@@ -34,11 +34,11 @@ Dreamer uses `cfg.env_backend = "procgen"` (or `"coinrun"`) to select this backe
 {"image": uint8 array with shape (3, H, W)}
 ```
 
-Procgen actions are discrete. For consistency with Synora's other discrete image adapters, the wrapper exposes a continuous one-hot-like action space with shape `(n,)` and values in `[-1, 1]`. The selected action is the index of the largest value in the model action vector.
+Procgen actions are discrete. For consistency with Simulusion's other discrete image adapters, the wrapper exposes a continuous one-hot-like action space with shape `(n,)` and values in `[-1, 1]`. The selected action is the index of the largest value in the model action vector.
 
 ## Example script
 
-Synora includes a compact Dreamer example for Procgen environments:
+Simulusion includes a compact Dreamer example for Procgen environments:
 
 ```bash
 python examples/run_dreamer_procgen.py --env coinrun --total-steps 2000
@@ -47,4 +47,4 @@ python examples/run_dreamer_procgen.py --list-envs
 
 ## Available games
 
-Synora recognizes the standard Procgen games: `bigfish`, `bossfight`, `caveflyer`, `chaser`, `climber`, `coinrun`, `dodgeball`, `fruitbot`, `heist`, `jumper`, `leaper`, `maze`, `miner`, `ninja`, `plunder`, and `starpilot`.
+Simulusion recognizes the standard Procgen games: `bigfish`, `bossfight`, `caveflyer`, `chaser`, `climber`, `coinrun`, `dodgeball`, `fruitbot`, `heist`, `jumper`, `leaper`, `maze`, `miner`, `ninja`, `plunder`, and `starpilot`.

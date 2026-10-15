@@ -1,4 +1,4 @@
-# Tutorial: Plug Synora world models into RL libraries
+# Tutorial: Plug Simulusion world models into RL libraries
 
 `WorldModelEnv` is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do **not** need to know whether a transition came from MuJoCo, Atari, Brax, or a learned dynamics model. They only need the Gymnasium contract:
 
@@ -7,7 +7,7 @@ obs, info = env.reset(seed=0)
 obs, reward, terminated, truncated, info = env.step(action)
 ```
 
-Because `WorldModelEnv` implements that contract, you can hand it to Stable-Baselines3, wrap it with TorchRL's `GymWrapper`, or use it inside a CleanRL-style training script. The world model itself does not need to implement a single Synora-specific interface: provide small adapter callables whenever the model uses custom method names, latent-state objects, reward heads, or action encodings.
+Because `WorldModelEnv` implements that contract, you can hand it to Stable-Baselines3, wrap it with TorchRL's `GymWrapper`, or use it inside a CleanRL-style training script. The world model itself does not need to implement a single Simulusion-specific interface: provide small adapter callables whenever the model uses custom method names, latent-state objects, reward heads, or action encodings.
 
 A notebook version of this tutorial is also available (requires pandoc to build).
 
@@ -19,12 +19,12 @@ Start by writing the smallest glue layer between your trained model and the Gymn
 import gymnasium as gym
 import numpy as np
 
-from synora import WorldModelEnv
+from simulusion import WorldModelEnv
 
 
 trained_model = (
     ...
-)  # Load a Synora model, an exported module, or your own adapter object.
+)  # Load a Simulusion model, an exported module, or your own adapter object.
 initial_latent = ...  # Optional: pass None if reset_fn creates the initial state.
 
 obs_space = gym.spaces.Box(-np.inf, np.inf, shape=(64,), dtype=np.float32)

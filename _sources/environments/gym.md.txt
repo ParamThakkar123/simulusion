@@ -1,13 +1,13 @@
 # Gym and Gymnasium
 
-The Gym/Gymnasium backend adapts standard Gym-like environments to Synora's image-first training interface. It accepts either an environment ID string or a pre-built environment instance and returns observations as `{"image": ...}`.
+The Gym/Gymnasium backend adapts standard Gym-like environments to Simulusion's image-first training interface. It accepts either an environment ID string or a pre-built environment instance and returns observations as `{"image": ...}`.
 
-Install: `pip install synora[gym]` for Gymnasium extras.
+Install: `pip install simulusion[gym]` for Gymnasium extras.
 
 ## Main APIs
 
 ```python
-from synora import GymImageEnv, make_gym_env
+from simulusion import GymImageEnv, make_gym_env
 
 env = make_gym_env("Pendulum-v1", seed=0, size=(64, 64), render_mode="rgb_array")
 obs = env.reset()
@@ -17,7 +17,7 @@ You can also wrap an already-created environment:
 
 ```python
 import gymnasium as gym
-from synora import GymImageEnv
+from simulusion import GymImageEnv
 
 base_env = gym.make("CartPole-v1", render_mode="rgb_array")
 env = GymImageEnv(base_env, seed=123, size=(64, 64))
@@ -40,7 +40,7 @@ The wrapper handles several observation styles:
 - Vector observations by rendering simple vertical intensity bands into an RGB image.
 - HWC, CHW, grayscale, and RGBA images by converting to RGB, resizing, and transposing to CHW.
 
-When the wrapped environment supports `render()`, Synora attempts to use rendered frames for visual observations. If rendering fails or only vector observations are available, it falls back to vector-to-image synthesis.
+When the wrapped environment supports `render()`, Simulusion attempts to use rendered frames for visual observations. If rendering fails or only vector observations are available, it falls back to vector-to-image synthesis.
 
 ## Seed determinism
 
@@ -65,17 +65,17 @@ For discrete action spaces, `GymImageEnv.action_space` is a continuous `Box` of 
 
 ## Example environments
 
-The lightweight catalog now queries the installed Gymnasium registry at runtime instead of maintaining a hardcoded list of versioned environment IDs. Use Gymnasium's environment docs and `synora envs list` to inspect the IDs available in your local installation and optional extras.
+The lightweight catalog now queries the installed Gymnasium registry at runtime instead of maintaining a hardcoded list of versioned environment IDs. Use Gymnasium's environment docs and `simulusion envs list` to inspect the IDs available in your local installation and optional extras.
 
 ## CLI collection
 
 The CLI can collect random-policy rollouts from Gym-like environments:
 
 ```bash
-synora collect --env CartPole-v1 --steps 1000 --out cartpole.npz
+simulusion collect --env CartPole-v1 --steps 1000 --out cartpole.npz
 ```
 
-The command first tries `synora.make_env()` and falls back to `gym.make()`.
+The command first tries `simulusion.make_env()` and falls back to `gym.make()`.
 
 ## Troubleshooting
 
