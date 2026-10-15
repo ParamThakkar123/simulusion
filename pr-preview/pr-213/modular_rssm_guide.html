@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Modular RSSM" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-213/modular_rssm_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="The Modular RSSM lets you mix and match encoder, backbone, and decoder components for world-model research. The standard Dreamer RSSM is a fixed architecture; the modular variant exposes every piec..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-213/_images/social_previews/summary_modular_rssm_guide_15ea7550.png" />
+<meta property="og:image:alt" content="The Modular RSSM lets you mix and match encoder, backbone, and decoder components for world-model research. The standard Dreamer RSSM is a fixed architecture; the modular variant exposes every piec..." />
+<meta name="description" content="The Modular RSSM lets you mix and match encoder, backbone, and decoder components for world-model research. The standard Dreamer RSSM is a fixed architecture; the modular variant exposes every piec..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Modular RSSM &#8212; Simulusion 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modular_rssm_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-213/modular_rssm_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Vision Components" href="vision_guide.html" />
+    <link rel="prev" title="Tutorial: Plug Simulusion world models into RL libraries" href="tutorials/world_model_env_rl_libraries.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Modular RSSM</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="modular-rssm">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Modular RSSM</a><a class="headerlink" href="#modular-rssm" title="Link to this heading">#</a></h1>
+<p>The Modular RSSM lets you mix and match encoder, backbone, and decoder
+components for world-model research. The standard Dreamer RSSM is a fixed
+architecture; the modular variant exposes every piece as a pluggable component.</p>
+<section id="see-it-in-action">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">See it in action</a><a class="headerlink" href="#see-it-in-action" title="Link to this heading">#</a></h2>
+<figure class="demo-media">
+  <video src="_static/gallery/modular_rssm_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>The same encoder and decoder with a GRU and an LSTM backbone, both predicting open loop next to the real frames.</figcaption>
+</figure><p>Trained from scratch in one to two hours on a 4 GB laptop GPU with
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">demos/modular_rssm_demo.py</span> <span class="pre">train</span></code>, then recorded with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">demos/modular_rssm_demo.py</span> <span class="pre">record</span></code>.
+More clips are in the <a class="reference internal" href="gallery.html#gallery-modular-rssm"><span class="std std-ref">gallery</span></a>.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#modular-rssm" id="id1">Modular RSSM</a></p>
+<ul>
+<li><p><a class="reference internal" href="#see-it-in-action" id="id2">See it in action</a></p></li>
+<li><p><a class="reference internal" href="#overview" id="id3">Overview</a></p></li>
+<li><p><a class="reference internal" href="#quick-start" id="id4">Quick start</a></p></li>
+<li><p><a class="reference internal" href="#components" id="id5">Components</a></p>
+<ul>
+<li><p><a class="reference internal" href="#encoders" id="id6">Encoders</a></p></li>
+<li><p><a class="reference internal" href="#backbones" id="id7">Backbones</a></p></li>
+<li><p><a class="reference internal" href="#decoders" id="id8">Decoders</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#direct-construction" id="id9">Direct construction</a></p></li>
+<li><p><a class="reference internal" href="#forward-pass" id="id10">Forward pass</a></p>
+<ul>
+<li><p><a class="reference internal" href="#single-step-operations" id="id11">Single-step operations</a></p></li>
+<li><p><a class="reference internal" href="#rollout-operations" id="id12">Rollout operations</a></p></li>
+<li><p><a class="reference internal" href="#decoding" id="id13">Decoding</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#ablation-studies" id="id14">Ablation studies</a></p></li>
+<li><p><a class="reference internal" href="#custom-components" id="id15">Custom components</a></p></li>
+<li><p><a class="reference internal" href="#integration-with-training" id="id16">Integration with training</a></p></li>
+<li><p><a class="reference internal" href="#available-via-the-public-api" id="id17">Available via the public API</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id18">See Also</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+</section>
+<section id="overview">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The architecture has three slots:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Observation → Encoder → Backbone → Decoder → Reconstruction
+                           │
+                    Reward Decoder → Reward prediction
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Slot</p></th>
+<th class="head"><p>Built-in options</p></th>
+<th class="head"><p>Custom</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Encoder</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">MLPEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">ViTEncoder</span></code></p></td>
+<td><p>Subclass <code class="docutils literal notranslate"><span class="pre">EncoderBase</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Backbone</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">GRUBackbone</span></code>, <code class="docutils literal notranslate"><span class="pre">LSTMBackbone</span></code>, <code class="docutils literal notranslate"><span class="pre">TransformerBackbone</span></code></p></td>
+<td><p>Subclass <code class="docutils literal notranslate"><span class="pre">BackboneBase</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Decoder</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code>, <code class="docutils literal notranslate"><span class="pre">MLPDecoder</span></code></p></td>
+<td><p>Subclass <code class="docutils literal notranslate"><span class="pre">DecoderBase</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">reward_decoder</span></code> (always an <code class="docutils literal notranslate"><span class="pre">MLPDecoder</span></code>) is attached automatically when using
+the factory, or can be provided manually.</p>
+</section>
+<section id="quick-start">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<p>Use the factory for the most common combinations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_modular_rssm</span>
+
+<span class="n">rssm</span> <span class="o">=</span> <span class="n">create_modular_rssm</span><span class="p">(</span>
+    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">"conv"</span><span class="p">,</span>  <span class="c1"># "conv" | "mlp" | "vit"</span>
+    <span class="n">decoder_type</span><span class="o">=</span><span class="s2">"conv"</span><span class="p">,</span>  <span class="c1"># "conv" | "mlp"</span>
+    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">"gru"</span><span class="p">,</span>  <span class="c1"># "gru" | "lstm" | "transformer"</span>
+    <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># (C, H, W) for images, (D,) for state vectors</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The factory creates the three components plus a reward decoder and wraps them
+in a <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> container. All components are also importable individually
+for direct construction.</p>
+</section>
+<section id="components">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Components</a><a class="headerlink" href="#components" title="Link to this heading">#</a></h2>
+<section id="encoders">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Encoders</a><a class="headerlink" href="#encoders" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">MLPEncoder</span><span class="p">,</span> <span class="n">ViTEncoder</span>
+
+<span class="c1"># Convolutional encoder — Dreamer-style, for image observations</span>
+<span class="n">enc</span> <span class="o">=</span> <span class="n">ConvEncoder</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+
+<span class="c1"># MLP encoder — for low-dimensional state observations</span>
+<span class="n">enc</span> <span class="o">=</span> <span class="n">MLPEncoder</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">])</span>
+
+<span class="c1"># Vision Transformer encoder — for image observations with global context</span>
+<span class="n">enc</span> <span class="o">=</span> <span class="n">ViTEncoder</span><span class="p">(</span><span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Encoder</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Embedding</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> uint8/float</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">embed_size)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MLPEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">D)</span></code> float</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">embed_size)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ViTEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> float</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">embed_size)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="backbones">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Backbones</a><a class="headerlink" href="#backbones" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRUBackbone</span><span class="p">,</span> <span class="n">LSTMBackbone</span><span class="p">,</span> <span class="n">TransformerBackbone</span>
+
+<span class="c1"># GRU — standard RSSM recurrent dynamics</span>
+<span class="n">bb</span> <span class="o">=</span> <span class="n">GRUBackbone</span><span class="p">(</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">hidden_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span>
+<span class="p">)</span>
+
+<span class="c1"># LSTM — longer memory than GRU, at higher compute cost</span>
+<span class="n">bb</span> <span class="o">=</span> <span class="n">LSTMBackbone</span><span class="p">(</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">hidden_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span>
+<span class="p">)</span>
+
+<span class="c1"># Transformer — global dependencies, no recurrent state</span>
+<span class="n">bb</span> <span class="o">=</span> <span class="n">TransformerBackbone</span><span class="p">(</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">embed_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">num_heads</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">num_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Backbone</p></th>
+<th class="head"><p>State keys</p></th>
+<th class="head"><p>Use when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GRUBackbone</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">stoch</span></code>, <code class="docutils literal notranslate"><span class="pre">deter</span></code></p></td>
+<td><p>Standard Dreamer-style dynamics</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LSTMBackbone</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">stoch</span></code>, <code class="docutils literal notranslate"><span class="pre">deter</span></code>, <code class="docutils literal notranslate"><span class="pre">cell</span></code></p></td>
+<td><p>Longer horizons, slower drift</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TransformerBackbone</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">stoch</span></code>, <code class="docutils literal notranslate"><span class="pre">deter</span></code></p></td>
+<td><p>Non-recurrent, parallel training</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="decoders">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Decoders</a><a class="headerlink" href="#decoders" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">MLPDecoder</span>
+
+<span class="c1"># Convolutional decoder — reconstructs images from latent features</span>
+<span class="n">dec</span> <span class="o">=</span> <span class="n">ConvDecoder</span><span class="p">(</span><span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">depth</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+
+<span class="c1"># MLP decoder — reconstructs low-dimensional observations</span>
+<span class="n">dec</span> <span class="o">=</span> <span class="n">MLPDecoder</span><span class="p">(</span><span class="n">stoch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">output_dim</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="o">=</span><span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Both decoders return a <code class="docutils literal notranslate"><span class="pre">torch.distributions</span></code> object (the convolutional decoder
+returns a pixel-wise <code class="docutils literal notranslate"><span class="pre">Independent(Normal(mean,</span> <span class="pre">1))</span></code>).</p>
+</section>
+</section>
+<section id="direct-construction">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Direct construction</a><a class="headerlink" href="#direct-construction" title="Link to this heading">#</a></h2>
+<p>When you need fine-grained control over component configuration, construct
+each piece and pass them to <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModularRSSM</span><span class="p">,</span>
+    <span class="n">ConvEncoder</span><span class="p">,</span>
+    <span class="n">ConvDecoder</span><span class="p">,</span>
+    <span class="n">GRUBackbone</span><span class="p">,</span>
+    <span class="n">MLPDecoder</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ConvEncoder</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">embed_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">ConvDecoder</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="n">backbone</span> <span class="o">=</span> <span class="n">GRUBackbone</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+<span class="n">reward_decoder</span> <span class="o">=</span> <span class="n">MLPDecoder</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">rssm</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">encoder</span><span class="p">,</span> <span class="n">decoder</span><span class="p">,</span> <span class="n">backbone</span><span class="p">,</span> <span class="n">reward_decoder</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">reward_decoder</span></code> is omitted, calling <code class="docutils literal notranslate"><span class="pre">rssm.decode_reward(...)</span></code> raises
+a clear error.</p>
+</section>
+<section id="forward-pass">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Forward pass</a><a class="headerlink" href="#forward-pass" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> operates in two modes — observation (encode + posterior) and
+imagination (prior only):</p>
+<section id="single-step-operations">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Single-step operations</a><a class="headerlink" href="#single-step-operations" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cpu"</span><span class="p">)</span>
+<span class="c1">#   state = {"mean": (4, 32), "std": (4, 32), "stoch": (4, 32), "deter": (4, 200)}</span>
+
+<span class="n">action</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+
+<span class="c1"># Observe step: encode observation, compute posterior</span>
+<span class="n">prior</span><span class="p">,</span> <span class="n">posterior</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">observe_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">observation</span><span class="p">)</span>
+
+<span class="c1"># Imagine step: prior only (no observation available)</span>
+<span class="n">next_state</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">imagine_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="rollout-operations">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Rollout operations</a><a class="headerlink" href="#rollout-operations" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Observe a full trajectory — returns stacked states</span>
+<span class="n">priors</span><span class="p">,</span> <span class="n">posteriors</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">observe_rollout</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">observations</span><span class="p">,</span>  <span class="c1"># (T, B, C, H, W)</span>
+    <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">,</span>  <span class="c1"># (T, B, action_size)</span>
+    <span class="n">nonterms</span><span class="o">=</span><span class="n">nonterms</span><span class="p">,</span>  <span class="c1"># (T, B)  or (T, B, 1)</span>
+    <span class="n">prev_state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="n">T</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1">#   priors["stoch"]:     (T, B, 32)</span>
+<span class="c1">#   posteriors["stoch"]: (T, B, 32)</span>
+
+<span class="c1"># Imagine a rollout using an actor policy</span>
+<span class="n">imagined</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">imagine_rollout</span><span class="p">(</span>
+    <span class="n">actor</span><span class="o">=</span><span class="n">policy_network</span><span class="p">,</span>  <span class="c1"># callable: features → action</span>
+    <span class="n">prev_state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1">#   imagined["stoch"]: (15, B, 32)</span>
+</pre></div>
+</div>
+</section>
+<section id="decoding">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Decoding</a><a class="headerlink" href="#decoding" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Decode observations from latent features</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">"stoch"</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">obs_dist</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+<span class="n">reconstruction</span> <span class="o">=</span> <span class="n">obs_dist</span><span class="o">.</span><span class="n">mean</span>  <span class="c1"># or obs_dist.sample()</span>
+
+<span class="c1"># Decode rewards</span>
+<span class="n">reward_dist</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">decode_reward</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="ablation-studies">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Ablation studies</a><a class="headerlink" href="#ablation-studies" title="Link to this heading">#</a></h2>
+<p>Swapping one component at a time isolates its contribution:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Same encoder and decoder, different backbone</span>
+<span class="n">bb_gru</span> <span class="o">=</span> <span class="n">GRUBackbone</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+<span class="n">rssm_gru</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">bb_gru</span><span class="p">)</span>
+
+<span class="n">bb_lstm</span> <span class="o">=</span> <span class="n">LSTMBackbone</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+<span class="n">rssm_lstm</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">bb_lstm</span><span class="p">)</span>
+
+<span class="n">bb_transformer</span> <span class="o">=</span> <span class="n">TransformerBackbone</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+<span class="n">rssm_transformer</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">enc</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">bb_transformer</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or swap the encoder while keeping the backbone fixed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">enc_conv</span> <span class="o">=</span> <span class="n">ConvEncoder</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="mi">1024</span><span class="p">)</span>
+<span class="n">enc_vit</span> <span class="o">=</span> <span class="n">ViTEncoder</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="mi">512</span><span class="p">,</span> <span class="n">patch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="n">rssm_conv</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">enc_conv</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">bb</span><span class="p">)</span>
+<span class="n">rssm_vit</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">enc_vit</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">bb</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-components">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Custom components</a><a class="headerlink" href="#custom-components" title="Link to this heading">#</a></h2>
+<p>Subclass <code class="docutils literal notranslate"><span class="pre">EncoderBase</span></code>, <code class="docutils literal notranslate"><span class="pre">DecoderBase</span></code>, or <code class="docutils literal notranslate"><span class="pre">BackboneBase</span></code> and implement the
+required interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.modular_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncoderBase</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyEncoder</span><span class="p">(</span><span class="n">EncoderBase</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_size</span> <span class="o">=</span> <span class="n">embed_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+
+
+<span class="n">rssm</span> <span class="o">=</span> <span class="n">ModularRSSM</span><span class="p">(</span><span class="n">MyEncoder</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">decoder</span><span class="p">,</span> <span class="n">backbone</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The base classes enforce the contract via <code class="docutils literal notranslate"><span class="pre">ABC</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Base class</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EncoderBase</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forward(obs)</span> <span class="pre">→</span> <span class="pre">embedding</span></code>, attribute <code class="docutils literal notranslate"><span class="pre">embed_size</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DecoderBase</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forward(features)</span> <span class="pre">→</span> <span class="pre">distribution</span> <span class="pre">or</span> <span class="pre">tensor</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BackboneBase</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forward(state,</span> <span class="pre">action,</span> <span class="pre">obs_embed,</span> <span class="pre">nonterm)</span> <span class="pre">→</span> <span class="pre">(prior,</span> <span class="pre">posterior)</span></code>, <code class="docutils literal notranslate"><span class="pre">init_state(batch,</span> <span class="pre">device)</span> <span class="pre">→</span> <span class="pre">state_dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="integration-with-training">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Integration with training</a><a class="headerlink" href="#integration-with-training" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> works with any Dreamer-style training loop. The standard
+pattern is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">horizon</span><span class="p">):</span>
+    <span class="n">prior</span><span class="p">,</span> <span class="n">posterior</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">observe_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">actions</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="n">observations</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">posterior</span>
+
+<span class="c1"># Train on the posterior states</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">posterior</span><span class="p">[</span><span class="s2">"stoch"</span><span class="p">],</span> <span class="n">posterior</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">recon_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">rssm</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">reward_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">rssm</span><span class="o">.</span><span class="n">decode_reward</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="c1"># Imagine for actor-critic</span>
+<span class="n">imagined</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">imagine_rollout</span><span class="p">(</span><span class="n">actor</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">seq_to_batch</span></code> and <code class="docutils literal notranslate"><span class="pre">detach_state</span></code> helpers are available for managing
+sequence dimensions and gradient flow in recurrent training.</p>
+</section>
+<section id="available-via-the-public-api">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Available via the public API</a><a class="headerlink" href="#available-via-the-public-api" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="n">rssm</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_modular_rssm</span><span class="p">(</span>
+    <span class="n">encoder_type</span><span class="o">=</span><span class="s2">"vit"</span><span class="p">,</span>
+    <span class="n">backbone_type</span><span class="o">=</span><span class="s2">"transformer"</span><span class="p">,</span>
+    <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Or import directly</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModularRSSM</span><span class="p">,</span> <span class="n">create_modular_rssm</span>
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="vision_guide.html"><span class="doc">Vision Components</span></a> — available encoders (ConvEncoder, ViTEncoder, MLPEncoder) and decoders (ConvDecoder, MLPDecoder)</p></li>
+<li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — using the ModularRSSM inside a full Dreamer training loop</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tutorials/world_model_env_rl_libraries.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: Plug Simulusion world models into RL libraries</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="vision_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Vision Components</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-it-in-action">See it in action</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#components">Components</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encoders">Encoders</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#backbones">Backbones</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decoders">Decoders</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-construction">Direct construction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forward-pass">Forward pass</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-step-operations">Single-step operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rollout-operations">Rollout operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decoding">Decoding</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ablation-studies">Ablation studies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-components">Custom components</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-training">Integration with training</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-via-the-public-api">Available via the public API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/modular_rssm_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
