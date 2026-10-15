@@ -34,7 +34,7 @@ runs, not paper-scale results: the point is to show what each model does.
 </tr>
 <tr>
 <td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-genie"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/genie_replay.gif" alt="Genie" width="100%"></a><br><b>Genie</b>: a real Sonic clip beside Genie regenerating it from the first frame, with actions it learned from unlabelled video.</td>
-<td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-iris"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/iris_dream.gif" alt="IRIS" width="100%"></a><br><b>IRIS</b>: a policy playing Pong inside a Transformer world model made of discrete tokens.</td>
+<td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-iris"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/iris_dream.gif" alt="IRIS" width="100%"></a><br><b>IRIS</b>: a policy boxing inside a Transformer world model made of discrete tokens.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-planet"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/planet_dream.gif" alt="PlaNet" width="100%"></a><br><b>PlaNet</b>: a latent model predicting the future while a CEM planner searches inside it.</td>

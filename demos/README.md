@@ -12,7 +12,7 @@ curve. The results are shown in the
 | PlaNet | `planet_demo.py` | DMC cartpole swing-up | 75 min | real vs imagined, CEM planner, curve |
 | ModularRSSM | `modular_rssm_demo.py` | DMC cartpole swing-up, random actions | 25 min per backbone | real vs GRU vs LSTM, curve |
 | DIAMOND | `diamond_demo.py` | Atari Breakout | 21 epochs | real vs diffusion dream, agent in the dream, curve |
-| IRIS | `iris_demo.py` | Atari Pong | 100 min | token reconstructions, imagination, policy, curve |
+| IRIS | `iris_demo.py` | Atari Boxing | 300 epochs (multi-day on 4 GB) | token reconstructions, imagination, policy, curve |
 | Genie | `genie_demo.py` | TinyWorlds Sonic video | 6k steps | replay from inferred actions, all latent actions, tokens, curve |
 | DiT | `dit_demo.py` | CIFAR-10 | 40 epochs | class grid, denoising video |
 | I-JEPA | `jepa_demo.py` | CIFAR-10 | 30 epochs | nearest neighbours, patch-feature PCA, kNN accuracy |

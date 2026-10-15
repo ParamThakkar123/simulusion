@@ -54,7 +54,19 @@ DEMOS = {
         "dream.mp4",
     ),
     "diamond": ("diamond_demo.py", ["--epochs", "21"], [], "dream.mp4"),
-    "iris": ("iris_demo.py", ["--minutes", "100"], [], "dream.mp4"),
+    # The gallery's Boxing run: 300 epochs, several days on a 4 GB laptop GPU.
+    # --until-epoch makes --resume stop at the same epoch after any restart.
+    "iris_boxing": (
+        "iris_demo.py",
+        [
+            *("--game", "ALE/Boxing-v5", "--run", "demos/runs/iris_boxing"),
+            *("--until-epoch", "300", "--minutes", "100000", "--resume"),
+            *("--autoencoder-steps", "200", "--transformer-steps", "200"),
+            *("--actor-critic-steps", "50", "--actor-critic-batch", "64"),
+        ],
+        ["--run", "demos/runs/iris_boxing", "--policy-steps", "2000"],
+        "dream.mp4",
+    ),
     "genie": ("genie_demo.py", ["--steps", "6000"], [], "replay.mp4"),
     "dit": ("dit_demo.py", ["--epochs", "40", "--batch-size", "64"], [], "samples.png"),
     "jepa": ("jepa_demo.py", ["--epochs", "30"], [], "neighbours.png"),
