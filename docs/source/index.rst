@@ -1,5 +1,23 @@
-Simulusion Documentation
-========================
+Simulusion: World Models in PyTorch
+===================================
+
+.. raw:: html
+
+   <script type="application/ld+json">
+   {
+     "@context": "https://schema.org",
+     "@type": "SoftwareSourceCode",
+     "name": "Simulusion",
+     "description": "A modular PyTorch library for world models: Dreamer, PlaNet, DIAMOND, IRIS, Genie, DiT and I-JEPA behind one API.",
+     "url": "https://paramthakkar123.github.io/simulusion/",
+     "codeRepository": "https://github.com/paramthakkar123/simulusion",
+     "programmingLanguage": "Python",
+     "runtimePlatform": "PyTorch",
+     "license": "https://opensource.org/licenses/MIT",
+     "keywords": "world models, PyTorch, model-based reinforcement learning, Dreamer, DIAMOND, IRIS, Genie",
+     "author": {"@type": "Person", "name": "Param Thakkar"}
+   }
+   </script>
 
 Simulusion is a modular PyTorch library for world models: agents that learn how
 their environment works, then plan, act or generate inside that learned model.

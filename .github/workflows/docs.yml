@@ -51,7 +51,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           sudo apt-get update && sudo apt-get install -y pandoc
-          pip install sphinx myst-parser sphinx-rtd-theme sphinx-autodoc-typehints sphinxext.opengraph pydata-sphinx-theme sphinx-copybutton sphinxcontrib-mermaid sphinx-thebe nbsphinx matplotlib attrdict
+          pip install sphinx myst-parser sphinx-rtd-theme sphinx-autodoc-typehints sphinxext.opengraph sphinx-sitemap pydata-sphinx-theme sphinx-copybutton sphinxcontrib-mermaid sphinx-thebe nbsphinx matplotlib attrdict
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install numpy gym gymnasium tensorboardX tensorboard plotly pillow tqdm einops pyyaml pygame opencv-python albumentations cma
 
@@ -85,7 +85,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           sudo apt-get update && sudo apt-get install -y pandoc
-          pip install sphinx myst-parser sphinx-rtd-theme sphinx-autodoc-typehints sphinxext.opengraph pydata-sphinx-theme sphinx-copybutton sphinxcontrib-mermaid sphinx-thebe nbsphinx matplotlib attrdict
+          pip install sphinx myst-parser sphinx-rtd-theme sphinx-autodoc-typehints sphinxext.opengraph sphinx-sitemap pydata-sphinx-theme sphinx-copybutton sphinxcontrib-mermaid sphinx-thebe nbsphinx matplotlib attrdict
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install numpy gym gymnasium tensorboardX tensorboard plotly pillow tqdm einops pyyaml pygame opencv-python albumentations cma
 

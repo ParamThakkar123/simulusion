@@ -1,14 +1,27 @@
 [project]
 name = "simulusion"
 dynamic = ["version"]
-description = "A Modular Pytorch Based library for training world models"
+description = "A modular PyTorch library for world models: Dreamer, PlaNet, DIAMOND, IRIS, Genie, DiT and I-JEPA behind one API"
 readme = "README.md"
 authors = [
     { name = "Param Thakkar" },
 ]
 requires-python = ">=3.11"
 license = "MIT"
-keywords = ["world-models", "pytorch", "mbrl"]
+keywords = [
+    "world-models",
+    "pytorch",
+    "mbrl",
+    "model-based-reinforcement-learning",
+    "reinforcement-learning",
+    "dreamer",
+    "planet",
+    "diamond",
+    "iris",
+    "genie",
+    "diffusion",
+    "jepa",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
@@ -195,6 +208,7 @@ docs = [
     "sphinxcontrib-mermaid>=0.9.0",
     "sphinx-thebe>=0.3.0",
     "sphinxext-opengraph>=0.13.0",
+    "sphinx-sitemap>=2.6.0",
     "myst-parser>=2.0.0,<5.0.0",
     "nbsphinx>=0.9.8",
     "mistune>=3.3.0",

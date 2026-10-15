@@ -26,6 +26,7 @@ extensions = [
     "myst_parser",
     "sphinx_copybutton",
     "sphinxext.opengraph",
+    "sphinx_sitemap",
     "sphinxcontrib.mermaid",
     "nbsphinx",
 ]
@@ -124,6 +125,10 @@ autodoc_mock_imports = [
 ]
 
 html_theme = "pydata_sphinx_theme"
+# Suffix of every page's browser/search-result title ("Dreamer - Simulusion").
+# Sphinx's default ("<project> <release> documentation") is long and repeats
+# the name; the searchable terms belong in each page's own heading.
+html_title = "Simulusion"
 html_favicon = "_static/simulusion-favicon.svg"
 html_theme_options = {
     "github_url": "https://github.com/paramthakkar123/simulusion",
@@ -174,3 +179,7 @@ ogp_site_url = html_baseurl
 ogp_site_name = "Simulusion Documentation"
 ogp_description_length = 200
 ogp_enable_meta_description = True
+
+# sitemap.xml for search engines. html_baseurl already carries the full docs
+# root, so each entry is just the page link (no language/version segments).
+sitemap_url_scheme = "{link}"
