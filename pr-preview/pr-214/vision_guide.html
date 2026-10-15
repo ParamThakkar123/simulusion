@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Vision Components" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-214/vision_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Simulusion provides a family of reusable vision modules — encoders, decoders, tokenizers, quantization layers, and distribution transforms — that serve as building blocks for world models and repre..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-214/_images/social_previews/summary_vision_guide_20142767.png" />
+<meta property="og:image:alt" content="Simulusion provides a family of reusable vision modules — encoders, decoders, tokenizers, quantization layers, and distribution transforms — that serve as building blocks for world models and repre..." />
+<meta name="description" content="Simulusion provides a family of reusable vision modules — encoders, decoders, tokenizers, quantization layers, and distribution transforms — that serve as building blocks for world models and repre..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Vision Components &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'vision_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-214/vision_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Datasets" href="datasets_guide.html" />
+    <link rel="prev" title="Modular RSSM" href="modular_rssm_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Vision Components</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="vision-components">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Vision Components</a><a class="headerlink" href="#vision-components" title="Link to this heading">#</a></h1>
+<p>Simulusion provides a family of reusable vision modules — encoders, decoders,
+tokenizers, quantization layers, and distribution transforms — that serve as
+building blocks for world models and representation learning.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#vision-components" id="id1">Vision Components</a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
+<li><p><a class="reference internal" href="#encoders" id="id3">Encoders</a></p>
+<ul>
+<li><p><a class="reference internal" href="#convencoder-dreamer-convolutional-encoder" id="id4"><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code> — Dreamer convolutional encoder</a></p></li>
+<li><p><a class="reference internal" href="#cnnencoder-planet-encoder" id="id5"><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code> — PlaNet encoder</a></p></li>
+<li><p><a class="reference internal" href="#irisencoder-iris-discrete-encoder" id="id6"><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code> — IRIS discrete encoder</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#decoders" id="id7">Decoders</a></p>
+<ul>
+<li><p><a class="reference internal" href="#convdecoder-dreamer-convolutional-decoder" id="id8"><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code> — Dreamer convolutional decoder</a></p></li>
+<li><p><a class="reference internal" href="#densedecoder-reward-value-discount-head" id="id9"><code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code> — reward/value/discount head</a></p></li>
+<li><p><a class="reference internal" href="#actiondecoder-dreamer-policy-head" id="id10"><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code> — Dreamer policy head</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#quantization" id="id11">Quantization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#vectorquantizer-and-vectorquantizerema" id="id12"><code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code> and <code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#video-tokenization" id="id13">Video tokenization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#videotokenizer-genie-style-vq-vae" id="id14"><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code> — Genie-style VQ-VAE</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#distribution-utilities" id="id15">Distribution utilities</a></p>
+<ul>
+<li><p><a class="reference internal" href="#tanhbijector" id="id16"><code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code></a></p></li>
+<li><p><a class="reference internal" href="#sampledist" id="id17"><code class="docutils literal notranslate"><span class="pre">SampleDist</span></code></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#twohotdistribution" id="id18"><code class="docutils literal notranslate"><span class="pre">_TwoHotDistribution</span></code></a></p></li>
+<li><p><a class="reference internal" href="#convvae" id="id19">ConvVAE</a></p></li>
+<li><p><a class="reference internal" href="#which-component-to-use" id="id20">Which component to use</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id21">See Also</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>All components live under <code class="docutils literal notranslate"><span class="pre">simulusion.vision</span></code> and are accessible from the
+top-level package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="c1"># Imports</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span><span class="p">,</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">VideoTokenizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorQuantizer</span><span class="p">,</span> <span class="n">VectorQuantizerEMA</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Category</p></th>
+<th class="head"><p>Component</p></th>
+<th class="head"><p>Used by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Encoders</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code></p></td>
+<td><p>Dreamer (image → embedding)</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code></p></td>
+<td><p>PlaNet (image → embedding)</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code></p></td>
+<td><p>IRIS (image → discrete tokens)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Decoders</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code></p></td>
+<td><p>Dreamer (latent → image distribution)</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CNNDecoder</span></code></p></td>
+<td><p>PlaNet (latent → image)</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code></p></td>
+<td><p>Dreamer (latent → reward/value/discount)</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code></p></td>
+<td><p>Dreamer (latent → action distribution)</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IRISDecoder</span></code></p></td>
+<td><p>IRIS (tokens → image)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Video tokenization</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code></p></td>
+<td><p>Genie (video → discrete tokens)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Quantization</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code></p></td>
+<td><p>IRIS, Genie (embedding → codebook index)</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code></p></td>
+<td><p>IRIS, Genie (EMA codebook updates)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Distributions</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code></p></td>
+<td><p>Dreamer (action squashing)</p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SampleDist</span></code></p></td>
+<td><p>Dreamer (MC-sampled distribution stats)</p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_TwoHotDistribution</span></code></p></td>
+<td><p>DreamerV2 (symlog two-hot encoding)</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>VAE</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvVAE</span></code></p></td>
+<td><p>Standalone convolutional VAE</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="encoders">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Encoders</a><a class="headerlink" href="#encoders" title="Link to this heading">#</a></h2>
+<section id="convencoder-dreamer-convolutional-encoder">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code> — Dreamer convolutional encoder</a><a class="headerlink" href="#convencoder-dreamer-convolutional-encoder" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ConvEncoder</span><span class="p">(</span>
+    <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># (C, H, W)</span>
+    <span class="n">embed_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>  <span class="c1"># output dimension</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>  <span class="c1"># see below</span>
+    <span class="n">depth</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>  <span class="c1"># base channel count</span>
+<span class="p">)</span>
+
+<span class="n">obs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+<span class="n">embedding</span> <span class="o">=</span> <span class="n">encoder</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>  <span class="c1"># (4, 256)</span>
+</pre></div>
+</div>
+<p>Architecture: 4 convolutional layers (kernel 4, stride 2) with channel
+doubling <code class="docutils literal notranslate"><span class="pre">32</span> <span class="pre">→</span> <span class="pre">64</span> <span class="pre">→</span> <span class="pre">128</span> <span class="pre">→</span> <span class="pre">256</span></code>, then a linear projection to <code class="docutils literal notranslate"><span class="pre">embed_size</span></code>.
+Input values in <code class="docutils literal notranslate"><span class="pre">[-0.5,</span> <span class="pre">0.5]</span></code>.</p>
+</section>
+<section id="cnnencoder-planet-encoder">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code> — PlaNet encoder</a><a class="headerlink" href="#cnnencoder-planet-encoder" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNNEncoder</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">CNNEncoder</span><span class="p">(</span><span class="n">embedding_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">activation_function</span><span class="o">=</span><span class="s2">"relu"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Same depth-doubling pattern as <code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code> but hardcoded to 3 input
+channels and no configurable depth parameter.</p>
+</section>
+<section id="irisencoder-iris-discrete-encoder">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code> — IRIS discrete encoder</a><a class="headerlink" href="#irisencoder-iris-discrete-encoder" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISEncoder</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">IRISEncoder</span><span class="p">(</span>
+    <span class="n">vocab_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>  <span class="c1"># codebook size</span>
+    <span class="n">tokens_per_frame</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>  <span class="c1"># 4×4 grid of tokens</span>
+    <span class="n">embedding_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">frame_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Architecture: 4 conv layers (stride 2, 64×64 → 4×4), self-attention at 16×16
+and 8×8 resolutions, residual blocks, then a <code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code> produces
+discrete token indices. Input should be 64×64 images.</p>
+</section>
+</section>
+<section id="decoders">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Decoders</a><a class="headerlink" href="#decoders" title="Link to this heading">#</a></h2>
+<section id="convdecoder-dreamer-convolutional-decoder">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code> — Dreamer convolutional decoder</a><a class="headerlink" href="#convdecoder-dreamer-convolutional-decoder" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvDecoder</span>
+
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">ConvDecoder</span><span class="p">(</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>  <span class="c1"># stochastic latent dimension</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>  <span class="c1"># deterministic latent dimension</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># (C, H, W)</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>
+    <span class="n">depth</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">230</span><span class="p">)</span>  <span class="c1"># stoch + deter concatenated</span>
+<span class="n">dist</span> <span class="o">=</span> <span class="n">decoder</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>  <span class="c1"># Independent(Normal(mean, 1), 3)</span>
+<span class="n">reconstruction</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">mean</span>  <span class="c1"># (4, 3, 64, 64)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>  <span class="c1"># reconstruction loss</span>
+</pre></div>
+</div>
+<p>Architecture: linear projection from <code class="docutils literal notranslate"><span class="pre">(stoch+deter)</span></code> to <code class="docutils literal notranslate"><span class="pre">32×depth</span></code>, then
+4 transposed convolutions (stride 2, kernels <code class="docutils literal notranslate"><span class="pre">[5,</span> <span class="pre">5,</span> <span class="pre">6,</span> <span class="pre">6]</span></code>). Returns a
+<code class="docutils literal notranslate"><span class="pre">torch.distributions.Independent(Normal(mean,</span> <span class="pre">1))</span></code> distribution so you can
+compute <code class="docutils literal notranslate"><span class="pre">log_prob</span></code> directly.</p>
+</section>
+<section id="densedecoder-reward-value-discount-head">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code> — reward/value/discount head</a><a class="headerlink" href="#densedecoder-reward-value-discount-head" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseDecoder</span>
+
+<span class="c1"># Regression (reward, value)</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">DenseDecoder</span><span class="p">(</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+    <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>
+    <span class="n">dist</span><span class="o">=</span><span class="s2">"normal"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Binary classification (discount)</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">DenseDecoder</span><span class="p">(</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+    <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>
+    <span class="n">dist</span><span class="o">=</span><span class="s2">"binary"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Symlog two-hot (DreamerV2)</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">DenseDecoder</span><span class="p">(</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">output_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+    <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>
+    <span class="n">dist</span><span class="o">=</span><span class="s2">"symlog_twohot"</span><span class="p">,</span>
+    <span class="n">num_buckets</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+    <span class="n">symlog_range</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">dist</span></code></p></th>
+<th class="head"><p>Return type</p></th>
+<th class="head"><p>Use case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;normal&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Independent(Normal)</span></code></p></td>
+<td><p>Reward prediction, value function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;binary&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Independent(Bernoulli)</span></code></p></td>
+<td><p>Discount / termination prediction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;symlog_twohot&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_TwoHotDistribution</span></code></p></td>
+<td><p>DreamerV2 reward/value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></td>
+<td><p>Raw tensor</p></td>
+<td><p>Custom downstream processing</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="actiondecoder-dreamer-policy-head">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code> — Dreamer policy head</a><a class="headerlink" href="#actiondecoder-dreamer-policy-head" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionDecoder</span>
+
+<span class="n">actor</span> <span class="o">=</span> <span class="n">ActionDecoder</span><span class="p">(</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">stoch_size</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">deter_size</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">units</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+    <span class="n">activation</span><span class="o">=</span><span class="s2">"elu"</span><span class="p">,</span>
+    <span class="n">min_std</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+    <span class="n">init_std</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">mean_scale</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">230</span><span class="p">)</span>
+<span class="n">action</span> <span class="o">=</span> <span class="n">actor</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>  <span class="c1"># stochastic sample</span>
+<span class="n">action</span> <span class="o">=</span> <span class="n">actor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">deter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># deterministic mode</span>
+</pre></div>
+</div>
+<p>Outputs a Gaussian distribution squashed through <code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code> to <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.
+The deterministic mode (<code class="docutils literal notranslate"><span class="pre">deter=True</span></code>) returns the distribution mode for
+deployment; the stochastic mode is used during training.</p>
+</section>
+</section>
+<section id="quantization">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Quantization</a><a class="headerlink" href="#quantization" title="Link to this heading">#</a></h2>
+<section id="vectorquantizer-and-vectorquantizerema">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code> and <code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code></a><a class="headerlink" href="#vectorquantizer-and-vectorquantizerema" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorQuantizer</span><span class="p">,</span> <span class="n">VectorQuantizerEMA</span>
+
+<span class="c1"># Standard VQ (gradient-based codebook updates)</span>
+<span class="n">vq</span> <span class="o">=</span> <span class="n">VectorQuantizer</span><span class="p">(</span><span class="n">vocab_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">commitment_weight</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+<span class="c1"># EMA VQ (more stable codebook learning)</span>
+<span class="n">vq</span> <span class="o">=</span> <span class="n">VectorQuantizerEMA</span><span class="p">(</span>
+    <span class="n">vocab_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">embedding_dim</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">commitment_weight</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">ema_decay</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># (B, C, H, W)</span>
+<span class="n">z_q</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">vq</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="c1">#   z_q:      (4, 64, 8, 8)  quantized embeddings</span>
+<span class="c1">#   indices:  (4, 8, 8)      codebook indices per spatial location</span>
+<span class="c1">#   loss_dict: {"vq_loss": tensor, "perplexity": tensor}</span>
+</pre></div>
+</div>
+<p>Both layers implement the same interface. The EMA variant updates codebook
+vectors via exponential moving average of encoder outputs rather than gradient
+descent, which typically produces higher codebook utilization.</p>
+</section>
+</section>
+<section id="video-tokenization">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Video tokenization</a><a class="headerlink" href="#video-tokenization" title="Link to this heading">#</a></h2>
+<section id="videotokenizer-genie-style-vq-vae">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code> — Genie-style VQ-VAE</a><a class="headerlink" href="#videotokenizer-genie-style-vq-vae" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">VideoTokenizer</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">VideoTokenizer</span><span class="p">(</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">encoder_dim</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">decoder_dim</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">encoder_depth</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">decoder_depth</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">num_heads</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">patch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">embedding_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">use_ema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">ema_decay</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">video</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>  <span class="c1"># (B, C, T, H, W)</span>
+<span class="n">reconstructed</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+<span class="c1">#   reconstructed:  (2, 3, 16, 64, 64)</span>
+<span class="c1">#   indices:        (2, 16, 16, 16)  (T × H' × W')</span>
+<span class="c1">#   loss: {"recon_loss": ..., "vq_loss": ..., "perplexity": ...}</span>
+</pre></div>
+</div>
+<p>Architecture:</p>
+<ol class="arabic simple">
+<li><p>Patch embedding <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W)</span> <span class="pre">→</span> <span class="pre">(B,</span> <span class="pre">T×P,</span> <span class="pre">encoder_dim)</span></code></p></li>
+<li><p>Encoder ST-Transformer</p></li>
+<li><p>Per-frame vector quantization</p></li>
+<li><p>Decoder ST-Transformer</p></li>
+<li><p>Patch unembedding <code class="docutils literal notranslate"><span class="pre">→</span> <span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W)</span></code></p></li>
+</ol>
+<p>Key features: causal processing (each frame only uses previous frames),
+spatiotemporal transformer instead of full 3D ViT, per-frame VQ with shared
+codebook.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Encode to discrete tokens</span>
+<span class="n">z_q</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">vq_loss</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">video</span><span class="p">)</span>
+
+<span class="c1"># Decode from indices (for training downstream models)</span>
+<span class="n">embeddings</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode_indices</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>  <span class="c1"># (B, T, 16, 16, 32)</span>
+<span class="n">recon</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">z_q</span><span class="p">)</span>
+
+<span class="c1"># Factory shortcut</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.video_tokenizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_video_tokenizer</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">create_video_tokenizer</span><span class="p">(</span><span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="distribution-utilities">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Distribution utilities</a><a class="headerlink" href="#distribution-utilities" title="Link to this heading">#</a></h2>
+<section id="tanhbijector">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code></a><a class="headerlink" href="#tanhbijector" title="Link to this heading">#</a></h3>
+<p>Bijective tanh transform for squashing Gaussian actions to <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. Used
+internally by <code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformedDistribution</span><span class="p">,</span> <span class="n">Normal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">TanhBijector</span>
+
+<span class="n">dist</span> <span class="o">=</span> <span class="n">TransformedDistribution</span><span class="p">(</span><span class="n">Normal</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">),</span> <span class="n">TanhBijector</span><span class="p">())</span>
+<span class="n">action</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c1"># bounded to [-1, 1]</span>
+</pre></div>
+</div>
+</section>
+<section id="sampledist">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">SampleDist</span></code></a><a class="headerlink" href="#sampledist" title="Link to this heading">#</a></h3>
+<p>Wraps a distribution and approximates <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>, <code class="docutils literal notranslate"><span class="pre">entropy</span></code> via Monte
+Carlo sampling (100 samples by default). Used internally when the analytic
+form is unavailable (e.g., after tanh squashing).</p>
+</section>
+</section>
+<section id="twohotdistribution">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">_TwoHotDistribution</span></code></a><a class="headerlink" href="#twohotdistribution" title="Link to this heading">#</a></h2>
+<p>DreamerV2’s symlog two-hot encoding for scalar prediction. Internally
+encodes targets into a categorical distribution over <code class="docutils literal notranslate"><span class="pre">num_buckets</span></code> evenly
+spaced bins within <code class="docutils literal notranslate"><span class="pre">[-symlog_range,</span> <span class="pre">symlog_range]</span></code>, then decodes via symexp.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.dreamer_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">_TwoHotDistribution</span>
+
+<span class="n">dist</span> <span class="o">=</span> <span class="n">_TwoHotDistribution</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">num_buckets</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">symlog_range</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>  <span class="c1"># categorical cross-entropy in symlog space</span>
+<span class="n">dist</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>  <span class="c1"># expectation decoded via symexp</span>
+</pre></div>
+</div>
+</section>
+<section id="convvae">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">ConvVAE</a><a class="headerlink" href="#convvae" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.VAE.ConvVAE</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvVAE</span>
+
+<span class="n">vae</span> <span class="o">=</span> <span class="n">ConvVAE</span><span class="p">(</span>
+    <span class="n">latent_dim</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">recon</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span> <span class="o">=</span> <span class="n">vae</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">vae</span><span class="o">.</span><span class="n">loss_function</span><span class="p">(</span><span class="n">recon</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A standalone convolutional VAE for representation learning and generative
+modeling. Can be used as a building block or baseline.</p>
+</section>
+<section id="which-component-to-use">
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">Which component to use</a><a class="headerlink" href="#which-component-to-use" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Task</p></th>
+<th class="head"><p>Encoder</p></th>
+<th class="head"><p>Decoder</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Dreamer world model</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code> + <code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Dreamer policy</p></td>
+<td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PlaNet world model</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CNNDecoder</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>IRIS discrete AE</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">IRISDecoder</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Genie video tokenizer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code></p></td>
+<td><p>(built-in)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Custom VQ-VAE</p></td>
+<td><p>custom + <code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code></p></td>
+<td><p>custom</p></td>
+</tr>
+<tr class="row-even"><td><p>Reward/value head</p></td>
+<td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DenseDecoder(dist=&quot;normal&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Discount head</p></td>
+<td><p>—</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DenseDecoder(dist=&quot;binary&quot;)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="modular_rssm_guide.html"><span class="doc">Modular RSSM</span></a> — uses ConvEncoder, ConvDecoder, MLPEncoder, MLPDecoder as pluggable components</p></li>
+<li><p><a class="reference internal" href="genie.html"><span class="doc">Genie: Generative Interactive Environment</span></a> — uses VideoTokenizer for video tokenization</p></li>
+<li><p><a class="reference internal" href="iris.html"><span class="doc">IRIS: Transformers for Sample-Efficient World Models</span></a> — uses IRISEncoder, IRISDecoder, VectorQuantizer, VectorQuantizerEMA</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="modular_rssm_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Modular RSSM</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="datasets_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Datasets</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#encoders">Encoders</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#convencoder-dreamer-convolutional-encoder"><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code> — Dreamer convolutional encoder</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cnnencoder-planet-encoder"><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code> — PlaNet encoder</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irisencoder-iris-discrete-encoder"><code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code> — IRIS discrete encoder</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#decoders">Decoders</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#convdecoder-dreamer-convolutional-decoder"><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code> — Dreamer convolutional decoder</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#densedecoder-reward-value-discount-head"><code class="docutils literal notranslate"><span class="pre">DenseDecoder</span></code> — reward/value/discount head</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#actiondecoder-dreamer-policy-head"><code class="docutils literal notranslate"><span class="pre">ActionDecoder</span></code> — Dreamer policy head</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantization">Quantization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vectorquantizer-and-vectorquantizerema"><code class="docutils literal notranslate"><span class="pre">VectorQuantizer</span></code> and <code class="docutils literal notranslate"><span class="pre">VectorQuantizerEMA</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#video-tokenization">Video tokenization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#videotokenizer-genie-style-vq-vae"><code class="docutils literal notranslate"><span class="pre">VideoTokenizer</span></code> — Genie-style VQ-VAE</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distribution-utilities">Distribution utilities</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tanhbijector"><code class="docutils literal notranslate"><span class="pre">TanhBijector</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sampledist"><code class="docutils literal notranslate"><span class="pre">SampleDist</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#twohotdistribution"><code class="docutils literal notranslate"><span class="pre">_TwoHotDistribution</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convvae">ConvVAE</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-component-to-use">Which component to use</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/vision_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
