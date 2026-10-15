@@ -6,9 +6,9 @@ This demonstrates the implementation of vectorized simulator workers and RL trai
 import logging
 from functools import partial
 from omegaconf import OmegaConf
-from synora.training.rl_harness import PPOTrainer
-from synora.envs.vector_env import TorchVectorizedEnv
-from synora.envs.gym_env import make_gym_env
+from simulusion.training.rl_harness import PPOTrainer
+from simulusion.envs.vector_env import TorchVectorizedEnv
+from simulusion.envs.gym_env import make_gym_env
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

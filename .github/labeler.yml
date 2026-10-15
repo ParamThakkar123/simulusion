@@ -1,50 +1,50 @@
 config:
-  - synora/configs/**
+  - simulusion/configs/**
 
 # Add 'environment' to any changes to environment files
 environment:
-  - synora/envs/**
+  - simulusion/envs/**
 
 trainer:
-  - synora/training/**
+  - simulusion/training/**
 
 controller:
-  - synora/controller/**
+  - simulusion/controller/**
 
 helpers:
-  - synora/helpers/**
+  - simulusion/helpers/**
 
 tokenizers:
-  - synora/vision/video_tokenizer.py
-  - synora/vision/vq_layer.py
+  - simulusion/vision/video_tokenizer.py
+  - simulusion/vision/vq_layer.py
 
 tests:
   - tests/**
-  - synora/testing/**
+  - simulusion/testing/**
 
 models:
-  - synora/models/**
+  - simulusion/models/**
 
 memory:
-  - synora/memory/**
+  - simulusion/memory/**
 
 masks:
-  - synora/masks/**
+  - simulusion/masks/**
 
 reward_functions:
-  - synora/reward/**
+  - simulusion/reward/**
 
 observation_wrappers:
-  - synora/observations/**
+  - simulusion/observations/**
 
 utilities:
-  - synora/utils/**
+  - simulusion/utils/**
 
 vision:
-  - synora/vision/**
+  - simulusion/vision/**
 
 transforms:
-  - synora/transforms/**
+  - simulusion/transforms/**
 
 # Add 'CI/CD' to any changes to GitHub workflows and automation config
 CI/CD:

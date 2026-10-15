@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import Mock
 
-from synora.controller.rssm_policy import RSSMPolicy
+from simulusion.controller.rssm_policy import RSSMPolicy
 
 
 class TestRSSMPolicy:

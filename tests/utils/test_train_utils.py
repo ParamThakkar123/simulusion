@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from synora.utils.train_utils import EarlyStopping, ReduceLROnPlateau
+from simulusion.utils.train_utils import EarlyStopping, ReduceLROnPlateau
 
 
 class TestEarlyStopping:

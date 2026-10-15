@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Renamed
+- **Synora is now Simulusion.** The distribution is `simulusion` on PyPI
+  (`pip install simulusion`, extras as `simulusion[gym]`), the package is
+  `import simulusion`, the CLI commands are `simulusion` / `simulusion-train`,
+  and environment variables use the `SIMULUSION_` prefix. Nothing was published
+  under the Synora name, so there is no `synora` import alias. Checkpoints load
+  unchanged: they are state dicts read with `weights_only=True`.
+
+### Added
+- A demo per model in `demos/` (Dreamer, DreamerV2, PlaNet, ModularRSSM,
+  DIAMOND, IRIS, Genie, DiT, I-JEPA). Each trains from scratch on a 4 GB laptop
+  GPU in one to two hours and records video of what it learned;
+  `demos/run_all.py` reproduces all of them.
+- A documentation gallery with the recorded clips, plus a "See it in action"
+  section on every algorithm page and in the README.
+- IRIS imagination replays each single-position Transformer step as a CUDA
+  graph on GPU (`GraphedDecodeStep`). Outputs are identical; on an RTX 3050 a
+  20-step imagination rollout drops from 11.4 s to 3.2 s, because the eager
+  path spent most of its time launching ~55k small kernels. Disable with
+  `agent.use_cuda_graphs = False`.
+- `DreamerV1Agent` and `DreamerV2Agent`, the agents behind
+  `create_model("dreamer-v1")` / `create_model("dreamer-v2")`.
+
+### Fixed
+- `create_model("dreamer-v1")` and `create_model("dreamer-v2")` raised a
+  `TypeError`; they now build agents that train their own version.
+- DreamerV2 could not train: its two-hot heads exposed `mean` as a method with
+  an extra trailing axis, and its actor loss detached the lambda-returns, so the
+  actor received no gradient. The actor also maximised `symlog` of the returns
+  rather than the returns themselves (DreamerV2, Sec. 2.4); on DMC cartpole
+  swing-up that pinned every action at -1 and stalled the return at ~75.
+- DIAMOND's imagination paired each conditioning frame with the action taken one
+  step later, so actor-critic training rolled the diffusion model forward on
+  shifted actions.
+- The TinyWorlds loader read each game's flat `(N, H, W, 3)` frame stream as
+  grayscale clips, so every Genie sample was one scrambled frame; clip files
+  also had channels interleaved across frames.
+- Genie's video tokenizer reshaped the quantizer's channel-first output instead
+  of permuting it, scrambling embeddings across positions. The decoder learned
+  that layout, so every frame Genie generated from tokens decoded to noise.
+  Genie models trained before this fix need retraining.
+- Genie checkpoints saved after warmup failed to load with `weights_only=True`,
+  and the trainer ignored `tokenizer_num_heads` / `action_num_heads`.
+- DiT trained on CIFAR-10 in `[0, 1]` instead of `[-1, 1]`, a class-conditional
+  run crashed at its final sampling step, its `config.yaml` omitted the class
+  settings needed to reload it, and periodic checkpoints were one epoch late.
+
 ## [1.0.0] — 2026-10-04
 
 First stable release, and the first under the name **Synora** (formerly
@@ -205,6 +252,11 @@ before 1.0 instead of being carried through it:
   manual Python 3.10 install
 
 ### Fixed
+- `pip install synora[gym]` crashed the README quick start on gymnasium 1.3:
+  the `gym` extra required `pygame` directly while `gymnasium[box2d]` 1.3
+  depends on `pygame-ce`, and the two install over each other, so rendering
+  any classic-control environment died with an access violation. The extra
+  no longer requires pygame itself; gymnasium brings the renderer it needs.
 - FID and FVD could stall for minutes: `scipy.linalg.sqrtm` ran a recursive
   Schur decomposition on the product of two 2048x2048 covariances, which is
   rank-deficient whenever there are fewer samples than feature dimensions.

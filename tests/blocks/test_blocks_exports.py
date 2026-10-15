@@ -2,7 +2,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-import synora.blocks as blocks  # noqa: E402  (guarded by importorskip above)
+import simulusion.blocks as blocks  # noqa: E402  (guarded by importorskip above)
 
 
 def test_blocks_all_exports_are_resolvable():

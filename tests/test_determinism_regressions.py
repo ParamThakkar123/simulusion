@@ -21,10 +21,10 @@ import numpy as np
 import torch
 from torch.distributions import Categorical
 
-from synora.envs.gym_env import GymImageEnv
-from synora.models.dreamer_rssm import RSSM
-from synora.training.rl_harness import PPOTrainer
-from synora.utils.gym_compat import gym
+from simulusion.envs.gym_env import GymImageEnv
+from simulusion.models.dreamer_rssm import RSSM
+from simulusion.training.rl_harness import PPOTrainer
+from simulusion.utils.gym_compat import gym
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _GOLDEN_PATH = _DATA_DIR / "regression_baselines.json"
@@ -210,7 +210,7 @@ def _load_golden_cases() -> list:
     return cases
 
 
-_UPDATE_GOLDEN = os.environ.get("SYNORA_UPDATE_GOLDEN")
+_UPDATE_GOLDEN = os.environ.get("SIMULUSION_UPDATE_GOLDEN")
 
 if _UPDATE_GOLDEN:
     current = {}

@@ -3,7 +3,7 @@ import pytest
 
 gym = pytest.importorskip("gymnasium")
 
-from synora.envs import WorldModelEnv, make_world_model_env  # noqa: E402
+from simulusion.envs import WorldModelEnv, make_world_model_env  # noqa: E402
 
 
 class _CountingWorldModel:

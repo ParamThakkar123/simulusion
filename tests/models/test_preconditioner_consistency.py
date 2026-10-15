@@ -2,7 +2,7 @@ import pytest
 
 import torch
 
-from synora.models.diffusion.diamond_diffusion import (
+from simulusion.models.diffusion.diamond_diffusion import (
     EDMPreconditioner,
     DiffusionUNet,
     EulerSampler,

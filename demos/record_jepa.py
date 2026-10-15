@@ -32,13 +32,13 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from synora.helpers.jepa_helper import init_model
-from synora.masks.multiblock import MaskCollator as MBMaskCollator
-from synora.utils.utils import apply_masks
-from synora.utils.jepa_utils import repeat_interleave_batch
+from simulusion.helpers.jepa_helper import init_model
+from simulusion.masks.multiblock import MaskCollator as MBMaskCollator
+from simulusion.utils.utils import apply_masks
+from simulusion.utils.jepa_utils import repeat_interleave_batch
 
 
-# Backbone width uniquely identifies the ViT size (synora.models.vit).
+# Backbone width uniquely identifies the ViT size (simulusion.models.vit).
 _WIDTH_TO_MODEL = {
     192: "vit_tiny",
     384: "vit_small",

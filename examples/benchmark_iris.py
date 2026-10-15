@@ -1,4 +1,4 @@
-from synora.benchmarks.cli import main
+from simulusion.benchmarks.cli import main
 
 
 if __name__ == "__main__":

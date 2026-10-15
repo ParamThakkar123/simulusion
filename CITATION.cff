@@ -1,26 +1,26 @@
 cff-version: 1.2.0
-message: "If you use Synora in your research, please cite it as below."
+message: "If you use Simulusion in your research, please cite it as below."
 type: software
-title: "Synora: A Modular PyTorch Library for World Models"
+title: "Simulusion: A Modular PyTorch Library for World Models"
 abstract: >-
-  Synora (formerly TorchWM) brings world-model algorithms - Dreamer, PlaNet,
+  Simulusion (formerly TorchWM) brings world-model algorithms - Dreamer, PlaNet,
   IRIS, DIAMOND, JEPA, DiT and Genie - together under one PyTorch API for
   training, evaluating and deploying them across environments.
 authors:
   - family-names: Thakkar
     given-names: Param
 license: MIT
-repository-code: "https://github.com/paramthakkar123/synora"
-url: "https://paramthakkar123.github.io/synora/"
+repository-code: "https://github.com/paramthakkar123/simulusion"
+url: "https://paramthakkar123.github.io/simulusion/"
 keywords:
   - world models
   - model-based reinforcement learning
   - pytorch
 preferred-citation:
   type: software
-  title: "Synora: A Modular PyTorch Library for World Models"
+  title: "Simulusion: A Modular PyTorch Library for World Models"
   authors:
     - family-names: Thakkar
       given-names: Param
   year: 2025
-  url: "https://github.com/paramthakkar123/synora"
+  url: "https://github.com/paramthakkar123/simulusion"

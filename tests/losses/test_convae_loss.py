@@ -1,7 +1,7 @@
 """Tests for the ConvVAE loss function."""
 
 import torch
-from synora.losses.convae_loss import conv_vae_loss_fn
+from simulusion.losses.convae_loss import conv_vae_loss_fn
 
 
 class TestConvVAELoss:

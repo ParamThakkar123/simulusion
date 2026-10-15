@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = synora, tools
+source = simulusion, tools
 
 [report]
 show_missing = True

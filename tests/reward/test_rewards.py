@@ -1,6 +1,6 @@
 import torch
-from synora.reward.dreamer_v1_reward import RewardModel
-from synora.reward.dreamer_v1_value import ValueModel
+from simulusion.reward.dreamer_v1_reward import RewardModel
+from simulusion.reward.dreamer_v1_value import ValueModel
 
 
 class TestRewardModel:

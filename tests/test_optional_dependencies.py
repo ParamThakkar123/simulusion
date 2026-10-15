@@ -20,12 +20,14 @@ def test_jax_is_brax_optional_dependency_not_core_dependency():
     assert "jax" in _dependency_names(project["optional-dependencies"]["brax"])
 
 
-def test_lockfile_keeps_jax_out_of_core_synora_dependencies():
+def test_lockfile_keeps_jax_out_of_core_simulusion_dependencies():
     lock = tomllib.loads(Path("uv.lock").read_text())
-    synora = next(package for package in lock["package"] if package["name"] == "synora")
+    simulusion = next(
+        package for package in lock["package"] if package["name"] == "simulusion"
+    )
 
-    assert "jax" not in _dependency_names(synora["dependencies"])
-    assert "jax" in _dependency_names(synora["optional-dependencies"]["brax"])
+    assert "jax" not in _dependency_names(simulusion["dependencies"])
+    assert "jax" in _dependency_names(simulusion["optional-dependencies"]["brax"])
 
 
 def test_console_script_target_packages_are_included_in_setuptools_find():
@@ -47,11 +49,13 @@ def test_click_is_core_dependency_for_cli():
     assert "click" in _dependency_names(project["dependencies"])
 
 
-def test_lockfile_keeps_click_in_core_synora_dependencies():
+def test_lockfile_keeps_click_in_core_simulusion_dependencies():
     lock = tomllib.loads(Path("uv.lock").read_text())
-    synora = next(package for package in lock["package"] if package["name"] == "synora")
+    simulusion = next(
+        package for package in lock["package"] if package["name"] == "simulusion"
+    )
 
-    assert "click" in _dependency_names(synora["dependencies"])
+    assert "click" in _dependency_names(simulusion["dependencies"])
 
 
 def test_gymnasium_and_wandb_are_optional_not_core_dependencies():
@@ -66,15 +70,17 @@ def test_gymnasium_and_wandb_are_optional_not_core_dependencies():
     assert "wandb" in _dependency_names(project["optional-dependencies"]["ml"])
 
 
-def test_lockfile_keeps_gymnasium_and_wandb_out_of_core_synora_dependencies():
+def test_lockfile_keeps_gymnasium_and_wandb_out_of_core_simulusion_dependencies():
     lock = tomllib.loads(Path("uv.lock").read_text())
-    synora = next(package for package in lock["package"] if package["name"] == "synora")
+    simulusion = next(
+        package for package in lock["package"] if package["name"] == "simulusion"
+    )
 
-    core = _dependency_names(synora["dependencies"])
+    core = _dependency_names(simulusion["dependencies"])
     assert "gymnasium" not in core
     assert "wandb" not in core
-    assert "gymnasium" in _dependency_names(synora["optional-dependencies"]["gym"])
-    assert "wandb" in _dependency_names(synora["optional-dependencies"]["ml"])
+    assert "gymnasium" in _dependency_names(simulusion["optional-dependencies"]["gym"])
+    assert "wandb" in _dependency_names(simulusion["optional-dependencies"]["ml"])
 
 
 def test_ml_agents_extra_matches_real_supported_sdk_series():
@@ -139,3 +145,14 @@ def test_dmc_uv_extra_keeps_dm_control_unconditional():
 
     assert "dm-control>=1.0.0" in dmc_uv
     assert not any(item.split(";")[0].strip() == "labmaze" for item in dmc_uv)
+
+
+def test_gym_extra_does_not_pin_a_second_pygame_distribution():
+    """gymnasium[box2d] >= 1.3 depends on pygame-ce, which installs the same
+    `pygame` package directory as pygame. Requiring pygame as well put both in
+    one environment and made env.render() crash the interpreter."""
+    project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+
+    names = _dependency_names(project["optional-dependencies"]["gym"])
+    assert "pygame" not in names
+    assert "pygame-ce" not in names

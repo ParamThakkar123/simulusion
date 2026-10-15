@@ -1,6 +1,6 @@
 # World Models Study Guide
 
-This page is a conceptual and practical map of the model families implemented in Synora. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use the API reference for exact constructor and method details.
+This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use the API reference for exact constructor and method details.
 
 ## What is a world model?
 
@@ -35,13 +35,13 @@ graph LR
 
 | If you want to study or build... | Start with | Core files |
 |---|---|---|
-| Latent-dynamics model-based RL from pixels | Dreamer | `synora.models.dreamer`, `synora.models.dreamer_rssm` |
-| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `synora.models.planet`, `synora.models.rssm` |
-| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `synora.models.modular_rssm` |
-| Self-supervised visual representations | JEPA + ViT | `synora.models.jepa_agent`, `synora.models.vit` |
-| Sample-efficient Atari with discrete token imagination | IRIS | `synora.models.iris_agent`, `synora.models.iris_transformer` |
-| Unsupervised controllable video-world modeling | Genie | `synora.models.genie`, `synora.models.latent_action_model`, `synora.models.dynamics_model` |
-| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `synora.models.diffusion.*` |
+| Latent-dynamics model-based RL from pixels | Dreamer | `simulusion.models.dreamer`, `simulusion.models.dreamer_rssm` |
+| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `simulusion.models.planet`, `simulusion.models.rssm` |
+| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `simulusion.models.modular_rssm` |
+| Self-supervised visual representations | JEPA + ViT | `simulusion.models.jepa_agent`, `simulusion.models.vit` |
+| Sample-efficient Atari with discrete token imagination | IRIS | `simulusion.models.iris_agent`, `simulusion.models.iris_transformer` |
+| Unsupervised controllable video-world modeling | Genie | `simulusion.models.genie`, `simulusion.models.latent_action_model`, `simulusion.models.dynamics_model` |
+| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `simulusion.models.diffusion.*` |
 
 ## Shared concepts
 
@@ -110,7 +110,7 @@ Use Dreamer when your environment has image observations, actions are known, and
 
 ## PlaNet and RSSM
 
-PlaNet also learns latent dynamics from pixels, but it is usually associated with online planning rather than fully training an actor in imagination. In Synora, `Planet` is the high-level entry point and `RecurrentStateSpaceModel` is the PlaNet-style state-space component.
+PlaNet also learns latent dynamics from pixels, but it is usually associated with online planning rather than fully training an actor in imagination. In Simulusion, `Planet` is the high-level entry point and `RecurrentStateSpaceModel` is the PlaNet-style state-space component.
 
 ### Study focus
 
@@ -140,11 +140,11 @@ JEPA (Joint Embedding Predictive Architecture) learns by predicting representati
 
 Here, `sg` denotes stop-gradient, `f` is an encoder, `g` is a predictor, and `m` represents masks or target metadata.
 
-### Synora pieces
+### Simulusion pieces
 
 - `JEPAAgent` coordinates representation learning.
 - `VisionTransformer` and ViT helper constructors provide patch-based encoders.
-- `synora.masks.*` contains masking/collation strategies for context-target prediction.
+- `simulusion.masks.*` contains masking/collation strategies for context-target prediction.
 
 ### When to use it
 
@@ -172,7 +172,7 @@ graph TD
 - **Token dynamics:** The transformer predicts the next discrete visual tokens conditioned on previous tokens and actions.
 - **Imagination:** Policy learning uses sampled token futures, decoded states, rewards, and termination predictions.
 
-### Synora pieces
+### Simulusion pieces
 
 - `IRISAgent` combines model and policy behavior.
 - `IRISTransformer` and `IRISWorldModel` implement token dynamics.
@@ -205,7 +205,7 @@ q(x_t \mid x_0)
 \end{aligned}
 ```
 
-### Synora pieces
+### Simulusion pieces
 
 - `DDPM` implements a denoising diffusion probabilistic model.
 - `DiT` implements a diffusion transformer with patch embedding, time conditioning, and transformer blocks.
@@ -247,9 +247,9 @@ graph LR
 
 | Stage | Component | Training | File |
 |---|---|---|---|
-| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `synora.vision.VAE.ConvVAE` |
-| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `synora.models.mdrnn` |
-| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `synora.models.controller` |
+| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `simulusion.vision.VAE.ConvVAE` |
+| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `simulusion.models.mdrnn` |
+| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `simulusion.models.controller` |
 
 ### Key ideas
 
@@ -265,29 +265,29 @@ Use the Ha & Schmidhuber world model when you want:
 - To quickly train a policy on a continuous-control task without GPU-heavy RL backprop
 - A baseline to compare model-based RL (Dreamer/PlaNet) with evolution-based controller training
 
-### Synora pieces
+### Simulusion pieces
 
 | Component | Module | Key classes |
 |---|---|---|
-| VAE | `synora.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
-| Dynamics | `synora.models.mdrnn` | `MDRNN`, `MDRNNCell` |
-| Policy | `synora.models.controller` | `Controller` |
-| Configs | `synora.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
-| Datasets | `synora.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
-| Losses | `synora.losses.convae_loss` | `conv_vae_loss_fn` |
-| | `synora.losses.gmm_loss` | `gmm_loss` |
-| Training | `synora.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
-| | `synora.training.train_convvae` | `train_convae` |
-| | `synora.training.train_mdn_rnn` | `train_mdn_rnn` |
-| | `synora.training.train_controller` | `train_controller` |
+| VAE | `simulusion.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
+| Dynamics | `simulusion.models.mdrnn` | `MDRNN`, `MDRNNCell` |
+| Policy | `simulusion.models.controller` | `Controller` |
+| Configs | `simulusion.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
+| Datasets | `simulusion.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
+| Losses | `simulusion.losses.convae_loss` | `conv_vae_loss_fn` |
+| | `simulusion.losses.gmm_loss` | `gmm_loss` |
+| Training | `simulusion.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
+| | `simulusion.training.train_convvae` | `train_convae` |
+| | `simulusion.training.train_mdn_rnn` | `train_mdn_rnn` |
+| | `simulusion.training.train_controller` | `train_controller` |
 
 ### Quick-start example
 
 ```python
-from synora.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
-from synora.training.train_convvae import train_convae
-from synora.training.train_mdn_rnn import train_mdn_rnn
-from synora.training.train_controller import train_controller
+from simulusion.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
+from simulusion.training.train_convvae import train_convae
+from simulusion.training.train_mdn_rnn import train_mdn_rnn
+from simulusion.training.train_controller import train_controller
 
 # Stage 1: Train VAE
 vae_config = WMVAEConfig(
@@ -336,7 +336,7 @@ train_controller(ctrl_config)
 ### Testing a trained model
 
 ```python
-from synora.training.train_world_model import test_trained_model
+from simulusion.training.train_world_model import test_trained_model
 
 test_trained_model(
     logdir="./results/carracing",
@@ -355,7 +355,7 @@ test_trained_model(
 5. **Study token world models:** IRIS and Genie show how discrete visual tokens enable transformer dynamics.
 6. **Study representation-only prediction:** JEPA clarifies why not every useful world model must reconstruct pixels.
 7. **Study diffusion:** compare likelihood-style denoising rollouts against autoregressive and RSSM rollouts.
-8. **Read the API reference:** map each concept to the exact Synora class or function.
+8. **Read the API reference:** map each concept to the exact Simulusion class or function.
 
 ## Common failure modes
 

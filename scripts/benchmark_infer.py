@@ -40,7 +40,7 @@ PLAY_MODELS = ("diamond", "dreamer", "iris", "genie")
 def _load_demo(name: str) -> Any:
     """Load a file under ``demos/`` -- that directory is not a Python package."""
     path = REPO_ROOT / "demos" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(f"synora_demo_{name}", path)
+    spec = importlib.util.spec_from_file_location(f"simulusion_demo_{name}", path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load {path}")
     module = importlib.util.module_from_spec(spec)
@@ -301,8 +301,8 @@ def record_dreamer_dream(
     import numpy as np
     import torch
 
-    from synora.inference.play_dreamer import _observation_frame
-    from synora.utils.utils import StreamingVideoWriter
+    from simulusion.inference.play_dreamer import _observation_frame
+    from simulusion.utils.utils import StreamingVideoWriter
 
     context = max(1, args.dream_context)
     obs = player.env.reset()
@@ -368,8 +368,8 @@ def record_dreamer(args: argparse.Namespace, model: str) -> int:
     import numpy as np
     import torch
 
-    from synora.inference.play_dreamer import DreamerPlayer, _observation_frame
-    from synora.utils.utils import StreamingVideoWriter
+    from simulusion.inference.play_dreamer import DreamerPlayer, _observation_frame
+    from simulusion.utils.utils import StreamingVideoWriter
 
     game = args.game or DEFAULT_GAMES["dreamer"]
     player = DreamerPlayer(
@@ -418,7 +418,7 @@ def record_dreamer(args: argparse.Namespace, model: str) -> int:
 
 
 def play_diamond(args: argparse.Namespace, control: str) -> int:
-    from synora.inference.play_diamond import run_play
+    from simulusion.inference.play_diamond import run_play
 
     run_play(
         checkpoint=str(args.checkpoint),
@@ -434,7 +434,7 @@ def play_diamond(args: argparse.Namespace, control: str) -> int:
 
 
 def play_dreamer(args: argparse.Namespace, control: str) -> int:
-    from synora.inference.play_dreamer import run_play
+    from simulusion.inference.play_dreamer import run_play
 
     run_play(
         checkpoint=str(args.checkpoint),
@@ -460,11 +460,11 @@ def play_iris(args: argparse.Namespace, control: str) -> int:
     load_policy = iris_demo.load_policy
     preprocess = iris_demo.preprocess
     read_checkpoint = iris_demo.read_checkpoint
-    from synora.inference.play_base import get_action_from_key, init_video_recorder
-    from synora.inference.play_diamond import ACTION_NAMES
-    from synora.configs.iris_config import IRISConfig
-    from synora.envs.ale_atari_env import make_atari_env
-    from synora.models.iris_agent import IRISAgent
+    from simulusion.inference.play_base import get_action_from_key, init_video_recorder
+    from simulusion.inference.play_diamond import ACTION_NAMES
+    from simulusion.configs.iris_config import IRISConfig
+    from simulusion.envs.ale_atari_env import make_atari_env
+    from simulusion.models.iris_agent import IRISAgent
 
     game = args.game or DEFAULT_GAMES["iris"]
     device = torch.device(
@@ -582,7 +582,7 @@ def play_genie(args: argparse.Namespace, control: str) -> int:
     genie_demo = _load_demo("record_genie")
     build_model = genie_demo.build_model
     tensor_to_uint8_img = genie_demo.tensor_to_uint8_img
-    from synora.inference.play_base import init_video_recorder
+    from simulusion.inference.play_base import init_video_recorder
 
     class _Args:
         checkpoint = args.checkpoint

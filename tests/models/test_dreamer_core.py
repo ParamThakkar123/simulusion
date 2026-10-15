@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 import torch
 
-from synora.configs.dreamer_config import DreamerConfig
-from synora.models.dreamer import Dreamer
+from simulusion.configs.dreamer_config import DreamerConfig
+from simulusion.models.dreamer import Dreamer
 
 OBS_SHAPE = (3, 64, 64)
 ACTION_SIZE = 2
@@ -160,3 +160,54 @@ def test_discount_model_discounts_are_scaled_by_gamma():
     horizon = dreamer.discounts.shape[0]
     bounds = torch.tensor([0.5**k for k in range(horizon)]).view(-1, 1, 1)
     assert torch.all(dreamer.discounts <= bounds + 1e-6)
+
+
+def test_dreamer_v2_trains_one_batch():
+    """DreamerV2's two-hot reward/value heads must expose `.mean` as a tensor,
+    like the torch distributions the rest of Dreamer reads it from."""
+    from simulusion.models.dreamer_v2 import DreamerV2
+
+    torch.manual_seed(0)
+    dreamer = DreamerV2(_tiny_config(), OBS_SHAPE, ACTION_SIZE, "cpu")
+    dreamer.collect_random_episodes(_FakeEnv(episode_length=5), 40)
+    losses = dreamer.train_one_batch()
+    assert all(np.isfinite(losses))
+
+
+@pytest.mark.parametrize(
+    ("name", "core", "algo"),
+    [
+        ("dreamer-v1", "DreamerV1", "Dreamerv1"),
+        ("dreamer-v2", "DreamerV2", "Dreamerv2"),
+    ],
+)
+def test_versioned_model_names_build_agents_for_that_version(name, core, algo):
+    """`create_model("dreamer-v2")` used to resolve to the bare DreamerV2 core,
+    whose constructor needs (args, obs_shape, action_size, device), so it raised."""
+    import simulusion.models as models
+    from simulusion.api import _load_object, get_model_spec
+
+    agent_cls = _load_object(get_model_spec(name).import_path)
+    assert issubclass(agent_cls, models.DreamerAgent)
+    assert agent_cls.core_cls is getattr(models, core)
+    assert agent_cls.algo_name == algo
+
+
+def test_dreamer_v2_actor_maximises_the_lambda_returns_themselves():
+    """DreamerV2 Sec. 2.4, continuous actions (rho = 0): L = -E[V_lambda].
+
+    A symlog on the returns here made the actor saturate on cartpole swing-up
+    (every action pinned at -1, actor gradient ~1e-8)."""
+    from simulusion.models.dreamer_v2 import DreamerV2
+
+    torch.manual_seed(0)
+    dreamer = DreamerV2(_tiny_config(), OBS_SHAPE, ACTION_SIZE, "cpu")
+    returns = torch.tensor([[[5.0]], [[50.0]]], requires_grad=True)
+    discounts = torch.tensor([[[1.0]], [[0.5]]])
+
+    loss = dreamer._compute_actor_loss(returns, discounts)
+    loss.backward()
+
+    assert loss.item() == pytest.approx(-(5.0 * 1.0 + 50.0 * 0.5) / 2)
+    # Every unit of return is worth the same to the actor, however large.
+    assert torch.allclose(returns.grad.flatten(), torch.tensor([-0.5, -0.25]))

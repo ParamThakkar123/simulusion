@@ -1,4 +1,4 @@
-"""Play Breakout with a trained IRIS agent, using the synora inference API.
+"""Play Breakout with a trained IRIS agent, using the simulusion inference API.
 
 The stepper threads the policy's LSTM state from frame to frame and resets it at
 episode boundaries. Calling ``agent.act(frame)`` without ``hidden`` would make
@@ -14,10 +14,10 @@ import cv2
 import numpy as np
 import torch
 
-from synora.configs.iris_config import IRISConfig
-from synora.envs.ale_atari_env import make_atari_env
-from synora.inference import IRISStepper
-from synora.models.iris_agent import IRISAgent
+from simulusion.configs.iris_config import IRISConfig
+from simulusion.envs.ale_atari_env import make_atari_env
+from simulusion.inference import IRISStepper
+from simulusion.models.iris_agent import IRISAgent
 
 
 def preprocess_frame(frame, size=64):

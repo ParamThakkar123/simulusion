@@ -8,11 +8,11 @@ import torch
 
 gym = pytest.importorskip("gymnasium")
 
-from synora.configs.dreamer_config import DreamerConfig  # noqa: E402
-from synora.envs.gym_env import GymImageEnv  # noqa: E402
-from synora.envs.wrappers import FrameStack  # noqa: E402
-from synora.models.dreamer import make_env  # noqa: E402
-from synora.utils.utils import TorchImageEnvWrapper  # noqa: E402
+from simulusion.configs.dreamer_config import DreamerConfig  # noqa: E402
+from simulusion.envs.gym_env import GymImageEnv  # noqa: E402
+from simulusion.envs.wrappers import FrameStack  # noqa: E402
+from simulusion.models.dreamer import make_env  # noqa: E402
+from simulusion.utils.utils import TorchImageEnvWrapper  # noqa: E402
 
 
 class _FakeDiscreteEnv:
@@ -43,10 +43,10 @@ class _FakeDiscreteEnv:
         pass
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.dmc.DeepMindControlEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.dmc.DeepMindControlEnv")
 def test_make_env_dmc_backend(
     mock_dmc,
     mock_repeat,
@@ -70,11 +70,11 @@ def test_make_env_dmc_backend(
     mock_dmc.assert_called_once_with(cfg.env, cfg.seed, size=cfg.image_size)
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.FrameStack")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.gym_env.GymImageEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.FrameStack")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.gym_env.GymImageEnv")
 def test_make_env_gym_backend(
     mock_gym_env,
     mock_repeat,
@@ -108,10 +108,10 @@ def test_make_env_gym_backend(
     )
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.unity_env.UnityMLAgentsEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.unity_env.UnityMLAgentsEnv")
 def test_make_env_unity_backend(
     mock_unity_env,
     mock_repeat,
@@ -143,7 +143,7 @@ def test_unity_mlagents_env_contract_with_fake_sdk(monkeypatch):
     from importlib.machinery import ModuleSpec
     from types import ModuleType, SimpleNamespace
 
-    from synora.envs.unity_env import UnityMLAgentsEnv
+    from simulusion.envs.unity_env import UnityMLAgentsEnv
 
     class _FakeActionTuple:
         def __init__(self, continuous):
@@ -393,7 +393,7 @@ def test_normalize_actions_wrapper_reports_model_and_executed_actions():
                 {"action": self.last_action.copy()},
             )
 
-    from synora.envs.wrappers import NormalizeActions
+    from simulusion.envs.wrappers import NormalizeActions
 
     wrapped = NormalizeActions(_ContinuousEnv())
     _, reward, done, info = wrapped.step(np.array([2.0, -2.0], dtype=np.float32))
@@ -524,7 +524,7 @@ def test_native_mujoco_image_env_with_mocked_bindings(monkeypatch):
     fake_mujoco.mj_step = fake_step
     monkeypatch.setitem(__import__("sys").modules, "mujoco", fake_mujoco)
 
-    from synora.envs.mujoco_env import MuJoCoImageEnv
+    from simulusion.envs.mujoco_env import MuJoCoImageEnv
 
     env = MuJoCoImageEnv(
         xml_string="<mujoco/>",
@@ -552,7 +552,7 @@ def test_list_gymnasium_robotics_envs_uses_registered_package_envs(monkeypatch):
     from importlib.machinery import ModuleSpec
     from types import ModuleType, SimpleNamespace
 
-    import synora.envs.robotics_env as robotics_env
+    import simulusion.envs.robotics_env as robotics_env
 
     fake_robotics = ModuleType("gymnasium_robotics")
     fake_robotics.__spec__ = ModuleSpec("gymnasium_robotics", loader=None)
@@ -582,8 +582,8 @@ def test_list_gymnasium_robotics_envs_uses_registered_package_envs(monkeypatch):
     ]
 
 
-def test_environment_catalog_exposes_robotics_to_online_synora(monkeypatch):
-    import synora.catalog as catalog
+def test_environment_catalog_exposes_robotics_to_online_simulusion(monkeypatch):
+    import simulusion.catalog as catalog
 
     monkeypatch.setattr(
         catalog, "_list_available_robotics_envs", lambda: ["FetchReachDense-v4"]
@@ -609,13 +609,13 @@ def test_environment_catalog_exposes_robotics_to_online_synora(monkeypatch):
     assert "ijepa" not in envs_by_model
 
 
-@patch("synora.envs.mujoco_env.GymImageEnv")
-@patch("synora.envs.robotics_env.gym.make")
+@patch("simulusion.envs.mujoco_env.GymImageEnv")
+@patch("simulusion.envs.robotics_env.gym.make")
 def test_make_mujoco_env_supports_generic_gymnasium_mujoco_task(
     mock_gym_make,
     mock_gym_image_env,
 ):
-    from synora.envs.mujoco_env import make_mujoco_env
+    from simulusion.envs.mujoco_env import make_mujoco_env
 
     base_env = Mock()
     wrapped_env = Mock()
@@ -654,7 +654,7 @@ def test_make_mujoco_env_from_config_builds_xml_string_env(monkeypatch):
     fake_mujoco.mj_step = lambda model, data, nstep=1: None
     monkeypatch.setitem(__import__("sys").modules, "mujoco", fake_mujoco)
 
-    from synora.envs.mujoco_env import make_mujoco_env_from_config
+    from simulusion.envs.mujoco_env import make_mujoco_env_from_config
 
     cfg = DreamerConfig()
     cfg.mujoco_xml_string = "<mujoco/>"
@@ -722,10 +722,10 @@ class _FakeBraxEnv:
 
 
 def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
-    from synora.envs.brax_env import BraxImageEnv
+    from simulusion.envs.brax_env import BraxImageEnv
 
     monkeypatch.setattr(
-        "synora.envs.brax_env._require_module",
+        "simulusion.envs.brax_env._require_module",
         lambda module_name, install_hint, **kwargs: {
             "jax": _FakeJax,
             "jax.numpy": np,
@@ -764,10 +764,10 @@ def test_brax_image_env_adapts_functional_brax_api(monkeypatch):
     assert "discount" in info
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.mujoco_env.make_mujoco_env_from_config")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.mujoco_env.make_mujoco_env_from_config")
 def test_make_env_native_mujoco_backend(
     mock_make_mujoco_env,
     mock_repeat,
@@ -794,10 +794,10 @@ def test_make_env_native_mujoco_backend(
     mock_make_mujoco_env.assert_called_once_with(cfg, cfg.image_size)
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.brax_env.BraxImageEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.brax_env.BraxImageEnv")
 def test_make_env_brax_backend(
     mock_brax_env,
     mock_repeat,
@@ -837,7 +837,7 @@ def test_make_env_brax_backend(
 def test_require_module_filters_warp_messages(monkeypatch, capsys):
     import importlib
 
-    from synora.envs import brax_env as be
+    from simulusion.envs import brax_env as be
 
     # Make find_spec always report modules exist.
     monkeypatch.setattr(importlib.util, "find_spec", lambda name: True)
@@ -863,8 +863,8 @@ def test_require_module_filters_warp_messages(monkeypatch, capsys):
     assert "Failed to import mujoco_warp:" not in captured.out
 
 
-@patch("synora.envs.robotics_env.GymImageEnv")
-@patch("synora.envs.robotics_env.gym.make")
+@patch("simulusion.envs.robotics_env.GymImageEnv")
+@patch("simulusion.envs.robotics_env.gym.make")
 def test_make_robotics_env_registers_gymnasium_robotics(
     mock_gym_make,
     mock_gym_image_env,
@@ -874,8 +874,8 @@ def test_make_robotics_env_registers_gymnasium_robotics(
     from importlib.machinery import ModuleSpec
     from types import ModuleType
 
-    import synora.envs.robotics_env as robotics_env
-    from synora.envs.robotics_env import make_robotics_env
+    import simulusion.envs.robotics_env as robotics_env
+    from simulusion.envs.robotics_env import make_robotics_env
 
     fake_robotics = ModuleType("gymnasium_robotics")
     fake_robotics.__spec__ = ModuleSpec("gymnasium_robotics", loader=None)
@@ -910,8 +910,8 @@ def test_make_robotics_env_registers_gymnasium_robotics(
     )
 
 
-@patch("synora.envs.mujoco_env.GymImageEnv")
-@patch("synora.envs.robotics_env.gym.make")
+@patch("simulusion.envs.mujoco_env.GymImageEnv")
+@patch("simulusion.envs.robotics_env.gym.make")
 def test_make_mujoco_env_falls_back_to_gymnasium_robotics_for_legacy_ids(
     mock_gym_make,
     mock_gym_image_env,
@@ -921,8 +921,8 @@ def test_make_mujoco_env_falls_back_to_gymnasium_robotics_for_legacy_ids(
     from importlib.machinery import ModuleSpec
     from types import ModuleType
 
-    import synora.envs.robotics_env as robotics_env
-    from synora.envs.mujoco_env import make_mujoco_env
+    import simulusion.envs.robotics_env as robotics_env
+    from simulusion.envs.mujoco_env import make_mujoco_env
 
     fake_robotics = ModuleType("gymnasium_robotics")
     fake_robotics.__spec__ = ModuleSpec("gymnasium_robotics", loader=None)
@@ -953,10 +953,10 @@ def test_make_mujoco_env_falls_back_to_gymnasium_robotics_for_legacy_ids(
     )
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.robotics_env.make_robotics_env")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.robotics_env.make_robotics_env")
 def test_make_env_robotics_backend(
     mock_robotics_env,
     mock_repeat,
@@ -990,7 +990,7 @@ def test_catalog_queries_gymnasium_registry_at_runtime(monkeypatch):
     import sys
     from types import SimpleNamespace
 
-    import synora.catalog as catalog
+    import simulusion.catalog as catalog
 
     fake_gym = SimpleNamespace(
         envs=SimpleNamespace(
@@ -1027,7 +1027,7 @@ def test_catalog_queries_gymnasium_registry_at_runtime(monkeypatch):
 
 
 def test_environment_catalog_uses_runtime_gymnasium_envs(monkeypatch):
-    import synora.catalog as catalog
+    import simulusion.catalog as catalog
 
     monkeypatch.setattr(
         catalog, "_list_available_gymnasium_envs", lambda: ["DynamicEnv-v9"]
@@ -1094,7 +1094,7 @@ class _FakeDeepMindLabModule:
 def test_dmlab_env_adapts_deepmind_lab_api(monkeypatch):
     import sys
 
-    from synora.envs.dmlab import DMLabEnv
+    from simulusion.envs.dmlab import DMLabEnv
 
     _FakeDeepMindLabModule.instances = []
     monkeypatch.setitem(sys.modules, "deepmind_lab", _FakeDeepMindLabModule)
@@ -1135,7 +1135,7 @@ def test_dmlab_env_adapts_deepmind_lab_api(monkeypatch):
 
 
 def test_procgen_env_name_normalization_and_list():
-    from synora.envs.procgen_env import (
+    from simulusion.envs.procgen_env import (
         list_procgen_envs,
         normalize_procgen_env_name,
     )
@@ -1150,8 +1150,8 @@ def test_procgen_image_env_wraps_single_vector_env(monkeypatch):
     import sys
     import types
 
-    from synora.envs import procgen_env
-    from synora.envs.procgen_env import ProcgenImageEnv
+    from simulusion.envs import procgen_env
+    from simulusion.envs.procgen_env import ProcgenImageEnv
 
     class _FakeProcgenEnv:
         def __init__(self, **kwargs):
@@ -1218,10 +1218,10 @@ def test_procgen_image_env_wraps_single_vector_env(monkeypatch):
     assert env._env.closed is True
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.dmlab.DMLabEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.dmlab.DMLabEnv")
 def test_make_env_dmlab_backend(
     mock_dmlab,
     mock_repeat,
@@ -1258,10 +1258,10 @@ def test_make_env_dmlab_backend(
     )
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.procgen_env.ProcgenImageEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.procgen_env.ProcgenImageEnv")
 def test_make_env_procgen_backend(
     mock_procgen_env,
     mock_repeat,
@@ -1296,10 +1296,10 @@ def test_make_env_procgen_backend(
     )
 
 
-@patch("synora.envs.wrappers.TimeLimit")
-@patch("synora.envs.wrappers.NormalizeActions")
-@patch("synora.envs.wrappers.ActionRepeat")
-@patch("synora.envs.bsuite_env.BSuiteImageEnv")
+@patch("simulusion.envs.wrappers.TimeLimit")
+@patch("simulusion.envs.wrappers.NormalizeActions")
+@patch("simulusion.envs.wrappers.ActionRepeat")
+@patch("simulusion.envs.bsuite_env.BSuiteImageEnv")
 def test_make_env_bsuite_backend(
     mock_bsuite_env,
     mock_repeat,
@@ -1361,7 +1361,7 @@ class _FakeBSuiteEnv:
 
 
 def test_bsuite_image_env_wraps_dm_env_discrete_task():
-    from synora.envs.bsuite_env import BSuiteImageEnv
+    from simulusion.envs.bsuite_env import BSuiteImageEnv
 
     base_env = _FakeBSuiteEnv()
     env = BSuiteImageEnv(
@@ -1390,7 +1390,7 @@ def test_bsuite_image_env_wraps_dm_env_discrete_task():
 
 
 def test_gym_image_env_reset_seed_replays_initial_observation_and_action_samples():
-    from synora.envs.gym_env import GymImageEnv
+    from simulusion.envs.gym_env import GymImageEnv
 
     class _SeedReplayEnv:
         def __init__(self):
@@ -1426,7 +1426,7 @@ def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
     import sys
     from types import ModuleType, SimpleNamespace
 
-    from synora.envs.dmc import DeepMindControlEnv
+    from simulusion.envs.dmc import DeepMindControlEnv
 
     class _SeededPhysics:
         def __init__(self, seed):
@@ -1485,7 +1485,7 @@ def test_dmc_reset_seed_rebuilds_backend_and_replays_initial_state(monkeypatch):
 
 
 def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeypatch):
-    from synora.envs.brax_env import BraxImageEnv
+    from simulusion.envs.brax_env import BraxImageEnv
 
     class _SeededBraxEnv:
         action_size = 2
@@ -1502,7 +1502,7 @@ def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeyp
             return _FakeBraxState(state.obs, reward=0.0, done=0.0)
 
     monkeypatch.setattr(
-        "synora.envs.brax_env._require_module",
+        "simulusion.envs.brax_env._require_module",
         lambda module_name, install_hint, **kwargs: {
             "jax": _FakeJax,
             "jax.numpy": np,
@@ -1524,7 +1524,7 @@ def test_brax_reset_seed_replays_initial_state_and_action_space_sampling(monkeyp
 def test_dmlab_reset_seed_restarts_episode_sequence_and_action_sampling(monkeypatch):
     import sys
 
-    from synora.envs.dmlab import DMLabEnv
+    from simulusion.envs.dmlab import DMLabEnv
 
     _FakeDeepMindLabModule.instances = []
     monkeypatch.setitem(sys.modules, "deepmind_lab", _FakeDeepMindLabModule)
@@ -1549,8 +1549,8 @@ def test_procgen_reset_seed_rebuilds_backend_and_reseeds_action_sampling(monkeyp
     import sys
     import types
 
-    from synora.envs import procgen_env
-    from synora.envs.procgen_env import ProcgenImageEnv
+    from simulusion.envs import procgen_env
+    from simulusion.envs.procgen_env import ProcgenImageEnv
 
     instances = []
 
@@ -1684,7 +1684,7 @@ def test_unity_reset_seed_rebuilds_backend_and_replays_initial_observation(monke
         channel_mod,
     )
 
-    from synora.envs.unity_env import UnityMLAgentsEnv
+    from simulusion.envs.unity_env import UnityMLAgentsEnv
 
     env = UnityMLAgentsEnv(file_name="fake.exe", seed=4, size=(8, 8), no_graphics=True)
     first = env.reset(seed=12)

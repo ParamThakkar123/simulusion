@@ -9,6 +9,19 @@ dynamics model to select the best action.
 PlaNet introduced the **RSSM** (Recurrent State-Space Model) that later became
 the backbone of Dreamer and other latent-dynamics agents.
 
+## See it in action
+
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/planet_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>Left: the real environment. Right: PlaNet's latent model predicting open loop from the actions its CEM planner chooses.</figcaption>
+</figure>
+```
+
+Trained from scratch in one to two hours on a 4 GB laptop GPU with
+`python demos/planet_demo.py train`, then recorded with `python demos/planet_demo.py record`.
+More clips are in the {ref}`gallery <gallery-planet>`.
+
 ```{contents} Contents
 ```
 
@@ -84,7 +97,7 @@ posterior and prior are within 3 nats, no further gradient pressure is applied.
 PlaNet stores **complete episodes** rather than individual transitions:
 
 ```python
-from synora import Memory, Episode
+from simulusion import Memory, Episode
 
 memory = Memory(size=100)  # keep at most 100 episodes
 episode = Episode()
@@ -103,21 +116,21 @@ sequences, lengths = memory.sample(batch_size=32, tracelen=50)
 | **Eviction** | FIFO per-episode (deque-based) |
 | **Time-major** | Optional via `time_first=True` |
 
-## Usage in Synora
+## Usage in Simulusion
 
 ### Direct construction
 
 ```python
-import synora
+import simulusion
 
-agent = synora.create_model("planet", env="CartPole-v1")
+agent = simulusion.create_model("planet", env="CartPole-v1")
 agent.train(epochs=100, steps_per_epoch=150)
 ```
 
 PlaNet takes parameters directly in its constructor (no separate config class):
 
 ```python
-from synora import Planet
+from simulusion import Planet
 
 agent = Planet(
     env="CartPole-v1",

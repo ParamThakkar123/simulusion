@@ -1,10 +1,10 @@
 """The demo recorders must at least import.
 
 These scripts live outside the package and nothing else imports them, so a
-symbol that moves inside ``synora`` breaks them silently: the failure only
+symbol that moves inside ``simulusion`` breaks them silently: the failure only
 shows up when someone runs a demo, which is exactly when it is least welcome.
 ``demos/record_diamond.py`` imported ``make_agent`` from ``scripts.play_diamond``
-for a while after that function had moved to ``synora.inference.play_diamond``,
+for a while after that function had moved to ``simulusion.inference.play_diamond``,
 leaving the script a dead entrypoint.
 """
 

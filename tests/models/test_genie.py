@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 import torch
-from synora.models import create_genie_small
-from synora.vision import create_video_tokenizer
-from synora.models.latent_action_model import create_latent_action_model
+from simulusion.models import create_genie_small
+from simulusion.vision import create_video_tokenizer
+from simulusion.models.latent_action_model import create_latent_action_model
 
 
 class TestVideoTokenizer:
@@ -44,6 +44,35 @@ class TestVideoTokenizer:
         assert "recon_loss" in loss_dict
         assert "vq_loss" in loss_dict
 
+    def test_decode_is_causal_in_time(self):
+        """A frame's pixels depend only on that frame's and earlier latents.
+
+        The decoder's temporal attention is causal, so changing the last frame's
+        latents must leave every earlier decoded frame untouched.
+        """
+        torch.manual_seed(0)
+        tokenizer = create_video_tokenizer(
+            num_frames=4,
+            image_size=16,
+            encoder_dim=32,
+            decoder_dim=64,
+            encoder_depth=1,
+            decoder_depth=2,
+            num_heads=4,
+            vocab_size=32,
+            embedding_dim=8,
+        ).eval()
+        z = torch.randn(1, 4, 4, 4, 8)
+        changed = z.clone()
+        changed[:, -1] = torch.randn_like(changed[:, -1])
+
+        with torch.no_grad():
+            before = tokenizer.decode(z)
+            after = tokenizer.decode(changed)
+
+        assert torch.allclose(before[:, :, :-1], after[:, :, :-1], atol=1e-6)
+        assert not torch.allclose(before[:, :, -1], after[:, :, -1])
+
     def test_encode_decode(self):
         tokenizer = create_video_tokenizer(
             num_frames=8,
@@ -67,6 +96,32 @@ class TestVideoTokenizer:
         assert z_q.shape[0] == B
         assert indices.shape[0] == B
         assert recon.shape == (B, C, T, H, W)
+
+    @pytest.mark.parametrize("use_ema", [False, True])
+    def test_encoded_embeddings_match_a_codebook_lookup_of_their_indices(self, use_ema):
+        """Genie decodes generated frames with `decode_indices` (a codebook
+        lookup), so `encode` must hand the decoder that same layout. It used to
+        reshape the quantizer's channel-first output instead of permuting it,
+        and every frame generated from tokens decoded to noise."""
+        torch.manual_seed(0)
+        tokenizer = create_video_tokenizer(
+            num_frames=2,
+            image_size=16,
+            encoder_dim=32,
+            decoder_dim=32,
+            encoder_depth=1,
+            decoder_depth=1,
+            num_heads=2,
+            vocab_size=16,
+            embedding_dim=8,
+            use_ema=use_ema,
+        ).eval()
+
+        with torch.no_grad():
+            z_q, indices, _ = tokenizer.encode(torch.rand(2, 3, 2, 16, 16))
+            looked_up = tokenizer.decode_indices(indices)
+
+        assert torch.allclose(z_q, looked_up, atol=1e-5)
 
 
 class TestLatentActionModel:
@@ -181,7 +236,7 @@ class TestGenie:
 
 class TestGenieTraining:
     def test_training_step(self):
-        from synora.training.train_genie import create_genie_trainer, GenieConfig
+        from simulusion.training.train_genie import create_genie_trainer, GenieConfig
 
         config = GenieConfig()
         config.max_steps = 1
@@ -202,8 +257,66 @@ class TestGenieTraining:
         assert "total_loss" in losses
         assert losses["total_loss"] > 0
 
+    @staticmethod
+    def _tiny_small_config():
+        from simulusion.configs.genie_config import GenieSmallConfig
+
+        config = GenieSmallConfig()
+        config.num_frames = 4
+        config.image_size = 16
+        config.tokenizer_vocab_size = 16
+        config.tokenizer_encoder_dim = 32
+        config.tokenizer_decoder_dim = 32
+        config.tokenizer_encoder_depth = 1
+        config.tokenizer_decoder_depth = 1
+        config.action_encoder_dim = 32
+        config.action_decoder_dim = 32
+        config.action_encoder_depth = 1
+        config.dynamics_dim = 32
+        config.dynamics_depth = 1
+        config.dynamics_num_heads = 2
+        return config
+
+    def test_trainer_builds_the_configured_head_counts(self):
+        from simulusion.training.train_genie import create_genie_trainer
+
+        config = self._tiny_small_config()
+        config.tokenizer_num_heads = 2
+        config.action_num_heads = 4
+
+        _, model = create_genie_trainer(config, torch.device("cpu"))
+
+        def heads(module):
+            return {m.num_heads for m in module.modules() if hasattr(m, "num_heads")}
+
+        assert heads(model.video_tokenizer) == {2}
+        assert heads(model.latent_action_model) == {4}
+
+    def test_checkpoint_after_warmup_loads_with_weights_only(self, tmp_path):
+        """Past warmup the cosine schedule must not leave numpy scalars in the
+        scheduler state, which `torch.load(weights_only=True)` rejects."""
+        from simulusion.training.train_genie import create_genie_trainer
+
+        config = self._tiny_small_config()
+        config.tokenizer_num_heads = 2
+        config.action_num_heads = 2
+        config.warmup_steps = 1
+        config.max_steps = 10
+
+        trainer, _ = create_genie_trainer(config, torch.device("cpu"))
+        batch = torch.rand(
+            2, 3, config.num_frames, config.image_size, config.image_size
+        )
+        for _ in range(3):
+            trainer.train_step(batch)
+
+        path = tmp_path / "genie.pt"
+        trainer.save_checkpoint(str(path))
+        trainer.load_checkpoint(str(path))
+        assert trainer.global_step == 3
+
     def test_video_dataset_loads_npy_clips(self, tmp_path):
-        from synora.training.train_genie import VideoDataset
+        from simulusion.training.train_genie import VideoDataset
 
         clip = np.random.rand(10, 48, 48, 3).astype(np.float32)
         path = tmp_path / "clip.npy"
@@ -323,7 +436,7 @@ class TestGenieInferActions:
 
 class TestGenieVideoTokenizer:
     def test_decode_indices(self):
-        from synora.vision import create_video_tokenizer
+        from simulusion.vision import create_video_tokenizer
 
         tokenizer = create_video_tokenizer(
             num_frames=8,

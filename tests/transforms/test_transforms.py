@@ -3,7 +3,7 @@ import torch
 from PIL import Image
 import numpy as np
 
-from synora.transforms.image import make_transforms, GaussianBlur
+from simulusion.transforms.image import make_transforms, GaussianBlur
 
 
 class TestMakeTransforms:
@@ -57,8 +57,8 @@ class TestGaussianBlur:
 
 
 def test_transform_package_exports_image_helpers():
-    from synora.transforms import GaussianBlur as ExportedGaussianBlur
-    from synora.transforms import make_transforms as exported_make_transforms
+    from simulusion.transforms import GaussianBlur as ExportedGaussianBlur
+    from simulusion.transforms import make_transforms as exported_make_transforms
 
     assert exported_make_transforms is make_transforms
     assert ExportedGaussianBlur is GaussianBlur

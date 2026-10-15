@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from synora.vision.iris_decoder import IRISDecoder
+from simulusion.vision.iris_decoder import IRISDecoder
 
 
 def _decoder_and_codebook(vocab_size: int = 10, embedding_dim: int = 8):

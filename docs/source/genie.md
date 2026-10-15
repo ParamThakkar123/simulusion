@@ -6,6 +6,19 @@ without requiring any action labels.
 
 Based on paper: [Genie: Generative Interactive Environments](https://arxiv.org/abs/2402.15391) (Bruce et al., 2024)
 
+## See it in action
+
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/genie_replay.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>Left: a real Sonic clip. Right: Genie generating the clip from its first frame alone, driven by latent actions it inferred without any action labels.</figcaption>
+</figure>
+```
+
+Trained from scratch in one to two hours on a 4 GB laptop GPU with
+`python demos/genie_demo.py train`, then recorded with `python demos/genie_demo.py record`.
+More clips are in the {ref}`gallery <gallery-genie>`.
+
 ```{contents} Contents
 :depth: 3
 ```
@@ -144,12 +157,12 @@ Each video should contain at least `num_frames` frames.
 | `warmup_steps` | 5000 | Learning rate warmup steps |
 | `max_steps` | 125000 | Total training steps |
 
-## Usage in Synora
+## Usage in Simulusion
 
 ### Quick start
 
 ```python
-from synora import GenieConfig, create_genie_small
+from simulusion import GenieConfig, create_genie_small
 
 cfg = GenieConfig()
 cfg.num_frames = 16
@@ -190,7 +203,7 @@ actions = model.infer_actions(frames)
 ### CLI
 
 ```bash
-synora train genie --config path/to/genie_config.yaml
+simulusion train genie --config path/to/genie_config.yaml
 ```
 
 See {doc}`configs_reference` for the full GenieConfig field reference with defaults.

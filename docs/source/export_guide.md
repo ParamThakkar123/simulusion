@@ -1,6 +1,6 @@
 # Exporting Models for Deployment
 
-Synora provides a unified export system that converts trained models and agents
+Simulusion provides a unified export system that converts trained models and agents
 into deployable formats — `torch.export` programs, AOTInductor packages, ONNX,
 TensorRT and (legacy) TorchScript — without requiring each model to implement
 its own export logic. For making inference fast, choosing what to export for
@@ -17,7 +17,7 @@ The export system is built around three levels of API:
 
 | Level | Function / Method | When to use |
 |---|---|---|
-| **Module method** | `module.export(path, format, ...)` | Every `nn.Module` class exported from the top-level `synora` namespace (`Genie`, `VisionTransformer`, `RSSM`, ...) |
+| **Module method** | `module.export(path, format, ...)` | Every `nn.Module` class exported from the top-level `simulusion` namespace (`Genie`, `VisionTransformer`, `RSSM`, ...) |
 | **Agent method** | `agent.export(path, format, ...)` | High-level agents (`DreamerAgent`, `JEPAAgent`, `IRISAgent`) that inherit `ExportableAgentMixin` |
 | **Standalone** | `export_any(obj, path, ...)` / `export_model(module, path, ...)` | When you need explicit control over which submodule is exported or want to bypass automatic target resolution |
 
@@ -38,7 +38,7 @@ symbolic.
 ### Loading and verifying artifacts
 
 ```python
-from synora import export_model, load_exported, verify_export
+from simulusion import export_model, load_exported, verify_export
 
 path = export_model(module, "step.pt2", format="exported_program", example_inputs=x)
 max_err = verify_export(module, path, x)  # raises AssertionError on mismatch
@@ -53,14 +53,14 @@ through ONNX Runtime when it is installed.
 
 ### Exporting any `nn.Module`
 
-`synora.export_model(module, path, ...)` exports any `torch.nn.Module`,
-including your own. Synora does not add methods to `torch.nn.Module`; its
+`simulusion.export_model(module, path, ...)` exports any `torch.nn.Module`,
+including your own. Simulusion does not add methods to `torch.nn.Module`; its
 public model classes get `.export()` from `ExportableAgentMixin`, which you can
 also inherit in your own classes (see [Custom agents](#custom-agents)).
 
 ```python
 import torch
-from synora import export_model
+from simulusion import export_model
 
 
 class MyModel(torch.nn.Module):
@@ -84,7 +84,7 @@ export_model(
 export_model(model, "model.onnx", format="onnx", example_inputs=torch.zeros(1, 64))
 ```
 
-Synora's own models (for example `synora.create_model("genie-small")`) can
+Simulusion's own models (for example `simulusion.create_model("genie-small")`) can
 call the same thing as a method: `genie.export("genie.pt2", format="exported_program", example_inputs=video)`.
 
 ### Exporting a trained agent
@@ -92,9 +92,9 @@ call the same thing as a method: `genie.export("genie.pt2", format="exported_pro
 High-level agents support the same `.export()` method directly:
 
 ```python
-import synora
+import simulusion
 
-agent = synora.create_model("dreamer", env="walker-walk", total_steps=1000)
+agent = simulusion.create_model("dreamer", env="walker-walk", total_steps=1000)
 # ... train the agent ...
 
 # Export the policy to ONNX
@@ -206,7 +206,7 @@ Inherit `ExportableAgentMixin` to give a custom agent (or your own
 `nn.Module`) the `.export()` method:
 
 ```python
-from synora import ExportableAgentMixin
+from simulusion import ExportableAgentMixin
 
 
 class MyAgent(ExportableAgentMixin):
@@ -232,14 +232,14 @@ agent.export(
 ```
 
 Or add inference support by implementing a matching pattern in
-`_infer_example_inputs` in `synora/export.py`.
+`_infer_example_inputs` in `simulusion/export.py`.
 
 ## Low-level API
 
 For scripting or batch export, use the standalone functions directly:
 
 ```python
-from synora import export_any, export_model
+from simulusion import export_any, export_model
 
 # export_any resolves the target module from any object
 export_any(agent, "policy.onnx", format="onnx")

@@ -5,7 +5,7 @@ This demonstrates how to use the DreamerAgent class for end-to-end training
 of a world model-based reinforcement learning agent.
 
 DeepMind Control tasks use ``domain-task`` names and need ``pip install
-synora[dmc]``. For a quick run without simulator downloads, use a Gymnasium
+simulusion[dmc]``. For a quick run without simulator downloads, use a Gymnasium
 task instead::
 
     python examples/dreamer_example.py --env cartpole-balance
@@ -15,8 +15,8 @@ task instead::
 import argparse
 import logging
 
-from synora.configs.dreamer_config import DreamerConfig
-from synora.models.dreamer import DreamerAgent
+from simulusion.configs.dreamer_config import DreamerConfig
+from simulusion.models.dreamer import DreamerAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

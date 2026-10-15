@@ -1,7 +1,7 @@
 # World Models Deep Dive (Ha & Schmidhuber, 2018)
 
 This page is a comprehensive technical reference for the Ha & Schmidhuber World Models
-implementation in Synora. It covers the architecture, data pipeline, training details,
+implementation in Simulusion. It covers the architecture, data pipeline, training details,
 inference, configuration, and common pitfalls.
 
 ```{contents} Contents
@@ -28,9 +28,9 @@ graph LR
 
 | Stage | Component | Function | Trained With | File |
 |---|---|---|---|---|
-| **V** | ConvVAE | Encodes 64×64 RGB → 32-d latent `z` | Reconstruction loss (MSE + KL) | `synora.vision.VAE.ConvVAE` |
-| **M** | MDN-RNN | Predicts next latent as Gaussian mixture `p(zₜ₊₁|aₜ,zₜ,hₜ)` | GMM NLL + BCE + MSE | `synora.models.mdrnn` |
-| **C** | Linear Controller | Maps `(zₜ, hₜ)` → action `aₜ` | CMA-ES (reward maximization) | `synora.models.controller` |
+| **V** | ConvVAE | Encodes 64×64 RGB → 32-d latent `z` | Reconstruction loss (MSE + KL) | `simulusion.vision.VAE.ConvVAE` |
+| **M** | MDN-RNN | Predicts next latent as Gaussian mixture `p(zₜ₊₁|aₜ,zₜ,hₜ)` | GMM NLL + BCE + MSE | `simulusion.models.mdrnn` |
+| **C** | Linear Controller | Maps `(zₜ, hₜ)` → action `aₜ` | CMA-ES (reward maximization) | `simulusion.models.controller` |
 
 ### Key design decisions
 
@@ -69,7 +69,7 @@ Encoder:                                                 Decoder:
   └─ Returns (mu, logsigma)                            └─ Sigmoid → 3×64×64 output
 ```
 
-Key classes in `synora.vision.VAE.ConvVAE`:
+Key classes in `simulusion.vision.VAE.ConvVAE`:
 
 | Class | Purpose |
 |---|---|
@@ -79,7 +79,7 @@ Key classes in `synora.vision.VAE.ConvVAE`:
 
 ### Loss function
 
-Defined in `synora.losses.convae_loss`:
+Defined in `simulusion.losses.convae_loss`:
 
 ```{math}
 \mathcal{L}_{\text{VAE}} = \underbrace{\|x - \hat{x}\|^2}_{\text{MSE reconstruction}}
@@ -97,7 +97,7 @@ Defined in `synora.losses.convae_loss`:
 **Training data** is collected by running the environment with random actions:
 
 ```python
-from synora.training.train_world_model import generate_rollouts
+from simulusion.training.train_world_model import generate_rollouts
 
 generate_rollouts(
     data_dir="./data/carracing",
@@ -148,7 +148,7 @@ the split with `num_test_files > 0`.
 
 ### Training loop
 
-See `synora.training.train_convvae.train_convae()`:
+See `simulusion.training.train_convvae.train_convae()`:
 
 1. Load pretrained VAE checkpoint if available (`noreload=False`).
 2. Create `ObservationDataset` with `A.Compose` transforms (resize + optional flip).
@@ -184,7 +184,7 @@ mixture weights, and `(μ_k, σ_k)` are the component parameters.
 
 ### MDRNN vs MDRNNCell
 
-The module `synora.models.mdrnn` provides two variants:
+The module `simulusion.models.mdrnn` provides two variants:
 
 | Class | RNN Type | Use Case | Forward Signature |
 |---|---|---|---|
@@ -235,7 +235,7 @@ temporal memory.
 
 ### Loss function
 
-Computed in `synora.training.train_mdn_rnn.get_loss()`:
+Computed in `simulusion.training.train_mdn_rnn.get_loss()`:
 
 ```{math}
 \mathcal{L}_{\text{MDRNN}} = \frac{1}{d+2}\left(
@@ -247,7 +247,7 @@ Computed in `synora.training.train_mdn_rnn.get_loss()`:
 
 | Component | Description |
 |---|---|
-| **GMM loss** (`synora.losses.gmm_loss`) | Negative log-likelihood of the observed next latent under the predicted Gaussian mixture. Uses numerically stable log-sum-exp: `\mathcal{L}_{\text{GMM}} = -\log\sum_k \pi_k \cdot \mathcal{N}(z_{t+1} \mid \mu_k, \sigma_k)` |
+| **GMM loss** (`simulusion.losses.gmm_loss`) | Negative log-likelihood of the observed next latent under the predicted Gaussian mixture. Uses numerically stable log-sum-exp: `\mathcal{L}_{\text{GMM}} = -\log\sum_k \pi_k \cdot \mathcal{N}(z_{t+1} \mid \mu_k, \sigma_k)` |
 | **BCE loss** | Binary cross-entropy for terminal flag prediction |
 | **MSE loss** | Mean squared error for reward prediction (only if `include_reward=True`) |
 | **Scaling factor** | Total loss divided by `latent_size + 2` (or `latent_size + 1` if reward excluded) to balance the GMM loss scale |
@@ -277,7 +277,7 @@ memory-intensive), `train_mdn_rnn.py` supports precomputed latents:
 
 ### Linear controller
 
-Defined in `synora.models.controller.Controller`:
+Defined in `simulusion.models.controller.Controller`:
 
 ```python
 class Controller(nn.Module):
@@ -610,26 +610,26 @@ def test_differentiable(self):
 
 ## CLI Usage
 
-The unified training script `synora.training.train_world_model` provides a
+The unified training script `simulusion.training.train_world_model` provides a
 complete CLI:
 
 ```bash
 # Generate data + train all 3 stages
-python -m synora.training.train_world_model --env CarRacing-v2
+python -m simulusion.training.train_world_model --env CarRacing-v2
 
 # Train only specific stages
-python -m synora.training.train_world_model --env CarRacing-v2 --stage vae
-python -m synora.training.train_world_model --env CarRacing-v2 --stage rnn
-python -m synora.training.train_world_model --env CarRacing-v2 --stage ctrl
+python -m simulusion.training.train_world_model --env CarRacing-v2 --stage vae
+python -m simulusion.training.train_world_model --env CarRacing-v2 --stage rnn
+python -m simulusion.training.train_world_model --env CarRacing-v2 --stage ctrl
 
 # Generate rollouts only
-python -m synora.training.train_world_model --env CarRacing-v2 --generate_only
+python -m simulusion.training.train_world_model --env CarRacing-v2 --generate_only
 
 # Test a trained model
-python -m synora.training.train_world_model --env CarRacing-v2 --test
+python -m simulusion.training.train_world_model --env CarRacing-v2 --test
 
 # With custom directories
-python -m synora.training.train_world_model \
+python -m simulusion.training.train_world_model \
     --env CarRacing-v2 \
     --data_dir ./data/carracing \
     --logdir ./results/carracing \

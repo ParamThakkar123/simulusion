@@ -22,7 +22,7 @@ import torch
 
 pytest.importorskip("cv2", reason="play_diamond imports OpenCV")
 
-from synora.inference.play_diamond import imagine_next_frame, to_display_frame
+from simulusion.inference.play_diamond import imagine_next_frame, to_display_frame
 
 L = 4
 SIZE = 8

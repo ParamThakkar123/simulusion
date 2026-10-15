@@ -1,13 +1,13 @@
 # Atari
 
-Synora exposes Atari 2600 environments through Gymnasium and the Arcade Learning Environment (ALE). Atari is the environment family; DIAMOND-style Atari support in Synora is an optional preprocessing wrapper/factory for Atari, not a separate environment backend.
+Simulusion exposes Atari 2600 environments through Gymnasium and the Arcade Learning Environment (ALE). Atari is the environment family; DIAMOND-style Atari support in Simulusion is an optional preprocessing wrapper/factory for Atari, not a separate environment backend.
 
-Install: `pip install ale-py synora[gym]` (ROMs required separately via AutoROM)
+Install: `pip install ale-py simulusion[gym]` (ROMs required separately via AutoROM)
 
 ## Raw Atari APIs
 
 ```python
-from synora import make_atari_env, list_available_atari_envs
+from simulusion import make_atari_env, list_available_atari_envs
 
 env = make_atari_env("ALE/Pong-v5", obs_type="rgb", frameskip=4)
 print(list_available_atari_envs()[:10])
@@ -30,10 +30,10 @@ Additional keyword arguments are forwarded to `gymnasium.make()`.
 
 ## Atari preprocessing for DIAMOND-style training
 
-This is not a separate environment in Synora. It is an Atari preprocessing path implemented by `DiamondAtariWrapper` and `make_diamond_atari_env()` for users who want DIAMOND-compatible Atari rollouts.
+This is not a separate environment in Simulusion. It is an Atari preprocessing path implemented by `DiamondAtariWrapper` and `make_diamond_atari_env()` for users who want DIAMOND-compatible Atari rollouts.
 
 ```python
-from synora import make_diamond_atari_env
+from simulusion import make_diamond_atari_env
 
 env = make_diamond_atari_env(
     game="ALE/Breakout-v5",
@@ -64,7 +64,7 @@ The factory creates the underlying Gymnasium Atari environment with `obs_type="r
 For parallel Atari simulation, use `make_atari_vector_env()`:
 
 ```python
-from synora import make_atari_vector_env
+from simulusion import make_atari_vector_env
 
 vec_env = make_atari_vector_env(
     game="pong",
@@ -75,7 +75,7 @@ vec_env = make_atari_vector_env(
 )
 ```
 
-This returns ALE's native `AtariVectorEnv`, not Synora's multiprocessing `TorchVectorizedEnv`.
+This returns ALE's native `AtariVectorEnv`, not Simulusion's multiprocessing `TorchVectorizedEnv`.
 
 ## Model usage
 

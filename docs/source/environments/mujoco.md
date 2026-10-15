@@ -1,13 +1,13 @@
 # MuJoCo
 
-Synora includes convenience factories for Gymnasium MuJoCo environments, currently focused on configurable Humanoid and HalfCheetah creation. These factories return standard Gymnasium environments; wrap them with `GymImageEnv` if a Synora model needs image observations.
+Simulusion includes convenience factories for Gymnasium MuJoCo environments, currently focused on configurable Humanoid and HalfCheetah creation. These factories return standard Gymnasium environments; wrap them with `GymImageEnv` if a Simulusion model needs image observations.
 
 Install: `pip install "gymnasium[mujoco]"`
 
 ## Humanoid factory
 
 ```python
-from synora import make_mujoco_env
+from simulusion import make_mujoco_env
 
 env = make_mujoco_env(
     "Humanoid-v4",
@@ -25,7 +25,7 @@ The factory builds `Humanoid-{version}` and forwards common reward, reset, healt
 ## HalfCheetah factory
 
 ```python
-from synora import make_mujoco_env
+from simulusion import make_mujoco_env
 
 env = make_mujoco_env(
     "HalfCheetah-v4",
@@ -43,7 +43,7 @@ The factory builds `HalfCheetah-{version}` and forwards the selected reward, res
 Because the MuJoCo factories return raw Gymnasium environments, wrap the environment with `GymImageEnv` or configure Dreamer through the Gym backend:
 
 ```python
-from synora import DreamerConfig
+from simulusion import DreamerConfig
 
 cfg = DreamerConfig()
 cfg.env_backend = "gym"
@@ -54,8 +54,8 @@ cfg.gym_render_mode = "rgb_array"
 For custom factory output:
 
 ```python
-from synora import GymImageEnv
-from synora import make_mujoco_env
+from simulusion import GymImageEnv
+from simulusion import make_mujoco_env
 
 base_env = make_mujoco_env("HalfCheetah-v4", render_mode="rgb_array")
 env = GymImageEnv(base_env, seed=0, size=(64, 64))

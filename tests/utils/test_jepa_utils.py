@@ -1,5 +1,5 @@
 import torch
-from synora.utils.jepa_utils import (
+from simulusion.utils.jepa_utils import (
     trunc_normal_,
     repeat_interleave_batch,
     WarmupCosineSchedule,

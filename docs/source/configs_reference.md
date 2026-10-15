@@ -1,17 +1,17 @@
 # Configs Reference
 
-This page documents all configuration classes in Synora.
+This page documents all configuration classes in Simulusion.
 
 ```{contents} Contents
 ```
 
 ## Shared Serialization API
 
-All model config classes exported by Synora support a common
+All model config classes exported by Simulusion support a common
 serialization interface:
 
 ```python
-from synora import DreamerConfig, GenieConfig, JEPAConfig
+from simulusion import DreamerConfig, GenieConfig, JEPAConfig
 
 cfg = GenieConfig(image_size=32, num_frames=8)
 cfg_dict = cfg.to_dict()
@@ -145,7 +145,7 @@ class DreamerConfig:
 
     # WandB
     enable_wandb: bool = False
-    wandb_project: str = "synora"
+    wandb_project: str = "simulusion"
     wandb_entity: str = ""
     log_dir: str = "runs"
     data_dir: Optional[str] = None
@@ -216,7 +216,7 @@ class JEPAConfig:
     folder: str = "results/jepa"
     write_tag: str = "jepa_run"
     enable_wandb: bool = False
-    wandb_project: str = "synora"
+    wandb_project: str = "simulusion"
     wandb_entity: str = ""
     enable_sweep: bool = False
     sweep_config: Dict[str, Any] = {}
@@ -369,7 +369,7 @@ class DiamondConfig:
 ### Basic Configuration
 
 ```python
-from synora import DreamerConfig
+from simulusion import DreamerConfig
 
 cfg = DreamerConfig()
 cfg.env = "walker-walk"
@@ -442,13 +442,13 @@ cfg.free_nats = 1.0
 
 ## Experiment YAML and OmegaConf overrides
 
-Synora provides a shared experiment configuration layer in
-`synora.experiments`. Training entrypoints can compose their Python
+Simulusion provides a shared experiment configuration layer in
+`simulusion.experiments`. Training entrypoints can compose their Python
 configuration defaults with a YAML file and Hydra/OmegaConf-style dot-list
 overrides, while still receiving plain Python dictionaries or config objects at
 runtime.
 
-Built-in YAML starters live under `synora/configs/experiments/`:
+Built-in YAML starters live under `simulusion/configs/experiments/`:
 
 - `diamond.yaml` for DIAMOND Atari experiments.
 - `iris.yaml` for IRIS Atari experiments.
@@ -457,15 +457,15 @@ Built-in YAML starters live under `synora/configs/experiments/`:
 Examples:
 
 ```bash
-synora train diamond --config synora/configs/experiments/diamond.yaml preset=small seed=1
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml preset=small seed=1
 ```
 
 ```bash
-synora train iris --config synora/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
+simulusion train iris --config simulusion/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
 ```
 
 ```bash
-synora train jepa --config synora/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
+simulusion train jepa --config simulusion/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
 ```
 
 Use `--print-config` with these entrypoints to inspect the fully composed config

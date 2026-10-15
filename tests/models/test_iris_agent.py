@@ -3,8 +3,8 @@ from unittest.mock import patch
 import pytest
 import torch
 
-from synora.models.iris_agent import IRISAgent, compute_lambda_return
-from synora.configs.iris_config import IRISConfig
+from simulusion.models.iris_agent import IRISAgent, compute_lambda_return
+from simulusion.configs.iris_config import IRISConfig
 
 
 class TestComputeLambdaReturn:
@@ -175,6 +175,113 @@ class TestIRISAgentImagineRollout:
                 assert pos == K + (step + 1) * (K + 1)
                 assert cache.length == pos
 
+    def test_rollout_cache_sized_to_horizon_matches_full_cache(self, agent):
+        """Sizing the KV cache to the rollout must not change the rollout."""
+        agent.transformer.termination_head.bias.data.copy_(torch.tensor([10.0, -10.0]))
+        initial_frame = torch.rand(2, 3, 64, 64)
+        sized = agent.transformer.init_cache
+
+        def full(batch_size, device, dtype=None, max_len=None):
+            return sized(batch_size, device, dtype)
+
+        results = []
+        for init_cache in (full, sized):
+            with patch.object(agent.transformer, "init_cache", init_cache):
+                torch.manual_seed(0)
+                with torch.no_grad():
+                    results.append(
+                        agent.imagine_rollout(
+                            initial_frame, horizon=4, stop_on_termination=False
+                        )
+                    )
+        for key in ("frames", "actions", "rewards", "continues"):
+            assert torch.allclose(results[0][key].float(), results[1][key].float())
+
+    def test_init_cache_max_len_never_exceeds_context(self, agent):
+        transformer = agent.transformer
+        cpu = torch.device("cpu")
+        assert transformer.init_cache(1, cpu).max_len == transformer.max_seq_len
+        assert transformer.init_cache(1, cpu, max_len=20).max_len == 20
+        too_long = transformer.max_seq_len + 50
+        assert (
+            transformer.init_cache(1, cpu, max_len=too_long).max_len
+            == transformer.max_seq_len
+        )
+
+    def test_policy_update_starts_from_the_burned_in_state(self, agent):
+        """Paper A.3: the update scores actions from the state they were taken in.
+
+        The rollout acts from the LSTM state left by the burn-in frames, so the
+        actor-critic loss must re-run the trajectory from that state rather than
+        from zeros.
+        """
+        agent.transformer.termination_head.bias.data.copy_(torch.tensor([10.0, -10.0]))
+        burn_in = torch.rand(2, 3, 3, 64, 64)
+        with torch.no_grad():
+            trajectory = agent.imagine_rollout(
+                torch.rand(2, 3, 64, 64),
+                horizon=3,
+                burn_in_frames=burn_in,
+                stop_on_termination=False,
+            )
+            expected = agent.burn_in(burn_in)
+        assert trajectory["initial_hidden"] is not None
+        for got, want in zip(trajectory["initial_hidden"], expected):
+            assert torch.allclose(got, want)
+
+        seen = []
+        forward = agent.forward_actor_critic
+
+        def recording_forward(frames, hidden=None):
+            seen.append(hidden)
+            return forward(frames, hidden=hidden)
+
+        with patch.object(agent, "forward_actor_critic", recording_forward):
+            agent.update_actor_critic(trajectory)
+        assert seen[0] is not None
+        for got, want in zip(seen[0], expected):
+            assert torch.allclose(got, want)
+
+    def test_act_with_epsilon_samples_from_the_policy(self, agent):
+        """Paper Table 5: epsilon-greedy is combined with sampling, not argmax.
+
+        With near-uniform logits and a small epsilon, collection must still
+        spread over the actions; an argmax would repeat the top one.
+        """
+        batch = 512
+        logits = torch.zeros(batch, 1, agent.action_size)
+        logits[..., 0] = 0.1  # argmax would always pick action 0
+
+        def fake_forward(frames, hidden=None):
+            return logits, torch.zeros(batch, 1), hidden
+
+        with patch.object(agent, "forward_actor_critic", fake_forward):
+            torch.manual_seed(0)
+            actions = agent.act(torch.rand(batch, 3, 64, 64), epsilon=0.01)
+
+        assert actions.shape == (batch,)
+        assert (actions == 0).float().mean() < 0.5
+        assert len(actions.unique()) == agent.action_size
+
+    def test_burn_in_in_chunks_matches_one_pass(self, agent):
+        frames = torch.rand(2, 5, 3, 64, 64)
+        agent.reconstruct_chunk_size = 1000
+        whole = agent.burn_in(frames)
+        agent.reconstruct_chunk_size = 3
+        chunked = agent.burn_in(frames)
+        for a, b in zip(whole, chunked):
+            assert torch.allclose(a, b, atol=1e-5)
+
+    def test_reconstruct_in_chunks_matches_one_pass(self, agent):
+        frames = torch.rand(2, 5, 3, 64, 64)
+        with torch.no_grad():
+            agent.reconstruct_chunk_size = 1000
+            whole = agent.reconstruct(frames)
+            agent.reconstruct_chunk_size = 3
+            chunked = agent.reconstruct(frames)
+        assert chunked.shape == frames.shape
+        assert torch.allclose(whole, chunked, atol=1e-5)
+
     def test_update_actor_critic_with_imagined_trajectory(self, agent):
         B, T, C, H, W = 2, 5, 3, 64, 64
         frames = torch.randn(B, T + 1, C, H, W)
@@ -192,6 +299,75 @@ class TestIRISAgentImagineRollout:
         assert "actor_loss" in metrics
         assert "value_loss" in metrics
         assert "total_loss" in metrics
+
+
+class TestGraphedDecodeStep:
+    """Imagination's CUDA-graph fast path must compute what the eager path does."""
+
+    @staticmethod
+    def _transformer(device):
+        from simulusion.models.iris_transformer import IRISTransformer
+
+        torch.manual_seed(0)
+        return (
+            IRISTransformer(
+                vocab_size=32,
+                tokens_per_frame=16,
+                action_size=4,
+                embed_dim=64,
+                num_layers=2,
+                num_heads=4,
+                dropout=0.0,
+            )
+            .to(device)
+            .eval()
+        )
+
+    def test_reset_cache_reprimes_like_a_fresh_one(self):
+        transformer = self._transformer("cpu")
+        tokens = torch.randint(0, 32, (2, 1, 16))
+        action = torch.tensor([1, 2])
+
+        reused = transformer.init_cache(2, torch.device("cpu"))
+        pos = transformer.prime_cache(tokens, None, reused, start_pos=0)
+        transformer.generate_frame_cached(action, reused, pos, sample=False)
+        reused.reset()
+
+        results = []
+        for cache in (reused, transformer.init_cache(2, torch.device("cpu"))):
+            pos = transformer.prime_cache(tokens, None, cache, start_pos=0)
+            results.append(
+                transformer.generate_frame_cached(action, cache, pos, sample=False)
+            )
+        assert torch.equal(results[0][1], results[1][1])
+        assert torch.allclose(results[0][0], results[1][0])
+
+    @pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+    def test_graphed_decode_matches_eager_decode(self):
+        from simulusion.models.iris_transformer import GraphedDecodeStep
+
+        device = torch.device("cuda")
+        transformer = self._transformer(device)
+        tokens = torch.randint(0, 32, (3, 1, 16), device=device)
+        actions = torch.randint(0, 4, (4, 3), device=device)
+
+        outputs = []
+        for graphed in (False, True):
+            cache = transformer.init_cache(3, device)
+            step = GraphedDecodeStep(transformer, cache, 3) if graphed else None
+            pos = transformer.prime_cache(tokens, None, cache, start_pos=0)
+            frames = []
+            for action in actions:
+                logits, generated, hidden, pos = transformer.generate_frame_cached(
+                    action, cache, pos, sample=False, decode_step=step
+                )
+                frames.append((logits, generated, hidden))
+            outputs.append(frames)
+
+        for eager, graphed in zip(*outputs):
+            assert torch.equal(eager[1], graphed[1])
+            assert torch.allclose(eager[0], graphed[0], atol=1e-5)
+            assert torch.allclose(eager[2], graphed[2], atol=1e-5)
 
 
 class TestIRISAgentCheckpointSecurity:
@@ -240,7 +416,7 @@ class TestIRISAgentCheckpointSecurity:
         }
 
         with patch(
-            "synora.models.iris_agent.torch.load", return_value=checkpoint
+            "simulusion.models.iris_agent.torch.load", return_value=checkpoint
         ) as mock_load:
             agent.load("checkpoint.pt")
 
@@ -268,6 +444,6 @@ class TestIRISAgentCheckpointSecurity:
         """
         stale = {"encoder": agent.encoder.state_dict()}
 
-        with patch("synora.models.iris_agent.torch.load", return_value=stale):
+        with patch("simulusion.models.iris_agent.torch.load", return_value=stale):
             with pytest.raises(RuntimeError, match="checkpoint format v1"):
                 agent.load("old.pt")

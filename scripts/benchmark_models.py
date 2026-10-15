@@ -1,4 +1,4 @@
-"""Auto-run compute benchmark across every model implemented in Synora.
+"""Auto-run compute benchmark across every model implemented in Simulusion.
 
 This is a *systems* benchmark: it builds each architecture, feeds it synthetic
 tensors, and measures parameter count, forward latency, forward+backward
@@ -6,7 +6,7 @@ latency, throughput and peak memory. It needs no checkpoints, no datasets and
 no environments, so it runs anywhere ``torch`` imports.
 
 For *return*-based benchmarking of trained agents (IQM over seeds on Atari),
-use ``python -m synora.benchmarks.cli`` instead -- that harness needs trained
+use ``python -m simulusion.benchmarks.cli`` instead -- that harness needs trained
 checkpoints and a Gymnasium install.
 
 The usual entrypoint is ``scripts/benchmark_models.sh``, which installs
@@ -135,7 +135,7 @@ def _default(value: int | None, fallback: int) -> int:
 
 
 def _build_dreamer_rssm(p: Preset) -> Built:
-    from synora.models.dreamer_rssm import RSSM
+    from simulusion.models.dreamer_rssm import RSSM
 
     action_size, embed = 6, 1024
     size = _default(p.width, 200)
@@ -158,7 +158,7 @@ def _build_dreamer_rssm(p: Preset) -> Built:
 
 
 def _build_planet_rssm(p: Preset) -> Built:
-    from synora.models.rssm import RecurrentStateSpaceModel
+    from simulusion.models.rssm import RecurrentStateSpaceModel
 
     action_size = 6
     size = _default(p.width, 200)
@@ -188,7 +188,7 @@ def _call_observe_rollout(
 
 def _modular_rssm(backbone_type: str) -> Callable[[Preset], Built]:
     def build(p: Preset) -> Built:
-        from synora.models.modular_rssm import create_modular_rssm
+        from simulusion.models.modular_rssm import create_modular_rssm
 
         action_size = 6
         size = _default(p.width, 200)
@@ -221,7 +221,7 @@ def _modular_rssm(backbone_type: str) -> Callable[[Preset], Built]:
 
 
 def _build_mdrnn(p: Preset) -> Built:
-    from synora.models.mdrnn import MDRNN
+    from simulusion.models.mdrnn import MDRNN
 
     latents, actions = 32, 3
     model = MDRNN(
@@ -240,7 +240,7 @@ def _build_mdrnn(p: Preset) -> Built:
 
 
 def _build_convvae(p: Preset) -> Built:
-    from synora.vision.VAE.ConvVAE import ConvVAE
+    from simulusion.vision.VAE.ConvVAE import ConvVAE
 
     model = ConvVAE(img_channels=3, latent_size=32)
 
@@ -265,7 +265,7 @@ def _iris_embedding_dim(p: Preset) -> int:
 
 
 def _build_iris_encoder(p: Preset) -> Built:
-    from synora.vision.iris_encoder import IRISEncoder
+    from simulusion.vision.iris_encoder import IRISEncoder
 
     model = IRISEncoder(
         vocab_size=_IRIS_VOCAB,
@@ -282,7 +282,7 @@ def _build_iris_encoder(p: Preset) -> Built:
 
 
 def _build_iris_decoder(p: Preset) -> Built:
-    from synora.vision.iris_decoder import IRISDecoder
+    from simulusion.vision.iris_decoder import IRISDecoder
 
     embedding_dim = _iris_embedding_dim(p)
     model = IRISDecoder(
@@ -301,7 +301,7 @@ def _build_iris_decoder(p: Preset) -> Built:
 
 
 def _build_iris_transformer(p: Preset) -> Built:
-    from synora.models.iris_transformer import IRISTransformer
+    from simulusion.models.iris_transformer import IRISTransformer
 
     model = IRISTransformer(
         vocab_size=_IRIS_VOCAB,
@@ -326,9 +326,9 @@ def _build_iris_transformer(p: Preset) -> Built:
 
 
 def _build_iris_world_model(p: Preset) -> Built:
-    from synora.models.iris_transformer import IRISTransformer, IRISWorldModel
-    from synora.vision.iris_decoder import IRISDecoder
-    from synora.vision.iris_encoder import IRISEncoder
+    from simulusion.models.iris_transformer import IRISTransformer, IRISWorldModel
+    from simulusion.vision.iris_decoder import IRISDecoder
+    from simulusion.vision.iris_encoder import IRISEncoder
 
     embedding_dim = _iris_embedding_dim(p)
     model = IRISWorldModel(
@@ -372,7 +372,7 @@ _DIAMOND_COND_FRAMES = 4
 
 
 def _build_diamond_unet(p: Preset) -> Built:
-    from synora.models.diffusion.diamond_diffusion import DiffusionUNet
+    from simulusion.models.diffusion.diamond_diffusion import DiffusionUNet
 
     model = DiffusionUNet(
         obs_channels=3,
@@ -399,7 +399,7 @@ def _build_diamond_unet(p: Preset) -> Built:
 
 
 def _build_diamond_reward_termination(p: Preset) -> Built:
-    from synora.models.diffusion.reward_termination import RewardTerminationModel
+    from simulusion.models.diffusion.reward_termination import RewardTerminationModel
 
     channels = _default(p.width, 32)
     model = RewardTerminationModel(
@@ -426,7 +426,7 @@ def _build_diamond_reward_termination(p: Preset) -> Built:
 
 
 def _build_dit(p: Preset) -> Built:
-    from synora.models.diffusion.DiT import DiT
+    from simulusion.models.diffusion.DiT import DiT
 
     size = p.image_size
     model = DiT(
@@ -457,7 +457,7 @@ _GENIE_ACTION_VOCAB = 8
 
 
 def _build_genie_tokenizer(p: Preset) -> Built:
-    from synora.vision.video_tokenizer import create_video_tokenizer
+    from simulusion.vision.video_tokenizer import create_video_tokenizer
 
     size = p.image_size
     model = create_video_tokenizer(
@@ -480,7 +480,7 @@ def _build_genie_tokenizer(p: Preset) -> Built:
 
 
 def _build_genie_latent_action(p: Preset) -> Built:
-    from synora.models.latent_action_model import create_latent_action_model
+    from simulusion.models.latent_action_model import create_latent_action_model
 
     size = p.image_size
     model = create_latent_action_model(
@@ -504,7 +504,7 @@ def _build_genie_latent_action(p: Preset) -> Built:
 
 
 def _build_genie_dynamics(p: Preset) -> Built:
-    from synora.models.dynamics_model import create_dynamics_model
+    from simulusion.models.dynamics_model import create_dynamics_model
 
     size, patch = p.image_size, 8
     tokens_per_frame = (size // patch) ** 2
@@ -530,7 +530,7 @@ def _build_genie_dynamics(p: Preset) -> Built:
 
 
 def _build_genie_small(p: Preset) -> Built:
-    from synora.models.genie import create_genie_small
+    from simulusion.models.genie import create_genie_small
 
     size = p.image_size
     model = create_genie_small(num_frames=p.seq, image_size=size)
@@ -549,7 +549,7 @@ def _build_genie_small(p: Preset) -> Built:
 
 def _jepa_vit(factory_name: str) -> Callable[[Preset], Built]:
     def build(p: Preset) -> Built:
-        from synora.models import vit as vit_module
+        from simulusion.models import vit as vit_module
 
         size = p.image_size
         model = getattr(vit_module, factory_name)(patch_size=8, img_size=[size])
@@ -888,7 +888,7 @@ def write_reports(
             writer.writerow(asdict(result))
 
     md_path = out_dir / "model_benchmarks.md"
-    lines = ["# Synora model benchmarks", ""]
+    lines = ["# Simulusion model benchmarks", ""]
     lines += [f"- **{key}**: {value}" for key, value in meta.items()]
     lines += ["", "| " + " | ".join(header for _, header in _COLUMNS) + " |"]
     lines.append("| " + " | ".join("---" for _ in _COLUMNS) + " |")
@@ -1059,7 +1059,7 @@ def main(argv: list[str] | None = None) -> int:
     if device.type == "cuda":
         meta["gpu"] = torch.cuda.get_device_name(device)
 
-    print("Synora model benchmark")
+    print("Simulusion model benchmark")
     for key, value in meta.items():
         print(f"  {key}: {value}")
     print()

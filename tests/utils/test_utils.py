@@ -33,7 +33,7 @@ class TestUtils:
             pytest.importorskip("gymnasium")
 
     def test_to_tensor_obs(self):
-        from synora.utils.utils import to_tensor_obs
+        from simulusion.utils.utils import to_tensor_obs
 
         image = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
         result = to_tensor_obs(image)
@@ -42,7 +42,7 @@ class TestUtils:
         assert result.dtype == torch.float32
 
     def test_postprocess_img(self):
-        from synora.utils.utils import postprocess_img
+        from simulusion.utils.utils import postprocess_img
 
         image = np.random.rand(64, 64, 3).astype(np.float32) * 255
         result = postprocess_img(image, depth=8)
@@ -52,7 +52,7 @@ class TestUtils:
         assert result.min() >= 0 and result.max() <= 255
 
     def test_preprocess_img(self):
-        from synora.utils.utils import preprocess_img
+        from simulusion.utils.utils import preprocess_img
 
         image = torch.rand(3, 64, 64) * 255
         preprocess_img(image, depth=8)
@@ -60,7 +60,7 @@ class TestUtils:
         assert image.min() >= -0.5 and image.max() <= 0.5
 
     def test_bottle(self):
-        from synora.utils.utils import bottle
+        from simulusion.utils.utils import bottle
 
         def sum_fn(x):
             return x.sum(dim=-1)
@@ -71,7 +71,7 @@ class TestUtils:
         assert result.shape == (2, 3)
 
     def test_get_combined_params(self):
-        from synora.utils.utils import get_combined_params
+        from simulusion.utils.utils import get_combined_params
 
         model1 = torch.nn.Linear(10, 5)
         model2 = torch.nn.Linear(5, 3)
@@ -81,7 +81,7 @@ class TestUtils:
         assert len(params) == 4
 
     def test_load_yml_config(self):
-        from synora.utils.utils import load_yml_config
+        from simulusion.utils.utils import load_yml_config
         import yaml
         import shutil
 
@@ -97,7 +97,7 @@ class TestUtils:
             shutil.rmtree(tmpdir)
 
     def test_ensure_results_dir_exists(self):
-        from synora.utils.utils import ensure_results_dir_exists
+        from simulusion.utils.utils import ensure_results_dir_exists
 
         with tempfile.TemporaryDirectory() as tmpdir:
             ensure_results_dir_exists(tmpdir)
@@ -106,7 +106,7 @@ class TestUtils:
             ensure_results_dir_exists("/nonexistent/path")
 
     def test_flatten_dict(self):
-        from synora.utils.utils import flatten_dict
+        from simulusion.utils.utils import flatten_dict
 
         data = {"a": 1, "b": {"c": 2, "d": {"e": 3}}}
         result = flatten_dict(data)
@@ -116,7 +116,7 @@ class TestUtils:
         assert "b.d.e" in result or "d.e" in result
 
     def test_normalize_frames_for_saving(self):
-        from synora.utils.utils import normalize_frames_for_saving
+        from simulusion.utils.utils import normalize_frames_for_saving
 
         frames_chw = np.random.rand(10, 3, 64, 64).astype(np.float32)
         result = normalize_frames_for_saving(frames_chw)
@@ -130,7 +130,7 @@ class TestUtils:
         assert result.shape == (10, 64, 64, 3)
 
     def test_normalize_frames_with_neg_half(self):
-        from synora.utils.utils import normalize_frames_for_saving
+        from simulusion.utils.utils import normalize_frames_for_saving
 
         frames = np.random.rand(10, 64, 64, 3).astype(np.float32) - 0.5
         result = normalize_frames_for_saving(frames)
@@ -138,7 +138,7 @@ class TestUtils:
         assert result.min() >= 0 and result.max() <= 1
 
     def test_get_mask_1d(self):
-        from synora.utils.utils import get_mask
+        from simulusion.utils.utils import get_mask
 
         tensor = torch.tensor([1.0, 2.0, 3.0])
         lengths = [2, 3, 1]
@@ -151,7 +151,7 @@ class TestUtils:
         assert mask[0, 2] == 0.0
 
     def test_get_mask_2d(self):
-        from synora.utils.utils import get_mask
+        from simulusion.utils.utils import get_mask
 
         tensor = torch.randn(2, 5, 3)
         lengths = [3, 5]
@@ -161,7 +161,7 @@ class TestUtils:
         assert mask.shape == (2, 5, 3)
 
     def test_load_memory_blocks_untrusted_pickle_globals(self, tmp_path):
-        from synora.utils.utils import load_memory
+        from simulusion.utils.utils import load_memory
 
         class Evil:
             def __reduce__(self):
@@ -174,7 +174,7 @@ class TestUtils:
             load_memory(replay_path, torch.device("cpu"))
 
     def test_load_memory_trusted_flag_still_uses_restricted_unpickler(self, tmp_path):
-        from synora.utils.utils import load_memory
+        from simulusion.utils.utils import load_memory
 
         class Evil:
             def __reduce__(self):
@@ -188,7 +188,7 @@ class TestUtils:
                 load_memory(replay_path, torch.device("cpu"), trusted=True)
 
     def test_apply_model_placeholder(self):
-        from synora.utils.utils import apply_model
+        from simulusion.utils.utils import apply_model
 
         model = Mock()
         inputs = torch.randn(2, 3)
@@ -197,7 +197,7 @@ class TestUtils:
         assert result is None
 
     def test_tensorboard_metrics(self):
-        from synora.utils.utils import TensorBoardMetrics
+        from simulusion.utils.utils import TensorBoardMetrics
 
         with tempfile.TemporaryDirectory() as tmpdir:
             metrics = TensorBoardMetrics(tmpdir)
@@ -208,7 +208,7 @@ class TestUtils:
             assert metrics.steps["accuracy"] == 1
 
     def test_plot_metrics(self):
-        from synora.utils.utils import plot_metrics
+        from simulusion.utils.utils import plot_metrics
         import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -219,7 +219,7 @@ class TestUtils:
             assert os.path.exists(html_file)
 
     def test_save_video_chw(self):
-        from synora.utils.utils import save_video
+        from simulusion.utils.utils import save_video
         import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -229,7 +229,7 @@ class TestUtils:
             assert os.path.exists(path)
 
     def test_save_video_hwc(self):
-        from synora.utils.utils import save_video
+        from simulusion.utils.utils import save_video
         import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -239,7 +239,7 @@ class TestUtils:
             assert os.path.exists(path)
 
     def test_save_video_invalid_dims(self):
-        from synora.utils.utils import save_video
+        from simulusion.utils.utils import save_video
 
         with tempfile.TemporaryDirectory() as tmpdir:
             frames = np.random.rand(5, 64, 64).astype(np.float32)
@@ -248,7 +248,7 @@ class TestUtils:
                 save_video(frames, tmpdir, "test_video")
 
     def test_combine_videos(self):
-        from synora.utils.utils import combine_videos
+        from simulusion.utils.utils import combine_videos
         import os
         import cv2
 
@@ -273,14 +273,14 @@ class TestUtils:
             assert os.path.exists(result)
 
     def test_combine_videos_no_files(self):
-        from synora.utils.utils import combine_videos
+        from simulusion.utils.utils import combine_videos
 
         with tempfile.TemporaryDirectory() as tmpdir:
             with pytest.raises(FileNotFoundError):
                 combine_videos(tmpdir)
 
     def test_apply_masks(self):
-        from synora.utils.utils import apply_masks
+        from simulusion.utils.utils import apply_masks
 
         x = torch.randn(2, 10, 5)
         mask1 = torch.tensor([0, 1, 2]).unsqueeze(0).expand(2, -1)
@@ -291,7 +291,7 @@ class TestUtils:
         assert result.shape == (4, 3, 5)
 
     def test_TorchImageEnvWrapper_init_with_string(self):
-        from synora.utils.utils import TorchImageEnvWrapper
+        from simulusion.utils.utils import TorchImageEnvWrapper
 
         with patch("gymnasium.make") as mock_make:
             mock_env = Mock()
@@ -304,7 +304,7 @@ class TestUtils:
             assert wrapper.bit_depth == 8
 
     def test_TorchImageEnvWrapper_reset(self):
-        from synora.utils.utils import TorchImageEnvWrapper
+        from simulusion.utils.utils import TorchImageEnvWrapper
 
         mock_env = Mock()
         mock_env.reset.return_value = (np.zeros((64, 64, 3), dtype=np.uint8), {})
@@ -316,7 +316,7 @@ class TestUtils:
         assert result.shape == (3, 64, 64)
 
     def test_TorchImageEnvWrapper_observation_size(self):
-        from synora.utils.utils import TorchImageEnvWrapper
+        from simulusion.utils.utils import TorchImageEnvWrapper
 
         mock_env = Mock()
         mock_env.reset.return_value = (np.zeros((64, 64, 3), dtype=np.uint8), {})
@@ -327,7 +327,7 @@ class TestUtils:
         assert wrapper.observation_size == (3, 64, 64)
 
     def test_TorchImageEnvWrapper_action_size(self):
-        from synora.utils.utils import TorchImageEnvWrapper
+        from simulusion.utils.utils import TorchImageEnvWrapper
 
         mock_env = Mock()
         mock_env.reset.return_value = (np.zeros((64, 64, 3), dtype=np.uint8), {})
@@ -340,7 +340,7 @@ class TestUtils:
         assert wrapper.action_size == 4
 
     def test_TorchImageEnvWrapper_discrete_action(self):
-        from synora.utils.utils import TorchImageEnvWrapper
+        from simulusion.utils.utils import TorchImageEnvWrapper
 
         mock_env = Mock()
         mock_env.reset.return_value = (np.zeros((64, 64, 3), dtype=np.uint8), {})
@@ -355,7 +355,7 @@ class TestUtils:
         assert wrapper.action_size == 1
 
     def test_StreamingVideoWriter(self):
-        from synora.utils.utils import StreamingVideoWriter
+        from simulusion.utils.utils import StreamingVideoWriter
         import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -369,7 +369,7 @@ class TestUtils:
             assert os.path.exists(path)
 
     def test_StreamingVideoWriter_float_frame(self):
-        from synora.utils.utils import StreamingVideoWriter
+        from simulusion.utils.utils import StreamingVideoWriter
         import os
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -398,7 +398,7 @@ def _video_codec(path):
 
 def test_mp4_writer_writes_browser_playable_h264(tmp_path):
     pytest.importorskip("imageio_ffmpeg")
-    from synora.utils.utils import Mp4Writer
+    from simulusion.utils.utils import Mp4Writer
 
     path = tmp_path / "clip.mp4"
     # Odd dimensions exercise the even-size padding yuv420p needs.
@@ -413,7 +413,7 @@ def test_mp4_writer_writes_browser_playable_h264(tmp_path):
 
 
 def test_mp4_writer_accepts_grayscale_and_rejects_wrong_size(tmp_path):
-    from synora.utils.utils import Mp4Writer
+    from simulusion.utils.utils import Mp4Writer
 
     with Mp4Writer(str(tmp_path / "gray.mp4"), 10, (32, 32)) as writer:
         writer.write(np.zeros((32, 32), dtype=np.uint8))
@@ -423,7 +423,7 @@ def test_mp4_writer_accepts_grayscale_and_rejects_wrong_size(tmp_path):
 
 def test_streaming_video_writer_uses_h264(tmp_path):
     pytest.importorskip("imageio_ffmpeg")
-    from synora.utils.utils import StreamingVideoWriter
+    from simulusion.utils.utils import StreamingVideoWriter
 
     path = tmp_path / "stream.mp4"
     writer = StreamingVideoWriter(str(path), fps=20)
@@ -438,7 +438,7 @@ def test_streaming_video_writer_uses_h264(tmp_path):
 def test_metrics_logger_writes_jsonl(tmp_path):
     import json
 
-    from synora.utils.logging_utils import MetricsLogger
+    from simulusion.utils.logging_utils import MetricsLogger
 
     metrics = MetricsLogger(
         str(tmp_path),
@@ -460,7 +460,7 @@ def test_assert_finite_decorator_rejects_nan():
     import pytest
     import torch
 
-    from synora.utils.logging_utils import assert_finite
+    from simulusion.utils.logging_utils import assert_finite
 
     @assert_finite
     def bad_loss():
@@ -473,7 +473,7 @@ def test_assert_finite_decorator_rejects_nan():
 def test_metrics_logger_writes_tensorboard_scalars_and_videos(tmp_path, monkeypatch):
     import torch
 
-    import synora.utils.logging_utils as logging_utils
+    import simulusion.utils.logging_utils as logging_utils
 
     events = []
 

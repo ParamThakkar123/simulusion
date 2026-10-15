@@ -5,10 +5,10 @@ import pytest
 import torch
 import numpy as np
 
-from synora.evals.fid import FID, _frechet_distance, _compute_statistics
-from synora.evals.fvd import FVD, _sample_clips
-from synora.evals.lpips import LPIPS, VGGFeatureExtractor
-from synora.evals.psnr import PSNR
+from simulusion.evals.fid import FID, _frechet_distance, _compute_statistics
+from simulusion.evals.fvd import FVD, _sample_clips
+from simulusion.evals.lpips import LPIPS, VGGFeatureExtractor
+from simulusion.evals.psnr import PSNR
 
 # End-to-end FID/FVD tests download a pretrained backbone (InceptionV3 is
 # 104 MB) on a cold cache and run it on CPU, which does not fit the suite-wide
@@ -220,13 +220,13 @@ class TestPSNR:
 class TestEvalUtils:
     def test_generate_trajectories_imports(self):
         """Tests that evals.diamond_utils imports correctly."""
-        from synora.evals.diamond_utils import generate_trajectories
+        from simulusion.evals.diamond_utils import generate_trajectories
 
         assert callable(generate_trajectories)
 
     def test_evals_package_imports(self):
         """Tests that the evals package exposes named exports."""
-        from synora.evals import FID, FVD, LPIPS, PSNR
+        from simulusion.evals import FID, FVD, LPIPS, PSNR
 
         assert FID is not None
         assert FVD is not None

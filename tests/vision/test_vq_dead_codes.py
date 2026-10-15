@@ -9,7 +9,7 @@ has a vocabulary of one.
 import pytest
 import torch
 
-from synora.vision.vq_layer import (
+from simulusion.vision.vq_layer import (
     DEFAULT_DEAD_CODE_THRESHOLD,
     VectorQuantizer,
     VectorQuantizerEMA,
@@ -96,7 +96,7 @@ def test_revival_rescues_a_collapsed_encoder_codebook(quantizer):
     EMA mass, so they can never win again. (Random Gaussian latents do *not*
     reproduce this, which is why the test pays for a real encoder.)
     """
-    from synora.vision.iris_encoder import IRISEncoder
+    from simulusion.vision.iris_encoder import IRISEncoder
 
     def final_perplexity(revive: bool) -> float:
         torch.manual_seed(0)

@@ -31,7 +31,7 @@ jobs:
 
     - name: Run mypy
       run: |
-        # ``mypy.ini`` already sets ``files = synora``. Passing the same
-        # package twice makes mypy 1.20 report a duplicate ``synora`` module
+        # ``mypy.ini`` already sets ``files = simulusion``. Passing the same
+        # package twice makes mypy 1.20 report a duplicate ``simulusion`` module
         # (the ``__init__.pyi`` stub colliding with itself).
-        mypy synora
+        mypy simulusion

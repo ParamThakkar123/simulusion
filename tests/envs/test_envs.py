@@ -11,7 +11,7 @@ if (
 
 import numpy as np
 
-from synora.envs.dmc import DeepMindControlEnv
+from simulusion.envs.dmc import DeepMindControlEnv
 
 
 class _FakePhysics:

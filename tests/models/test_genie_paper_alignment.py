@@ -12,14 +12,14 @@ import pytest
 import torch
 import torch.nn as nn
 
-from synora.blocks.st_transformer import (
+from simulusion.blocks.st_transformer import (
     STSpatialAttention,
     STTemporalAttention,
     STTransformer,
     STTransformerBlock,
 )
-from synora.models.dynamics_model import DynamicsModel
-from synora.models.latent_action_model import LatentActionModel
+from simulusion.models.dynamics_model import DynamicsModel
+from simulusion.models.latent_action_model import LatentActionModel
 
 
 def _st(**overrides) -> STTransformer:

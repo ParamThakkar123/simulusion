@@ -1,132 +1,130 @@
 # Getting Started
 
-## Installation
+This page takes you from installation to a trained world model you can watch,
+then shows where to go for each model family.
 
-Install from PyPI:
-
-```bash
-pip install synora
-```
-
-Install from source:
+## 1. Install
 
 ```bash
-git clone https://github.com/ParamThakkar123/synora.git
-cd synora
-pip install -e .
+pip install "simulusion[gym]"
 ```
 
-For development and tests:
+The package installs as `simulusion` and imports as `simulusion`. The `gym`
+extra brings Gymnasium with its classic-control and Atari environments. Other
+extras add DeepMind Control (`dmc`), logging (`ml`), MuJoCo, Brax and more; see
+{doc}`installation`.
+
+Simulusion does not pin a PyTorch build. For GPU training, install the CUDA wheel
+that matches your driver from [pytorch.org](https://pytorch.org/get-started/locally/)
+first, and check it with:
 
 ```bash
-pip install -e ".[dev]"
+python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 ```
 
-## Logging with Weights & Biases and TensorBoard
+## 2. Train your first world model
 
-Synora supports logging experiment results to Weights & Biases (WandB) and TensorBoard.
-
-### Weights & Biases
-
-To use WandB logging, set the `WANDB_API_KEY` environment variable (anonymous logins are no longer supported). You can get your key from [wandb.ai](https://wandb.ai/settings).
+Dreamer learns a model of the environment from raw pixels and trains its policy
+entirely inside that model:
 
 ```python
-cfg.enable_wandb = True
-cfg.wandb_project = "synora"
-cfg.wandb_entity = "your-entity"
-```
+import simulusion
 
-### TensorBoard
-
-Enable TensorBoard logging:
-
-```python
-cfg.enable_tensorboard = True
-cfg.log_dir = "runs"
-```
-
-Logs will be saved to the specified directory and can be viewed with `tensorboard --logdir runs`.
-
-## Quick Start: Friendly API
-
-The recommended entrypoint for common workflows is `synora`. It mirrors the
-Synora implementation package, but gives users short factory helpers for
-discovery, model creation, and environment creation.
-
-```python
-import synora
-
-print(synora.list_models())
-print(synora.list_env_backends())
-
-# Runs on `pip install synora[gym]`. Use env="walker-walk" (default backend)
-# with `pip install synora[dmc]` for DeepMind Control tasks.
-agent = synora.create_model(
-    "dreamer", env="Pendulum-v1", env_backend="gym", total_steps=5_000
+agent = simulusion.create_model(
+    "dreamer",
+    env="Pendulum-v1",
+    env_backend="gym",
+    total_steps=20_000,
 )
-env = synora.make_env("CartPole-v1", backend="gym")
+agent.train()
 ```
 
-You can still import direct research components from `synora` when you
-need lower-level control:
+Training prints a line per iteration and writes everything to one run folder,
+`runs/Pendulum-v1_Dreamerv1_<name>_<timestamp>/`:
+
+| File | Contents |
+|---|---|
+| `config.yaml` | the full configuration of the run |
+| `metrics.jsonl` | one JSON line per iteration: returns, losses, throughput |
+| `ckpts/<step>_ckpt.pt` | checkpoints, the final one always written |
+
+`create_model` accepts any field of the model's config as a keyword argument.
+To see them all, build the config first:
 
 ```python
-from synora import DreamerAgent, DreamerConfig
-
-cfg = DreamerConfig()
-cfg.env_backend = "gym"  # or the default "dmc" with synora[dmc] installed
-cfg.env = "Pendulum-v1"
-agent = DreamerAgent(cfg)
+cfg = simulusion.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
+print(cfg)
 ```
 
-## Quick Start: Dreamer
+## 3. Watch what it learned
 
-Synora implements multiple world model algorithms. Click on each to see detailed documentation:
-
-| Algorithm | Description | Quick Start |
-|-----------|-------------|--------------|
-| **Dreamer** | Model-based RL with latent dynamics | {doc}`dreamer` |
-| **JEPA** | Self-supervised visual representations | {doc}`jepa` |
-| **IRIS** | Sample-efficient RL with Transformers | {doc}`iris` |
-| **DiT** | Diffusion models with Transformers | {doc}`dit` |
-
-Train a complete world model pipeline (VAE + MDNRNN + Controller) on any Gym environment:
+The [demo scripts](https://github.com/ParamThakkar123/simulusion/tree/main/demos)
+turn a run into video. For Dreamer, `record` shows the real environment beside
+the world model's prediction of it, plus the policy acting:
 
 ```bash
-# Train on CarRacing
-python -m synora.training.train_world_model --env CarRacing-v2
-
-# Train on Pendulum
-python -m synora.training.train_world_model --env Pendulum-v1
-
-# Test trained model
-python -m synora.training.train_world_model --env CarRacing-v2 --test
-
-# Specify action size manually for environments with missing dependencies
-python -m synora.training.train_world_model --env BipedalWalker-v3 --action_size 4
+python demos/dreamer_demo.py record --run runs/Pendulum-v1_Dreamerv1_<name>_<timestamp>
 ```
 
-Dreamer supports multiple backends through `DreamerConfig.env_backend`; the
-top-level `synora.make_env()` helper uses the same backend names for standalone
-environment creation:
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/dreamer_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>What <code>record</code> produces, here for a Dreamer trained on cartpole swing-up. Left: the real environment. Right: the world model, observing 5 frames and then imagining the rest.</figcaption>
+</figure>
+```
 
-| Backend | Description |
+For a live session instead of a recording, `simulusion play --model dreamer -c
+<checkpoint>` opens a window where you can take over the controls (needs a
+desktop session).
+
+## 4. Choose a model
+
+Every model is built with `simulusion.create_model(name, ...)`. The names are those
+returned by `simulusion.list_models()`:
+
+| Model | `create_model` name | What it does | Demo |
+|---|---|---|---|
+| {doc}`Dreamer <dreamer>` | `dreamer`, `dreamer-v1`, `dreamer-v2` | Learns latent dynamics from pixels; trains an actor-critic in imagination | {ref}`video <gallery-dreamer>` |
+| {doc}`PlaNet <planet>` | `planet` | Plans each action with CEM inside a learned latent model | {ref}`video <gallery-planet>` |
+| {doc}`DIAMOND <diamond>` | `diamond` | Diffusion world model of Atari; agent trained on generated frames | {ref}`video <gallery-diamond>` |
+| {doc}`IRIS <iris>` | `iris` | Discrete-token autoencoder + Transformer world model | {ref}`video <gallery-iris>` |
+| {doc}`Genie <genie>` | `genie`, `genie-small`, `genie-large` | Playable world model learned from unlabelled video | {ref}`video <gallery-genie>` |
+| {doc}`DiT <dit>` | `dit` | Diffusion Transformer for image generation | {ref}`video <gallery-dit>` |
+| {doc}`I-JEPA <jepa>` | `jepa` | Self-supervised image representations, predicted in latent space | {ref}`images <gallery-i-jepa>` |
+| {doc}`ModularRSSM <modular_rssm_guide>` | `modular-rssm` | A world model assembled from swappable encoder, backbone and decoder | {ref}`video <gallery-modular-rssm>` |
+
+To run any of them on a different environment, pass `env=` and
+`env_backend=`. The same backend names work with `simulusion.make_env()`:
+
+| Backend | Environments |
 |---|---|
-| `dmc` | DeepMind Control Suite tasks (e.g. `walker-walk`) |
-| `dmlab` | DeepMind Lab 3D navigation tasks (e.g. `rooms_collect_good_objects_train`) |
-| `gym` | Gym/Gymnasium environment IDs or an existing environment instance |
-| `mujoco` | Gymnasium MuJoCo task IDs or native MJCF/MJB models |
-| `robotics` | Any ID registered by the installed Gymnasium Robotics package |
-| `procgen` | Procgen benchmark games such as `coinrun` and `heist` |
+| `gym` | Gymnasium IDs (classic control, Box2D, Atari), or an existing env instance |
+| `dmc` | DeepMind Control Suite tasks, written `domain-task` (e.g. `walker-walk`) |
+| `mujoco` | Gymnasium MuJoCo tasks or native MJCF/MJB models |
+| `robotics` | IDs registered by Gymnasium Robotics |
 | `brax` | JAX/Brax continuous-control environments |
-| `unity_mlagents` | Unity ML-Agents executable environments |
+| `procgen` | Procgen games such as `coinrun` (manual install) |
+| `dmlab` | DeepMind Lab 3D navigation tasks |
+| `unity_mlagents` | Unity ML-Agents executables |
 
-## Typical Training Flow
+## 5. Log to Weights & Biases or TensorBoard
 
-1. Choose an algorithm (Dreamer, JEPA, IRIS, or DiT)
-2. Create a config object for that algorithm
-3. Override dataset/environment and optimization fields
-4. Instantiate the corresponding agent
-5. Call `train()` and monitor logs/checkpoints
+Both are off by default. Install the `ml` extra, then set them on the config:
 
-For complete API details, see {doc}`api_reference`.
+```python
+cfg = simulusion.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
+cfg.enable_tensorboard = True  # then: tensorboard --logdir runs
+cfg.enable_wandb = True  # needs WANDB_API_KEY in the environment
+cfg.wandb_project = "simulusion"
+agent = simulusion.create_model("dreamer", config=cfg)
+```
+
+## Next steps
+
+- The {doc}`gallery` shows every model trained on a laptop GPU, with the
+  commands to reproduce each clip.
+- {doc}`training_guide` covers budgets, checkpointing, resuming and early
+  stopping.
+- {doc}`inference_guide` and {doc}`deployment_guide` cover fast inference and
+  exporting to ONNX, TorchScript and TensorRT.
+- {doc}`world_models_guide` explains the ideas the models share.

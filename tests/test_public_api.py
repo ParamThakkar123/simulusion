@@ -2,26 +2,26 @@ import re
 
 import pytest
 
-import synora
-from synora import api
+import simulusion
+from simulusion import api
 
 
 def _missing_optional_dependency(exc):
     """True when ``exc`` is an extra that simply is not installed here.
 
-    A base ``pip install synora`` has no gymnasium, ale_py, cv2 and so on, so
+    A base ``pip install simulusion`` has no gymnasium, ale_py, cv2 and so on, so
     the env-adapter exports legitimately fail to import. Those are not export
-    map bugs. A ``ModuleNotFoundError`` naming a ``synora`` module *is* a bug -
+    map bugs. A ``ModuleNotFoundError`` naming a ``simulusion`` module *is* a bug -
     it means the map points somewhere that does not exist.
     """
 
     if not isinstance(exc, ModuleNotFoundError):
         return False
-    # synora/utils/gym_compat.py re-raises with an explanatory message and no
+    # simulusion/utils/gym_compat.py re-raises with an explanatory message and no
     # ``name``, so a nameless miss is an optional backend rather than our code.
     if exc.name is None:
         return True
-    return not exc.name.startswith("synora")
+    return not exc.name.startswith("simulusion")
 
 
 def _partition_exports(module):
@@ -45,8 +45,8 @@ def test_every_public_export_resolves():
     # whole surface so the export map can never drift from the implementation.
     pytest.importorskip("torch")
 
-    broken, _ = _partition_exports(synora)
-    assert not broken, f"unresolvable synora exports: {broken}"
+    broken, _ = _partition_exports(simulusion)
+    assert not broken, f"unresolvable simulusion exports: {broken}"
 
 
 def test_export_check_is_not_vacuous():
@@ -64,33 +64,35 @@ def test_export_check_is_not_vacuous():
         "ConvEncoder",
     ]
     for name in core:
-        assert name in synora.__all__, f"{name} dropped out of the public API"
-        getattr(synora, name)
+        assert name in simulusion.__all__, f"{name} dropped out of the public API"
+        getattr(simulusion, name)
 
 
 def test_all_is_free_of_duplicates_and_exports_the_api_module():
-    assert "api" in synora.__all__
-    duplicates = {n for n in synora.__all__ if synora.__all__.count(n) > 1}
-    assert not duplicates, f"duplicate names in synora.__all__: {sorted(duplicates)}"
+    assert "api" in simulusion.__all__
+    duplicates = {n for n in simulusion.__all__ if simulusion.__all__.count(n) > 1}
+    assert not duplicates, (
+        f"duplicate names in simulusion.__all__: {sorted(duplicates)}"
+    )
 
 
-def test_top_level_synora_exports_user_facing_factories():
-    assert re.match(r"^\d+\.\d+\.\d+$", synora.__version__)
-    assert synora.create_config is api.create_config
-    assert "dreamer" in synora.list_models()
-    assert "gym" in synora.list_env_backends()
+def test_top_level_simulusion_exports_user_facing_factories():
+    assert re.match(r"^\d+\.\d+\.\d+$", simulusion.__version__)
+    assert simulusion.create_config is api.create_config
+    assert "dreamer" in simulusion.list_models()
+    assert "gym" in simulusion.list_env_backends()
 
 
 def test_create_config_accepts_aliases_and_overrides():
-    cfg = synora.create_config("dreamerv1", env="cartpole-swingup", seed=123)
+    cfg = simulusion.create_config("dreamerv1", env="cartpole-swingup", seed=123)
     assert cfg.env == "cartpole-swingup"
     assert cfg.seed == 123
 
 
 def test_model_and_backend_specs_resolve_aliases():
-    assert synora.get_model_spec("i-jepa").name == "jepa"
-    assert synora.get_env_backend_spec("gymnasium").name == "gym"
-    assert synora.get_env_backend_spec("wm").name == "world-model"
+    assert simulusion.get_model_spec("i-jepa").name == "jepa"
+    assert simulusion.get_env_backend_spec("gymnasium").name == "gym"
+    assert simulusion.get_env_backend_spec("wm").name == "world-model"
 
 
 def test_make_env_dispatches_to_selected_backend(monkeypatch):
@@ -107,7 +109,7 @@ def test_make_env_dispatches_to_selected_backend(monkeypatch):
     monkeypatch.setattr(api, "_load_object", fake_loader)
     env = api.make_env("CartPole-v1", backend="gym", render_mode="rgb_array")
 
-    assert calls["import_path"] == "synora.envs:make_gym_env"
+    assert calls["import_path"] == "simulusion.envs:make_gym_env"
     assert env == {
         "env_id": "CartPole-v1",
         "kwargs": {"render_mode": "rgb_array"},
@@ -153,7 +155,7 @@ def test_make_env_dispatches_world_model_backend(monkeypatch):
     monkeypatch.setattr(api, "_load_object", fake_loader)
     env = api.make_env(model, backend="wm", observation_space="obs", action_space="act")
 
-    assert calls["import_path"] == "synora.envs:make_world_model_env"
+    assert calls["import_path"] == "simulusion.envs:make_world_model_env"
     assert env == {
         "world_model": model,
         "kwargs": {"observation_space": "obs", "action_space": "act"},
@@ -164,7 +166,7 @@ def test_export_model_torchscript_writes_file(tmp_path):
     import pytest
 
     torch = pytest.importorskip("torch")
-    from synora import export_model
+    from simulusion import export_model
 
     class TinyAgent(torch.nn.Module):
         def __init__(self):
@@ -188,79 +190,79 @@ def test_export_model_torchscript_writes_file(tmp_path):
 
 def test_top_level_exports_export_helpers():
     import pytest
-    import synora
+    import simulusion
 
     pytest.importorskip("torch")
-    from synora.export import ExportableAgentMixin, export_any, export_model
+    from simulusion.export import ExportableAgentMixin, export_any, export_model
 
-    assert synora.export_any is export_any
-    assert synora.export_model is export_model
-    assert synora.ExportableAgentMixin is ExportableAgentMixin
+    assert simulusion.export_any is export_any
+    assert simulusion.export_model is export_model
+    assert simulusion.ExportableAgentMixin is ExportableAgentMixin
 
 
 def test_layer_and_helper_packages_are_importable():
-    import synora.helpers as helpers
-    from synora.layers import AdaLNNormalization, RMSNorm
+    import simulusion.helpers as helpers
+    from simulusion.layers import AdaLNNormalization, RMSNorm
 
     assert "load_checkpoint" in dir(helpers)
     assert RMSNorm.__name__ == "RMSNorm"
     assert AdaLNNormalization.__name__ == "AdaLNNormalization"
 
 
-def test_synora_submodules_alias_synora():
-    import synora.envs
-    import synora.models
-    import synora.utils.deprecation
+def test_simulusion_submodules_alias_simulusion():
+    import simulusion.envs
+    import simulusion.models
+    import simulusion.utils.deprecation
 
-    import synora.envs
-    import synora.models
-    import synora.utils.deprecation
+    import simulusion.envs
+    import simulusion.models
+    import simulusion.utils.deprecation
 
-    # The friendly ``synora.<name>`` surface resolves to the same module object
-    # as the internal ``synora.<name>`` implementation.
-    assert synora.models is synora.models
-    assert synora.envs is synora.envs
-    assert synora.utils.deprecation is synora.utils.deprecation
+    # The friendly ``simulusion.<name>`` surface resolves to the same module object
+    # as the internal ``simulusion.<name>`` implementation.
+    assert simulusion.models is simulusion.models
+    assert simulusion.envs is simulusion.envs
+    assert simulusion.utils.deprecation is simulusion.utils.deprecation
     # Canonical module identity stays on the internal package.
-    assert synora.models.__name__ == "synora.models"
+    assert simulusion.models.__name__ == "simulusion.models"
 
 
-def test_synora_submodule_from_imports_resolve():
-    from synora.envs import make_gym_env
-    from synora.models import Dreamer
-    from synora.utils.deprecation import deprecated
+def test_simulusion_submodule_from_imports_resolve():
+    from simulusion.envs import make_gym_env
+    from simulusion.models import Dreamer
+    from simulusion.utils.deprecation import deprecated
 
     assert Dreamer.__name__ == "Dreamer"
     assert callable(make_gym_env)
     assert callable(deprecated)
 
 
-def test_synora_cli_is_the_real_submodule_not_an_alias():
-    # ``synora.cli`` is a genuine module shipped in the ``synora`` package and
-    # must not be shadowed by the ``synora`` alias finder.
-    import synora.cli
+def test_simulusion_cli_is_the_real_submodule_not_an_alias():
+    # ``simulusion.cli`` is a genuine module shipped in the ``simulusion`` package and
+    # must not be shadowed by the ``simulusion`` alias finder.
+    import simulusion.cli
 
-    assert synora.cli.__name__ == "synora.cli"
-    assert synora.cli.__file__.replace("\\", "/").endswith("synora/cli.py")
+    assert simulusion.cli.__name__ == "simulusion.cli"
+    assert simulusion.cli.__file__.replace("\\", "/").endswith("simulusion/cli.py")
 
 
 def test_diamond_and_dit_are_registered_in_public_api():
-    assert "diamond" in synora.list_models()
-    assert "dit" in synora.list_models()
+    assert "diamond" in simulusion.list_models()
+    assert "dit" in simulusion.list_models()
 
-    diamond_cfg = synora.create_config("diamond", game="Pong-v5", seed=11)
-    dit_cfg = synora.create_config("diffusion-transformer", IMG_SIZE=8, PATCH=4)
+    diamond_cfg = simulusion.create_config("diamond", game="Pong-v5", seed=11)
+    dit_cfg = simulusion.create_config("diffusion-transformer", IMG_SIZE=8, PATCH=4)
 
     assert diamond_cfg.game == "Pong-v5"
     assert diamond_cfg.seed == 11
     assert dit_cfg.IMG_SIZE == 8
     assert dit_cfg.PATCH == 4
-    assert synora.get_model_spec("diamond_agent").name == "diamond"
-    assert synora.get_model_spec("diffusion_transformer").name == "dit"
+    assert simulusion.get_model_spec("diamond_agent").name == "diamond"
+    assert simulusion.get_model_spec("diffusion_transformer").name == "dit"
 
 
 def test_create_model_uses_dit_config_adapter():
-    model = synora.create_model(
+    model = simulusion.create_model(
         "dit",
         IMG_SIZE=8,
         PATCH=4,
@@ -285,7 +287,7 @@ def test_create_model_dispatches_diamond_agent_with_config(monkeypatch):
     original_loader = api._load_object
 
     def fake_loader(import_path):
-        if import_path == "synora.training.train_diamond:DiamondAgent":
+        if import_path == "simulusion.training.train_diamond:DiamondAgent":
             return FakeDiamondAgent
         return original_loader(import_path)
 

@@ -1,4 +1,4 @@
-"""Shared pytest configuration for the Synora suite."""
+"""Shared pytest configuration for the Simulusion suite."""
 
 import gc
 import sys

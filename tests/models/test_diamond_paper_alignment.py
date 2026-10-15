@@ -11,16 +11,16 @@ import pytest
 import torch
 import torch.nn as nn
 
-from synora.datasets.diamond_dataset import (
+from simulusion.datasets.diamond_dataset import (
     ReplayBuffer,
     SequenceDataset,
     to_model_domain,
 )
-from synora.models.diffusion.DDPM import DDPM
-from synora.models.diffusion.actor_critic import ActorCriticNetwork
-from synora.models.diffusion.diamond_diffusion import TimestepEmbedding
-from synora.models.diffusion.reward_termination import RewardTerminationModel
-from synora.envs.diamond_atari import DiamondAtariWrapper
+from simulusion.models.diffusion.DDPM import DDPM
+from simulusion.models.diffusion.actor_critic import ActorCriticNetwork
+from simulusion.models.diffusion.diamond_diffusion import TimestepEmbedding
+from simulusion.models.diffusion.reward_termination import RewardTerminationModel
+from simulusion.envs.diamond_atari import DiamondAtariWrapper
 
 
 class TestDiffusionTargetIsOneStepAhead:
@@ -303,8 +303,8 @@ class TestImaginationOrdering:
 
     @staticmethod
     def _agent():
-        from synora.configs.diamond_config import DiamondConfig
-        from synora.training.train_diamond import DiamondAgent
+        from simulusion.configs.diamond_config import DiamondConfig
+        from simulusion.training.train_diamond import DiamondAgent
 
         gym = pytest.importorskip("gymnasium")
         del gym
@@ -372,3 +372,34 @@ class TestImaginationOrdering:
         assert torch.equal(seen[0], obs_history[:, -1])
         for step, queried in enumerate(seen):
             assert torch.equal(queried, obs[:, step])
+
+    def test_diffusion_conditions_on_the_actions_taken_at_each_frame(self):
+        """D is trained on (x_{t-L+1..t}, a_{t-L+1..t}) -> x_{t+1}, with a_j the
+        action taken at x_j (``SequenceDataset``). The first imagined frame must
+        see a_0..a_{L-2} from the history plus the policy's own a_{L-1}.
+        """
+        agent = self._agent()
+        B, L = 2, agent.config.burn_in_length
+        size = agent.config.obs_size
+
+        obs_history = torch.rand(B, L, 3, size, size)
+        action_history = torch.randint(0, agent.action_dim, (B, L))
+        hidden = agent.reward_model.init_hidden(B, agent.device)
+
+        seen: list[torch.Tensor] = []
+        original = agent.sampler.sample
+
+        def spy(*args, **kwargs):  # noqa: ANN002, ANN003
+            seen.append(kwargs["actions"].detach().clone())
+            return original(*args, **kwargs)
+
+        agent.sampler.sample = spy  # type: ignore[method-assign]
+        _, _, _, actions, _ = agent._imagine_trajectory(
+            obs_history, action_history, hidden
+        )
+
+        assert torch.equal(seen[0][:, :-1], action_history[:, :-1])
+        assert torch.equal(seen[0][:, -1], actions[:, 0])
+        # Each later step slides the window forward by one imagined action.
+        assert torch.equal(seen[1][:, -2], actions[:, 0])
+        assert torch.equal(seen[1][:, -1], actions[:, 1])

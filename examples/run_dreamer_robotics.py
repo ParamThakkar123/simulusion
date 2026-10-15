@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def make_config(cli_cfg):
-    from synora.configs.dreamer_config import DreamerConfig
+    from simulusion.configs.dreamer_config import DreamerConfig
 
     cfg = DreamerConfig()
     cfg.env_backend = "robotics"
@@ -50,22 +50,22 @@ def main() -> None:
     cli_cfg = OmegaConf.from_cli()
 
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("synora").setLevel(logging.INFO)
+    logging.getLogger("simulusion").setLevel(logging.INFO)
 
     if cli_cfg.get("list_envs", False):
-        from synora.envs.robotics_env import list_gymnasium_robotics_envs
+        from simulusion.envs.robotics_env import list_gymnasium_robotics_envs
 
         env_ids = list_gymnasium_robotics_envs()
         if not env_ids:
             raise SystemExit(
                 "No Gymnasium Robotics environments found. Install with: "
-                "pip install 'synora[robotics]'"
+                "pip install 'simulusion[robotics]'"
             )
         for env_id in env_ids:
             print(env_id)
         return
 
-    from synora.models.dreamer import DreamerAgent
+    from simulusion.models.dreamer import DreamerAgent
 
     cfg = make_config(cli_cfg)
     LOGGER.info("Running DreamerV1 on Gymnasium Robotics env='%s'", cfg.env)

@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import Mock, patch
 
-from synora.models.planet import Planet
+from simulusion.models.planet import Planet
 
 
 class TestPlanet:
@@ -18,7 +18,7 @@ class TestPlanet:
             "device": torch.device("cpu"),
         }
 
-    @patch("synora.models.planet.TorchImageEnvWrapper")
+    @patch("simulusion.models.planet.TorchImageEnvWrapper")
     def test_initialization_with_string_env(self, mock_wrapper, config):
         mock_env = Mock()
         mock_env.action_size = 2
@@ -32,7 +32,7 @@ class TestPlanet:
         assert isinstance(planet.rssm, torch.nn.Module)
         assert planet.memory is not None
 
-    @patch("synora.models.planet.TorchImageEnvWrapper")
+    @patch("simulusion.models.planet.TorchImageEnvWrapper")
     def test_initialization_with_custom_env(self, mock_wrapper, config):
         mock_env = Mock()
         mock_env.action_size = 2
@@ -44,7 +44,7 @@ class TestPlanet:
         mock_wrapper.assert_not_called()
         assert planet.env == mock_env
 
-    @patch("synora.models.planet.TorchImageEnvWrapper")
+    @patch("simulusion.models.planet.TorchImageEnvWrapper")
     def test_warmup(self, mock_wrapper, config):
         mock_env = Mock()
         mock_env.action_size = 2

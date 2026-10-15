@@ -1,13 +1,13 @@
 services:
-  # One-shot CLI container. The image's entrypoint is `synora`, so pass the
+  # One-shot CLI container. The image's entrypoint is `simulusion`, so pass the
   # command to run, e.g.:
   #
-  #   docker compose run --rm synora train dreamer env=Pendulum-v1 env_backend=gym
+  #   docker compose run --rm simulusion train dreamer env=Pendulum-v1 env_backend=gym
   #
   # There is no long-running server, so the service must not restart: with
   # `restart: unless-stopped` the default `--help` command exited and the
   # container restarted in a loop.
-  synora:
+  simulusion:
     build:
       context: .
       dockerfile: Dockerfile

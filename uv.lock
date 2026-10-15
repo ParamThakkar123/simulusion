@@ -238,10 +238,35 @@ wheels = [
 ]
 
 [[package]]
-name = "box2d-py"
-version = "2.3.5"
+name = "box2d"
+version = "2.3.10"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/dd/5a/ad8d3ef9c13d5afcc1e44a77f11792ee717f6727b3320bddbc607e935e2a/box2d-py-2.3.5.tar.gz", hash = "sha256:b37dc38844bcd7def48a97111d2b082e4f81cca3cece7460feb3eacda0da2207", size = 374446, upload-time = "2018-10-02T01:03:23.527Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/60/8e6e1b00a1ad671774c3f22d4835b73c182ff8873b76a09398ceb4000a04/Box2D-2.3.10-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:9d6ef55bb2d41bab0e5d332aa7bdeaa8ba3ef6f8d67842d8120f9629c9f98e9e", size = 1322973, upload-time = "2024-11-29T17:59:21.788Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/68/7475fc901b4f6d7a1f9a03e8027833212994560677b8a6817ec71eb9ab59/Box2D-2.3.10-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ac0cb3f0de8c8d44c4ffbf395a9447c4598ce5548fef3fd5a53ae45f3c24bc2e", size = 1286845, upload-time = "2024-11-29T17:59:24.506Z" },
+    { url = "https://files.pythonhosted.org/packages/27/e8/98181c614df95de4dc6dd3f3901ffeca459aa71caadcde6f8860baf8aa36/Box2D-2.3.10-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1b27a17424c6860c2b80b0cbf46a460059beb21e8ea920c177b635be2406e18d", size = 3717486, upload-time = "2024-11-29T17:59:42.67Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/8f/ac359ced6b1ae4834a7d572ffd8c525206f900c494b884aaf22f90f76375/Box2D-2.3.10-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1971ab37f67593ad77b068184b699ac414f5d590da8fd85e2d99edb89ecf86f1", size = 3421803, upload-time = "2024-11-29T18:00:17.96Z" },
+    { url = "https://files.pythonhosted.org/packages/78/a9/d9216ac83b9f2f4e8dfd837cb64c0e4cc340fac10771df16af635cb52d6c/Box2D-2.3.10-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:b2999e5d17a452bd9ef2f40832c775cb4ca69429ff0dcd16c1159f89087e2329", size = 4373144, upload-time = "2024-11-29T18:00:20.58Z" },
+    { url = "https://files.pythonhosted.org/packages/60/c2/b01ca4a52e376349a989e53109b53e4c060b92c4ad9076360998519f12da/Box2D-2.3.10-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:b1c45ae2a296e9b0f8b8b27248d3d0920ef459f89f25bf3333c7847c900017d0", size = 4432849, upload-time = "2024-11-29T18:00:32.801Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/93/757dd2ce9e70ff29dd653cd4a5d8af6b9b54570480840e45eb4820bdc15f/Box2D-2.3.10-cp311-cp311-win32.whl", hash = "sha256:230acaa22ec66c7910700461b9a9617ec1d205ffff28f2d55e2b31762852e287", size = 1191194, upload-time = "2024-11-29T18:00:34.628Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/5c/e0d29175cf8e155f168fb7e31c3be7a25f264f65e4814300911e3e80b0de/Box2D-2.3.10-cp311-cp311-win_amd64.whl", hash = "sha256:5f71f2402abe014fc615571dededd11f213e04a6190753a4f92e0cb659ae16eb", size = 1310823, upload-time = "2024-11-29T18:00:57.99Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/50/978d24d7d9e236f75f6663a32dc71bfeb72b237acb3e410ede6bd7330014/Box2D-2.3.10-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:4dfba4a0639084bdf8eca0ed686ec16419538d5722b54ea1398998de9a705ab2", size = 1324164, upload-time = "2024-11-29T18:01:09.918Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/33/303c8e540516eebd38e2d117c3a5b151e0ae8cf9b76d05ff266a29d361b1/Box2D-2.3.10-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b00a2edd8561d34cb88bd8818f1243b8fed030c8ad10b60181e8e57a45a74795", size = 1280204, upload-time = "2024-11-29T18:01:12.276Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/d3/857a8806d6639df07c911c5b1a64b093445f4d58ebe3a076f5daaa11fc38/Box2D-2.3.10-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:041bdec01bb31d5e795af262d2bf8cc158929e149212dbfbbf4dcdcfd6de5f99", size = 3691487, upload-time = "2024-11-29T18:01:35.699Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/b7/093042694a6a844666180fff74d294a672c87e91285c460d22973a0b4e08/Box2D-2.3.10-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e97afcd97834524b7d3a1cf9f14a5b68da8c536c6002b4edf87ff1715ddccc5c", size = 3376935, upload-time = "2024-11-29T18:01:50.341Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/3a/0656495f88af573660bb6de5240e500fa96ede5e7adaf2b4ae1a55afe615/Box2D-2.3.10-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:d4083933c43ad01049e0315ff8217eb463567b8f68eb37d250fc88be9d52ae42", size = 4342608, upload-time = "2024-11-29T18:02:12.655Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/87/c5fc979827d555ab9b9803d7f0b043b5a6108f8de8c7184be385b24fd3c0/Box2D-2.3.10-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:6b0d1cb60b917297b0c9d770b3a7f152aa112f7d0f2a4c1634c5cc060f898c4f", size = 4423303, upload-time = "2024-11-29T18:02:28.32Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/a8/8ac50aafca7e5e466d712dd24e7dc1337935eb4661560294f115333bfc18/Box2D-2.3.10-cp312-cp312-win32.whl", hash = "sha256:b8d3d237de7caf729268687e3e7b0f8c13d509a67b6bb693d314f440c963f006", size = 1193198, upload-time = "2024-11-29T18:02:31.009Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/48/a3fde47fa3c2f5e32873e4cebc5ed5f663f434698dca1f0197c674e2f66c/Box2D-2.3.10-cp312-cp312-win_amd64.whl", hash = "sha256:ff9f434b61d2d9bf5c274aaa81a11ecd717441f64491bc22fda8151f3c35d78c", size = 1312692, upload-time = "2024-11-29T18:02:50.602Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/19/1306ce0c5a7f95b4f16fd748f5040ccadc590753a4acd0e7f393ef970a47/Box2D-2.3.10-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:0bd976f03bb08ffc86172bbf687afdd6e499a34f7d0ebf9da65f7a9c0ff62ba9", size = 1324189, upload-time = "2024-11-29T18:03:07.169Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/2c/33285e6fe35dc8aa8d44be0905b8a202abba11474d57d1b1dfa81b5779f6/Box2D-2.3.10-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:047d4faae2dc53c408970e494831361fce0460faaa2ed9544824dd3ea5321e7e", size = 1280162, upload-time = "2024-11-29T18:03:11.696Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/50/141a420f97920c4cac12037c7cb9ced2631d7d04e33a59b32bea97a846b6/Box2D-2.3.10-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ffa4f7955147dd64d33dbb1d360486984d13cda6e566c7c0c5bea348a8b172b4", size = 3689335, upload-time = "2024-11-29T18:03:34.314Z" },
+    { url = "https://files.pythonhosted.org/packages/12/bf/791c594e5fd8a9e930e4672761e2a5d00bf9fbb60cddfe5e2233eafa6e22/Box2D-2.3.10-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f460cb51926ffa9897070f3e7a4a30389da47946c8287ae36bd34b72590b9a99", size = 3373916, upload-time = "2024-11-29T18:03:44.799Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/f8/4ccc3422f985639ee4120d3503d6263b9fa2e382a250c8ede444399b76e1/Box2D-2.3.10-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:90a48c81e5dc3667ee376d5f1986b645b0b5140644f39032ad2853ff760dd84a", size = 4340307, upload-time = "2024-11-29T18:04:14.854Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/c8/3ed795c0e920b461eec500798d2247ac3ba38cf20bb6497c28a9891ee9a2/Box2D-2.3.10-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a09ded6f5a4b55f0188af2ad63a6f7d60adc7154671e9f32cef4a0cabf5ed542", size = 4419706, upload-time = "2024-11-29T18:04:28.446Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/2e/8b95f2779467c9af0ee62105f105a96e1b5a1380dbf5c546a09af5c51d4e/Box2D-2.3.10-cp313-cp313-win32.whl", hash = "sha256:6d4b0bd0e118e0449eadbadc6cf4617b1dbf72b411fbdccab4921108b3c2b768", size = 1193206, upload-time = "2024-11-29T18:05:01.167Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/90/230643c42763a1f5eb0554fbb6729befe6730f6dd9a9e4ec61cd470b94be/Box2D-2.3.10-cp313-cp313-win_amd64.whl", hash = "sha256:49f9d3d0d5956d360e25cd9733a29a3f0018297a3b554a401f19ed2c9499a507", size = 1312703, upload-time = "2024-11-29T18:05:45.749Z" },
+]
 
 [[package]]
 name = "brax"
@@ -1146,7 +1171,7 @@ wheels = [
 
 [[package]]
 name = "gymnasium"
-version = "1.2.2"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cloudpickle" },
@@ -1154,15 +1179,15 @@ dependencies = [
     { name = "numpy" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/1c/d70b2ddd067992fa0332deae08293ef2dc489917ac5342e0e4b8850641f6/gymnasium-1.2.2.tar.gz", hash = "sha256:46d927328f8518bb5a689dbe270d228c1da2b08bcb71ae0152c10aa66f48d530", size = 829250, upload-time = "2025-11-04T15:21:06.048Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/ff/14b6880d703dfaca204490979d3254ccd280c99550798993319902873658/gymnasium-1.3.0.tar.gz", hash = "sha256:6939e86e835d6b71b6ba6bfd360487420876deafc79bfb7bacba83a7c446bcf3", size = 830646, upload-time = "2026-04-22T13:47:14.155Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/53/39cd8c2f85e213fce1f32367c4bdbd3402d3bcde7d0826a1172a0f2c5cc0/gymnasium-1.2.2-py3-none-any.whl", hash = "sha256:f04ec362b1fdf73a8b327db5ef89384a3f2ba411e05d3521513414fbbb2199c8", size = 952118, upload-time = "2025-11-04T15:21:03.484Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/73/fda6a25f3beeb5e49d74330b44092b9e5a547395ccd478d1103ddcbff1fc/gymnasium-1.3.0-py3-none-any.whl", hash = "sha256:6b8c159a8540dcbcb221722d7efda24d78ebbcbc3bd2ea1c2611aa2a34471fc2", size = 953904, upload-time = "2026-04-22T13:47:12.13Z" },
 ]
 
 [package.optional-dependencies]
 box2d = [
-    { name = "box2d-py" },
-    { name = "pygame" },
+    { name = "box2d" },
+    { name = "pygame-ce" },
     { name = "swig" },
 ]
 
@@ -3336,32 +3361,51 @@ wheels = [
 ]
 
 [[package]]
-name = "pygame"
-version = "2.6.1"
+name = "pygame-ce"
+version = "2.5.8"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/49/cc/08bba60f00541f62aaa252ce0cfbd60aebd04616c0b9574f755b583e45ae/pygame-2.6.1.tar.gz", hash = "sha256:56fb02ead529cee00d415c3e007f75e0780c655909aaa8e8bf616ee09c9feb1f", size = 14808125, upload-time = "2024-09-29T13:41:34.698Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/2d/0f942ec31d558a6a1f2fd0df9965ff0055f165ed5b8d36f6509b1f3768a2/pygame_ce-2.5.8.tar.gz", hash = "sha256:3c8e69088ead310037972c391306ea58e74d7296b35d1890067749235fd554ba", size = 5300831, upload-time = "2026-08-09T11:39:49.226Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/ca/8f367cb9fe734c4f6f6400e045593beea2635cd736158f9fabf58ee14e3c/pygame-2.6.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:20349195326a5e82a16e351ed93465a7845a7e2a9af55b7bc1b2110ea3e344e1", size = 13113753, upload-time = "2024-09-29T14:26:13.751Z" },
-    { url = "https://files.pythonhosted.org/packages/83/47/6edf2f890139616b3219be9cfcc8f0cb8f42eb15efd59597927e390538cb/pygame-2.6.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:f3935459109da4bb0b3901da9904f0a3e52028a3332a355d298b1673a334cf21", size = 12378146, upload-time = "2024-09-29T14:26:22.456Z" },
-    { url = "https://files.pythonhosted.org/packages/00/9e/0d8aa8cf93db2d2ee38ebaf1c7b61d0df36ded27eb726221719c150c673d/pygame-2.6.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c31dbdb5d0217f32764797d21c2752e258e5fb7e895326538d82b5f75a0cd856", size = 13611760, upload-time = "2024-09-29T11:10:47.317Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/9e/d06adaa5cc65876bcd7a24f59f67e07f7e4194e6298130024ed3fb22c456/pygame-2.6.1-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:173badf82fa198e6888017bea40f511cb28e69ecdd5a72b214e81e4dcd66c3b1", size = 14298054, upload-time = "2024-09-29T11:39:53.891Z" },
-    { url = "https://files.pythonhosted.org/packages/7a/a1/9ae2852ebd3a7cc7d9ae7ff7919ab983e4a5c1b7a14e840732f23b2b48f6/pygame-2.6.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ce8cc108b92de9b149b344ad2e25eedbe773af0dc41dfb24d1f07f679b558c60", size = 13977107, upload-time = "2024-09-29T11:39:56.831Z" },
-    { url = "https://files.pythonhosted.org/packages/31/df/6788fd2e9a864d0496a77670e44a7c012184b7a5382866ab0e60c55c0f28/pygame-2.6.1-cp311-cp311-win32.whl", hash = "sha256:811e7b925146d8149d79193652cbb83e0eca0aae66476b1cb310f0f4226b8b5c", size = 10250863, upload-time = "2024-09-29T11:44:48.199Z" },
-    { url = "https://files.pythonhosted.org/packages/d2/55/ca3eb851aeef4f6f2e98a360c201f0d00bd1ba2eb98e2c7850d80aabc526/pygame-2.6.1-cp311-cp311-win_amd64.whl", hash = "sha256:91476902426facd4bb0dad4dc3b2573bc82c95c71b135e0daaea072ed528d299", size = 10622016, upload-time = "2024-09-29T12:17:01.545Z" },
-    { url = "https://files.pythonhosted.org/packages/92/16/2c602c332f45ff9526d61f6bd764db5096ff9035433e2172e2d2cadae8db/pygame-2.6.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:4ee7f2771f588c966fa2fa8b829be26698c9b4836f82ede5e4edc1a68594942e", size = 13118279, upload-time = "2024-09-29T14:26:30.427Z" },
-    { url = "https://files.pythonhosted.org/packages/cd/53/77ccbc384b251c6e34bfd2e734c638233922449a7844e3c7a11ef91cee39/pygame-2.6.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:c8040ea2ab18c6b255af706ec01355c8a6b08dc48d77fd4ee783f8fc46a843bf", size = 12384524, upload-time = "2024-09-29T14:26:49.996Z" },
-    { url = "https://files.pythonhosted.org/packages/06/be/3ed337583f010696c3b3435e89a74fb29d0c74d0931e8f33c0a4246307a9/pygame-2.6.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c47a6938de93fa610accd4969e638c2aebcb29b2fca518a84c3a39d91ab47116", size = 13587123, upload-time = "2024-09-29T11:10:50.072Z" },
-    { url = "https://files.pythonhosted.org/packages/fd/ca/b015586a450db59313535662991b34d24c1f0c0dc149cc5f496573900f4e/pygame-2.6.1-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:33006f784e1c7d7e466fcb61d5489da59cc5f7eb098712f792a225df1d4e229d", size = 14275532, upload-time = "2024-09-29T11:39:59.356Z" },
-    { url = "https://files.pythonhosted.org/packages/b9/f2/d31e6ad42d657af07be2ffd779190353f759a07b51232b9e1d724f2cda46/pygame-2.6.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1206125f14cae22c44565c9d333607f1d9f59487b1f1432945dfc809aeaa3e88", size = 13952653, upload-time = "2024-09-29T11:40:01.781Z" },
-    { url = "https://files.pythonhosted.org/packages/f3/42/8ea2a6979e6fa971702fece1747e862e2256d4a8558fe0da6364dd946c53/pygame-2.6.1-cp312-cp312-win32.whl", hash = "sha256:84fc4054e25262140d09d39e094f6880d730199710829902f0d8ceae0213379e", size = 10252421, upload-time = "2024-09-29T11:14:26.877Z" },
-    { url = "https://files.pythonhosted.org/packages/5f/90/7d766d54bb95939725e9a9361f9c06b0cfbe3fe100aa35400f0a461a278a/pygame-2.6.1-cp312-cp312-win_amd64.whl", hash = "sha256:3a9e7396be0d9633831c3f8d5d82dd63ba373ad65599628294b7a4f8a5a01a65", size = 10624591, upload-time = "2024-09-29T11:52:54.489Z" },
-    { url = "https://files.pythonhosted.org/packages/e1/91/718acf3e2a9d08a6ddcc96bd02a6f63c99ee7ba14afeaff2a51c987df0b9/pygame-2.6.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:ae6039f3a55d800db80e8010f387557b528d34d534435e0871326804df2a62f2", size = 13090765, upload-time = "2024-09-29T14:27:02.377Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/c6/9cb315de851a7682d9c7568a41ea042ee98d668cb8deadc1dafcab6116f0/pygame-2.6.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:2a3a1288e2e9b1e5834e425bedd5ba01a3cd4902b5c2bff8ed4a740ccfe98171", size = 12381704, upload-time = "2024-09-29T14:27:10.228Z" },
-    { url = "https://files.pythonhosted.org/packages/9f/8f/617a1196e31ae3b46be6949fbaa95b8c93ce15e0544266198c2266cc1b4d/pygame-2.6.1-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:27eb17e3dc9640e4b4683074f1890e2e879827447770470c2aba9f125f74510b", size = 13581091, upload-time = "2024-09-29T11:30:27.653Z" },
-    { url = "https://files.pythonhosted.org/packages/3b/87/2851a564e40a2dad353f1c6e143465d445dab18a95281f9ea458b94f3608/pygame-2.6.1-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:4c1623180e70a03c4a734deb9bac50fc9c82942ae84a3a220779062128e75f3b", size = 14273844, upload-time = "2024-09-29T11:40:04.138Z" },
-    { url = "https://files.pythonhosted.org/packages/85/b5/aa23aa2e70bcba42c989c02e7228273c30f3b44b9b264abb93eaeff43ad7/pygame-2.6.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef07c0103d79492c21fced9ad68c11c32efa6801ca1920ebfd0f15fb46c78b1c", size = 13951197, upload-time = "2024-09-29T11:40:06.785Z" },
-    { url = "https://files.pythonhosted.org/packages/a6/06/29e939b34d3f1354738c7d201c51c250ad7abefefaf6f8332d962ff67c4b/pygame-2.6.1-cp313-cp313-win32.whl", hash = "sha256:3acd8c009317190c2bfd81db681ecef47d5eb108c2151d09596d9c7ea9df5c0e", size = 10249309, upload-time = "2024-09-29T11:10:23.329Z" },
-    { url = "https://files.pythonhosted.org/packages/7e/11/17f7f319ca91824b86557e9303e3b7a71991ef17fd45286bf47d7f0a38e6/pygame-2.6.1-cp313-cp313-win_amd64.whl", hash = "sha256:813af4fba5d0b2cb8e58f5d95f7910295c34067dcc290d34f1be59c48bd1ea6a", size = 10620084, upload-time = "2024-09-29T11:48:51.587Z" },
+    { url = "https://files.pythonhosted.org/packages/97/9b/884fb7367951e74e7f77061bb08e893272794c07b1212dc61ba258c3c71e/pygame_ce-2.5.8-cp311-cp311-macosx_10_11_universal2.whl", hash = "sha256:9e98223c8874177c8441923a8f60da76b1de9d7f2450602a4c7ef24c15e84f1a", size = 16588698, upload-time = "2026-08-09T11:38:07.009Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/7d/b3f3a58cd09e97dbbedde419bedb7ead1f7e4d3cd6465b00bdf56766ded9/pygame_ce-2.5.8-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:a7b2a54548926eaf535ac574cfa6528f96bd1e2f524a20fea514b2922dd68bcc", size = 12060566, upload-time = "2026-08-09T11:38:09.516Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/8b/7ba5dbf40ff461984327539a6895ada8ab2eac4c035238f97a0fd9da9866/pygame_ce-2.5.8-cp311-cp311-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:ff283d1bee65e208cf2f0da7f2f4e3d0993d1787938898de2872fbefab1f786b", size = 12599420, upload-time = "2026-08-09T11:38:12.101Z" },
+    { url = "https://files.pythonhosted.org/packages/05/02/c315738725cd08d2ff4cc8f8dd29638e69e70f200d3610bcd291cbb886b8/pygame_ce-2.5.8-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:33e1b5a78cd6d25c2c8f00c09cdc0ba8000eec81b53dc7d8d7323d8319691d69", size = 12155284, upload-time = "2026-08-09T11:38:14.456Z" },
+    { url = "https://files.pythonhosted.org/packages/17/3d/b9d57ebab57fdef946626ae275b111c077b83fe0d0ccc3a2ec12b17523d2/pygame_ce-2.5.8-cp311-cp311-win32.whl", hash = "sha256:b919b49b8a41564f7d0ad43f6dc97a66f29d3956fb592581f4abd62442644c9c", size = 9122893, upload-time = "2026-08-09T11:38:16.789Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/68/54cbebea295bbd9598604e3b4c3ef2aff75df1612482c2d102963151096c/pygame_ce-2.5.8-cp311-cp311-win_amd64.whl", hash = "sha256:0f75f6cf17607e380687aa5551c46aa830c8037b2950c71e48be8891ddc737da", size = 9666898, upload-time = "2026-08-09T11:38:19.213Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/8a/79129cc0c755d639d180a582869e4c7a0d5106dbf611262bcf5d554ce59d/pygame_ce-2.5.8-cp311-cp311-win_arm64.whl", hash = "sha256:8e7931bd6b8ffc1474e7b3d5717e18bf8ff3eed95ab9042f1b9a0907e9ff6519", size = 10212252, upload-time = "2026-08-09T11:38:21.537Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/2a/9c48c56cb36baa49d8732fc41896d2d8a6027bf94155aa1a5663fd72f7ff/pygame_ce-2.5.8-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:0ae2141c81595b4b13b780d325b9ea0016c6647f8b3a6004278b00765a96664d", size = 16570732, upload-time = "2026-08-09T11:38:24.118Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/83/f4979079f5a8f729b0f488e987db1227086816c26e1b985d61fc9a60605f/pygame_ce-2.5.8-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:e401643af9455cb69f8cb77050c325f290314da0051e9ab82c5ccaf8017c314a", size = 12048869, upload-time = "2026-08-09T11:38:26.733Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/38/9961f6543bfb4ecc4dbeee0fdb57edbd633945dc143df9c70ee476416cc4/pygame_ce-2.5.8-cp312-cp312-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:6d4839f127b1b66f1dfe7e0dca3d2233b6f3a63077690081d1996e24087c6055", size = 12587614, upload-time = "2026-08-09T11:38:29.143Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/07/e139faa8911d48991e161e356e652be2a642303f3baf6a57c7ba4a1f0f49/pygame_ce-2.5.8-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:bf9c8b4376077efec6ae31443172ae98545f278d0e4426852e81c28ab1f5d7c2", size = 12147342, upload-time = "2026-08-09T11:38:32.166Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/e6/238b48936733ed1908486df072137e7eef61fd26de4620d54e438b69d509/pygame_ce-2.5.8-cp312-cp312-win32.whl", hash = "sha256:91d2434d8cbdb7cd04c9b37e76a8154641da25f4e274265806407f495fe6e889", size = 9126160, upload-time = "2026-08-09T11:38:34.812Z" },
+    { url = "https://files.pythonhosted.org/packages/81/13/2bba0ebe563047ae9de68dc05656dc0bfa9394c60970548b06d2f2e106c5/pygame_ce-2.5.8-cp312-cp312-win_amd64.whl", hash = "sha256:2cfe8afe1e7955780f0bd4f01d65f1b4903f561407052081cfcec31e80957c3c", size = 9668595, upload-time = "2026-08-09T11:38:37.279Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/2e/871161f0546d549fa458609029771d7a36c1e7758e164a3b2c2ed61b507b/pygame_ce-2.5.8-cp312-cp312-win_arm64.whl", hash = "sha256:6c48a3ad5f7102e076055a3c817c12e932ee5c9b831080db2ea9754236b0490d", size = 10213955, upload-time = "2026-08-09T11:38:39.559Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/06/f2e2d9fe3eb2dc1fde30b90e250274e85ba355af729892ac71ba653924a1/pygame_ce-2.5.8-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:56441a9bb75c2461750dc0e6e4a46e3833b3cf6339bfbaf16f93ecac037510f3", size = 16562516, upload-time = "2026-08-09T11:38:42.311Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/fe/4be67df98bb05f7b024900f80fe4d07a72cec7022262d17c449b2a9f6034/pygame_ce-2.5.8-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:e3183bc0d808e739ca2400df45a5bfae10704ccbcacab0f04f9adc9027e86427", size = 12045702, upload-time = "2026-08-09T11:38:44.903Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/8f/f7d283799aaa2208c1276f085d514f2ac37ce1bb5df940c7cbac7e6a6320/pygame_ce-2.5.8-cp313-cp313-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:841aecccb498419367936bea0b1b0c6e9d635dc81c41ef26ec1769158f1ab871", size = 12585829, upload-time = "2026-08-09T11:38:47.507Z" },
+    { url = "https://files.pythonhosted.org/packages/27/4d/03fd52c7f958b8e929757a118cada9aee16ae9d4fd84f2682ee0cbd3941d/pygame_ce-2.5.8-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:5bb966b610e161a8f6d908b4c62ef3a1f3e922bc7bed73bd70a3e15dc780b90e", size = 12145623, upload-time = "2026-08-09T11:38:49.87Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/61/c02613190a3256a656258bb4f677aecc09c3cb1f5521490ce7d5fb6308dd/pygame_ce-2.5.8-cp313-cp313-win32.whl", hash = "sha256:cab944d76af71e707803856b4db984ca90d9d6453e470e89771ed963c11ed912", size = 9123635, upload-time = "2026-08-09T11:38:52.452Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/1b/da9186e5b88714c16fdb23bc4ba0bca4a75c21e3a5cf9607765773f68d22/pygame_ce-2.5.8-cp313-cp313-win_amd64.whl", hash = "sha256:f495b0eb7a5c54c59da58e964bc7f68073c3f43cf307729fd48309104a04c190", size = 9668342, upload-time = "2026-08-09T11:38:54.988Z" },
+    { url = "https://files.pythonhosted.org/packages/55/d3/78136bc51be25afbd7954c22488860e80f32d9a885f6667fed8aac7df0d6/pygame_ce-2.5.8-cp313-cp313-win_arm64.whl", hash = "sha256:dea22b4d4c418bbd0bd9853ae797ecfa882436d2684ceb6063ba8b520adc8500", size = 10211021, upload-time = "2026-08-09T11:38:57.529Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/e6/8e83904cf4184223419345a78c905e7c1ace10228befd87eb497ba015c8c/pygame_ce-2.5.8-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:7ec4efa6b57a194f5ad51b92211cc74b485320df951b0cc870235b2b889b9b6d", size = 16571019, upload-time = "2026-08-09T11:39:00.084Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/f3/4f90a0b5e86635d741111084eaa4d4c65fcab2f461edb8c9efa502e4c630/pygame_ce-2.5.8-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:bb91d0bb0b5e2a4da61910d752769d4580cacffb4b7338cee57c932351c67e7b", size = 12051251, upload-time = "2026-08-09T11:39:02.561Z" },
+    { url = "https://files.pythonhosted.org/packages/99/7e/b0c4f5d43261e8707353ef40cf6620d46d42f43a502c236e93ce6ea82e7b/pygame_ce-2.5.8-cp314-cp314-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:68bd9c4ac42bb2549c034d56399404f16c87c56714db721ed975a759798a3d16", size = 12585932, upload-time = "2026-08-09T11:39:04.989Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/62/06f0ceb7f5a154e0071a4ce81a16de47b9f3b85034fa391686d489d15be5/pygame_ce-2.5.8-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:0027bd2255cbb39789d9c7ff95a5f040f56d1cfeb09504497447c0ee06169a24", size = 12147357, upload-time = "2026-08-09T11:39:07.433Z" },
+    { url = "https://files.pythonhosted.org/packages/05/57/14d6b40318af71cf20e4c750866795424e018f79c5a5cf3a9a74a8717c4c/pygame_ce-2.5.8-cp314-cp314-win32.whl", hash = "sha256:c5285d444e4b789ef95522bbd2b90433163ad2b89e0ae4891236fde88a027fbd", size = 9255121, upload-time = "2026-08-09T11:39:09.723Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/31/92d32a9bf9b78e9ef10cec7224e2f00efc957757505822af8dc4225e9b41/pygame_ce-2.5.8-cp314-cp314-win_amd64.whl", hash = "sha256:b4c2e28c201240199356952e6bd0221969d2eb8a1a15c3454d77db209bad7891", size = 9833757, upload-time = "2026-08-09T11:39:11.989Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/26/4024483d4a3161ed8fb8d3f3f4957580af31d468e0c31df7e6038f45ccdc/pygame_ce-2.5.8-cp314-cp314-win_arm64.whl", hash = "sha256:b23034594412456504822d3088cf5f292f63bbe415eac29735340a59999e4116", size = 10410381, upload-time = "2026-08-09T11:39:14.417Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/11/0b47f80b261d6379c86b9cc3fa405af5bd62af10506de7e28c2275d67b86/pygame_ce-2.5.8-cp315-cp315-macosx_10_15_universal2.whl", hash = "sha256:0a4e0804d53bae8d9aa5192fc2259b40dd084b48ea273dd7dd6e1c12b73303c4", size = 16571139, upload-time = "2026-08-09T11:39:16.979Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/95/694cd02641a0c0956b6c5919b56599af302524ac133551b654f550f28919/pygame_ce-2.5.8-cp315-cp315-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:d7f03d38b3693c014dd47d4e281620b6756669129e545af1cd608a9484582846", size = 12051154, upload-time = "2026-08-09T11:39:19.873Z" },
+    { url = "https://files.pythonhosted.org/packages/da/5e/bed22b0d07d9e96bb9a448acc9da7a235f046280264c33476f0c0753d302/pygame_ce-2.5.8-cp315-cp315-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:d084b79535f3529aa157edd9401f4f33e5082f318d287029291d6596bb225105", size = 12585976, upload-time = "2026-08-09T11:39:22.555Z" },
+    { url = "https://files.pythonhosted.org/packages/21/ce/8c167ba5ba736e372730ae29ef0f8cb2e62a88580e647ae987bc112eb1cb/pygame_ce-2.5.8-cp315-cp315-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:d9cbf6e2648ae6d76aa8ece82187d240300cfd9f4c90860e1e466f78cf0ab14a", size = 12147466, upload-time = "2026-08-09T11:39:24.935Z" },
+    { url = "https://files.pythonhosted.org/packages/63/92/c99ed51479f2d2a5d7fc9d5aa3b880e4c0fcc87f30cb95ecf325f35dd2fd/pygame_ce-2.5.8-cp315-cp315-win32.whl", hash = "sha256:312a01ff5439a0bd2e55b56683518454da4cbe4cad493d0580e9c49f6aacc2d8", size = 9254928, upload-time = "2026-08-09T11:39:29.525Z" },
+    { url = "https://files.pythonhosted.org/packages/87/41/404836598d666ffe02681fd0c29f013daaa8baf18e5de5f7a5d4870b6105/pygame_ce-2.5.8-cp315-cp315-win_amd64.whl", hash = "sha256:5b789aa7e4239be025c9de8428c2c422f0811f0e3dd702b574d836fd9ae040eb", size = 9833657, upload-time = "2026-08-09T11:39:31.897Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/a2/7a844f772c6f0967e75d49cb10602fbb878b9daee1cc080d2b9597bcc873/pygame_ce-2.5.8-cp315-cp315-win_arm64.whl", hash = "sha256:28c4fed3870e3edf72ea7ea359bb5f64c55db0fb9cb3bdb26b4b674b4b4bcff4", size = 10410231, upload-time = "2026-08-09T11:39:34.184Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/b8/525dfcfda50ea9e98cd4097d6d0beabcfa0a6007475c04dab2021077c6de/pygame_ce-2.5.8-pp311-pypy311_pp73-macosx_10_15_universal2.whl", hash = "sha256:0aa908c9fce4d508205e0b9cdc0f7338066da63322f6bcaa9a9c8aff9155a87e", size = 16485912, upload-time = "2026-08-09T11:39:37.277Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/33/d02386a4314be22bc6198d93c2d99f372c0c8c7b71fc9c390cf36d5c5c99/pygame_ce-2.5.8-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:894faf17699ea7f14eabd9161ef532c1d248e40f568dab9240fc68b4c1ea85dc", size = 12008829, upload-time = "2026-08-09T11:39:39.717Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/26/a14abbac97c681385dbb01d5c44c867992dbf2265a784af35141c485813e/pygame_ce-2.5.8-pp311-pypy311_pp73-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:0d0c4b2b38e1946ea7a7c625ea317e237573e8731e4a56055eb4361b3c2daa0f", size = 12538786, upload-time = "2026-08-09T11:39:42.37Z" },
+    { url = "https://files.pythonhosted.org/packages/28/6c/2a8d9ca41d40e2d30e940107a019bbc17de518948c360789f59a439d689a/pygame_ce-2.5.8-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:9ea02f653f76d496870766e1fb8419b6a6aebd81d40265057672f1f6d63d3509", size = 12102335, upload-time = "2026-08-09T11:39:44.64Z" },
+    { url = "https://files.pythonhosted.org/packages/47/b5/1068d4d24891b17fcb6cf3556b1de8d5821a2bc44ebbea2b25dbd767ae2b/pygame_ce-2.5.8-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:f2f2f1c03dc8d4460779f9e55f959a7c7e523101b3530f60f3208e5ca65a6216", size = 9635346, upload-time = "2026-08-09T11:39:46.968Z" },
 ]
 
 [[package]]
@@ -4150,6 +4194,229 @@ wheels = [
 ]
 
 [[package]]
+name = "simulusion"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "einops" },
+    { name = "pyyaml" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "albumentations" },
+    { name = "ale-py" },
+    { name = "autorom" },
+    { name = "brax" },
+    { name = "bsuite" },
+    { name = "cma" },
+    { name = "dm-control", marker = "python_full_version < '3.13'" },
+    { name = "gitpython" },
+    { name = "gymnasium", extra = ["box2d"] },
+    { name = "gymnasium-robotics" },
+    { name = "h5py" },
+    { name = "huggingface-hub" },
+    { name = "hydra-core" },
+    { name = "imageio-ffmpeg" },
+    { name = "jax" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+    { name = "mistune" },
+    { name = "mlagents-envs" },
+    { name = "mujoco" },
+    { name = "mypy" },
+    { name = "myst-parser" },
+    { name = "nbconvert" },
+    { name = "nbsphinx" },
+    { name = "nvidia-ml-py" },
+    { name = "omegaconf" },
+    { name = "opencv-python" },
+    { name = "plotly" },
+    { name = "pre-commit" },
+    { name = "protobuf" },
+    { name = "pydata-sphinx-theme" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+    { name = "scikit-learn" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-rtd-theme" },
+    { name = "sphinx-thebe" },
+    { name = "sphinxcontrib-bibtex" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxext-opengraph" },
+    { name = "tensorboard" },
+    { name = "tensorboardx" },
+    { name = "torchaudio" },
+    { name = "umap-learn" },
+    { name = "wandb" },
+]
+brax = [
+    { name = "brax" },
+    { name = "jax" },
+]
+bsuite = [
+    { name = "bsuite" },
+]
+dev = [
+    { name = "gitpython" },
+    { name = "mypy" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+]
+dmc = [
+    { name = "dm-control", marker = "python_full_version < '3.13'" },
+    { name = "gymnasium" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+]
+dmc-uv = [
+    { name = "dm-control" },
+    { name = "gymnasium" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
+]
+docs = [
+    { name = "mistune" },
+    { name = "myst-parser" },
+    { name = "nbconvert" },
+    { name = "nbsphinx" },
+    { name = "pydata-sphinx-theme" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-copybutton" },
+    { name = "sphinx-rtd-theme" },
+    { name = "sphinx-thebe" },
+    { name = "sphinxcontrib-bibtex" },
+    { name = "sphinxcontrib-mermaid" },
+    { name = "sphinxext-opengraph" },
+]
+genie = [
+    { name = "h5py" },
+    { name = "huggingface-hub" },
+    { name = "omegaconf" },
+]
+gym = [
+    { name = "ale-py" },
+    { name = "autorom" },
+    { name = "gymnasium", extra = ["box2d"] },
+    { name = "huggingface-hub" },
+]
+ml = [
+    { name = "hydra-core" },
+    { name = "nvidia-ml-py" },
+    { name = "omegaconf" },
+    { name = "tensorboard" },
+    { name = "tensorboardx" },
+    { name = "torchaudio" },
+    { name = "wandb" },
+]
+ml-agents = [
+    { name = "mlagents-envs" },
+    { name = "protobuf" },
+]
+mujoco = [
+    { name = "mujoco" },
+]
+robotics = [
+    { name = "gymnasium-robotics" },
+    { name = "mujoco" },
+]
+viz = [
+    { name = "h5py" },
+    { name = "imageio-ffmpeg" },
+    { name = "opencv-python" },
+    { name = "plotly" },
+    { name = "scikit-learn" },
+    { name = "umap-learn" },
+]
+worldmodels = [
+    { name = "albumentations" },
+    { name = "cma" },
+    { name = "imageio-ffmpeg" },
+    { name = "opencv-python" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "albumentations", marker = "extra == 'worldmodels'", specifier = ">=2.0.0" },
+    { name = "ale-py", marker = "extra == 'gym'", specifier = ">=0.10.1" },
+    { name = "autorom", marker = "extra == 'gym'", specifier = ">=0.6.1" },
+    { name = "brax", marker = "extra == 'brax'", specifier = ">=0.13.0" },
+    { name = "bsuite", marker = "extra == 'bsuite'", specifier = ">=0.3.5" },
+    { name = "click", specifier = ">=8.0.0" },
+    { name = "cma", marker = "extra == 'worldmodels'", specifier = ">=4.0.0" },
+    { name = "dm-control", marker = "python_full_version < '3.13' and extra == 'dmc'", specifier = ">=1.0.0" },
+    { name = "dm-control", marker = "extra == 'dmc-uv'", specifier = ">=1.0.0" },
+    { name = "einops", specifier = ">=0.8.2" },
+    { name = "gitpython", marker = "extra == 'dev'", specifier = ">=3.1.58" },
+    { name = "gymnasium", marker = "extra == 'dmc'", specifier = ">=1.2.2" },
+    { name = "gymnasium", marker = "extra == 'dmc-uv'", specifier = ">=1.2.2" },
+    { name = "gymnasium", extras = ["box2d"], marker = "extra == 'gym'", specifier = ">=1.2.2" },
+    { name = "gymnasium-robotics", marker = "extra == 'robotics'", specifier = ">=1.3.0" },
+    { name = "h5py", marker = "extra == 'genie'", specifier = ">=3.11.0" },
+    { name = "h5py", marker = "extra == 'viz'", specifier = ">=3.11.0" },
+    { name = "huggingface-hub", marker = "extra == 'genie'", specifier = ">=0.23.0" },
+    { name = "huggingface-hub", marker = "extra == 'gym'", specifier = ">=0.23.0" },
+    { name = "hydra-core", marker = "extra == 'ml'", specifier = ">=1.3.2" },
+    { name = "imageio-ffmpeg", marker = "extra == 'viz'", specifier = ">=0.5.1" },
+    { name = "imageio-ffmpeg", marker = "extra == 'worldmodels'", specifier = ">=0.5.1" },
+    { name = "jax", marker = "extra == 'brax'", specifier = ">=0.10.1" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc'", specifier = ">=0.0.2" },
+    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc-uv'", specifier = ">=0.0.2" },
+    { name = "mistune", marker = "extra == 'docs'", specifier = ">=3.3.0" },
+    { name = "mlagents-envs", marker = "extra == 'ml-agents'", specifier = ">=0.28.0,<0.29.0" },
+    { name = "mujoco", marker = "extra == 'mujoco'", specifier = ">=3.2.0" },
+    { name = "mujoco", marker = "extra == 'robotics'", specifier = ">=3.2.0,<3.12" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
+    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0,<5.0.0" },
+    { name = "nbconvert", marker = "extra == 'docs'", specifier = ">=7.17.1" },
+    { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.9.8" },
+    { name = "nvidia-ml-py", marker = "extra == 'ml'", specifier = ">=12.535.77" },
+    { name = "omegaconf", marker = "extra == 'genie'", specifier = ">=2.3.0" },
+    { name = "omegaconf", marker = "extra == 'ml'", specifier = ">=2.3.0" },
+    { name = "opencv-python", marker = "extra == 'viz'", specifier = ">=4.12.0.88" },
+    { name = "opencv-python", marker = "extra == 'worldmodels'", specifier = ">=4.12.0.88" },
+    { name = "plotly", marker = "extra == 'viz'", specifier = ">=6.5.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.0" },
+    { name = "protobuf", marker = "extra == 'ml-agents'", specifier = ">=5.29.6" },
+    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.15.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
+    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3.1" },
+    { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.16.8" },
+    { name = "scikit-learn", marker = "extra == 'viz'", specifier = ">=1.8.0" },
+    { name = "simulusion", extras = ["brax", "bsuite", "dev", "dmc", "docs", "gym", "ml", "ml-agents", "mujoco", "robotics", "viz", "worldmodels"], marker = "extra == 'all'" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0.0,<9.0.0" },
+    { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = "<1.26.0" },
+    { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = ">=0.5.2" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.1.0" },
+    { name = "sphinx-thebe", marker = "extra == 'docs'", specifier = ">=0.3.0" },
+    { name = "sphinxcontrib-bibtex", marker = "extra == 'docs'", specifier = ">=2.6.5" },
+    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = ">=0.9.0" },
+    { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = ">=0.13.0" },
+    { name = "tensorboard", marker = "extra == 'ml'", specifier = ">=2.20.0" },
+    { name = "tensorboardx", marker = "extra == 'ml'", specifier = ">=2.6.4" },
+    { name = "torch", specifier = ">=2.1.0" },
+    { name = "torchaudio", marker = "extra == 'ml'", specifier = ">=0.13.0" },
+    { name = "torchvision", specifier = ">=0.16.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+    { name = "umap-learn", marker = "extra == 'viz'", specifier = ">=0.5.11" },
+    { name = "wandb", marker = "extra == 'ml'", specifier = ">=0.16.0" },
+]
+provides-extras = ["gym", "ml-agents", "dmc", "dmc-uv", "genie", "mujoco", "robotics", "brax", "bsuite", "viz", "worldmodels", "ml", "dev", "all", "docs"]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4867,232 +5134,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/82/3e0a7ad18e99831e2d7f4713d3be717b7159ff5a920862dd5c23c454aa71/torchvision-0.28.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:904cf89af220f8c6b2ed0296bb5065b474ce43b77558e48b2bf9de8b0ba17204", size = 7675526, upload-time = "2026-07-08T16:07:34.572Z" },
     { url = "https://files.pythonhosted.org/packages/18/d4/23aea03b28297bc66a4461f55ae4296368a9d85fa9a454bafcb2a5348bd7/torchvision-0.28.0-cp314-cp314t-win_amd64.whl", hash = "sha256:46f581979c010ad6da6bd85ee602aa707e1ff44312670223b7a0ee517ad06d47", size = 4291452, upload-time = "2026-07-08T16:07:32.236Z" },
 ]
-
-[[package]]
-name = "synora"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "einops" },
-    { name = "pyyaml" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "tqdm" },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "albumentations" },
-    { name = "ale-py" },
-    { name = "autorom" },
-    { name = "brax" },
-    { name = "bsuite" },
-    { name = "cma" },
-    { name = "dm-control", marker = "python_full_version < '3.13'" },
-    { name = "gitpython" },
-    { name = "gymnasium", extra = ["box2d"] },
-    { name = "gymnasium-robotics" },
-    { name = "h5py" },
-    { name = "huggingface-hub" },
-    { name = "hydra-core" },
-    { name = "imageio-ffmpeg" },
-    { name = "jax" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-    { name = "mistune" },
-    { name = "mlagents-envs" },
-    { name = "mujoco" },
-    { name = "mypy" },
-    { name = "myst-parser" },
-    { name = "nbconvert" },
-    { name = "nbsphinx" },
-    { name = "nvidia-ml-py" },
-    { name = "omegaconf" },
-    { name = "opencv-python" },
-    { name = "plotly" },
-    { name = "pre-commit" },
-    { name = "protobuf" },
-    { name = "pydata-sphinx-theme" },
-    { name = "pygame" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-    { name = "scikit-learn" },
-    { name = "sphinx" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinx-thebe" },
-    { name = "sphinxcontrib-bibtex" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxext-opengraph" },
-    { name = "tensorboard" },
-    { name = "tensorboardx" },
-    { name = "torchaudio" },
-    { name = "umap-learn" },
-    { name = "wandb" },
-]
-brax = [
-    { name = "brax" },
-    { name = "jax" },
-]
-bsuite = [
-    { name = "bsuite" },
-]
-dev = [
-    { name = "gitpython" },
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-]
-dmc = [
-    { name = "dm-control", marker = "python_full_version < '3.13'" },
-    { name = "gymnasium" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-]
-dmc-uv = [
-    { name = "dm-control" },
-    { name = "gymnasium" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13'" },
-]
-docs = [
-    { name = "mistune" },
-    { name = "myst-parser" },
-    { name = "nbconvert" },
-    { name = "nbsphinx" },
-    { name = "pydata-sphinx-theme" },
-    { name = "sphinx" },
-    { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-copybutton" },
-    { name = "sphinx-rtd-theme" },
-    { name = "sphinx-thebe" },
-    { name = "sphinxcontrib-bibtex" },
-    { name = "sphinxcontrib-mermaid" },
-    { name = "sphinxext-opengraph" },
-]
-genie = [
-    { name = "h5py" },
-    { name = "huggingface-hub" },
-    { name = "omegaconf" },
-]
-gym = [
-    { name = "ale-py" },
-    { name = "autorom" },
-    { name = "gymnasium", extra = ["box2d"] },
-    { name = "huggingface-hub" },
-    { name = "pygame" },
-]
-ml = [
-    { name = "hydra-core" },
-    { name = "nvidia-ml-py" },
-    { name = "omegaconf" },
-    { name = "tensorboard" },
-    { name = "tensorboardx" },
-    { name = "torchaudio" },
-    { name = "wandb" },
-]
-ml-agents = [
-    { name = "mlagents-envs" },
-    { name = "protobuf" },
-]
-mujoco = [
-    { name = "mujoco" },
-]
-robotics = [
-    { name = "gymnasium-robotics" },
-    { name = "mujoco" },
-]
-viz = [
-    { name = "h5py" },
-    { name = "imageio-ffmpeg" },
-    { name = "opencv-python" },
-    { name = "plotly" },
-    { name = "scikit-learn" },
-    { name = "umap-learn" },
-]
-worldmodels = [
-    { name = "albumentations" },
-    { name = "cma" },
-    { name = "imageio-ffmpeg" },
-    { name = "opencv-python" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "albumentations", marker = "extra == 'worldmodels'", specifier = ">=2.0.0" },
-    { name = "ale-py", marker = "extra == 'gym'", specifier = ">=0.10.1" },
-    { name = "autorom", marker = "extra == 'gym'", specifier = ">=0.6.1" },
-    { name = "brax", marker = "extra == 'brax'", specifier = ">=0.13.0" },
-    { name = "bsuite", marker = "extra == 'bsuite'", specifier = ">=0.3.5" },
-    { name = "click", specifier = ">=8.0.0" },
-    { name = "cma", marker = "extra == 'worldmodels'", specifier = ">=4.0.0" },
-    { name = "dm-control", marker = "python_full_version < '3.13' and extra == 'dmc'", specifier = ">=1.0.0" },
-    { name = "dm-control", marker = "extra == 'dmc-uv'", specifier = ">=1.0.0" },
-    { name = "einops", specifier = ">=0.8.2" },
-    { name = "gitpython", marker = "extra == 'dev'", specifier = ">=3.1.58" },
-    { name = "gymnasium", marker = "extra == 'dmc'", specifier = ">=1.2.2" },
-    { name = "gymnasium", marker = "extra == 'dmc-uv'", specifier = ">=1.2.2" },
-    { name = "gymnasium", extras = ["box2d"], marker = "extra == 'gym'", specifier = ">=1.2.2" },
-    { name = "gymnasium-robotics", marker = "extra == 'robotics'", specifier = ">=1.3.0" },
-    { name = "h5py", marker = "extra == 'genie'", specifier = ">=3.11.0" },
-    { name = "h5py", marker = "extra == 'viz'", specifier = ">=3.11.0" },
-    { name = "huggingface-hub", marker = "extra == 'genie'", specifier = ">=0.23.0" },
-    { name = "huggingface-hub", marker = "extra == 'gym'", specifier = ">=0.23.0" },
-    { name = "hydra-core", marker = "extra == 'ml'", specifier = ">=1.3.2" },
-    { name = "imageio-ffmpeg", marker = "extra == 'viz'", specifier = ">=0.5.1" },
-    { name = "imageio-ffmpeg", marker = "extra == 'worldmodels'", specifier = ">=0.5.1" },
-    { name = "jax", marker = "extra == 'brax'", specifier = ">=0.10.1" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc'", specifier = ">=0.0.2" },
-    { name = "labmaze-new", marker = "python_full_version >= '3.13' and extra == 'dmc-uv'", specifier = ">=0.0.2" },
-    { name = "mistune", marker = "extra == 'docs'", specifier = ">=3.3.0" },
-    { name = "mlagents-envs", marker = "extra == 'ml-agents'", specifier = ">=0.28.0,<0.29.0" },
-    { name = "mujoco", marker = "extra == 'mujoco'", specifier = ">=3.2.0" },
-    { name = "mujoco", marker = "extra == 'robotics'", specifier = ">=3.2.0,<3.12" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
-    { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0,<5.0.0" },
-    { name = "nbconvert", marker = "extra == 'docs'", specifier = ">=7.17.1" },
-    { name = "nbsphinx", marker = "extra == 'docs'", specifier = ">=0.9.8" },
-    { name = "nvidia-ml-py", marker = "extra == 'ml'", specifier = ">=12.535.77" },
-    { name = "omegaconf", marker = "extra == 'genie'", specifier = ">=2.3.0" },
-    { name = "omegaconf", marker = "extra == 'ml'", specifier = ">=2.3.0" },
-    { name = "opencv-python", marker = "extra == 'viz'", specifier = ">=4.12.0.88" },
-    { name = "opencv-python", marker = "extra == 'worldmodels'", specifier = ">=4.12.0.88" },
-    { name = "plotly", marker = "extra == 'viz'", specifier = ">=6.5.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.5.0" },
-    { name = "protobuf", marker = "extra == 'ml-agents'", specifier = ">=5.29.6" },
-    { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.15.0" },
-    { name = "pygame", marker = "extra == 'gym'", specifier = ">=2.6.1" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
-    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3.1" },
-    { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.6.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.14.6" },
-    { name = "scikit-learn", marker = "extra == 'viz'", specifier = ">=1.8.0" },
-    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=8.0.0,<9.0.0" },
-    { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = "<1.26.0" },
-    { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = ">=0.5.2" },
-    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.1.0" },
-    { name = "sphinx-thebe", marker = "extra == 'docs'", specifier = ">=0.3.0" },
-    { name = "sphinxcontrib-bibtex", marker = "extra == 'docs'", specifier = ">=2.6.5" },
-    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = ">=0.9.0" },
-    { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = ">=0.13.0" },
-    { name = "tensorboard", marker = "extra == 'ml'", specifier = ">=2.20.0" },
-    { name = "tensorboardx", marker = "extra == 'ml'", specifier = ">=2.6.4" },
-    { name = "torch", specifier = ">=2.1.0" },
-    { name = "torchaudio", marker = "extra == 'ml'", specifier = ">=0.13.0" },
-    { name = "torchvision", specifier = ">=0.16.0" },
-    { name = "synora", extras = ["brax", "bsuite", "dev", "dmc", "docs", "gym", "ml", "ml-agents", "mujoco", "robotics", "viz", "worldmodels"], marker = "extra == 'all'" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "umap-learn", marker = "extra == 'viz'", specifier = ">=0.5.11" },
-    { name = "wandb", marker = "extra == 'ml'", specifier = ">=0.16.0" },
-]
-provides-extras = ["gym", "ml-agents", "dmc", "dmc-uv", "genie", "mujoco", "robotics", "brax", "bsuite", "viz", "worldmodels", "ml", "dev", "all", "docs"]
 
 [[package]]
 name = "tornado"

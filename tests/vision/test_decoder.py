@@ -1,6 +1,6 @@
 import pytest
 import torch
-from synora.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
+from simulusion.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
 
 
 class TestConvDecoder:

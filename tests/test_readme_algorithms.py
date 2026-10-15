@@ -24,9 +24,9 @@ def _table_names() -> set[str]:
 
 
 def test_readme_table_lists_every_registered_model():
-    import synora
+    import simulusion
 
-    registered = set(synora.list_models())
+    registered = set(simulusion.list_models())
     listed = _table_names()
 
     assert not registered - listed, (

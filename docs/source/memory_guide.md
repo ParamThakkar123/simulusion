@@ -1,6 +1,6 @@
 # Memory & Replay Buffers
 
-Synora provides replay buffers and episodic memory for each agent family.
+Simulusion provides replay buffers and episodic memory for each agent family.
 All buffers store environment interaction data and support sequence sampling
 for world-model training.
 
@@ -12,17 +12,17 @@ for world-model training.
 
 | Agent | Buffer class | Location | Storage |
 |---|---|---|---|
-| Dreamer (V1/V2/V3) | `ReplayBuffer` | `synora.memory.dreamer_memory` | Ring buffer of individual transitions |
-| PlaNet / RSSM | `Memory` + `Episode` | `synora.memory.planet_memory` | Deque of complete episodes |
-| IRIS | `IRISReplayBuffer` + `IRISOnPolicyBuffer` | `synora.memory.iris_memory` | Ring buffer of individual transitions |
-| DIAMOND | `ReplayBuffer` + `SequenceDataset` | `synora.datasets.diamond_dataset` | Ring buffer with next-observation + PyTorch Dataset wrapper |
+| Dreamer (V1/V2/V3) | `ReplayBuffer` | `simulusion.memory.dreamer_memory` | Ring buffer of individual transitions |
+| PlaNet / RSSM | `Memory` + `Episode` | `simulusion.memory.planet_memory` | Deque of complete episodes |
+| IRIS | `IRISReplayBuffer` + `IRISOnPolicyBuffer` | `simulusion.memory.iris_memory` | Ring buffer of individual transitions |
+| DIAMOND | `ReplayBuffer` + `SequenceDataset` | `simulusion.datasets.diamond_dataset` | Ring buffer with next-observation + PyTorch Dataset wrapper |
 
 All buffers are accessible from the top-level package:
 
 ```python
-import synora
+import simulusion
 
-buffer = synora.ReplayBuffer(size=100000, obs_shape=(3, 64, 64), action_size=6)
+buffer = simulusion.ReplayBuffer(size=100000, obs_shape=(3, 64, 64), action_size=6)
 ```
 
 ## Dreamer `ReplayBuffer`
@@ -32,7 +32,7 @@ to save memory and samples **contiguous sequences** for temporal world-model
 learning.
 
 ```python
-from synora import ReplayBuffer
+from simulusion import ReplayBuffer
 
 buffer = ReplayBuffer(
     size=100000,  # max transitions before FIFO eviction
@@ -72,7 +72,7 @@ Each episode is captured by an `Episode` object, and a collection of episodes
 is managed by `Memory`.
 
 ```python
-from synora import Memory, Episode
+from simulusion import Memory, Episode
 
 memory = Memory(size=100)  # keep at most 100 episodes
 
@@ -110,7 +110,7 @@ IRIS uses two buffers: a ring buffer for long-term storage and an on-policy
 buffer for collecting the current episode.
 
 ```python
-from synora import IRISReplayBuffer, IRISOnPolicyBuffer
+from simulusion import IRISReplayBuffer, IRISOnPolicyBuffer
 
 # Main replay buffer
 buffer = IRISReplayBuffer(
@@ -160,7 +160,7 @@ The DIAMOND buffer works with a PyTorch `Dataset` wrapper for integration
 with DataLoader-based training loops.
 
 ```python
-from synora.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
+from simulusion.datasets.diamond_dataset import ReplayBuffer, SequenceDataset
 
 buffer = ReplayBuffer(
     capacity=100000,

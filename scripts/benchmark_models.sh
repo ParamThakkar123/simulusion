@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Auto-run the Synora model benchmark, or run inference / interactive play.
+# Auto-run the Simulusion model benchmark, or run inference / interactive play.
 #
 # Compute (default): installs uv if it is missing, installs the project with
 # `uv sync`, times every architecture, and prints the results table. Needs no
@@ -250,7 +250,7 @@ echo
 # Timestamp reference: a report older than this is left over from an earlier
 # run (--list, --no-report, or a run that died), so it must not be echoed as if
 # it were this run's result.
-marker="${TMPDIR:-/tmp}/.synora-bench-marker.$$"
+marker="${TMPDIR:-/tmp}/.simulusion-bench-marker.$$"
 : > "${marker}"
 trap 'rm -f "${marker}"' EXIT
 

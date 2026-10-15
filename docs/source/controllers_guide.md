@@ -1,6 +1,6 @@
 # Controllers and Policies
 
-Synora provides several controller and policy classes that convert latent
+Simulusion provides several controller and policy classes that convert latent
 representations into environment actions. The right choice depends on whether
 you plan online (CEM at every step), use a trained actor-critic, or evolve
 a controller with black-box optimization.
@@ -28,7 +28,7 @@ them out through the RSSM prior, scores them by predicted reward, and refits a
 Gaussian to the best candidates.
 
 ```python
-from synora import RSSMPolicy
+from simulusion import RSSMPolicy
 
 policy = RSSMPolicy(
     model=rssm,  # RecurrentStateSpaceModel instance
@@ -62,7 +62,7 @@ episode data. It produces `Episode` objects compatible with PlaNet's
 episode-based `Memory`.
 
 ```python
-from synora import RSSMPolicy, RolloutGenerator, Episode
+from simulusion import RSSMPolicy, RolloutGenerator, Episode
 
 generator = RolloutGenerator(
     env,  # Gymnasium-compatible environment
@@ -125,7 +125,7 @@ output heads.
 The shared 4-layer CNN backbone:
 
 ```python
-from synora import CNNFeatureExtractor
+from simulusion import CNNFeatureExtractor
 
 cnn = CNNFeatureExtractor(
     frame_shape=(3, 64, 64),
@@ -141,7 +141,7 @@ Architecture: `Conv2D(3→32) → Conv2D(32→64) → Conv2D(64→128) → Conv2
 ### IRISActor
 
 ```python
-from synora import IRISActor
+from simulusion import IRISActor
 
 actor = IRISActor(
     action_size=6,
@@ -165,7 +165,7 @@ context frames), pass `burn_in_frames` to `forward()`.
 ### IRISCritic
 
 ```python
-from synora import IRISCritic
+from simulusion import IRISCritic
 
 critic = IRISCritic(
     hidden_size=512,
@@ -184,7 +184,7 @@ instance from the actor.
 ### IRISPolicy
 
 ```python
-from synora import IRISPolicy
+from simulusion import IRISPolicy
 
 policy = IRISPolicy(action_size=6)
 
@@ -201,10 +201,10 @@ automatically create a critic — instantiate `IRISCritic` separately if needed.
 
 ```python
 import torch
-import synora
+import simulusion
 
-actor = synora.IRISActor(action_size=6)
-critic = synora.IRISCritic()
+actor = simulusion.IRISActor(action_size=6)
+critic = simulusion.IRISCritic()
 
 # Imagined rollout loop:
 frames = torch.randn(1, 20, 3, 64, 64)
@@ -223,7 +223,7 @@ critic_loss = F.mse_loss(values, target_values)
 deterministic states to an action vector:
 
 ```python
-from synora.models.controller import Controller
+from simulusion.models.controller import Controller
 
 ctrl = Controller(latent_size=32, hidden_size=256, action_size=3)
 action = ctrl(torch.cat([z, h], dim=-1))  # (B, action_size)

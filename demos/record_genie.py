@@ -30,8 +30,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import numpy as np
 import torch
 
-from synora.models.genie import Genie, create_genie_small
-from synora.utils.utils import StreamingVideoWriter
+from simulusion.models.genie import Genie, create_genie_small
+from simulusion.utils.utils import StreamingVideoWriter
 
 
 def tensor_to_uint8_img(t: torch.Tensor) -> np.ndarray:
@@ -179,7 +179,7 @@ def make_prompt(
 
     if not args.no_dataset_prompt:
         try:
-            from synora.datasets import create_tinyworlds_dataloader
+            from simulusion.datasets import create_tinyworlds_dataloader
 
             dataset, _ = create_tinyworlds_dataloader(
                 dataset_name=args.prompt_dataset,
