@@ -1088,7 +1088,10 @@ window.runMermaid = runMermaid;</script>
             <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">frames_flat</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">frames_flat</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_chunk_size</span><span class="p">)]</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">frames_flat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_chunk_size</span><span class="p">)</span>
+                <span class="p">]</span>
             <span class="p">)</span>
         <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
@@ -1278,7 +1281,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">recon</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">part</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">flat</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>

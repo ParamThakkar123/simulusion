@@ -8,7 +8,7 @@ IRIS (Imagination with auto-Regression over an Inner Speech) is an implementatio
 ```{raw} html
 <figure class="demo-media">
   <video src="_static/gallery/iris_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
-  <figcaption>The IRIS policy acting inside the Transformer's imagination of Pong, starting from a single real frame.</figcaption>
+  <figcaption>The IRIS policy acting inside the Transformer's imagination of Atari Boxing, starting from a single real frame.</figcaption>
 </figure>
 ```
 

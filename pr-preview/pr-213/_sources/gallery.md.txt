@@ -195,19 +195,19 @@ IRIS compresses every frame into 16 discrete tokens with a VQ autoencoder,
 then models the game as a sequence of tokens and actions with a Transformer. The
 policy learns from Transformer imagination only.
 
-Trained on Pong for 95 epochs (19,000 real environment steps, about six hours on
-the 4 GB laptop GPU), the world model is in good shape: frames survive the round
-trip through 16 tokens down to the one-pixel ball, and the Transformer predicts
-the next frame's tokens almost exactly (next-token loss 0.01). The policy is
-where the budget runs out. It scores -14 in the real game, against -21 for one
-that never returns the ball, so it has started to play but is still weak; the
-paper reaches +15 with about forty times more policy training.
+Trained on Atari Boxing for 300 epochs (60,000 real environment steps, in stages
+on the 4 GB laptop GPU), the world model keeps the ring, both boxers and the
+scoreboard through 16 tokens per frame, and the policy has learned to close in
+and trade punches. In a full two-minute round in the real emulator it led 29-21
+with 24 seconds left and lost 31-32: level with the game's built-in opponent,
+not yet better. The paper reaches about +70 with several times more policy
+training per epoch.
 
 ```{raw} html
 <div class="demo-pair">
   <figure class="demo-media">
     <video src="_static/gallery/iris_tokens.mp4" autoplay loop muted playsinline preload="metadata"></video>
-    <figcaption>Each real Pong frame (left) and its reconstruction from 16 tokens (right): the only view of the game the world model gets.</figcaption>
+    <figcaption>Each real Boxing frame (left) and its reconstruction from 16 tokens (right): the only view of the game the world model gets.</figcaption>
   </figure>
   <figure class="demo-media">
     <video src="_static/gallery/iris_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
@@ -217,7 +217,7 @@ paper reaches +15 with about forty times more policy training.
 <div class="demo-pair">
   <figure class="demo-media">
     <video src="_static/gallery/iris_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
-    <figcaption>The policy playing real Pong (the right paddle), from tokenized frames.</figcaption>
+    <figcaption>The policy (the white boxer) playing a full round of real Boxing from tokenized frames; the label is its running score.</figcaption>
   </figure>
   <figure class="demo-media">
     <img src="_static/gallery/iris_curve.png" alt="IRIS losses over training" loading="lazy">
@@ -227,15 +227,16 @@ paper reaches +15 with about forty times more policy training.
 ```
 
 ```bash
-python demos/iris_demo.py train --minutes 600 --autoencoder-steps 200 --transformer-steps 200 --actor-critic-steps 20
-python demos/iris_demo.py record
+python demos/iris_demo.py train --game ALE/Boxing-v5 --run demos/runs/iris_boxing --until-epoch 300 \
+    --autoencoder-steps 200 --transformer-steps 200 --actor-critic-steps 50 --actor-critic-batch 64
+python demos/iris_demo.py record --run demos/runs/iris_boxing --policy-steps 2000
 ```
 
 The demo keeps the paper's architecture and its schedule (autoencoder alone
-until epoch 25, the policy from epoch 50). Batches are a quarter of the paper's
-to fit a 4 GB GPU, and the policy takes 20 updates per epoch instead of 200,
-because each one imagines 20 frames token by token. `--resume` continues an
-interrupted run. See {doc}`iris`.
+until epoch 25, the policy from epoch 50). To fit a 4 GB GPU the policy takes
+50 updates per epoch instead of 200, because each one imagines 20 frames token
+by token. `--resume` continues an interrupted run and `--until-epoch` makes it
+stop at the same epoch however often it was restarted. See {doc}`iris`.
 
 ---
 

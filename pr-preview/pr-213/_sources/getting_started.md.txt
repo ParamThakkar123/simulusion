@@ -113,8 +113,8 @@ Both are off by default. Install the `ml` extra, then set them on the config:
 
 ```python
 cfg = simulusion.create_config("dreamer", env="Pendulum-v1", env_backend="gym")
-cfg.enable_tensorboard = True   # then: tensorboard --logdir runs
-cfg.enable_wandb = True         # needs WANDB_API_KEY in the environment
+cfg.enable_tensorboard = True  # then: tensorboard --logdir runs
+cfg.enable_wandb = True  # needs WANDB_API_KEY in the environment
 cfg.wandb_project = "simulusion"
 agent = simulusion.create_model("dreamer", config=cfg)
 ```
