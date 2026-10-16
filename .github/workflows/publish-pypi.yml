@@ -16,6 +16,13 @@ jobs:
   publish:
     name: Build and publish release
     runs-on: ubuntu-latest
+    # Trusted publishing: PyPI accepts this job's OIDC token (permissions
+    # above grant id-token: write) for the `synora` project, so no API token
+    # is stored. The publisher registered on PyPI names this workflow file and
+    # this environment; renaming either breaks publishing.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/synora/
 
     steps:
       - name: Checkout release target
@@ -151,5 +158,3 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
