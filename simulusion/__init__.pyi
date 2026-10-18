@@ -184,6 +184,11 @@ from simulusion.vision.video_tokenizer import VideoTokenizer as VideoTokenizer
 from simulusion.vision.video_tokenizer import create_video_tokenizer as create_video_tokenizer
 from simulusion.vision.vq_layer import VectorQuantizer as VectorQuantizer
 from simulusion.vision.vq_layer import VectorQuantizerEMA as VectorQuantizerEMA
+from simulusion.world_model import as_world_model as as_world_model
+from simulusion.world_model import list_world_model_families as list_world_model_families
+from simulusion.world_model import load_world_model as load_world_model
+from simulusion.world_model.protocol import WorldModel as WorldModel
+from simulusion.world_model.protocol import WorldModelSpec as WorldModelSpec
 
 __version__: str
 
@@ -295,9 +300,12 @@ __all__ = [
     "VideoTokenizer",
     "VideoTokenizerConfig",
     "VisionTransformer",
+    "WorldModel",
     "WorldModelEnv",
+    "WorldModelSpec",
     "__version__",
     "api",
+    "as_world_model",
     "benchmark_step",
     "build_perceptual_loss",
     "compute_lambda_return",
@@ -336,9 +344,11 @@ __all__ = [
     "list_models",
     "list_registered_env_backends",
     "list_registered_models",
+    "list_world_model_families",
     "load_bundle",
     "load_exported",
     "load_jepa_encoder",
+    "load_world_model",
     "make_atari_env",
     "make_atari_vector_env",
     "make_brax_env",

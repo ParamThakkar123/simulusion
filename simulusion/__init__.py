@@ -225,6 +225,12 @@ _LAZY_EXPORTS: dict[str, str] = {
     "save_bundle": "simulusion.inference",
     "load_bundle": "simulusion.inference",
     "STKVCache": "simulusion.blocks.st_transformer",
+    # One protocol over every world model family.
+    "WorldModel": "simulusion.world_model",
+    "WorldModelSpec": "simulusion.world_model",
+    "as_world_model": "simulusion.world_model",
+    "load_world_model": "simulusion.world_model",
+    "list_world_model_families": "simulusion.world_model",
 }
 
 _EXPORTS = {**_API_EXPORTS, **_LAZY_EXPORTS}
