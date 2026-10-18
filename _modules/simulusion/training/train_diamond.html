@@ -716,15 +716,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">ReplayBuffer</span><span class="p">,</span>
     <span class="n">SequenceDataset</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.diffusion.diamond_diffusion</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DiffusionUNet</span><span class="p">,</span>
-    <span class="n">EDMPreconditioner</span><span class="p">,</span>
-    <span class="n">EulerSampler</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.diffusion.reward_termination</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">RewardTerminationModel</span><span class="p">,</span>
-    <span class="n">RewardTerminationLoss</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.diffusion.reward_termination</span><span class="w"> </span><span class="kn">import</span> <span class="n">RewardTerminationLoss</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.diffusion.actor_critic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ActorCriticNetwork</span><span class="p">,</span>
     <span class="n">RLLoss</span><span class="p">,</span>
@@ -911,47 +903,14 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Initialize all DIAMOND models."""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_model</span> <span class="o">=</span> <span class="n">DiffusionUNet</span><span class="p">(</span>
-            <span class="n">obs_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">num_conditioning_frames</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_conditioning_frames</span><span class="p">,</span>
-            <span class="c1"># config.diffusion_channels is a list of absolute channel sizes per level</span>
-            <span class="c1"># DiffusionUNet expects base_channels and channel_multipliers (multipliers</span>
-            <span class="c1"># relative to base). Convert absolute sizes to multipliers here.</span>
-            <span class="n">base_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">diffusion_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">channel_multipliers</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">c</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">diffusion_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">diffusion_channels</span>
-                <span class="p">]</span>
-            <span class="p">),</span>
-            <span class="n">num_res_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">diffusion_res_blocks</span><span class="p">,</span>
-            <span class="n">cond_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">diffusion_cond_dim</span><span class="p">,</span>
-            <span class="n">action_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">action_dim</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.world_model.diamond</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_diamond_networks</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">edm_precond</span> <span class="o">=</span> <span class="n">EDMPreconditioner</span><span class="p">(</span>
-            <span class="n">sigma_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sigma_data</span><span class="p">,</span>
-            <span class="n">p_mean</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">p_mean</span><span class="p">,</span>
-            <span class="n">p_std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">p_std</span><span class="p">,</span>
+        <span class="c1"># The world model's networks are built in one place, shared with</span>
+        <span class="c1"># DiamondWorldModel, so a checkpoint loads into either.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span> <span class="o">=</span> <span class="n">build_diamond_networks</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span>
         <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">EulerSampler</span><span class="p">(</span>
-            <span class="n">sigma_min</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sigma_min</span><span class="p">,</span>
-            <span class="n">sigma_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">sigma_max</span><span class="p">,</span>
-            <span class="n">rho</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span>
-            <span class="n">num_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_sampling_steps</span><span class="p">,</span>
-            <span class="n">edm_precond</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">edm_precond</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span> <span class="o">=</span> <span class="n">RewardTerminationModel</span><span class="p">(</span>
-            <span class="n">obs_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">action_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">action_dim</span><span class="p">,</span>
-            <span class="n">channels</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_channels</span><span class="p">),</span>
-            <span class="n">lstm_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_lstm_dim</span><span class="p">,</span>
-            <span class="n">cond_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_cond_dim</span><span class="p">,</span>
-            <span class="n">res_blocks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_res_blocks</span><span class="p">,</span>
-            <span class="n">frame_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">obs_size</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edm_precond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">edm_precond</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_loss_fn</span> <span class="o">=</span> <span class="n">RewardTerminationLoss</span><span class="p">()</span>
 

@@ -701,6 +701,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.models.dreamer.Dreamer.act_with_world_model">act_with_world_model() (simulusion.models.dreamer.Dreamer method)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.action">action (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.action">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieConfig.action_decoder_dim">action_decoder_dim (simulusion.configs.genie_config.GenieConfig attribute)</a>
 
       <ul>
@@ -801,6 +807,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.envs.wrappers.ActionRepeat">ActionRepeat (class in simulusion.envs.wrappers)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec">ActionSpec (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec">(class in simulusion.world_model.protocol)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.actor_channels">actor_channels (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 
       <ul>
@@ -821,10 +833,10 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.actor_learning_rate">(simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.models.dreamer.Dreamer.actor_loss">actor_loss() (simulusion.models.dreamer.Dreamer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.actor_lstm_dim">actor_lstm_dim (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 
       <ul>
@@ -921,6 +933,20 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.inference.benchmark.LatencyReport.as_dict">(simulusion.inference.benchmark.LatencyReport method)</a>
 </li>
       </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.as_frames">as_frames() (simulusion.world_model.protocol.WorldModelBase method)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.as_frames">(simulusion.world_model.WorldModelBase method)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.as_tensor">as_tensor() (simulusion.world_model.ActionSpec method)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.as_tensor">(simulusion.world_model.protocol.ActionSpec method)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.as_world_model">as_world_model() (in module simulusion.world_model)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.jepa_config.JEPAConfig.aspect_ratio">aspect_ratio (simulusion.configs.jepa_config.JEPAConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.utils.logging_utils.assert_finite">assert_finite() (in module simulusion.utils.logging_utils)</a>
@@ -993,12 +1019,18 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.training.train_genie.GenieConfig.batch_size">(simulusion.training.train_genie.GenieConfig attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api_reference.html#simulusion.inference.benchmark.benchmark_step">benchmark_step() (in module simulusion.inference.benchmark)</a>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.batch_size">batch_size() (simulusion.world_model.protocol.WorldModelBase static method)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.batch_size">(simulusion.world_model.WorldModelBase static method)</a>
 </li>
-      <li><a href="api_reference.html#simulusion.benchmarks.runner.BenchmarkRunner">BenchmarkRunner (class in simulusion.benchmarks.runner)</a>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.inference.benchmark.benchmark_step">benchmark_step() (in module simulusion.inference.benchmark)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.benchmarks.runner.BenchmarkRunner">BenchmarkRunner (class in simulusion.benchmarks.runner)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.BETA_END">BETA_END (simulusion.configs.dit_config.DiTConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.BETA_START">BETA_START (simulusion.configs.dit_config.DiTConfig attribute)</a>
@@ -1022,6 +1054,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.memory.iris_memory.IRISReplayBuffer.buffer_capacity">buffer_capacity (simulusion.memory.iris_memory.IRISReplayBuffer property)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.buffer_size">buffer_size (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.diamond.build_diamond_networks">build_diamond_networks() (in module simulusion.world_model.diamond)</a>
 </li>
       <li><a href="api_reference.html#simulusion.training.train_jepa.build_loss_fn">build_loss_fn() (in module simulusion.training.train_jepa)</a>
 </li>
@@ -1135,10 +1169,10 @@ window.runMermaid = runMermaid;</script>
       </ul></li>
       <li><a href="api_reference.html#simulusion.benchmarks.metrics.compute_aggregate_metrics">compute_aggregate_metrics() (in module simulusion.benchmarks.metrics)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.training.rl_harness.PPOTrainer.compute_gae">compute_gae() (simulusion.training.rl_harness.PPOTrainer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.models.iris_agent.compute_lambda_return">compute_lambda_return() (in module simulusion.models.iris_agent)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.diffusion.actor_critic.RLLoss.compute_lambda_returns">compute_lambda_returns() (simulusion.models.diffusion.actor_critic.RLLoss method)</a>
@@ -1149,6 +1183,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.api.ModelSpec.config_path">config_path (simulusion.api.ModelSpec attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.context_frames">context_frames (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.context_frames">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.inference.steppers.ImagineOutput.continue_prob">continue_prob (simulusion.inference.steppers.ImagineOutput attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.controller.Controller">Controller (class in simulusion.models.controller)</a>
@@ -1278,6 +1318,14 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="api_reference.html#simulusion.vision.video_tokenizer.VideoTokenizer.decode">(simulusion.vision.video_tokenizer.VideoTokenizer method)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.decode">(simulusion.world_model.protocol.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.decode">(simulusion.world_model.protocol.WorldModelBase method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.decode">(simulusion.world_model.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.decode">(simulusion.world_model.WorldModelBase method)</a>
+</li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.vision.iris_decoder.IRISDecoder.decode_from_embeddings">decode_from_embeddings() (simulusion.vision.iris_decoder.IRISDecoder method)</a>
 </li>
@@ -1372,16 +1420,26 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="api_reference.html#simulusion.inference.steppers.WorldModelStepper.device">(simulusion.inference.steppers.WorldModelStepper attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="api_reference.html#simulusion.benchmarks.adapters.DiamondAdapter">DiamondAdapter (class in simulusion.benchmarks.adapters)</a>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.device">(simulusion.world_model.protocol.WorldModel attribute)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.device">(simulusion.world_model.protocol.WorldModelBase attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.device">(simulusion.world_model.WorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.device">(simulusion.world_model.WorldModelBase attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.benchmarks.adapters.DiamondAdapter">DiamondAdapter (class in simulusion.benchmarks.adapters)</a>
+</li>
       <li><a href="api_reference.html#simulusion.training.train_diamond.DiamondAgent">DiamondAgent (class in simulusion.training.train_diamond)</a>
 </li>
       <li><a href="api_reference.html#simulusion.envs.diamond_atari.DiamondAtariWrapper">DiamondAtariWrapper (class in simulusion.envs.diamond_atari)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig">DiamondConfig (class in simulusion.configs.diamond_config)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.diamond.DiamondWorldModel">DiamondWorldModel (class in simulusion.world_model.diamond)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.diffusion_channels">diffusion_channels (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 
@@ -1464,6 +1522,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.benchmarks.adapters.DreamerV1Adapter">DreamerV1Adapter (class in simulusion.benchmarks.adapters)</a>
 </li>
       <li><a href="api_reference.html#simulusion.benchmarks.adapters.DreamerV2Adapter">DreamerV2Adapter (class in simulusion.benchmarks.adapters)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.dreamer.DreamerWorldModel">DreamerWorldModel (class in simulusion.world_model.dreamer)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.benchmark.DriftReport">DriftReport (class in simulusion.inference.benchmark)</a>
 </li>
@@ -1616,6 +1676,14 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="api_reference.html#simulusion.vision.video_tokenizer.VideoTokenizer.encode">(simulusion.vision.video_tokenizer.VideoTokenizer method)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.encode">(simulusion.world_model.protocol.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.encode">(simulusion.world_model.protocol.WorldModelBase method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.encode">(simulusion.world_model.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.encode">(simulusion.world_model.WorldModelBase method)</a>
+</li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.vision.iris_encoder.IRISEncoder.encode_to_indices">encode_to_indices() (simulusion.vision.iris_encoder.IRISEncoder method)</a>
 </li>
@@ -1635,12 +1703,12 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.configs.genie_config.VideoTokenizerConfig.encoder_dim">(simulusion.configs.genie_config.VideoTokenizerConfig attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.encoder_layers">encoder_layers (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.encoder_residual_blocks">encoder_residual_blocks (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.models.modular_rssm.EncoderBase">EncoderBase (class in simulusion.models.modular_rssm)</a>
 </li>
       <li><a href="api_reference.html#simulusion.utils.utils.ensure_results_dir_exists">ensure_results_dir_exists() (in module simulusion.utils.utils)</a>
@@ -1753,6 +1821,28 @@ window.runMermaid = runMermaid;</script>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.api.EnvBackendSpec.factory_path">factory_path (simulusion.api.EnvBackendSpec attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.diamond.DiamondWorldModel.family">family (simulusion.world_model.diamond.DiamondWorldModel attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.dreamer.DreamerWorldModel.family">(simulusion.world_model.dreamer.DreamerWorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.genie.GenieWorldModel.family">(simulusion.world_model.genie.GenieWorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.iris.IRISTokenWorldModel.family">(simulusion.world_model.iris.IRISTokenWorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.planet.PlanetWorldModel.family">(simulusion.world_model.planet.PlanetWorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.family">(simulusion.world_model.protocol.WorldModelBase attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.family">(simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.vae_mdrnn.MDRNNWorldModel.family">(simulusion.world_model.vae_mdrnn.MDRNNWorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.family">(simulusion.world_model.WorldModelBase attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.family">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.inference.steppers.DreamerStepper.features">features() (simulusion.inference.steppers.DreamerStepper static method)</a>
 </li>
       <li><a href="api_reference.html#simulusion.datasets.imagenet1k.ImageNetSubset.filter_dataset_">filter_dataset_() (simulusion.datasets.imagenet1k.ImageNetSubset method)</a>
@@ -1983,6 +2073,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.frame_width">frame_width (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.Rollout.frames">frames (simulusion.world_model.protocol.Rollout attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.Rollout.frames">(simulusion.world_model.Rollout attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.frameskip">frameskip (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.envs.wrappers.FrameStack">FrameStack (class in simulusion.envs.wrappers)</a>
@@ -1990,6 +2086,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.free_nats">free_nats (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.utils.dreamer_utils.FreezeParameters">FreezeParameters (class in simulusion.utils.dreamer_utils)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.vae_mdrnn.MDRNNWorldModel.from_checkpoints">from_checkpoints() (simulusion.world_model.vae_mdrnn.MDRNNWorldModel class method)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.diffusion.DiT.DiT.from_config">from_config() (simulusion.models.diffusion.DiT.DiT class method)</a>
 
@@ -2056,6 +2154,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieSmallConfig">GenieSmallConfig (class in simulusion.configs.genie_config)</a>
 </li>
       <li><a href="api_reference.html#simulusion.training.train_genie.GenieTrainer">GenieTrainer (class in simulusion.training.train_genie)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.genie.GenieWorldModel">GenieWorldModel (class in simulusion.world_model.genie)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.vit.get_1d_sincos_pos_embed">get_1d_sincos_pos_embed() (in module simulusion.models.vit)</a>
 </li>
@@ -2183,18 +2283,36 @@ window.runMermaid = runMermaid;</script>
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api_reference.html#simulusion.datasets.video_datasets.HDF5Dataset">HDF5Dataset (class in simulusion.datasets.video_datasets)</a>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.has_reward">has_reward (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.has_reward">(simulusion.world_model.WorldModelSpec attribute)</a>
 </li>
-      <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.HEADS">HEADS (simulusion.configs.dit_config.DiTConfig attribute)</a>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.has_termination">has_termination (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.has_termination">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.datasets.video_datasets.HDF5Dataset">HDF5Dataset (class in simulusion.datasets.video_datasets)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.HEADS">HEADS (simulusion.configs.dit_config.DiTConfig attribute)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMVAEConfig.height">height (simulusion.configs.wm_config.WMVAEConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMControllerConfig.hidden_size">hidden_size (simulusion.configs.wm_config.WMControllerConfig attribute)</a>
 
       <ul>
         <li><a href="api_reference.html#simulusion.configs.wm_config.WMMDNRNNConfig.hidden_size">(simulusion.configs.wm_config.WMMDNRNNConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.high">high (simulusion.world_model.ActionSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.high">(simulusion.world_model.protocol.ActionSpec attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -2287,6 +2405,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.inference.runtime.InferenceModel">InferenceModel (class in simulusion.inference.runtime)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.Transition.info">info (simulusion.world_model.protocol.Transition attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.Transition.info">(simulusion.world_model.Transition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.blocks.st_transformer.STTransformer.init_cache">init_cache() (simulusion.blocks.st_transformer.STTransformer method)</a>
 
       <ul>
@@ -2369,6 +2493,8 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.inference.steppers.IRISStepper">IRISStepper (class in simulusion.inference.steppers)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.iris.IRISTokenWorldModel">IRISTokenWorldModel (class in simulusion.world_model.iris)</a>
+</li>
       <li><a href="api_reference.html#simulusion.training.train_iris.IRISTrainer">IRISTrainer (class in simulusion.training.train_iris)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.iris_transformer.IRISTransformer">IRISTransformer (class in simulusion.models.iris_transformer)</a>
@@ -2403,10 +2529,16 @@ window.runMermaid = runMermaid;</script>
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.kl_alpha">kl_alpha (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.kind">kind (simulusion.world_model.ActionSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.kind">(simulusion.world_model.protocol.ActionSpec attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.kl_alpha">kl_alpha (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.kl_loss_coeff">kl_loss_coeff (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.iris_transformer.KVCache">KVCache (class in simulusion.models.iris_transformer)</a>
@@ -2423,6 +2555,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.inference.benchmark.LatencyReport">LatencyReport (class in simulusion.inference.benchmark)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.latent">latent (simulusion.world_model.ActionSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.latent">(simulusion.world_model.protocol.ActionSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMControllerConfig.latent_size">latent_size (simulusion.configs.wm_config.WMControllerConfig attribute)</a>
 
       <ul>
@@ -2471,8 +2609,16 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.envs.procgen_env.list_procgen_envs">list_procgen_envs() (in module simulusion.envs.procgen_env)</a>
 </li>
-      <li><a href="api_reference.html#simulusion.models.iris_agent.IRISAgent.load">load() (simulusion.models.iris_agent.IRISAgent method)</a>
+      <li><a href="api_reference.html#simulusion.world_model.list_world_model_families">list_world_model_families() (in module simulusion.world_model)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.models.iris_agent.IRISAgent.load">load() (simulusion.models.iris_agent.IRISAgent method)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.load">(simulusion.world_model.protocol.WorldModelBase class method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.load">(simulusion.world_model.WorldModelBase class method)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.inference.bundle.Bundle.load_artifact">load_artifact() (simulusion.inference.bundle.Bundle method)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.bundle.load_bundle">load_bundle() (in module simulusion.inference.bundle)</a>
@@ -2514,6 +2660,8 @@ window.runMermaid = runMermaid;</script>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.inference.bundle.Bundle.load_weights">load_weights() (simulusion.inference.bundle.Bundle method)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.load_world_model">load_world_model() (in module simulusion.world_model)</a>
 </li>
       <li><a href="api_reference.html#simulusion.utils.utils.load_yml_config">load_yml_config() (in module simulusion.utils.utils)</a>
 </li>
@@ -2563,6 +2711,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.jepa_config.JEPAConfig.loss_type">loss_type (simulusion.configs.jepa_config.JEPAConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.low">low (simulusion.world_model.ActionSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.low">(simulusion.world_model.protocol.ActionSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.LR">LR (simulusion.configs.dit_config.DiTConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.jepa_config.JEPAConfig.lr">lr (simulusion.configs.jepa_config.JEPAConfig attribute)</a>
@@ -2643,6 +2797,8 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.inference.bundle.Bundle.manifest">manifest (simulusion.inference.bundle.Bundle attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.MANIFEST_NAME">MANIFEST_NAME (in module simulusion.world_model.protocol)</a>
+</li>
       <li><a href="api_reference.html#simulusion.datasets.nuplan.NuPlanSample.map_raster">map_raster (simulusion.datasets.nuplan.NuPlanSample attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieConfig.mask_prob_max">mask_prob_max (simulusion.configs.genie_config.GenieConfig attribute)</a>
@@ -2679,6 +2835,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.inference.benchmark.DriftReport.max_abs_error">max_abs_error (simulusion.inference.benchmark.DriftReport attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.max_context">max_context (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.max_context">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.max_env_steps">max_env_steps (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.max_episode_length">max_episode_length (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
@@ -2718,6 +2880,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.models.mdrnn.MDRNN">MDRNN (class in simulusion.models.mdrnn)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.mdrnn.MDRNNCell">MDRNNCell (class in simulusion.models.mdrnn)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.vae_mdrnn.MDRNNWorldModel">MDRNNWorldModel (class in simulusion.world_model.vae_mdrnn)</a>
 </li>
       <li><a href="api_reference.html#simulusion.vision.dreamer_decoder.SampleDist.mean">mean() (simulusion.vision.dreamer_decoder.SampleDist method)</a>
 </li>
@@ -3001,6 +3165,22 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="api_reference.html#module-simulusion.vision.vq_layer">simulusion.vision.vq_layer</a>
 </li>
+        <li><a href="api_reference.html#module-simulusion.world_model">simulusion.world_model</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.diamond">simulusion.world_model.diamond</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.dreamer">simulusion.world_model.dreamer</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.genie">simulusion.world_model.genie</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.iris">simulusion.world_model.iris</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.planet">simulusion.world_model.planet</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.protocol">simulusion.world_model.protocol</a>
+</li>
+        <li><a href="api_reference.html#module-simulusion.world_model.vae_mdrnn">simulusion.world_model.vae_mdrnn</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -3032,6 +3212,12 @@ window.runMermaid = runMermaid;</script>
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.world_model.ActionSpec.n">n (simulusion.world_model.ActionSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.ActionSpec.n">(simulusion.world_model.protocol.ActionSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMControllerConfig.n_samples">n_samples (simulusion.configs.wm_config.WMControllerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.api.EnvBackendSpec.name">name (simulusion.api.EnvBackendSpec attribute)</a>
@@ -3142,6 +3328,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.datasets.video_datasets.VideoDatasetConfig.obs_key">obs_key (simulusion.datasets.video_datasets.VideoDatasetConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.obs_shape">obs_shape (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.obs_shape">(simulusion.world_model.WorldModelSpec attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.obs_size">obs_size (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.envs.wrappers.RenderImage.obs_space">obs_space (simulusion.envs.wrappers.RenderImage property)</a>
@@ -3302,6 +3494,8 @@ window.runMermaid = runMermaid;</script>
       </ul></li>
       <li><a href="api_reference.html#simulusion.models.planet.Planet">Planet (class in simulusion.models.planet)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.planet.PlanetWorldModel">PlanetWorldModel (class in simulusion.world_model.planet)</a>
+</li>
       <li><a href="api_reference.html#simulusion.datasets.nuplan.NuPlanSample.planning_target">planning_target (simulusion.datasets.nuplan.NuPlanSample attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.genie.Genie.play">play() (simulusion.models.genie.Genie method)</a>
@@ -3383,6 +3577,8 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.masks.RandomMaskCollator">RandomMaskCollator (in module simulusion.masks)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.jepa_config.JEPAConfig.read_checkpoint">read_checkpoint (simulusion.configs.jepa_config.JEPAConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.read_manifest">read_manifest() (in module simulusion.world_model.protocol)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.iris_agent.IRISAgent.reconstruct">reconstruct() (simulusion.models.iris_agent.IRISAgent method)</a>
 </li>
@@ -3480,8 +3676,6 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.utils.utils.TorchImageEnvWrapper.reset">(simulusion.utils.utils.TorchImageEnvWrapper method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.envs.vector_env.TorchVectorizedEnv.reset_batch">reset_batch() (simulusion.envs.vector_env.TorchVectorizedEnv method)</a>
 
       <ul>
@@ -3496,6 +3690,8 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.vision.iris_encoder.ResidualBlock">(class in simulusion.vision.iris_encoder)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.envs.wrappers.ResizeImage">ResizeImage (class in simulusion.envs.wrappers)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.precision.resolve_precision">resolve_precision() (in module simulusion.inference.precision)</a>
@@ -3509,7 +3705,13 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.models.dreamer.Dreamer.restore_checkpoint">restore_checkpoint() (simulusion.models.dreamer.Dreamer method)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.steppers.ImagineOutput.reward">reward (simulusion.inference.steppers.ImagineOutput attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Transition.reward">(simulusion.world_model.protocol.Transition attribute)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.Transition.reward">(simulusion.world_model.Transition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.reward_channels">reward_channels (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 
       <ul>
@@ -3536,6 +3738,12 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.envs.wrappers.RewardObs">RewardObs (class in simulusion.envs.wrappers)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.Rollout.rewards">rewards (simulusion.world_model.protocol.Rollout attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.Rollout.rewards">(simulusion.world_model.Rollout attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.models.diffusion.reward_termination.RewardTerminationLoss">RewardTerminationLoss (class in simulusion.models.diffusion.reward_termination)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.diffusion.reward_termination.RewardTerminationModel">RewardTerminationModel (class in simulusion.models.diffusion.reward_termination)</a>
@@ -3546,6 +3754,22 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.models.diffusion.actor_critic.RLLoss">RLLoss (class in simulusion.models.diffusion.actor_critic)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.Rollout">Rollout (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Rollout">(class in simulusion.world_model.protocol)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.rollout">rollout() (simulusion.world_model.protocol.WorldModel method)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.rollout">(simulusion.world_model.protocol.WorldModelBase method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.rollout">(simulusion.world_model.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.rollout">(simulusion.world_model.WorldModelBase method)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.inference.benchmark.rollout_drift">rollout_drift() (in module simulusion.inference.benchmark)</a>
 </li>
       <li><a href="api_reference.html#simulusion.controller.rollout_generator.RolloutGenerator.rollout_eval">rollout_eval() (simulusion.controller.rollout_generator.RolloutGenerator method)</a>
@@ -3642,6 +3866,14 @@ window.runMermaid = runMermaid;</script>
 
       <ul>
         <li><a href="api_reference.html#simulusion.models.iris_agent.IRISAgent.save">(simulusion.models.iris_agent.IRISAgent method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.save">(simulusion.world_model.protocol.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.save">(simulusion.world_model.protocol.WorldModelBase method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.save">(simulusion.world_model.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.save">(simulusion.world_model.WorldModelBase method)</a>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.inference.bundle.save_bundle">save_bundle() (in module simulusion.inference.bundle)</a>
@@ -4125,8 +4357,6 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#module-simulusion.models.controller">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     simulusion.models.diffusion
 
@@ -4169,6 +4399,8 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#module-simulusion.models.diffusion.reward_termination">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     simulusion.models.dreamer
 
@@ -4463,6 +4695,62 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#module-simulusion.vision.vq_layer">module</a>
 </li>
       </ul></li>
+      <li>
+    simulusion.world_model
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.diamond
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.diamond">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.dreamer
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.dreamer">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.genie
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.genie">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.iris
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.iris">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.planet
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.planet">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.protocol
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.protocol">module</a>
+</li>
+      </ul></li>
+      <li>
+    simulusion.world_model.vae_mdrnn
+
+      <ul>
+        <li><a href="api_reference.html#module-simulusion.world_model.vae_mdrnn">module</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.envs.vector_env.SimWorker">SimWorker (class in simulusion.envs.vector_env)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.diffusion.DiT.sinusoidal_time_embedding">sinusoidal_time_embedding() (in module simulusion.models.diffusion.DiT)</a>
@@ -4475,6 +4763,16 @@ window.runMermaid = runMermaid;</script>
       </ul></li>
       <li><a href="api_reference.html#simulusion.training.train_controller.slave_routine">slave_routine() (in module simulusion.training.train_controller)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.spec">spec (simulusion.world_model.protocol.WorldModel attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.spec">(simulusion.world_model.protocol.WorldModelBase attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.spec">(simulusion.world_model.WorldModel attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.spec">(simulusion.world_model.WorldModelBase attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.datasets.tinyworlds.TinyWorldsConfig.split">split (simulusion.datasets.tinyworlds.TinyWorldsConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.start_actor_critic_after">start_actor_critic_after (simulusion.configs.iris_config.IRISConfig attribute)</a>
@@ -4486,7 +4784,17 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.start_transformer_after">start_transformer_after (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.steppers.ImagineOutput.state">state (simulusion.inference.steppers.ImagineOutput attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Rollout.state">(simulusion.world_model.protocol.Rollout attribute)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Transition.state">(simulusion.world_model.protocol.Transition attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.Rollout.state">(simulusion.world_model.Rollout attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.Transition.state">(simulusion.world_model.Transition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.datasets.diamond_dataset.ReplayBuffer.state_dict">state_dict() (simulusion.datasets.diamond_dataset.ReplayBuffer method)</a>
 
       <ul>
@@ -4550,6 +4858,14 @@ window.runMermaid = runMermaid;</script>
 </li>
         <li><a href="api_reference.html#simulusion.utils.utils.TorchImageEnvWrapper.step">(simulusion.utils.utils.TorchImageEnvWrapper method)</a>
 </li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel.step">(simulusion.world_model.protocol.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase.step">(simulusion.world_model.protocol.WorldModelBase method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModel.step">(simulusion.world_model.WorldModel method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.step">(simulusion.world_model.WorldModelBase method)</a>
+</li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.envs.vector_env.TorchVectorizedEnv.step_batch">step_batch() (simulusion.envs.vector_env.TorchVectorizedEnv method)</a>
 
@@ -4573,6 +4889,12 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.models.modular_rssm.BackboneBase.stoch_size">(simulusion.models.modular_rssm.BackboneBase attribute)</a>
 </li>
         <li><a href="api_reference.html#simulusion.models.modular_rssm.ModularRSSM.stoch_size">(simulusion.models.modular_rssm.ModularRSSM property)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.stochastic">stochastic (simulusion.world_model.protocol.WorldModelSpec attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.stochastic">(simulusion.world_model.WorldModelSpec attribute)</a>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.utils.train_utils.EarlyStopping.stop">stop (simulusion.utils.train_utils.EarlyStopping property)</a>
@@ -4649,6 +4971,16 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.terminate_on_life_loss">terminate_on_life_loss (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.protocol.Rollout.terminated">terminated (simulusion.world_model.protocol.Rollout attribute)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Transition.terminated">(simulusion.world_model.protocol.Transition attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.Rollout.terminated">(simulusion.world_model.Rollout attribute)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.Transition.terminated">(simulusion.world_model.Transition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.test">test (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.test_episodes">test_episodes (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
@@ -4693,6 +5025,10 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.configs.wm_config.WMMDNRNNConfig.to_dict">(simulusion.configs.wm_config.WMMDNRNNConfig method)</a>
 </li>
         <li><a href="api_reference.html#simulusion.configs.wm_config.WMVAEConfig.to_dict">(simulusion.configs.wm_config.WMVAEConfig method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec.to_dict">(simulusion.world_model.protocol.WorldModelSpec method)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec.to_dict">(simulusion.world_model.WorldModelSpec method)</a>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.training.train_iris.IRISTrainer.to_float_tensor">to_float_tensor() (simulusion.training.train_iris.IRISTrainer method)</a>
@@ -4745,6 +5081,8 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.training.train_genie.GenieConfig.tokenizer_encoder_depth">(simulusion.training.train_genie.GenieConfig attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieConfig.tokenizer_encoder_dim">tokenizer_encoder_dim (simulusion.configs.genie_config.GenieConfig attribute)</a>
 
       <ul>
@@ -4753,8 +5091,6 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.training.train_genie.GenieConfig.tokenizer_encoder_dim">(simulusion.training.train_genie.GenieConfig attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieConfig.tokenizer_num_heads">tokenizer_num_heads (simulusion.configs.genie_config.GenieConfig attribute)</a>
 
       <ul>
@@ -4859,6 +5195,12 @@ window.runMermaid = runMermaid;</script>
 
       <ul>
         <li><a href="api_reference.html#simulusion.models.modular_rssm.TransformerBlock">(class in simulusion.models.modular_rssm)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.Transition">Transition (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.Transition">(class in simulusion.world_model.protocol)</a>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.utils.jepa_utils.trunc_normal_">trunc_normal_() (in module simulusion.utils.jepa_utils)</a>
@@ -5093,14 +5435,14 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.weight_decay_reward">weight_decay_reward (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.inference.quantize.Int8WeightOnlyLinear.weight_int8">weight_int8 (simulusion.inference.quantize.Int8WeightOnlyLinear attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.quantize.weight_memory_bytes">weight_memory_bytes() (in module simulusion.inference.quantize)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.WIDTH">WIDTH (simulusion.configs.dit_config.DiTConfig attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMVAEConfig.width">width (simulusion.configs.wm_config.WMVAEConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.genie_config.GenieConfig.window_attention_heads">window_attention_heads (simulusion.configs.genie_config.GenieConfig attribute)</a>
@@ -5123,8 +5465,28 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dit_config.DiTConfig.WORKDIR">WORKDIR (simulusion.configs.dit_config.DiTConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.world_model_class">world_model_class() (in module simulusion.world_model)</a>
+</li>
       <li><a href="api_reference.html#simulusion.models.dreamer.Dreamer.world_model_loss">world_model_loss() (simulusion.models.dreamer.Dreamer method)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.world_model.WorldModel">WorldModel (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModel">(class in simulusion.world_model.protocol)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.WorldModelBase">WorldModelBase (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelBase">(class in simulusion.world_model.protocol)</a>
+</li>
+      </ul></li>
+      <li><a href="api_reference.html#simulusion.world_model.WorldModelSpec">WorldModelSpec (class in simulusion.world_model)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.world_model.protocol.WorldModelSpec">(class in simulusion.world_model.protocol)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.inference.steppers.WorldModelStepper">WorldModelStepper (class in simulusion.inference.steppers)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.benchmark.DriftReport.worst_rel_error">worst_rel_error (simulusion.inference.benchmark.DriftReport property)</a>
