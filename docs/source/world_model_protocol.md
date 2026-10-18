@@ -11,17 +11,17 @@ with any family.
 import torch
 from simulusion.world_model import as_world_model, load_world_model
 
-model = as_world_model(agent)           # a model you trained in this process
+model = as_world_model(agent)  # a model you trained in this process
 # or: model = load_world_model("runs/dreamer/ckpts/61000_ckpt.pt", "dreamer")
 
-state = model.encode(frames, actions)   # real context -> model state
-out = model.step(state, action)         # one imagined step
-out.reward, out.terminated              # from the model's own heads
-image = model.decode(out.state)         # (B, C, H, W) in [0, 1]
+state = model.encode(frames, actions)  # real context -> model state
+out = model.step(state, action)  # one imagined step
+out.reward, out.terminated  # from the model's own heads
+image = model.decode(out.state)  # (B, C, H, W) in [0, 1]
 
 torch.manual_seed(0)
-traj = model.rollout(state, planned_actions)   # many steps
-traj.frames, traj.rewards, traj.terminated     # (B, H, ...)
+traj = model.rollout(state, planned_actions)  # many steps
+traj.frames, traj.rewards, traj.terminated  # (B, H, ...)
 ```
 
 ## The methods
@@ -79,10 +79,10 @@ family in `world_model.json`. It also reads each family's own training
 checkpoints when you name the family:
 
 ```python
-load_world_model("runs/dreamer/ckpts/61000_ckpt.pt", "dreamer")   # V1 or V2
-load_world_model("runs/planet/rssm.pth", "planet")                # bare RSSM weights
+load_world_model("runs/dreamer/ckpts/61000_ckpt.pt", "dreamer")  # V1 or V2
+load_world_model("runs/planet/rssm.pth", "planet")  # bare RSSM weights
 load_world_model("runs/iris/iris.pt", "iris")
-load_world_model("runs/diamond/checkpoint_10.pt", "diamond")      # no emulator needed
+load_world_model("runs/diamond/checkpoint_10.pt", "diamond")  # no emulator needed
 load_world_model("runs/genie/genie_sonic_final.pt", "genie")
 ```
 
