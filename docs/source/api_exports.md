@@ -213,6 +213,18 @@ See {doc}`deployment_guide`.
 | `save_bundle(dir, module, ...)` / `load_bundle(dir)` | `simulusion.inference` | Deployment bundles: weights, config, artifacts, manifest. |
 | `STKVCache` | `simulusion.blocks.st_transformer` | Temporal KV cache for incremental Genie / ST-transformer generation. |
 
+## World model protocol
+
+See {doc}`world_model_protocol`.
+
+| Name | Source | Description |
+|---|---|---|
+| `as_world_model(model)` | `simulusion.world_model` | Wrap a trained Dreamer, PlaNet, IRIS, DIAMOND, Genie or (ConvVAE, MDN-RNN) model in the common protocol. |
+| `load_world_model(path, family=None)` | `simulusion.world_model` | Load a saved world model, or a family's own training checkpoint. |
+| `WorldModel` | `simulusion.world_model` | The protocol: `encode` / `step` / `rollout` / `decode` / `save`. |
+| `WorldModelSpec` | `simulusion.world_model` | Observation shape, action space, context length and which heads a model has. |
+| `list_world_model_families()` | `simulusion.world_model` | The family names `load_world_model` accepts. |
+
 ## Reward and value models
 
 | Name | Source | Description |

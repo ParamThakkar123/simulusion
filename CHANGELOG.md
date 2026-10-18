@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **One `WorldModel` protocol for every family** (`simulusion.world_model`):
+  `encode` / `step` / `rollout` / `decode` / `save`, with the same frame,
+  action and state conventions everywhere. `as_world_model(model)` wraps a
+  trained Dreamer (V1/V2), PlaNet, IRIS, DIAMOND, Genie or (ConvVAE, MDN-RNN)
+  model; `load_world_model(path, family)` reads each family's own training
+  checkpoints, and any world model saves to one directory format.
+  `WorldModelSpec` says what a model reads and predicts (action space, context
+  length, reward and termination heads). Steps go through each family's own
+  code: IRIS matches `imagine_rollout`, Dreamer its stepper, PlaNet its
+  planner. A DIAMOND world model loads without the Atari emulator or replay
+  buffer. JEPA and DiT have no adapter, since neither is action-conditioned.
+  See the new "One interface for every world model" guide.
 - A demo per model in `demos/` (Dreamer, DreamerV2, PlaNet, ModularRSSM,
   DIAMOND, IRIS, Genie, DiT, I-JEPA). Each trains from scratch on a 4 GB laptop
   GPU in one to two hours and records video of what it learned;

@@ -60,6 +60,37 @@ Use ``simulusion`` for common workflows::
    :undoc-members:
    :show-inheritance:
 
+.. automodule:: simulusion.world_model
+   :members: as_world_model, load_world_model, list_world_model_families, world_model_class
+
+.. automodule:: simulusion.world_model.protocol
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.dreamer
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.planet
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.iris
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.diamond
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.genie
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.vae_mdrnn
+   :members:
+   :show-inheritance:
+
 .. automodule:: simulusion.models
    :no-index:
 

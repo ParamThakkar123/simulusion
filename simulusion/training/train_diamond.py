@@ -33,15 +33,7 @@ from simulusion.datasets.diamond_dataset import (
     ReplayBuffer,
     SequenceDataset,
 )
-from simulusion.models.diffusion.diamond_diffusion import (
-    DiffusionUNet,
-    EDMPreconditioner,
-    EulerSampler,
-)
-from simulusion.models.diffusion.reward_termination import (
-    RewardTerminationModel,
-    RewardTerminationLoss,
-)
+from simulusion.models.diffusion.reward_termination import RewardTerminationLoss
 from simulusion.models.diffusion.actor_critic import (
     ActorCriticNetwork,
     RLLoss,
@@ -214,47 +206,14 @@ class DiamondAgent:
 
     def _build_models(self) -> None:
         """Initialize all DIAMOND models."""
-        self.diffusion_model = DiffusionUNet(
-            obs_channels=3,
-            num_conditioning_frames=self.config.num_conditioning_frames,
-            # config.diffusion_channels is a list of absolute channel sizes per level
-            # DiffusionUNet expects base_channels and channel_multipliers (multipliers
-            # relative to base). Convert absolute sizes to multipliers here.
-            base_channels=self.config.diffusion_channels[0],
-            channel_multipliers=tuple(
-                [
-                    int(c // self.config.diffusion_channels[0])
-                    for c in self.config.diffusion_channels
-                ]
-            ),
-            num_res_blocks=self.config.diffusion_res_blocks,
-            cond_dim=self.config.diffusion_cond_dim,
-            action_dim=self.action_dim,
-        ).to(self.device)
+        from simulusion.world_model.diamond import build_diamond_networks
 
-        self.edm_precond = EDMPreconditioner(
-            sigma_data=self.config.sigma_data,
-            p_mean=self.config.p_mean,
-            p_std=self.config.p_std,
+        # The world model's networks are built in one place, shared with
+        # DiamondWorldModel, so a checkpoint loads into either.
+        self.diffusion_model, self.sampler, self.reward_model = build_diamond_networks(
+            self.config, self.action_dim, self.device
         )
-
-        self.sampler = EulerSampler(
-            sigma_min=self.config.sigma_min,
-            sigma_max=self.config.sigma_max,
-            rho=self.config.rho,
-            num_steps=self.config.num_sampling_steps,
-            edm_precond=self.edm_precond,
-        )
-
-        self.reward_model = RewardTerminationModel(
-            obs_channels=3,
-            action_dim=self.action_dim,
-            channels=tuple(self.config.reward_channels),
-            lstm_dim=self.config.reward_lstm_dim,
-            cond_dim=self.config.reward_cond_dim,
-            res_blocks=self.config.reward_res_blocks,
-            frame_size=self.config.obs_size,
-        ).to(self.device)
+        self.edm_precond = self.sampler.edm_precond
 
         self.reward_loss_fn = RewardTerminationLoss()
 

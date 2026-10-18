@@ -84,6 +84,7 @@ model under *Algorithms* in the sidebar.
    public_api
    training_guide
    inference_guide
+   world_model_protocol
    deployment_guide
    evaluation_guide
    memory_guide
