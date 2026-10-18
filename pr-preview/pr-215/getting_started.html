@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Getting Started" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/getting_started.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="This page takes you from installation to a trained world model you can watch, then shows where to go for each model family. 1. Install: The package installs as simulusion and imports as simulusion...." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/_images/social_previews/summary_getting_started_c6ef9e89.png" />
+<meta property="og:image:alt" content="This page takes you from installation to a trained world model you can watch, then shows where to go for each model family. 1. Install: The package installs as simulusion and imports as simulusion...." />
+<meta name="description" content="This page takes you from installation to a trained world model you can watch, then shows where to go for each model family. 1. Install: The package installs as simulusion and imports as simulusion...." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Getting Started &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting_started';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/getting_started.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Simulusion: World Models in PyTorch" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Getting Started</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<p>This page takes you from installation to a trained world model you can watch,
+then shows where to go for each model family.</p>
+<section id="install">
+<h2>1. Install<a class="headerlink" href="#install" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"simulusion[gym]"</span>
+</pre></div>
+</div>
+<p>The package installs as <code class="docutils literal notranslate"><span class="pre">simulusion</span></code> and imports as <code class="docutils literal notranslate"><span class="pre">simulusion</span></code>. The <code class="docutils literal notranslate"><span class="pre">gym</span></code>
+extra brings Gymnasium with its classic-control and Atari environments. Other
+extras add DeepMind Control (<code class="docutils literal notranslate"><span class="pre">dmc</span></code>), logging (<code class="docutils literal notranslate"><span class="pre">ml</span></code>), MuJoCo, Brax and more; see
+<a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>.</p>
+<p>Simulusion does not pin a PyTorch build. For GPU training, install the CUDA wheel
+that matches your driver from <a class="reference external" href="https://pytorch.org/get-started/locally/">pytorch.org</a>
+first, and check it with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import torch; print(torch.__version__, torch.cuda.is_available())"</span>
+</pre></div>
+</div>
+</section>
+<section id="train-your-first-world-model">
+<h2>2. Train your first world model<a class="headerlink" href="#train-your-first-world-model" title="Link to this heading">#</a></h2>
+<p>Dreamer learns a model of the environment from raw pixels and trains its policy
+entirely inside that model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
+    <span class="s2">"dreamer"</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span>
+    <span class="n">env_backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">,</span>
+    <span class="n">total_steps</span><span class="o">=</span><span class="mi">20_000</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Training prints a line per iteration and writes everything to one run folder,
+<code class="docutils literal notranslate"><span class="pre">runs/Pendulum-v1_Dreamerv1_&lt;name&gt;_&lt;timestamp&gt;/</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config.yaml</span></code></p></td>
+<td><p>the full configuration of the run</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics.jsonl</span></code></p></td>
+<td><p>one JSON line per iteration: returns, losses, throughput</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ckpts/&lt;step&gt;_ckpt.pt</span></code></p></td>
+<td><p>checkpoints, the final one always written</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">create_model</span></code> accepts any field of the model’s config as a keyword argument.
+To see them all, build the config first:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="watch-what-it-learned">
+<h2>3. Watch what it learned<a class="headerlink" href="#watch-what-it-learned" title="Link to this heading">#</a></h2>
+<p>The <a class="reference external" href="https://github.com/ParamThakkar123/simulusion/tree/main/demos">demo scripts</a>
+turn a run into video. For Dreamer, <code class="docutils literal notranslate"><span class="pre">record</span></code> shows the real environment beside
+the world model’s prediction of it, plus the policy acting:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>demos/dreamer_demo.py<span class="w"> </span>record<span class="w"> </span>--run<span class="w"> </span>runs/Pendulum-v1_Dreamerv1_&lt;name&gt;_&lt;timestamp&gt;
+</pre></div>
+</div>
+<figure class="demo-media">
+  <video src="_static/gallery/dreamer_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>What <code>record</code> produces, here for a Dreamer trained on cartpole swing-up. Left: the real environment. Right: the world model, observing 5 frames and then imagining the rest.</figcaption>
+</figure><p>For a live session instead of a recording, <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">play</span> <span class="pre">--model</span> <span class="pre">dreamer</span> <span class="pre">-c</span> <span class="pre">&lt;checkpoint&gt;</span></code> opens a window where you can take over the controls (needs a
+desktop session).</p>
+</section>
+<section id="choose-a-model">
+<h2>4. Choose a model<a class="headerlink" href="#choose-a-model" title="Link to this heading">#</a></h2>
+<p>Every model is built with <code class="docutils literal notranslate"><span class="pre">simulusion.create_model(name,</span> <span class="pre">...)</span></code>. The names are those
+returned by <code class="docutils literal notranslate"><span class="pre">simulusion.list_models()</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">create_model</span></code> name</p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Demo</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">dreamer-v1</span></code>, <code class="docutils literal notranslate"><span class="pre">dreamer-v2</span></code></p></td>
+<td><p>Learns latent dynamics from pixels; trains an actor-critic in imagination</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-dreamer"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="planet.html"><span class="doc">PlaNet</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">planet</span></code></p></td>
+<td><p>Plans each action with CEM inside a learned latent model</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-planet"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="diamond.html"><span class="doc">DIAMOND</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">diamond</span></code></p></td>
+<td><p>Diffusion world model of Atari; agent trained on generated frames</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-diamond"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="iris.html"><span class="doc">IRIS</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iris</span></code></p></td>
+<td><p>Discrete-token autoencoder + Transformer world model</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-iris"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="genie.html"><span class="doc">Genie</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">genie</span></code>, <code class="docutils literal notranslate"><span class="pre">genie-small</span></code>, <code class="docutils literal notranslate"><span class="pre">genie-large</span></code></p></td>
+<td><p>Playable world model learned from unlabelled video</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-genie"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="dit.html"><span class="doc">DiT</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dit</span></code></p></td>
+<td><p>Diffusion Transformer for image generation</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-dit"><span class="std std-ref">video</span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="jepa.html"><span class="doc">I-JEPA</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">jepa</span></code></p></td>
+<td><p>Self-supervised image representations, predicted in latent space</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-i-jepa"><span class="std std-ref">images</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="modular_rssm_guide.html"><span class="doc">ModularRSSM</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">modular-rssm</span></code></p></td>
+<td><p>A world model assembled from swappable encoder, backbone and decoder</p></td>
+<td><p><a class="reference internal" href="gallery.html#gallery-modular-rssm"><span class="std std-ref">video</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>To run any of them on a different environment, pass <code class="docutils literal notranslate"><span class="pre">env=</span></code> and
+<code class="docutils literal notranslate"><span class="pre">env_backend=</span></code>. The same backend names work with <code class="docutils literal notranslate"><span class="pre">simulusion.make_env()</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Backend</p></th>
+<th class="head"><p>Environments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gym</span></code></p></td>
+<td><p>Gymnasium IDs (classic control, Box2D, Atari), or an existing env instance</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dmc</span></code></p></td>
+<td><p>DeepMind Control Suite tasks, written <code class="docutils literal notranslate"><span class="pre">domain-task</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">walker-walk</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mujoco</span></code></p></td>
+<td><p>Gymnasium MuJoCo tasks or native MJCF/MJB models</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robotics</span></code></p></td>
+<td><p>IDs registered by Gymnasium Robotics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">brax</span></code></p></td>
+<td><p>JAX/Brax continuous-control environments</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">procgen</span></code></p></td>
+<td><p>Procgen games such as <code class="docutils literal notranslate"><span class="pre">coinrun</span></code> (manual install)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmlab</span></code></p></td>
+<td><p>DeepMind Lab 3D navigation tasks</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unity_mlagents</span></code></p></td>
+<td><p>Unity ML-Agents executables</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="log-to-weights-biases-or-tensorboard">
+<h2>5. Log to Weights &amp; Biases or TensorBoard<a class="headerlink" href="#log-to-weights-biases-or-tensorboard" title="Link to this heading">#</a></h2>
+<p>Both are off by default. Install the <code class="docutils literal notranslate"><span class="pre">ml</span></code> extra, then set them on the config:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"Pendulum-v1"</span><span class="p">,</span> <span class="n">env_backend</span><span class="o">=</span><span class="s2">"gym"</span><span class="p">)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">enable_tensorboard</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># then: tensorboard --logdir runs</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">enable_wandb</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># needs WANDB_API_KEY in the environment</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">wandb_project</span> <span class="o">=</span> <span class="s2">"simulusion"</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="gallery.html"><span class="doc">Gallery</span></a> shows every model trained on a laptop GPU, with the
+commands to reproduce each clip.</p></li>
+<li><p><a class="reference internal" href="training_guide.html"><span class="doc">Training Guide</span></a> covers budgets, checkpointing, resuming and early
+stopping.</p></li>
+<li><p><a class="reference internal" href="inference_guide.html"><span class="doc">Inference Guide</span></a> and <a class="reference internal" href="deployment_guide.html"><span class="doc">Efficient Inference and Deployment</span></a> cover fast inference and
+exporting to ONNX, TorchScript and TensorRT.</p></li>
+<li><p><a class="reference internal" href="world_models_guide.html"><span class="doc">World Models Study Guide</span></a> explains the ideas the models share.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Simulusion: World Models in PyTorch</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="installation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install">1. Install</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-your-first-world-model">2. Train your first world model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#watch-what-it-learned">3. Watch what it learned</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choose-a-model">4. Choose a model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#log-to-weights-biases-or-tensorboard">5. Log to Weights &amp; Biases or TensorBoard</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/getting_started.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

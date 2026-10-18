@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Tutorial: Plug Simulusion world models into RL libraries" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/tutorials/world_model_env_rl_libraries.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="WorldModelEnv is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do not need to know whether a transition came from MuJoCo, Atari, Brax, or a learned d..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/_images/social_previews/summary_tutorials_world_model_env_rl_libraries_4937d873.png" />
+<meta property="og:image:alt" content="WorldModelEnv is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do not need to know whether a transition came from MuJoCo, Atari, Brax, or a learned d..." />
+<meta name="description" content="WorldModelEnv is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do not need to know whether a transition came from MuJoCo, Atari, Brax, or a learned d..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Tutorial: Plug Simulusion world models into RL libraries &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorials/world_model_env_rl_libraries';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/tutorials/world_model_env_rl_libraries.html" />
+    <link rel="icon" href="../_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Modular RSSM" href="../modular_rssm_guide.html" />
+    <link rel="prev" title="World Models Study Guide" href="../world_models_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: Plug Simulusion world models into RL libraries</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tutorial-plug-simulusion-world-models-into-rl-libraries">
+<h1>Tutorial: Plug Simulusion world models into RL libraries<a class="headerlink" href="#tutorial-plug-simulusion-world-models-into-rl-libraries" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code> is a Gymnasium-compatible facade around a trained world model. The key idea is that RL libraries do <strong>not</strong> need to know whether a transition came from MuJoCo, Atari, Brax, or a learned dynamics model. They only need the Gymnasium contract:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Because <code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code> implements that contract, you can hand it to Stable-Baselines3, wrap it with TorchRL’s <code class="docutils literal notranslate"><span class="pre">GymWrapper</span></code>, or use it inside a CleanRL-style training script. The world model itself does not need to implement a single Simulusion-specific interface: provide small adapter callables whenever the model uses custom method names, latent-state objects, reward heads, or action encodings.</p>
+<p>A notebook version of this tutorial is also available (requires pandoc to build).</p>
+<section id="build-one-adapter-once">
+<h2>1. Build one adapter once<a class="headerlink" href="#build-one-adapter-once" title="Link to this heading">#</a></h2>
+<p>Start by writing the smallest glue layer between your trained model and the Gymnasium API. The example below uses placeholder model methods; replace them with your checkpoint loading, encoder/decoder, dynamics, reward, and terminal heads.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorldModelEnv</span>
+
+
+<span class="n">trained_model</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>  <span class="c1"># Load a Simulusion model, an exported module, or your own adapter object.</span>
+<span class="n">initial_latent</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Optional: pass None if reset_fn creates the initial state.</span>
+
+<span class="n">obs_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">action_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_world_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">latent</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample_initial_state</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">latent</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"state"</span><span class="p">:</span> <span class="n">latent</span><span class="p">,</span> <span class="s2">"observation"</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span> <span class="s2">"info"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"world_model"</span><span class="p">}}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">transition_world_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+    <span class="n">next_state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_next_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decode_observation</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
+    <span class="n">reward</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_reward</span><span class="p">(</span><span class="n">next_state</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+    <span class="n">done</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_terminal</span><span class="p">(</span><span class="n">next_state</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"state"</span><span class="p">:</span> <span class="n">next_state</span><span class="p">,</span>
+        <span class="s2">"observation"</span><span class="p">:</span> <span class="n">obs</span><span class="p">,</span>
+        <span class="s2">"reward"</span><span class="p">:</span> <span class="n">reward</span><span class="p">,</span>
+        <span class="s2">"terminated"</span><span class="p">:</span> <span class="n">done</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">WorldModelEnv</span><span class="p">(</span>
+    <span class="n">trained_model</span><span class="p">,</span>
+    <span class="n">observation_space</span><span class="o">=</span><span class="n">obs_space</span><span class="p">,</span>
+    <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
+    <span class="n">initial_state</span><span class="o">=</span><span class="n">initial_latent</span><span class="p">,</span>
+    <span class="n">reset_fn</span><span class="o">=</span><span class="n">reset_world_model</span><span class="p">,</span>
+    <span class="n">transition_fn</span><span class="o">=</span><span class="n">transition_world_model</span><span class="p">,</span>
+    <span class="n">max_episode_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="adapter-return-forms">
+<h3>Adapter return forms<a class="headerlink" href="#adapter-return-forms" title="Link to this heading">#</a></h3>
+<p>You can return dictionaries, Gymnasium tuples, or compact <code class="docutils literal notranslate"><span class="pre">(state,</span> <span class="pre">obs,</span> <span class="pre">reward)</span></code> tuples. Dictionary returns are recommended for production because they make state, observation, reward, termination, truncation, and diagnostic info explicit.</p>
+<p>If your library action format differs from your model action format, add <code class="docutils literal notranslate"><span class="pre">action_transform_fn</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">action_transform</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+    <span class="c1"># Example: convert a discrete library action into a learned one-hot action vector.</span>
+    <span class="n">one_hot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">num_actions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">one_hot</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">action</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">return</span> <span class="n">one_hot</span>
+
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">WorldModelEnv</span><span class="p">(</span>
+    <span class="n">trained_model</span><span class="p">,</span>
+    <span class="n">observation_space</span><span class="o">=</span><span class="n">obs_space</span><span class="p">,</span>
+    <span class="n">action_space</span><span class="o">=</span><span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="n">trained_model</span><span class="o">.</span><span class="n">num_actions</span><span class="p">),</span>
+    <span class="n">reset_fn</span><span class="o">=</span><span class="n">reset_world_model</span><span class="p">,</span>
+    <span class="n">transition_fn</span><span class="o">=</span><span class="n">transition_world_model</span><span class="p">,</span>
+    <span class="n">action_transform_fn</span><span class="o">=</span><span class="n">action_transform</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="stable-baselines3">
+<h2>2. Stable-Baselines3<a class="headerlink" href="#stable-baselines3" title="Link to this heading">#</a></h2>
+<p>Stable-Baselines3 custom environments must follow the Gymnasium interface. Its docs recommend running <code class="docutils literal notranslate"><span class="pre">check_env</span></code> for custom environments, and image observations should be <code class="docutils literal notranslate"><span class="pre">np.uint8</span></code> within a <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code> <code class="docutils literal notranslate"><span class="pre">Box</span></code> when using CNN policies.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3.common.env_checker</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_env</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3.common.monitor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Monitor</span>
+
+<span class="n">check_env</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">sb3_env</span> <span class="o">=</span> <span class="n">Monitor</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">"MlpPolicy"</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For dictionary observations, use <code class="docutils literal notranslate"><span class="pre">MultiInputPolicy</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">"MultiInputPolicy"</span><span class="p">,</span> <span class="n">sb3_env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For image observations, prefer channel-first <code class="docutils literal notranslate"><span class="pre">uint8</span></code> images and choose <code class="docutils literal notranslate"><span class="pre">CnnPolicy</span></code> or <code class="docutils literal notranslate"><span class="pre">MultiInputPolicy</span></code> depending on whether the observation is a plain image or a dictionary containing an image.</p>
+</section>
+<section id="torchrl">
+<h2>3. TorchRL<a class="headerlink" href="#torchrl" title="Link to this heading">#</a></h2>
+<p>TorchRL can wrap an already-created Gymnasium environment with <code class="docutils literal notranslate"><span class="pre">GymWrapper</span></code>. This is useful for <code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code> because your world model is usually a Python object or checkpoint rather than a registered Gymnasium id.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchrl.envs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymWrapper</span><span class="p">,</span> <span class="n">TransformedEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchrl.envs.transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">DoubleToFloat</span><span class="p">,</span> <span class="n">StepCounter</span>
+
+<span class="n">base_env</span> <span class="o">=</span> <span class="n">GymWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">torchrl_env</span> <span class="o">=</span> <span class="n">TransformedEnv</span><span class="p">(</span>
+    <span class="n">base_env</span><span class="p">,</span>
+    <span class="n">Compose</span><span class="p">(</span>
+        <span class="n">DoubleToFloat</span><span class="p">(),</span>
+        <span class="n">StepCounter</span><span class="p">(</span><span class="n">max_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">td</span> <span class="o">=</span> <span class="n">torchrl_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">td</span> <span class="o">=</span> <span class="n">torchrl_env</span><span class="o">.</span><span class="n">rand_step</span><span class="p">(</span><span class="n">td</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>From here you can attach TorchRL collectors, modules, and losses exactly as you would for a physical simulator. The wrapper boundary is still Gymnasium, so the model adapter remains reusable outside TorchRL.</p>
+</section>
+<section id="cleanrl">
+<h2>4. CleanRL<a class="headerlink" href="#cleanrl" title="Link to this heading">#</a></h2>
+<p>CleanRL examples are intentionally single-file. The common pattern is to define a <code class="docutils literal notranslate"><span class="pre">make_env</span></code> closure that returns a Gymnasium environment, then pass a list of closures to <code class="docutils literal notranslate"><span class="pre">gym.vector.SyncVectorEnv</span></code> or <code class="docutils literal notranslate"><span class="pre">AsyncVectorEnv</span></code>. <code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code> fits that pattern directly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">thunk</span><span class="p">():</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">WorldModelEnv</span><span class="p">(</span>
+            <span class="n">trained_model</span><span class="p">,</span>
+            <span class="n">observation_space</span><span class="o">=</span><span class="n">obs_space</span><span class="p">,</span>
+            <span class="n">action_space</span><span class="o">=</span><span class="n">action_space</span><span class="p">,</span>
+            <span class="n">reset_fn</span><span class="o">=</span><span class="n">reset_world_model</span><span class="p">,</span>
+            <span class="n">transition_fn</span><span class="o">=</span><span class="n">transition_world_model</span><span class="p">,</span>
+            <span class="n">max_episode_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">env</span>
+
+    <span class="k">return</span> <span class="n">thunk</span>
+
+
+<span class="n">envs</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">SyncVectorEnv</span><span class="p">([</span><span class="n">make_env</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
+<span class="n">obs</span><span class="p">,</span> <span class="n">infos</span> <span class="o">=</span> <span class="n">envs</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If every vector worker should own an independent model copy, load or clone the model inside <code class="docutils literal notranslate"><span class="pre">thunk()</span></code> instead of closing over a shared <code class="docutils literal notranslate"><span class="pre">trained_model</span></code> object.</p>
+</section>
+<section id="practical-checklist">
+<h2>5. Practical checklist<a class="headerlink" href="#practical-checklist" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Observation spaces:</strong> match the decoded observation exactly. Use <code class="docutils literal notranslate"><span class="pre">Box(...,</span> <span class="pre">dtype=np.float32)</span></code> for vectors and <code class="docutils literal notranslate"><span class="pre">Box(0,</span> <span class="pre">255,</span> <span class="pre">dtype=np.uint8)</span></code> for images.</p></li>
+<li><p><strong>Action spaces:</strong> expose the action format the RL library should optimize. Use <code class="docutils literal notranslate"><span class="pre">action_transform_fn</span></code> to convert library actions into model-specific actions.</p></li>
+<li><p><strong>Episode length:</strong> set <code class="docutils literal notranslate"><span class="pre">max_episode_steps</span></code> to the imagination horizon you trust. This marks time-limit endings as <code class="docutils literal notranslate"><span class="pre">truncated=True</span></code>.</p></li>
+<li><p><strong>State diagnostics:</strong> <code class="docutils literal notranslate"><span class="pre">info[&quot;model_state&quot;]</span></code> contains the latest latent/model state; keep it for debugging but do not feed it to policies unless you intentionally include it in observations.</p></li>
+<li><p><strong>Vectorization:</strong> create one environment instance per worker. Avoid sharing mutable model state across parallel workers unless the model is explicitly thread/process safe.</p></li>
+<li><p><strong>Reality checks:</strong> validate imagined policies in the real environment periodically. Learned rollouts can exploit model errors.</p></li>
+</ul>
+</section>
+<section id="external-references">
+<h2>External references<a class="headerlink" href="#external-references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Stable-Baselines3 custom environment guide: <a class="reference external" href="https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html">https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html</a></p></li>
+<li><p>Stable-Baselines3 PPO example: <a class="reference external" href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html</a></p></li>
+<li><p>TorchRL <code class="docutils literal notranslate"><span class="pre">GymWrapper</span></code> reference: <a class="reference external" href="https://docs.pytorch.org/rl/main/reference/generated/torchrl.envs.GymWrapper.html">https://docs.pytorch.org/rl/main/reference/generated/torchrl.envs.GymWrapper.html</a></p></li>
+<li><p>TorchRL environment tutorial: <a class="reference external" href="https://docs.pytorch.org/rl/main/tutorials/torchrl_envs.html">https://docs.pytorch.org/rl/main/tutorials/torchrl_envs.html</a></p></li>
+<li><p>CleanRL PPO docs: <a class="reference external" href="https://docs.cleanrl.dev/rl-algorithms/ppo/">https://docs.cleanrl.dev/rl-algorithms/ppo/</a></p></li>
+<li><p>Gymnasium basic usage: <a class="reference external" href="https://gymnasium.farama.org/content/basic_usage/">https://gymnasium.farama.org/content/basic_usage/</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../world_models_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">World Models Study Guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../modular_rssm_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Modular RSSM</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-one-adapter-once">1. Build one adapter once</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adapter-return-forms">Adapter return forms</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stable-baselines3">2. Stable-Baselines3</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl">3. TorchRL</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cleanrl">4. CleanRL</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-checklist">5. Practical checklist</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#external-references">External references</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/tutorials/world_model_env_rl_libraries.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

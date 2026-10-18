@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="JEPA: Joint Embedding Predictive Architecture" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/jepa.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="JEPA is a self-supervised learning method that learns visual representations by predicting representations in abstract latent space, without relying on generative modeling or hand-crafted data augm..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/_images/social_previews/summary_jepa_1985cb6d.png" />
+<meta property="og:image:alt" content="JEPA is a self-supervised learning method that learns visual representations by predicting representations in abstract latent space, without relying on generative modeling or hand-crafted data augm..." />
+<meta name="description" content="JEPA is a self-supervised learning method that learns visual representations by predicting representations in abstract latent space, without relying on generative modeling or hand-crafted data augm..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>JEPA: Joint Embedding Predictive Architecture &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "displayMath": [["$$", "$$"], ["\\[", "\\]"]], "packages": {"[+]": ["ams"]}, "processEnvironments": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area", "skipHtmlTags": ["script", "noscript", "style", "textarea", "pre", "code"]}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'jepa';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-215/jepa.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="IRIS: Transformers for Sample-Efficient World Models" href="iris.html" />
+    <link rel="prev" title="PlaNet" href="planet.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">JEPA: Joint Embedding Predictive Architecture</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="jepa-joint-embedding-predictive-architecture">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">JEPA: Joint Embedding Predictive Architecture</a><a class="headerlink" href="#jepa-joint-embedding-predictive-architecture" title="Link to this heading">#</a></h1>
+<p>JEPA is a self-supervised learning method that learns visual representations by predicting
+representations in abstract latent space, without relying on generative modeling or
+hand-crafted data augmentations.</p>
+<p>Based on paper: <a class="reference external" href="https://arxiv.org/abs/2301.08243">I-JEPA: Image-based Joint Embedding Predictive Architecture</a> (Bardes et al., 2023)</p>
+<section id="see-it-in-action">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">See it in action</a><a class="headerlink" href="#see-it-in-action" title="Link to this heading">#</a></h2>
+<figure class="demo-media">
+  <img src="_static/gallery/jepa_neighbours.png" alt="Test images (left) and their nearest training images in I-JEPA feature space. Neither the encoder nor the search used labels." loading="lazy">
+  <figcaption>Test images (left) and their nearest training images in I-JEPA feature space. Neither the encoder nor the search used labels.</figcaption>
+</figure><p>Trained from scratch in one to two hours on a 4 GB laptop GPU with
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">demos/jepa_demo.py</span> <span class="pre">train</span></code>, then recorded with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">demos/jepa_demo.py</span> <span class="pre">record</span></code>.
+More clips are in the <a class="reference internal" href="gallery.html#gallery-i-jepa"><span class="std std-ref">gallery</span></a>.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#jepa-joint-embedding-predictive-architecture" id="id1">JEPA: Joint Embedding Predictive Architecture</a></p>
+<ul>
+<li><p><a class="reference internal" href="#see-it-in-action" id="id2">See it in action</a></p></li>
+<li><p><a class="reference internal" href="#overview" id="id3">Overview</a></p></li>
+<li><p><a class="reference internal" href="#architecture" id="id4">Architecture</a></p>
+<ul>
+<li><p><a class="reference internal" href="#high-level-diagram" id="id5">High-level diagram</a></p></li>
+<li><p><a class="reference internal" href="#vision-transformer-vit" id="id6">Vision Transformer (ViT)</a></p></li>
+<li><p><a class="reference internal" href="#target-encoder-ema" id="id7">Target Encoder (EMA)</a></p></li>
+<li><p><a class="reference internal" href="#predictor" id="id8">Predictor</a></p></li>
+<li><p><a class="reference internal" href="#masking" id="id9">Masking</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#training" id="id10">Training</a></p>
+<ul>
+<li><p><a class="reference internal" href="#loss-function" id="id11">Loss Function</a></p></li>
+<li><p><a class="reference internal" href="#optimization" id="id12">Optimization</a></p></li>
+<li><p><a class="reference internal" href="#learning-rate-schedule" id="id13">Learning Rate Schedule</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#usage-in-simulusion" id="id14">Usage in Simulusion</a></p>
+<ul>
+<li><p><a class="reference internal" href="#quick-start" id="id15">Quick start</a></p></li>
+<li><p><a class="reference internal" href="#using-config-directly" id="id16">Using config directly</a></p></li>
+<li><p><a class="reference internal" href="#data-pipeline" id="id17">Data pipeline</a></p></li>
+<li><p><a class="reference internal" href="#cli" id="id18">CLI</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#inference-and-downstream-tasks" id="id19">Inference and Downstream Tasks</a></p>
+<ul>
+<li><p><a class="reference internal" href="#linear-probing-protocol" id="id20">Linear probing protocol</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#i-jepa-vs-v-jepa" id="id21">I-JEPA vs V-JEPA</a></p></li>
+<li><p><a class="reference internal" href="#common-pitfalls" id="id22">Common Pitfalls</a></p>
+<ul>
+<li><p><a class="reference internal" href="#predictor-collapse" id="id23">Predictor collapse</a></p></li>
+<li><p><a class="reference internal" href="#representation-collapse" id="id24">Representation collapse</a></p></li>
+<li><p><a class="reference internal" href="#memory-usage" id="id25">Memory usage</a></p></li>
+<li><p><a class="reference internal" href="#slow-convergence" id="id26">Slow convergence</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#comparison-to-other-methods" id="id27">Comparison to Other Methods</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id28">See Also</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id29">References</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+</section>
+<section id="overview">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>I-JEPA learns visual representations <strong>without</strong>:</p>
+<ul class="simple">
+<li><p>Hand-crafted data augmentations (color jitter, grayscale, etc.)</p></li>
+<li><p>Negative examples (contrastive learning)</p></li>
+<li><p>Pixel-level reconstruction (autoencoders, MAE)</p></li>
+</ul>
+<p>Instead, it predicts the <strong>latent representation</strong> of one image region from
+another region using a Vision Transformer (ViT) backbone. The predictor operates
+in embedding space, not pixel space, which forces the model to learn
+semantically meaningful features.</p>
+<pre  class="mermaid">
+        graph TD
+    A[&quot;Input image x&quot;] --&gt; B[&quot;Context encoder f_θ&quot;]
+    A --&gt; C[&quot;Target encoder f_θ̄ (EMA)&quot;]
+    B --&gt; D[&quot;Context patches (masked)&quot;]
+    C --&gt; E[&quot;Target patches&quot;]
+    D --&gt; F[&quot;Predictor g_φ&quot;]
+    E --&gt; G[&quot;Target representation sg(y_target)&quot;]
+    F --&gt; H[&quot;Predicted representation ŷ&quot;]
+    H --&gt; I[&quot;L2 loss&quot;]
+    G --&gt; I
+    I --&gt; J[&quot;sg: stop-gradient through target encoder&quot;]
+    </pre></section>
+<section id="architecture">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Architecture</a><a class="headerlink" href="#architecture" title="Link to this heading">#</a></h2>
+<section id="high-level-diagram">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">High-level diagram</a><a class="headerlink" href="#high-level-diagram" title="Link to this heading">#</a></h3>
+<div class="architecture-diagram" aria-label="JEPA architecture diagram">
+  <section class="diagram-section">
+    <h3>JEPA Architecture</h3>
+    <div class="diagram-row">
+      <span class="diagram-node warning">Current frame encoder</span>
+      <span class="diagram-arrow">→</span>
+      <span class="diagram-node">Predictor token</span>
+      <span class="diagram-arrow">→</span>
+      <span class="diagram-node">Predicted representation</span>
+      <span class="diagram-arrow">→</span>
+      <span class="diagram-node danger">MSE loss</span>
+    </div>
+    <div class="diagram-row">
+      <span class="diagram-node warning">Future frame frozen encoder</span>
+      <span class="diagram-arrow">→</span>
+      <span class="diagram-node">Target representation</span>
+      <span class="diagram-arrow">→</span>
+      <span class="diagram-node danger">MSE loss</span>
+    </div>
+  </section>
+</div>
+</section>
+<section id="vision-transformer-vit">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Vision Transformer (ViT)</a><a class="headerlink" href="#vision-transformer-vit" title="Link to this heading">#</a></h3>
+<p>The backbone encoder in <code class="docutils literal notranslate"><span class="pre">simulusion.models.vit</span></code> is a Vision Transformer
+following the standard ViT architecture with JEPA-specific modifications.</p>
+<p><strong>Patch embedding:</strong></p>
+<p>The input image <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">∈</span> <span class="pre">ℝ^{3×H×W}</span></code> is split into patches of size <code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">×</span> <span class="pre">P</span></code>,
+producing <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">(H/P)</span> <span class="pre">×</span> <span class="pre">(W/P)</span></code> patches. Each patch is linearly projected to
+<code class="docutils literal notranslate"><span class="pre">embed_dim</span></code>:</p>
+<div class="math notranslate nohighlight">
+\[\text{patches} \in \mathbb{R}^{N \times (3 \cdot P^2)} \to
+\text{tokens} \in \mathbb{R}^{N \times D}\]</div>
+<p><strong>Transformer blocks:</strong></p>
+<p>Each block consists of:</p>
+<ol class="arabic simple">
+<li><p><strong>LayerNorm</strong> → Multi-Head Self-Attention → residual</p></li>
+<li><p><strong>LayerNorm</strong> → MLP (GELU, 4× hidden) → residual</p></li>
+<li><p><strong>DropPath</strong> (stochastic depth) regularization during training</p></li>
+</ol>
+<p><strong>Key architectural details:</strong></p>
+<ul class="simple">
+<li><p>No class token — all patch tokens are used</p></li>
+<li><p>Pre-normalization (LayerNorm before attention and MLP)</p></li>
+<li><p>Fixed sin-cos positional embeddings (not learned)</p></li>
+</ul>
+</section>
+<section id="target-encoder-ema">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Target Encoder (EMA)</a><a class="headerlink" href="#target-encoder-ema" title="Link to this heading">#</a></h3>
+<p>The target encoder <code class="docutils literal notranslate"><span class="pre">f_{\bar{θ}}</span></code> has the same architecture as the context
+encoder <code class="docutils literal notranslate"><span class="pre">f_θ</span></code> but its weights are an <strong>exponential moving average</strong> (EMA) of
+the context encoder’s weights:</p>
+<div class="math notranslate nohighlight">
+\[\bar{θ} \leftarrow m \cdot \bar{θ} + (1 - m) \cdot θ\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">m</span></code> is the momentum coefficient (default: cosine schedule from 0.996 to
+1.0). The target encoder receives <code class="docutils literal notranslate"><span class="pre">stop-gradient</span></code>.</p>
+</section>
+<section id="predictor">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Predictor</a><a class="headerlink" href="#predictor" title="Link to this heading">#</a></h3>
+<p>The predictor <code class="docutils literal notranslate"><span class="pre">g_φ</span></code> is a narrow transformer that predicts target patch
+representations from context patch representations. Its width is fixed at 384
+channels and its head count is inherited from the backbone; its depth follows
+the backbone (Appendix A): 6 layers for ViT-B, 12 for ViT-L/H, 16 for ViT-G.
+Leave <code class="docutils literal notranslate"><span class="pre">pred_depth=None</span></code> to get the paper’s depth for the configured backbone.</p>
+<p>Key design:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Detail</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Lighter than the encoder</strong></p></td>
+<td><p>Fewer layers, smaller hidden dim</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Positional embeddings for all patches</strong></p></td>
+<td><p>The predictor knows which target patches to predict</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Mask tokens for target positions</strong></p></td>
+<td><p>Learnable embeddings substituted for masked patches</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="masking">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Masking</a><a class="headerlink" href="#masking" title="Link to this heading">#</a></h3>
+<p>I-JEPA uses <strong>multi-block masking</strong>: random rectangular blocks are masked
+rather than individual patches.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">.</span><span class="n">num_enc_masks</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># 1 context block</span>
+<span class="n">config</span><span class="o">.</span><span class="n">enc_mask_scale</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Context covers 85-100% of the image</span>
+<span class="n">config</span><span class="o">.</span><span class="n">num_pred_masks</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># 4 target blocks</span>
+<span class="n">config</span><span class="o">.</span><span class="n">pred_mask_scale</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># Each target is 15-20%</span>
+<span class="n">config</span><span class="o">.</span><span class="n">aspect_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>  <span class="c1"># Target block aspect ratio range</span>
+</pre></div>
+</div>
+<p>The context block is sampled at unit aspect ratio, and every region overlapping
+a target block is then removed from it, leaving ~25% of the patches visible on
+average. The predictor sees those context patches and must predict the
+representation of each target block’s patches.</p>
+<p>These are not free parameters – the paper’s ablations turn on them:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Paper value</p></th>
+<th class="head"><p>Low-shot top-1 if changed</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Target blocks (Table 10)</p></td>
+<td><p>4</p></td>
+<td><p>9.0 with 1 block, vs 54.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>Target scale (Table 8)</p></td>
+<td><p>(0.15, 0.2)</p></td>
+<td><p>33.6 at (0.2, 0.3), vs 54.2</p></td>
+</tr>
+<tr class="row-even"><td><p>Context scale (Table 9)</p></td>
+<td><p>(0.85, 1.0)</p></td>
+<td><p>31.2 at (0.40, 1.0), vs 54.2</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="training">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Training</a><a class="headerlink" href="#training" title="Link to this heading">#</a></h2>
+<section id="loss-function">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Loss Function</a><a class="headerlink" href="#loss-function" title="Link to this heading">#</a></h3>
+<p>The I-JEPA loss is the L2 distance between predicted and target representations,
+averaged over masked patches (<code class="docutils literal notranslate"><span class="pre">loss_type=&quot;l2&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;l2_sum&quot;</span></code> keeps the paper’s
+per-block sum, and <code class="docutils literal notranslate"><span class="pre">&quot;smooth_l1&quot;</span></code> matches the reference implementation):</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{L}_{\text{JEPA}} =
+\frac{1}{|\mathcal{M}|} \sum_{i \in \mathcal{M}}
+\left\| g_φ(f_θ(x)_i + \text{mask\_token}, \text{pos}_i) -
+\text{sg}(f_{\bar{θ}}(x)_i) \right\|_2^2\]</div>
+</section>
+<section id="optimization">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Optimization</a><a class="headerlink" href="#optimization" title="Link to this heading">#</a></h3>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\text{Context encoder: } &amp; θ \leftarrow \text{optimizer}(θ, \nabla_θ \mathcal{L}) \\
+\text{Predictor: } &amp; φ \leftarrow \text{optimizer}(φ, \nabla_φ \mathcal{L}) \\
+\text{Target encoder: } &amp; \bar{θ} \leftarrow m \cdot \bar{θ} + (1 - m) \cdot θ
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="learning-rate-schedule">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Learning Rate Schedule</a><a class="headerlink" href="#learning-rate-schedule" title="Link to this heading">#</a></h3>
+<p>Appendix A: linear warmup from <code class="docutils literal notranslate"><span class="pre">start_lr</span></code> (1e-4) to <code class="docutils literal notranslate"><span class="pre">lr</span></code> (1e-3) over the first
+15 epochs, then cosine decay to <code class="docutils literal notranslate"><span class="pre">final_lr</span></code> (1e-6). Weight decay is raised
+linearly from 0.04 to 0.4 across pretraining, and the EMA momentum from 0.996
+to 1.0.</p>
+<p>Those learning rates are quoted for the paper’s batch size of 2048. Simulusion
+scales them linearly by <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">*</span> <span class="pre">world_size</span> <span class="pre">/</span> <span class="pre">lr_reference_batch_size</span></code>, so
+smaller batches get a proportionally smaller learning rate automatically. Set
+<code class="docutils literal notranslate"><span class="pre">lr_reference_batch_size</span> <span class="pre">=</span> <span class="pre">None</span></code> to use <code class="docutils literal notranslate"><span class="pre">lr</span></code> verbatim.</p>
+</section>
+</section>
+<section id="usage-in-simulusion">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Usage in Simulusion</a><a class="headerlink" href="#usage-in-simulusion" title="Link to this heading">#</a></h2>
+<section id="quick-start">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
+    <span class="s2">"jepa"</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">"imagenet"</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>  <span class="c1"># the paper uses 2048 across 16 GPUs; the LR follows it</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="using-config-directly">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Using config directly</a><a class="headerlink" href="#using-config-directly" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">JEPAAgent</span><span class="p">,</span> <span class="n">JEPAConfig</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">JEPAConfig</span><span class="p">()</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s2">"imagenet1k"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="s2">"/data/imagenet"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">image_folder</span> <span class="o">=</span> <span class="s2">"train"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">JEPAAgent</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="data-pipeline">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Data pipeline</a><a class="headerlink" href="#data-pipeline" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s2">"imagenet1k"</span>  <span class="c1"># ImageNet-1K (requires download)</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="s2">"/data/imagenet"</span>
+
+<span class="c1"># Or use a generic image folder:</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s2">"imagefolder"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">root_path</span> <span class="o">=</span> <span class="s2">"./my_dataset"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">image_folder</span> <span class="o">=</span> <span class="s2">"train"</span>
+
+<span class="c1"># Or CIFAR-10 for testing:</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="s2">"cifar10"</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">download</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>I-JEPA uses <strong>no</strong> hand-crafted view augmentations – that is the paper’s
+central claim. <code class="docutils literal notranslate"><span class="pre">use_horizontal_flip</span></code>, <code class="docutils literal notranslate"><span class="pre">use_color_distortion</span></code> and
+<code class="docutils literal notranslate"><span class="pre">use_gaussian_blur</span></code> all default to <code class="docutils literal notranslate"><span class="pre">False</span></code>, leaving only the random resized crop
+of the reference implementation. Turning them on departs from the paper.</p>
+</div>
+</section>
+<section id="cli">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">CLI</a><a class="headerlink" href="#cli" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="w"> </span>--dataset<span class="w"> </span>imagenet1k<span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="configs_reference.html"><span class="doc">Configs Reference</span></a> for the full JEPAConfig field reference with defaults.</p>
+</section>
+</section>
+<section id="inference-and-downstream-tasks">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Inference and Downstream Tasks</a><a class="headerlink" href="#inference-and-downstream-tasks" title="Link to this heading">#</a></h2>
+<p>I-JEPA is evaluated with a frozen encoder. Load the EMA target-encoder – the
+one the paper evaluates – and average-pool its patch tokens:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.eval_jepa</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_jepa_encoder</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">load_jepa_encoder</span><span class="p">(</span><span class="s2">"results/jepa/jepa_run-latest.pth.tar"</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+    <span class="n">representations</span> <span class="o">=</span> <span class="n">encoder</span><span class="p">(</span><span class="n">images</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># [batch, embed_dim]</span>
+</pre></div>
+</div>
+<section id="linear-probing-protocol">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Linear probing protocol</a><a class="headerlink" href="#linear-probing-protocol" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">simulusion.training.eval_jepa</span></code> implements Appendix A.2: the encoder is
+frozen, features are the average-pooled patch tokens (I-JEPA has no <code class="docutils literal notranslate"><span class="pre">[cls]</span></code>
+token), and a linear head is trained on them with LARS for 50 epochs at batch
+16384, decaying the learning rate 10x every 15 epochs. It sweeps reference
+learning rates <code class="docutils literal notranslate"><span class="pre">[0.01,</span> <span class="pre">0.05,</span> <span class="pre">0.001]</span></code>, weight decays <code class="docutils literal notranslate"><span class="pre">[0.0005,</span> <span class="pre">0.0]</span></code>, the
+average-pooled last layer against the concatenated last four layers, and a head
+with and without a preceding batch-norm, reporting the best.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>--model<span class="w"> </span>jepa<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--root-path<span class="w"> </span>/data/imagenet<span class="w"> </span>--model-name<span class="w"> </span>vit_base<span class="w"> </span>--output<span class="w"> </span>probe.json
+
+<span class="c1"># equivalent, without the CLI wrapper</span>
+python<span class="w"> </span>-m<span class="w"> </span>simulusion.training.eval_jepa<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--checkpoint<span class="w"> </span>results/jepa/jepa_run-latest.pth.tar<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--root-path<span class="w"> </span>/data/imagenet<span class="w"> </span>--model-name<span class="w"> </span>vit_base
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.eval_jepa</span><span class="w"> </span><span class="kn">import</span> <span class="n">jepa_linear_probe</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">jepa_linear_probe</span><span class="p">(</span>
+    <span class="n">checkpoint</span><span class="o">=</span><span class="s2">"results/jepa/jepa_run-latest.pth.tar"</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"/data/imagenet"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">"top1"</span><span class="p">],</span> <span class="n">results</span><span class="p">[</span><span class="s2">"sweep"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Paper reference points on ImageNet-1K linear evaluation (Table 1):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Arch.</p></th>
+<th class="head"><p>Epochs</p></th>
+<th class="head"><p>Top-1</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>I-JEPA</p></td>
+<td><p>ViT-B/16</p></td>
+<td><p>600</p></td>
+<td><p>72.9%</p></td>
+</tr>
+<tr class="row-odd"><td><p>I-JEPA</p></td>
+<td><p>ViT-L/16</p></td>
+<td><p>600</p></td>
+<td><p>77.5%</p></td>
+</tr>
+<tr class="row-even"><td><p>I-JEPA</p></td>
+<td><p>ViT-H/14</p></td>
+<td><p>300</p></td>
+<td><p>79.3%</p></td>
+</tr>
+<tr class="row-odd"><td><p>MAE</p></td>
+<td><p>ViT-B/16</p></td>
+<td><p>1600</p></td>
+<td><p>68.0%</p></td>
+</tr>
+<tr class="row-even"><td><p>data2vec</p></td>
+<td><p>ViT-L/16</p></td>
+<td><p>1600</p></td>
+<td><p>77.3%</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="i-jepa-vs-v-jepa">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">I-JEPA vs V-JEPA</a><a class="headerlink" href="#i-jepa-vs-v-jepa" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Aspect</p></th>
+<th class="head"><p>I-JEPA (Image)</p></th>
+<th class="head"><p>V-JEPA (Video)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Input</p></td>
+<td><p>Single image</p></td>
+<td><p>Video clip</p></td>
+</tr>
+<tr class="row-odd"><td><p>Masking</p></td>
+<td><p>Spatial block masking</p></td>
+<td><p>Spatio-temporal tube masking</p></td>
+</tr>
+<tr class="row-even"><td><p>Task</p></td>
+<td><p>Predict masked patch latents</p></td>
+<td><p>Predict future frame latents</p></td>
+</tr>
+<tr class="row-odd"><td><p>Predictor</p></td>
+<td><p>Transformer</p></td>
+<td><p>Spatio-temporal transformer</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="common-pitfalls">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Common Pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<section id="predictor-collapse">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Predictor collapse</a><a class="headerlink" href="#predictor-collapse" title="Link to this heading">#</a></h3>
+<p>The predictor outputs a constant regardless of input.</p>
+<p><strong>Fixes:</strong></p>
+<ul class="simple">
+<li><p>Ensure EMA starts close to 1.0 (default: 0.996)</p></li>
+<li><p>Verify predictor output variance is non-zero</p></li>
+</ul>
+</section>
+<section id="representation-collapse">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Representation collapse</a><a class="headerlink" href="#representation-collapse" title="Link to this heading">#</a></h3>
+<p>All patches map to nearly identical representations.</p>
+<p><strong>Fixes:</strong></p>
+<ul class="simple">
+<li><p>Use multi-block masking (not random patch masking)</p></li>
+<li><p>Check the feature covariance matrix</p></li>
+</ul>
+</section>
+<section id="memory-usage">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">Memory usage</a><a class="headerlink" href="#memory-usage" title="Link to this heading">#</a></h3>
+<p>ViT-B/16 with 224×224 creates 196 patch tokens. Batch size 64 requires ~16 GB GPU.</p>
+<p><strong>Tips:</strong></p>
+<ul class="simple">
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">gradient_checkpointing</span> <span class="pre">=</span> <span class="pre">True</span></code></p></li>
+<li><p>Reduce <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and increase <code class="docutils literal notranslate"><span class="pre">accum_iter</span></code></p></li>
+</ul>
+</section>
+<section id="slow-convergence">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">Slow convergence</a><a class="headerlink" href="#slow-convergence" title="Link to this heading">#</a></h3>
+<p>JEPA requires long warmup (40 epochs) and many total epochs (100–300).</p>
+<p><strong>Tips:</strong></p>
+<ul class="simple">
+<li><p>Use the cosine schedule for EMA momentum</p></li>
+<li><p>Expect 48+ hours on 4× GPUs for ViT-B/16 at 100 epochs</p></li>
+</ul>
+</section>
+</section>
+<section id="comparison-to-other-methods">
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Comparison to Other Methods</a><a class="headerlink" href="#comparison-to-other-methods" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>What it predicts</p></th>
+<th class="head"><p>Approach</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Autoencoder</p></td>
+<td><p>Pixels</p></td>
+<td><p>Reconstruction</p></td>
+</tr>
+<tr class="row-odd"><td><p>VAE</p></td>
+<td><p>Pixels</p></td>
+<td><p>Generative</p></td>
+</tr>
+<tr class="row-even"><td><p>MAE</p></td>
+<td><p>Pixels</p></td>
+<td><p>Masked modeling</p></td>
+</tr>
+<tr class="row-odd"><td><p>JEPA</p></td>
+<td><p>Latents</p></td>
+<td><p>Predictive coding</p></td>
+</tr>
+<tr class="row-even"><td><p>IRIS</p></td>
+<td><p>Tokens</p></td>
+<td><p>Transformer dynamics</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id28" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="iris.html"><span class="doc">IRIS: Transformers for Sample-Efficient World Models</span></a> — discrete world model using JEPA-style token prediction</p></li>
+<li><p><a class="reference internal" href="vision_guide.html"><span class="doc">Vision Components</span></a> — ViT encoder and video tokenizer components</p></li>
+</ul>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id29" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Bardes, A., Ponce, J., &amp; LeCun, Y. (2023). I-JEPA: Image-based Joint Embedding Predictive Architecture. <em>arXiv:2301.08243.</em></p></li>
+<li><p>Assran, M., et al. (2023). Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture. <em>CVPR 2023.</em></p></li>
+<li><p>Dosovitskiy, A., et al. (2021). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale. <em>ICLR 2021.</em></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="planet.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">PlaNet</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="iris.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">IRIS: Transformers for Sample-Efficient World Models</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-it-in-action">See it in action</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#architecture">Architecture</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#high-level-diagram">High-level diagram</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vision-transformer-vit">Vision Transformer (ViT)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#target-encoder-ema">Target Encoder (EMA)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predictor">Predictor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#masking">Masking</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training">Training</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loss-function">Loss Function</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization">Optimization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#learning-rate-schedule">Learning Rate Schedule</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-in-simulusion">Usage in Simulusion</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-config-directly">Using config directly</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-pipeline">Data pipeline</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cli">CLI</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inference-and-downstream-tasks">Inference and Downstream Tasks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-probing-protocol">Linear probing protocol</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#i-jepa-vs-v-jepa">I-JEPA vs V-JEPA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predictor-collapse">Predictor collapse</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#representation-collapse">Representation collapse</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#memory-usage">Memory usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#slow-convergence">Slow convergence</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison-to-other-methods">Comparison to Other Methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/jepa.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
