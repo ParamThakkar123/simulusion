@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- `simulusion train MODEL` runs registered tasks on the shared Trainer.
+  Commands written for the older per-family entrypoints (a `--config` without
+  `task:`, or flat overrides such as `total_epochs=100`) still reach them, as
+  does `--legacy`.
+
+### Fixed
+- A resumed DIAMOND run kept a replay buffer only as large as it was at the
+  checkpoint: `save_checkpoint` recorded the trimmed length as the capacity.
+  Its replay and observation side files are now found next to the
+  checkpoint even after the directory moves.
+- The World Models CMA-ES controller search minimised the episode return
+  instead of maximising it, and its rollouts called `Controller` with two
+  arguments where `forward` takes one, so every rollout raised.
+- `GenieWorldModel.encode` without actions failed for Genie's default mean-
+  pooled latent actions, which infer one action per clip.
+
 ### Renamed
 - **Synora is now Simulusion.** The distribution is `simulusion` on PyPI
   (`pip install simulusion`, extras as `simulusion[gym]`), the package is
@@ -16,6 +33,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **One trainer for every family** (`simulusion.training.Trainer`), built on
+  Hugging Face Accelerate (now a core dependency). Any training task runs to a
+  step budget with one precision setting (`fp32` / `bf16` / `fp16` / `auto`),
+  data parallelism (`accelerate launch` / `torchrun`), gradient accumulation,
+  logging to `metrics.jsonl` / TensorBoard / W&B, periodic evaluation, early
+  stopping, atomic checkpoints with resume (bit-exact in one process; replay
+  buffers included for online agents) and export of the trained world model.
+  Tasks: `dreamer`, `dreamer-v1`, `dreamer-v2`, `planet`, `iris`, `diamond`
+  (agents, collecting online), `dreamer-wm`, `iris-wm`, `diamond-wm`, `genie`,
+  `vae`, `mdrnn` (world models from data), `controller` (World Models' C by
+  CMA-ES, in the real environment or inside the dream), `dit` and `jepa`.
+  Write your own with `TrainingTask` and `register_task`. See the new "One
+  Trainer for Every Model" guide.
+- **Declarative run configs.** One YAML names a task and fills `trainer:` and
+  the task's sections; `key=value` overrides reach any nested field and
+  unknown keys fail with their dotted path. Every run writes its resolved
+  `config.yaml` (pass it back with `--config` to repeat the run) and
+  `run.json` (git commit and dirty flag, package versions, GPUs, command
+  line). Shipped configs for every task are in `simulusion/configs/runs/`.
+  `simulusion train` runs them; `simulusion.run_training()` from Python.
+- **World models train without their agent.** The `-wm` tasks fit Dreamer's,
+  IRIS's or DIAMOND's world model to recorded episodes with no environment
+  and no policy, and `simulusion.agents.PlanningAgent` / `CEMPlanner` act
+  through any world model with a reward head by planning in it.
+- **One episode format for video, RL and robot data** (`simulusion.data`): an
+  `.npz` per episode with frames, optional actions / rewards / episode ends
+  between them, extra cameras, proprioception and a language instruction;
+  `EpisodeFolder` / `EpisodeWriter`, and `SequenceDataset` windows that never
+  cross an episode boundary. Readers for LeRobot datasets (v2.x and v3.0,
+  local or from the Hub; `pip install simulusion[lerobot]`) and RLDS / Open
+  X-Embodiment (with TensorFlow Datasets), plus `simulusion datasets import`
+  and `simulusion datasets info`.
+- `MixedPrecision` and `GradientUpdate` replace the hand-written GradScaler
+  blocks in Dreamer, IRIS, DIAMOND, Genie, PlaNet, ConvVAE and MDN-RNN.
+  `use_amp` still selects what it did, so results are unchanged.
 - **One `WorldModel` protocol for every family** (`simulusion.world_model`):
   `encode` / `step` / `rollout` / `decode` / `save`, with the same frame,
   action and state conventions everywhere. `as_world_model(model)` wraps a

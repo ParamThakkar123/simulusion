@@ -243,6 +243,7 @@ class IRISWorldModelTask(TrainingTask):
         k = min(self.config.model.autoencoder_batch_size, flat.shape[0])
         pick = torch.randperm(flat.shape[0], device=flat.device)[:k]
         ae = self.agent.update_autoencoder(flat[pick])
+        self.trainer.broadcast_quantizers(self.agent.encoder)
         tf = self.agent.update_transformer(frames, acts, rewards, terms)
         return {
             "recon_loss": ae["recon_loss"],

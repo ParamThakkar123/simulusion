@@ -175,6 +175,17 @@ class Trainer:
                     f"selected {self.accelerator.device}. Leave device unset, or "
                     "use CUDA_VISIBLE_DEVICES / `accelerate config` to choose GPUs."
                 )
+        from accelerate.utils import DistributedType
+
+        if self.accelerator.distributed_type in (
+            DistributedType.FSDP,
+            DistributedType.DEEPSPEED,
+        ):
+            raise NotImplementedError(
+                "Sharded training (FSDP / DeepSpeed) is not supported: gradient "
+                "clipping and checkpoints assume each process holds the whole "
+                "model. Launch with plain data parallelism (multi-GPU DDP)."
+            )
         self.device: torch.device = self.accelerator.device
         self.precision = MixedPrecision(self.config.precision, self.device)
         self.run_config = dict(run_config) if run_config is not None else None
@@ -221,6 +232,28 @@ class Trainer:
         for module in modules:
             for tensor in [*module.parameters(), *module.buffers()]:
                 dist.broadcast(tensor.data, src=0)
+
+    def broadcast_quantizers(self, *modules: nn.Module) -> None:
+        """Make every process's vector-quantizer codebooks process 0's.
+
+        Codebooks change outside the optimizer: dead-code revival rewrites
+        unused codes with features of the local batch, and EMA quantizers
+        update from local statistics. Under data parallelism each process
+        sees different data, so without this their codebooks (and with them
+        the tokens) drift apart even though the trained weights stay equal.
+        Call it after every update. A no-op in one process.
+        """
+        if self.num_processes == 1:
+            return
+        from simulusion.vision.vq_layer import VectorQuantizer, VectorQuantizerEMA
+
+        quantizers = [
+            sub
+            for module in modules
+            for sub in module.modules()
+            if isinstance(sub, (VectorQuantizer, VectorQuantizerEMA))
+        ]
+        self.broadcast_parameters(quantizers)
 
     def prepare_dataloader(self, loader: Any) -> Any:
         """Shard ``loader`` across processes and move its batches to the device."""
@@ -361,7 +394,12 @@ class Trainer:
                     self._log(self.reduce(logged), progress, prefix="train")
                     window = {}
 
-                if cfg.eval_every and _crossed(before, progress, cfg.eval_every):
+                # The last step is evaluated by final_evaluation() below.
+                if (
+                    cfg.eval_every
+                    and progress < budget
+                    and _crossed(before, progress, cfg.eval_every)
+                ):
                     if self._evaluate(task, progress):
                         stopped_early = True
                         break

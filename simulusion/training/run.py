@@ -173,15 +173,23 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[TrainResult]:
         sys.stdout.write(dump_run_config(resolved))
         return None
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s")
-    result = Trainer(trainer_config, run_config=resolved).fit(task_cls(task_config))
-    print(f"Run directory: {result.run_dir}")
-    if result.world_model_path is not None:
-        print(f"World model:   {result.world_model_path}")
+    trainer = Trainer(trainer_config, run_config=resolved)
+    result = trainer.fit(task_cls(task_config))
+    if trainer.is_main_process:
+        print(f"Run directory: {result.run_dir}")
+        if result.world_model_path is not None:
+            print(f"World model:   {result.world_model_path}")
+        if result.model_path is not None:
+            print(f"Model:         {result.model_path}")
     return result
 
 
+#: ``simulusion.run_training``: the same as :func:`run`.
+run_training = run
+
 __all__ = [
     "RUN_CONFIG_DIR",
+    "run_training",
     "dump_run_config",
     "main",
     "resolve_run_config",

@@ -34,15 +34,28 @@ Commands
   a compressed `.npz` with keys `observations`, `actions`, `rewards`,
   `dones`.
 
-- `train <model> [extra args...] [--inproc]` - Launch an existing training
-  entrypoint. The CLI maps simple model names to modules in
-  `simulusion.training` (e.g. `diamond`, `iris`, `planet`, `jepa`, `rssm`,
-  `genie`). By default `train` spawns a subprocess running
-  `python -m simulusion.training.<name>` and forwards any extra args. Use
-  `--inproc` to attempt running the training entrypoint in-process (calls the
-  module's `main()` if available). DIAMOND, IRIS, and JEPA accept
-  `--config PATH`, `--print-config`, and OmegaConf/Hydra-style dot-list
-  overrides such as `total_epochs=100` or `optimization.lr=3e-4`.
+- `datasets import <lerobot|oxe|rlds> <source> <out_dir>` - Convert a LeRobot
+  dataset (local folder or Hub repo id) or an RLDS / Open X-Embodiment dataset
+  into an episode folder, the format every training task reads. Options:
+  `--camera`, `--all-cameras`, `--episodes 0-9`, `--revision` (LeRobot);
+  `--split`, `--data-dir`, `--version` (RLDS). See {doc}`episodes_guide`.
+
+- `datasets info <path>` - Summarise an episode folder: episodes, frames,
+  action space, cameras, observations, source.
+
+- `train [task] [--config FILE] [--print-config] [key=value ...]` - Train on
+  the shared Trainer from a run config. `task` is any registered training task
+  (`simulusion train --help-tasks` lists them), optional when the config names
+  one; `--config` takes a YAML file or the name of a shipped config in
+  `simulusion/configs/runs/`; every field can be overridden with dotted
+  `key=value` pairs. See {doc}`trainer_guide`.
+
+- `train <model> --legacy [extra args...] [--inproc]` - Launch a family's own,
+  older training entrypoint (`python -m simulusion.training.train_<name>`),
+  forwarding the extra args; `--inproc` calls its `main()` in-process instead
+  of spawning a subprocess. Commands written for those entrypoints (a
+  `--config` file without `task:`, or flat overrides such as
+  `total_epochs=100`) are recognised and still run there.
 
 - `eval --model <NAME> --checkpoint <PATH> [options]` - Evaluate a trained world
   model. Generative models (`diamond`) are scored with FID, FVD, LPIPS, and PSNR,
@@ -119,6 +132,25 @@ simulusion datasets convert data/my_dataset.h5 --out-dir /tmp/videos
 
 ```bash
 simulusion collect --env ALE/Pong-v5 --steps 1000 --out pong.npz
+```
+
+- Example: train Genie on a folder of clips with the shared Trainer, in bf16
+
+```bash
+simulusion train genie data.path=data/clips trainer.precision=bf16 trainer.max_steps=20000
+```
+
+- Example: repeat a finished run exactly
+
+```bash
+simulusion train --config runs/genie_20261020-120000/config.yaml
+```
+
+- Example: import a LeRobot dataset and train Dreamer's world model on it
+
+```bash
+simulusion datasets import lerobot lerobot/pusht data/pusht
+simulusion train --config dreamer-wm data.path=data/pusht
 ```
 
 - Example: run IRIS training with a library YAML config and a dot-list override

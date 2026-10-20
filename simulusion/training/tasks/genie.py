@@ -62,6 +62,7 @@ class GenieTask(TrainingTask):
         batch = next(self.batches)
         video = frames_to_float(batch["frames"]).permute(0, 2, 1, 3, 4)
         losses = self.genie.train_step(video)
+        self.trainer.broadcast_quantizers(self.genie.model)
         return {k: float(v) for k, v in losses.items() if v is not None}
 
     def evaluate(self) -> Metrics:

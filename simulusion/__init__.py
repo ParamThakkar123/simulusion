@@ -231,6 +231,24 @@ _LAZY_EXPORTS: dict[str, str] = {
     "as_world_model": "simulusion.world_model",
     "load_world_model": "simulusion.world_model",
     "list_world_model_families": "simulusion.world_model",
+    # One trainer for every family; declarative runs.
+    "Trainer": "simulusion.training.trainer",
+    "TrainerConfig": "simulusion.training.trainer",
+    "TrainResult": "simulusion.training.trainer",
+    "TrainingTask": "simulusion.training.task",
+    "register_task": "simulusion.training.task",
+    "list_tasks": "simulusion.training.task",
+    "run_training": "simulusion.training.run",
+    "MixedPrecision": "simulusion.training.precision",
+    "GradientUpdate": "simulusion.training.precision",
+    # One episode format for video, RL and robot data.
+    "EpisodeFolder": "simulusion.data",
+    "EpisodeWriter": "simulusion.data",
+    "LeRobotEpisodes": "simulusion.data",
+    "load_oxe": "simulusion.data",
+    # Agents that act through any world model.
+    "CEMPlanner": "simulusion.agents",
+    "PlanningAgent": "simulusion.agents",
 }
 
 _EXPORTS = {**_API_EXPORTS, **_LAZY_EXPORTS}

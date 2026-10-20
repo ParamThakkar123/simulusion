@@ -320,6 +320,147 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
         click.echo(f"Wrote: {out_name}.mp4")
 
 
+@datasets_app.command("import")
+@click.argument("source_format", type=click.Choice(["lerobot", "oxe", "rlds"]))
+@click.argument("source")
+@click.argument("out_dir", type=click.Path(path_type=Path))
+@click.option("--camera", default=None, help="View to keep as the main frames.")
+@click.option(
+    "--all-cameras", is_flag=True, help="Keep every other view as an extra camera."
+)
+@click.option(
+    "--episodes",
+    default=None,
+    help="LeRobot episode indices to import, e.g. '0-9' or '0,3,7'.",
+)
+@click.option("--revision", default=None, help="Hub revision (LeRobot).")
+@click.option(
+    "--split", default="train", show_default=True, help="TFDS split (OXE / RLDS)."
+)
+@click.option(
+    "--data-dir",
+    default=None,
+    help="Where the RLDS dataset lives (OXE: the public bucket by default).",
+)
+@click.option("--version", default=None, help="RLDS dataset version.")
+def datasets_import(
+    source_format: str,
+    source: str,
+    out_dir: Path,
+    camera: str | None,
+    all_cameras: bool,
+    episodes: str | None,
+    revision: str | None,
+    split: str,
+    data_dir: str | None,
+    version: str | None,
+) -> None:
+    """Convert a LeRobot or RLDS / Open X-Embodiment dataset into an episode folder.
+
+    The folder is what every training task reads (`data.path=OUT_DIR`).
+
+    
+    Examples:
+        simulusion datasets import lerobot lerobot/pusht data/pusht
+        simulusion datasets import lerobot ./my_lerobot_dataset data/mine --all-cameras
+        simulusion datasets import oxe fractal20220817_data data/fractal --split 'train[:50]'
+    """
+    from simulusion.data import EpisodeWriter
+
+    try:
+        if source_format == "lerobot":
+            from simulusion.data.lerobot import import_lerobot
+
+            out = import_lerobot(
+                source,
+                out_dir,
+                camera=camera,
+                extra_cameras="all" if all_cameras else (),
+                episodes=_parse_index_list(episodes) if episodes else None,
+                revision=revision,
+            )
+        else:
+            from simulusion.data.rlds import (
+                OXE_GCS_ROOT,
+                OXE_PRESETS,
+                RLDSKeys,
+                load_oxe,
+            )
+
+            keys = OXE_PRESETS.get(source, RLDSKeys())
+            if camera:
+                keys = RLDSKeys(
+                    image=camera,
+                    cameras=keys.cameras,
+                    state=keys.state,
+                    action=keys.action,
+                    language=keys.language,
+                )
+            with EpisodeWriter(out_dir) as writer:
+                for episode in load_oxe(
+                    source,
+                    split=split,
+                    data_dir=data_dir or OXE_GCS_ROOT,
+                    version=version,
+                    keys=keys,
+                ):
+                    writer.write(episode)
+                    if writer.meta is not None:
+                        writer.meta.source = f"{source_format}:{source}"
+            out = out_dir
+    except (ImportError, FileNotFoundError, KeyError, ValueError) as exc:
+        _echo_error(str(exc))
+        raise click.exceptions.Exit(1)
+    _echo_dataset_info(out)
+
+
+@datasets_app.command("info")
+@click.argument("path", type=click.Path(exists=True, path_type=Path))
+def datasets_info(path: Path) -> None:
+    """Summarise an episode folder: episodes, frames, actions, cameras."""
+    _echo_dataset_info(path)
+
+
+def _echo_dataset_info(path: Path) -> None:
+    from simulusion.data import EpisodeFolder
+
+    folder = EpisodeFolder(path)
+    lengths = folder.lengths
+    click.echo(f"{path}: {len(folder)} episodes, {sum(lengths)} frames")
+    click.echo(
+        f"  length min/mean/max: {min(lengths)} / {sum(lengths) / len(lengths):.1f} / {max(lengths)}"
+    )
+    meta = folder.meta
+    if meta is not None:
+        actions = (
+            f"{meta.action_kind} ({meta.action_dim})"
+            if meta.action_kind
+            else "none (video)"
+        )
+        click.echo(f"  actions: {actions}")
+        if meta.cameras:
+            click.echo(f"  extra cameras: {', '.join(meta.cameras)}")
+        if meta.observation_keys:
+            click.echo(f"  observations: {', '.join(meta.observation_keys)}")
+        if meta.fps:
+            click.echo(f"  fps: {meta.fps:g}")
+        if meta.source:
+            click.echo(f"  source: {meta.source}")
+
+
+def _parse_index_list(text: str) -> list[int]:
+    """'0-3,7' -> [0, 1, 2, 3, 7]."""
+    out: list[int] = []
+    for part in text.split(","):
+        part = part.strip()
+        if "-" in part:
+            lo, hi = part.split("-", 1)
+            out.extend(range(int(lo), int(hi) + 1))
+        elif part:
+            out.append(int(part))
+    return out
+
+
 @app.group("models")
 def models_app() -> None:
     """Model discovery commands."""
@@ -947,6 +1088,21 @@ def train(
     key = model.strip().lower() if model else None
     tasks = list_tasks()
 
+    if (
+        key is not None
+        and not legacy
+        and key in tasks
+        and key in TRAINING_MODULES
+        and _legacy_style_args(key, args)
+    ):
+        click.echo(
+            f"Running the legacy '{key}' entrypoint: the arguments use its own "
+            "config format (no `task:` in the config file, or keys outside the "
+            "run config's sections). Pass --legacy to choose it explicitly; see "
+            "the trainer guide for run configs."
+        )
+        legacy = True
+
     if key is not None and (legacy or key not in tasks):
         if key not in TRAINING_MODULES:
             _echo_error(
@@ -968,6 +1124,46 @@ def train(
     except KeyboardInterrupt:
         _echo_error("Training interrupted by user")
         raise click.exceptions.Exit(1)
+
+
+def _legacy_style_args(task: str, args: list[str]) -> bool:
+    """Whether ``args`` were written for a family's pre-Trainer entrypoint.
+
+    Run configs name their task and nest every field under a section
+    (``trainer.``, ``model.``, ``data.`` ...). The older entrypoints take a
+    flat config file and flat ``key=value`` overrides, so a ``--config``
+    without ``task:``, or an override outside the task's sections, means the
+    command predates the Trainer.
+    """
+    import dataclasses
+
+    import yaml
+
+    from simulusion.training.task import get_task
+
+    sections = {"task", "trainer"} | {
+        f.name for f in dataclasses.fields(get_task(task).config_cls)
+    }
+    config: str | None = None
+    overrides = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("--config", "-c") and i + 1 < len(args):
+            config = args[i + 1]
+            i += 2
+            continue
+        if arg.startswith("--config="):
+            config = arg.split("=", 1)[1]
+        elif "=" in arg and not arg.startswith("-"):
+            overrides.append(arg.split("=", 1)[0].strip())
+        i += 1
+    if any(key.split(".", 1)[0] not in sections for key in overrides):
+        return True
+    if config is not None and Path(config).is_file():
+        loaded = yaml.safe_load(Path(config).read_text(encoding="utf-8")) or {}
+        return not (isinstance(loaded, dict) and "task" in loaded)
+    return False
 
 
 def _run_legacy_training(module: str, extra_args: list[str], inproc: bool) -> None:

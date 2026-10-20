@@ -119,8 +119,9 @@ def test_progress_jumps_trigger_logging_eval_and_checkpoints(tmp_path: Path) -> 
     assert result.progress == 20  # 5 calls of 4 units
     steps = sorted({row["step"] for row in _metrics(tmp_path / "run")})
     assert steps == [12, 20]  # crossed 10 at 12, 20 at 20
-    # Two in-loop evaluations plus the final one.
-    assert task.evals == 3
+    # One in-loop evaluation (at 12) plus the final one; the last step's
+    # periodic evaluation is left to the final one.
+    assert task.evals == 2
     names = sorted(p.name for p in (tmp_path / "run" / "checkpoints").iterdir())
     assert names == ["step_00000012", "step_00000020"]
 

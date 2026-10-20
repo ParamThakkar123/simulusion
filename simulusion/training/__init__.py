@@ -1,9 +1,35 @@
-"""Training modules for World Models."""
+"""Training for every Simulusion family.
+
+:class:`Trainer` runs any :class:`TrainingTask` (one or more per family, see
+:mod:`simulusion.training.tasks`) from a :class:`TrainerConfig`;
+:func:`run` does it from a YAML run config. The per-family trainers below
+(``IRISTrainer``, ``train_diamond``, ...) are the older entrypoints, kept for
+existing scripts.
+"""
 
 from typing import Any
 
 
+_CORE = {
+    "Trainer": "simulusion.training.trainer",
+    "TrainerConfig": "simulusion.training.trainer",
+    "TrainResult": "simulusion.training.trainer",
+    "TrainingTask": "simulusion.training.task",
+    "register_task": "simulusion.training.task",
+    "get_task": "simulusion.training.task",
+    "list_tasks": "simulusion.training.task",
+    "MixedPrecision": "simulusion.training.precision",
+    "GradientUpdate": "simulusion.training.precision",
+    "run": "simulusion.training.run",
+    "resolve_run_config": "simulusion.training.run",
+}
+
+
 def __getattr__(name: str) -> Any:
+    if name in _CORE:
+        import importlib
+
+        return getattr(importlib.import_module(_CORE[name]), name)
     if name == "train_convae":
         from simulusion.training.train_convvae import train_convae
 
@@ -60,6 +86,7 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
+    *_CORE,
     "DiamondAgent",
     "GenieTrainer",
     "IRISTrainer",
