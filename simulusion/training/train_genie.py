@@ -13,6 +13,7 @@ from pathlib import Path
 from simulusion.configs.serialization import SerializableConfigMixin
 from simulusion.models.genie import Genie
 from simulusion.models.model_io import save_config_next_to_checkpoint
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.memory_utils import enable_performance_defaults
 from simulusion.utils.train_utils import EarlyStopping
 
@@ -196,7 +197,18 @@ class GenieTrainer:
         model: nn.Module,
         config: GenieConfig,
         device: Optional[torch.device] = None,
+        *,
+        precision: Optional[MixedPrecision] = None,
     ) -> None:
+        """Args:
+        model: The Genie model.
+        config: Training hyperparameters.
+        device: Defaults to the best available device.
+        precision: Autocast and loss scaling. Defaults to what the config's
+            ``use_amp`` flag selects: bf16 where CUDA supports it, else fp16
+            on CUDA, bf16 on CPU, and fp32 without ``use_amp``. The shared
+            :class:`~simulusion.training.Trainer` passes the run's precision.
+        """
         self.model = model
         self.config = config
 
@@ -218,18 +230,17 @@ class GenieTrainer:
         if getattr(config, "perf_defaults", True):
             enable_performance_defaults(tf32=bool(getattr(config, "tf32", True)))
 
-        self.use_amp = bool(getattr(config, "use_amp", False))
-        self._amp_device = getattr(self.device, "type", str(self.device))
-        # bf16 carries fp32's dynamic range, so it needs no loss scaling; fp16
-        # does. Only build a scaler for the case that actually requires one.
-        self._amp_dtype = (
-            torch.bfloat16
-            if self._amp_device == "cuda" and torch.cuda.is_bf16_supported()
-            else torch.float16
-        )
-        self.scaler = torch.amp.GradScaler(
-            self._amp_device,
-            enabled=self.use_amp and self._amp_dtype is torch.float16,
+        if precision is None:
+            use_amp = bool(getattr(config, "use_amp", False))
+            precision = MixedPrecision(
+                ("auto" if self.device.type == "cuda" else "bf16")
+                if use_amp
+                else "fp32",
+                self.device,
+            )
+        self.precision = precision
+        self.update = GradientUpdate(
+            self.optimizer, self.model.parameters(), self.precision, max_grad_norm=1.0
         )
 
         self.global_step = 0
@@ -270,11 +281,7 @@ class GenieTrainer:
             + self.config.mask_prob_min
         )
 
-        with torch.amp.autocast(
-            device_type=self._amp_device,
-            dtype=self._amp_dtype,
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             outputs = self.model(batch, mask_prob=mask_prob)
 
         recon_loss = outputs.get("recon_loss", 0.0)
@@ -293,15 +300,9 @@ class GenieTrainer:
 
         total_loss = outputs["total_loss"]
 
-        self.optimizer.zero_grad(set_to_none=True)
-        self.scaler.scale(total_loss).backward()
-        # Gradients must be unscaled before clipping, or the norm is measured on
-        # scaled values and the clip threshold means nothing.
-        self.scaler.unscale_(self.optimizer)
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.scheduler.step()
+        grad_norm = self.update(total_loss)
+        if grad_norm is not None:
+            self.scheduler.step()
 
         self.global_step += 1
 
@@ -321,6 +322,9 @@ class GenieTrainer:
             "dynamics_loss": as_tensor(dynamics_loss),
             "learning_rate": torch.tensor(float(self.scheduler.get_last_lr()[0])),
             "z_q_for_dynamics_mean": as_tensor(z_q_for_dynamics_mean),
+            "grad_norm": as_tensor(
+                grad_norm if grad_norm is not None else float("nan")
+            ),
         }
 
     def validate(self, val_batch: torch.Tensor) -> Dict[str, torch.Tensor]:
@@ -471,6 +475,7 @@ class GenieTrainer:
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler_state_dict": self.scheduler.state_dict(),
+                "scaler_state_dict": self.update.scaler.state_dict(),
                 "global_step": self.global_step,
             },
             path,
@@ -486,14 +491,13 @@ class GenieTrainer:
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        if checkpoint.get("scaler_state_dict"):
+            self.update.scaler.load_state_dict(checkpoint["scaler_state_dict"])
         self.global_step = checkpoint["global_step"]
 
 
-def create_genie_trainer(
-    config: Optional[GenieConfig] = None,
-    device: Optional[torch.device] = None,
-) -> Tuple[GenieTrainer, nn.Module]:
-    """Factory function to create Genie trainer and model."""
+def build_genie(config: Optional[GenieConfig] = None) -> "Genie":
+    """The Genie model a training config describes."""
     if config is None:
         config = GenieConfig()
 
@@ -502,7 +506,7 @@ def create_genie_trainer(
     # defaults (512/1024/1024) and those three config fields did nothing at all
     # -- a config that said 256 built a 512-wide tokenizer, and the checkpoint
     # then recorded the width it did not have.
-    model = Genie(
+    return Genie(
         num_frames=config.num_frames,
         image_size=config.image_size,
         in_channels=config.in_channels,
@@ -529,6 +533,15 @@ def create_genie_trainer(
         action_num_heads=getattr(config, "action_num_heads", 16),
     )
 
+
+def create_genie_trainer(
+    config: Optional[GenieConfig] = None,
+    device: Optional[torch.device] = None,
+) -> Tuple[GenieTrainer, nn.Module]:
+    """Factory function to create Genie trainer and model."""
+    if config is None:
+        config = GenieConfig()
+    model = build_genie(config)
     trainer = GenieTrainer(model, config, device)
 
     return trainer, model

@@ -909,28 +909,69 @@ def play_command(
     "train",
     context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
 )
-@click.argument("model")
+@click.argument("model", required=False)
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
+@click.option(
+    "--legacy",
+    is_flag=True,
+    help="Run the family's own pre-Trainer entrypoint instead of the shared Trainer.",
+)
 @click.option(
     "--inproc",
     is_flag=True,
-    help="Run training in-process instead of spawning subprocess.",
+    help="With --legacy: run in-process instead of spawning a subprocess.",
 )
-def train(model: str, extra_args: tuple[str, ...], inproc: bool) -> None:
-    """Launch a training entrypoint with optional YAML/OmegaConf overrides.
+def train(
+    model: str | None, extra_args: tuple[str, ...], legacy: bool, inproc: bool
+) -> None:
+    """Train a model on the shared Trainer from a run config and overrides.
+
+    MODEL is a training task (see `simulusion train --help-tasks` or the
+    list below); it may be omitted when the config names its task.
 
     Examples:
-        simulusion train iris --config simulusion/configs/experiments/iris.yaml total_epochs=100
-        simulusion train jepa optimization.epochs=50 data.batch_size=128
+        simulusion train genie data.path=data/clips trainer.max_steps=2000
+        simulusion train --config simulusion/configs/runs/dreamer.yaml trainer.precision=bf16
+        simulusion train --config runs/genie_20261020/config.yaml   # repeat a run
+        simulusion train iris --legacy --config simulusion/configs/experiments/iris.yaml
     """
-    key = model.strip().lower()
-    if key not in TRAINING_MODULES:
-        _echo_error(
-            f"Unknown model '{model}'. Known: {', '.join(TRAINING_MODULES.keys())}"
-        )
+    from simulusion.training.task import list_tasks
+
+    args = list(extra_args)
+    if model is not None and (model.startswith("-") or "=" in model):
+        args.insert(0, model)
+        model = None
+    if "--help-tasks" in args:
+        click.echo("Training tasks: " + ", ".join(list_tasks()))
+        return
+    key = model.strip().lower() if model else None
+    tasks = list_tasks()
+
+    if key is not None and (legacy or key not in tasks):
+        if key not in TRAINING_MODULES:
+            _echo_error(
+                f"Unknown model '{model}'. Training tasks: {', '.join(tasks)}. "
+                f"Legacy entrypoints (--legacy): {', '.join(TRAINING_MODULES)}"
+            )
+            raise click.exceptions.Exit(1)
+        _run_legacy_training(TRAINING_MODULES[key], args, inproc)
+        return
+
+    from simulusion.configs.structured import ConfigError
+    from simulusion.training import run as run_module
+
+    try:
+        run_module.main(([key] if key else []) + args)
+    except ConfigError as exc:
+        _echo_error(str(exc))
+        raise click.exceptions.Exit(1)
+    except KeyboardInterrupt:
+        _echo_error("Training interrupted by user")
         raise click.exceptions.Exit(1)
 
-    module = TRAINING_MODULES[key]
+
+def _run_legacy_training(module: str, extra_args: list[str], inproc: bool) -> None:
+    """Launch a family's own training entrypoint (the pre-Trainer path)."""
     if inproc:
         # Failures inside training propagate as a non-zero exit. The previous
         # version retried `main()` without the user's arguments on any
@@ -1008,9 +1049,9 @@ def run() -> None:
 def run_train() -> None:
     """Console-script entrypoint used by the installed ``simulusion-train`` command.
 
-    This is equivalent to ``simulusion train MODEL [ARGS...]`` and dispatches via
-    ``TRAINING_MODULES`` so new training modules only need to be added to that
-    mapping instead of registering another packaging entry point.
+    This is equivalent to ``simulusion train [MODEL] [ARGS...]``: registered
+    training tasks run on the shared Trainer, and ``--legacy`` reaches the
+    entrypoints in ``TRAINING_MODULES``.
     """
     train.main(prog_name="simulusion-train")
 
