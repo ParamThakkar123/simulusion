@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -97,7 +98,7 @@ def sequence_loaders(
     trainer: Any,
     *,
     sequence_length: int,
-    image_size: Optional[int],
+    image_size: Optional[int | Tuple[int, int]],
     require_actions: bool = False,
 ) -> Tuple[Iterator[dict], Optional[DataLoader], Optional[DatasetMeta]]:
     """An endless iterator of training batches, a validation loader, and metadata."""
@@ -155,9 +156,52 @@ def sequence_loaders(
     return trainer.infinite(trainer.prepare_dataloader(train)), val, meta
 
 
+#: Arrays a ring replay buffer (Dreamer's, IRIS's) may hold, row-aligned.
+_REPLAY_ARRAYS = ("observations", "actions", "rewards", "terminals", "terminated")
+
+
+def save_replay(buffer: Any, path: Path) -> None:
+    """Write the filled part of a ring replay buffer, plus its write position."""
+    n = buffer.size if buffer.full else buffer.idx
+    arrays = {
+        name: getattr(buffer, name)[:n]
+        for name in _REPLAY_ARRAYS
+        if hasattr(buffer, name)
+    }
+    state = np.array([buffer.idx, int(buffer.full), buffer.steps, buffer.episodes])
+    np.savez(path, state=state, **arrays)
+
+
+def load_replay(buffer: Any, path: Path) -> None:
+    """Restore what :func:`save_replay` wrote into a buffer of the same size."""
+    with np.load(path, allow_pickle=False) as data:
+        n = data["observations"].shape[0]
+        if n > buffer.size:
+            raise ValueError(
+                f"The saved replay holds {n} transitions; this buffer holds {buffer.size}."
+            )
+        for name in _REPLAY_ARRAYS:
+            if name in data.files and hasattr(buffer, name):
+                getattr(buffer, name)[:n] = data[name]
+        idx, full, steps, episodes = (int(v) for v in data["state"])
+    buffer.idx, buffer.full, buffer.steps, buffer.episodes = (
+        idx,
+        bool(full),
+        steps,
+        episodes,
+    )
+
+
 def mean_metrics(rows: List[dict]) -> dict:
     keys = set().union(*rows) if rows else set()
     return {k: float(np.mean([r[k] for r in rows if k in r])) for k in sorted(keys)}
 
 
-__all__ = ["SequenceDataConfig", "mean_metrics", "open_episodes", "sequence_loaders"]
+__all__ = [
+    "SequenceDataConfig",
+    "load_replay",
+    "mean_metrics",
+    "open_episodes",
+    "save_replay",
+    "sequence_loaders",
+]

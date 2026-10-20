@@ -5,7 +5,7 @@ in world models. The MDRNN predicts future latent states using a Gaussian
 Mixture Model (GMM) based on current latent states and actions.
 """
 
-from typing import Any
+from typing import Any, Optional
 import os
 from os.path import join, exists
 from functools import partial
@@ -22,6 +22,7 @@ from simulusion.models.mdrnn import MDRNN
 from simulusion.vision.VAE.ConvVAE import ConvVAE
 from simulusion.losses.gmm_loss import gmm_loss
 from simulusion.datasets.wm_dataset import SequenceDataset, LatentSequenceDataset
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.train_utils import EarlyStopping, ReduceLROnPlateau
 
 
@@ -244,6 +245,7 @@ def data_pass(
     lr_scheduler: Any = None,
     batch_size: int = 50,
     train: bool = True,
+    update: Optional[GradientUpdate] = None,
 ) -> float:
     """Run one epoch of training or validation.
 
@@ -261,6 +263,9 @@ def data_pass(
         train: If True, run training pass; otherwise run validation.
         use_amp: If True, use automatic mixed precision.
         scaler: GradScaler for mixed precision training.
+        update: Steps ``optimizer`` at its own precision (the shared Trainer
+            passes one); without it one is built from ``use_amp`` and
+            ``scaler``.
 
     Returns:
         float: Average loss for the epoch.
@@ -281,6 +286,13 @@ def data_pass(
         loader.dataset.load_next_buffer()
 
     use_precomputed = vae is None
+    if update is None:
+        update = GradientUpdate(
+            optimizer, mdrnn.parameters(), MixedPrecision.from_use_amp(use_amp, device)
+        )
+        if scaler is not None:
+            update.scaler = scaler  # keep the caller's loss scale across epochs
+    precision = update.precision
 
     pbar = tqdm(total=len(loader.dataset), desc="Epoch {}".format(epoch))
     for i, data in enumerate(loader):
@@ -300,23 +312,7 @@ def data_pass(
             latent_next_obs = latent_next_obs.view(batch_size_current, seq_len, -1)
 
         if train:
-            if use_amp:
-                with torch.cuda.amp.autocast():
-                    losses = get_loss(
-                        mdrnn,
-                        latent_obs,
-                        action,
-                        reward,
-                        terminal,
-                        latent_next_obs,
-                        include_reward,
-                        latent_size,
-                    )
-                optimizer.zero_grad()
-                scaler.scale(losses["loss"]).backward()
-                scaler.step(optimizer)
-                scaler.update()
-            else:
+            with precision.autocast():
                 losses = get_loss(
                     mdrnn,
                     latent_obs,
@@ -327,34 +323,19 @@ def data_pass(
                     include_reward,
                     latent_size,
                 )
-                optimizer.zero_grad()
-                losses["loss"].backward()  # type: ignore[no-untyped-call]
-                optimizer.step()
+            update(losses["loss"])
         else:
-            with torch.no_grad():
-                if use_amp:
-                    with torch.cuda.amp.autocast():
-                        losses = get_loss(
-                            mdrnn,
-                            latent_obs,
-                            action,
-                            reward,
-                            terminal,
-                            latent_next_obs,
-                            include_reward,
-                            latent_size,
-                        )
-                else:
-                    losses = get_loss(
-                        mdrnn,
-                        latent_obs,
-                        action,
-                        reward,
-                        terminal,
-                        latent_next_obs,
-                        include_reward,
-                        latent_size,
-                    )
+            with torch.no_grad(), precision.autocast():
+                losses = get_loss(
+                    mdrnn,
+                    latent_obs,
+                    action,
+                    reward,
+                    terminal,
+                    latent_next_obs,
+                    include_reward,
+                    latent_size,
+                )
 
         cum_loss += losses["loss"].item()
         cum_gmm += losses["gmm"].item()

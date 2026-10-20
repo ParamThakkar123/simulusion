@@ -15,6 +15,7 @@ from simulusion.models.model_io import (
     resolve_pretrained_file,
     save_config_next_to_checkpoint,
 )
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.vision.iris_encoder import IRISEncoder
 from simulusion.vision.iris_decoder import IRISDecoder
 from simulusion.vision.perceptual_loss import build_perceptual_loss
@@ -157,9 +158,11 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         # === Optimizers ===
         self._setup_optimizers()
 
-        self.autoencoder_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.transformer_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.ac_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+        # What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The
+        # shared Trainer replaces it with the run's precision (set_precision).
+        self.precision = MixedPrecision.from_use_amp(self.use_amp, device)
+        self._all_reduce = False
+        self._build_updates()
 
         # === Training state ===
         self.global_step = 0
@@ -353,6 +356,48 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             lr=self.config.actor_learning_rate,
             betas=betas,
         )
+
+    def _build_updates(self) -> None:
+        clip = self.config.grad_clip_norm
+        self.autoencoder_update = GradientUpdate(
+            self.autoencoder_opt,
+            list(self.encoder.parameters()) + list(self.decoder.parameters()),
+            self.precision,
+            max_grad_norm=clip,
+            all_reduce=self._all_reduce,
+        )
+        self.transformer_update = GradientUpdate(
+            self.transformer_opt,
+            self.transformer.parameters(),
+            self.precision,
+            max_grad_norm=clip,
+            all_reduce=self._all_reduce,
+        )
+        self.ac_update = GradientUpdate(
+            self.ac_opt,
+            list(self.cnn.parameters())
+            + list(self.lstm.parameters())
+            + list(self.actor_head.parameters())
+            + list(self.critic_head.parameters()),
+            self.precision,
+            max_grad_norm=clip,
+            all_reduce=self._all_reduce,
+        )
+
+    def set_precision(
+        self, precision: MixedPrecision, *, all_reduce: bool = False
+    ) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers).
+
+        ``all_reduce`` averages gradients across processes before each step,
+        for data-parallel training of the world model (the tokenizer is called
+        through ``encoder(...)`` from several places, so it is not wrapped in
+        DDP).
+        """
+        self.precision = precision
+        self.use_amp = precision.enabled
+        self._all_reduce = all_reduce
+        self._build_updates()
 
     @staticmethod
     def _losses_to_floats(losses: dict[str, torch.Tensor]) -> dict[str, float]:
@@ -786,10 +831,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         self.encoder.train()
         self.decoder.train()
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             # Encode
             z_q, indices, vq_loss = self.encoder(frames)
 
@@ -809,15 +851,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
                 perc_loss = torch.zeros((), device=frames.device)
 
         # Update
-        self.autoencoder_opt.zero_grad(set_to_none=True)
-        self.autoencoder_scaler.scale(loss).backward()
-        self.autoencoder_scaler.unscale_(self.autoencoder_opt)
-        nn.utils.clip_grad_norm_(
-            list(self.encoder.parameters()) + list(self.decoder.parameters()),
-            self.config.grad_clip_norm,
-        )
-        self.autoencoder_scaler.step(self.autoencoder_opt)
-        self.autoencoder_scaler.update()
+        self.autoencoder_update(loss)
 
         losses = self._losses_to_floats(
             {
@@ -873,10 +907,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             actions = actions.argmax(dim=-1)  # (B, T)
         actions = actions.long()
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             # Get predictions. The transformer consumes the full T+1 frame
             # sequence (teacher forcing) and predicts frames 1..T.
             token_logits, rewards_pred, terms_pred = self.transformer(
@@ -920,14 +951,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             loss = token_loss + reward_loss + term_loss
 
         # Update
-        self.transformer_opt.zero_grad(set_to_none=True)
-        self.transformer_scaler.scale(loss).backward()  # type: ignore[no-untyped-call]
-        self.transformer_scaler.unscale_(self.transformer_opt)
-        nn.utils.clip_grad_norm_(
-            self.transformer.parameters(), self.config.grad_clip_norm
-        )
-        self.transformer_scaler.step(self.transformer_opt)
-        self.transformer_scaler.update()
+        self.transformer_update(loss)
 
         losses = self._losses_to_floats(
             {
@@ -960,10 +984,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
 
         B, T_plus_1, C, H, W = frames.shape
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             # Forward pass over all T+1 frames: the trailing frame supplies the
             # bootstrap value V(x_H) for the lambda-return. Previously only the
             # first T frames were forwarded and the bootstrap was hardcoded to
@@ -1026,18 +1047,7 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             loss = actor_loss + value_loss
 
         # Update
-        self.ac_opt.zero_grad(set_to_none=True)
-        self.ac_scaler.scale(loss).backward()  # type: ignore[no-untyped-call]
-        self.ac_scaler.unscale_(self.ac_opt)
-        nn.utils.clip_grad_norm_(
-            list(self.cnn.parameters())
-            + list(self.lstm.parameters())
-            + list(self.actor_head.parameters())
-            + list(self.critic_head.parameters()),
-            self.config.grad_clip_norm,
-        )
-        self.ac_scaler.step(self.ac_opt)
-        self.ac_scaler.update()
+        self.ac_update(loss)
 
         losses = self._losses_to_floats(
             {

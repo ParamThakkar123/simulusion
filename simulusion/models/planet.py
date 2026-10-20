@@ -214,43 +214,9 @@ class Planet(ExportableAgentMixin):
         os.makedirs(self.results_dir, exist_ok=True)
         self.summary = TensorBoardMetrics(self.results_dir)
 
-        # Initialize learning rate scheduler
-        scheduler: Any = None
-        if scheduler_type is not None and scheduler_type.lower() != "none":
-            scheduler_kwargs = scheduler_kwargs or {}
-
-            if scheduler_type.lower() == "step":
-                # Default: reduce LR by factor of 0.5 every 50 epochs
-                step_size = scheduler_kwargs.get("step_size", 50)
-                gamma = scheduler_kwargs.get("gamma", 0.5)
-                scheduler = torch.optim.lr_scheduler.StepLR(
-                    self.optimizer, step_size=step_size, gamma=gamma
-                )
-            elif scheduler_type.lower() == "cosine":
-                # Cosine annealing with warm restarts
-                T_max = scheduler_kwargs.get("T_max", epochs)
-                eta_min = scheduler_kwargs.get("eta_min", 1e-6)
-                scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                    self.optimizer, T_max=T_max, eta_min=eta_min
-                )
-            elif scheduler_type.lower() == "exponential":
-                # Exponential decay
-                gamma = scheduler_kwargs.get("gamma", 0.95)
-                scheduler = torch.optim.lr_scheduler.ExponentialLR(
-                    self.optimizer, gamma=gamma
-                )
-            elif scheduler_type.lower() == "plateau":
-                # Reduce on plateau (based on loss)
-                mode = scheduler_kwargs.get("mode", "min")
-                factor = scheduler_kwargs.get("factor", 0.5)
-                patience = scheduler_kwargs.get("patience", 10)
-                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    self.optimizer, mode=mode, factor=factor, patience=patience
-                )
-            else:
-                print(
-                    f"Warning: Unknown scheduler type '{scheduler_type}'. No scheduler will be used."
-                )
+        scheduler = make_planet_scheduler(
+            self.optimizer, scheduler_type, scheduler_kwargs, epochs
+        )
 
         if len(self.memory.episodes) == 0:
             self.warmup(n_episodes=1, random_policy=True)
@@ -336,3 +302,49 @@ class Planet(ExportableAgentMixin):
                 )
 
         return self.results_dir
+
+
+def make_planet_scheduler(
+    optimizer: torch.optim.Optimizer,
+    scheduler_type: str | None,
+    scheduler_kwargs: dict | None,
+    epochs: int,
+) -> Any:
+    """The per-epoch learning-rate scheduler ``Planet.train`` uses.
+
+    ``scheduler_type`` is ``"step"`` (halve every 50 epochs by default),
+    ``"cosine"``, ``"exponential"``, ``"plateau"`` or ``None`` / ``"none"``.
+    """
+    if scheduler_type is None or scheduler_type.lower() == "none":
+        return None
+    scheduler_kwargs = scheduler_kwargs or {}
+    kind = scheduler_type.lower()
+    if kind == "step":
+        # Default: reduce LR by factor of 0.5 every 50 epochs
+        return torch.optim.lr_scheduler.StepLR(
+            optimizer,
+            step_size=scheduler_kwargs.get("step_size", 50),
+            gamma=scheduler_kwargs.get("gamma", 0.5),
+        )
+    if kind == "cosine":
+        return torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=scheduler_kwargs.get("T_max", epochs),
+            eta_min=scheduler_kwargs.get("eta_min", 1e-6),
+        )
+    if kind == "exponential":
+        return torch.optim.lr_scheduler.ExponentialLR(
+            optimizer, gamma=scheduler_kwargs.get("gamma", 0.95)
+        )
+    if kind == "plateau":
+        # Reduce on plateau (based on loss)
+        return torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode=scheduler_kwargs.get("mode", "min"),
+            factor=scheduler_kwargs.get("factor", 0.5),
+            patience=scheduler_kwargs.get("patience", 10),
+        )
+    print(
+        f"Warning: Unknown scheduler type '{scheduler_type}'. No scheduler will be used."
+    )
+    return None

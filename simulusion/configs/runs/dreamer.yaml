@@ -1,0 +1,22 @@
+# Dreamer (V1) on DeepMind Control walker-walk, collecting online.
+#   simulusion train --config dreamer
+#   simulusion train --config dreamer task=dreamer-v2 model.env=cheetah-run
+# Progress and every interval below count environment steps (after action repeat).
+task: dreamer
+trainer:
+  max_steps: 1000000
+  precision: auto
+  log_every: 1000
+  eval_every: 10000
+  checkpoint_every: 50000
+  keep_checkpoints: 1      # replay buffers are large
+model:                     # simulusion.configs.dreamer_config.DreamerConfig
+  env_backend: dmc
+  env: walker-walk
+  action_repeat: 2
+  seed_steps: 5000
+  collect_steps: 1000
+  update_steps: 100
+  test_episodes: 5
+  enable_wandb: false
+save_replay: true

@@ -1,0 +1,17 @@
+# IRIS on Atari 100k, the paper's settings (ICLR 2023, Appendix A).
+#   simulusion train --config iris game=ALE/Breakout-v5
+# Progress is epochs (600; collection stops after 500 = 100k env steps). The
+# final evaluation (100 episodes) is the benchmark number; periodic ones are
+# monitoring only.
+task: iris
+trainer:
+  max_steps: 600
+  precision: auto
+  log_every: 1
+  eval_every: 50
+  checkpoint_every: 50
+  keep_checkpoints: 1
+game: ALE/Pong-v5
+eval_episodes: 10          # periodic monitoring; the final one uses model.eval_episodes
+model: {}                  # IRISConfig defaults are the paper's
+save_replay: true

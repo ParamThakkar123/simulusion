@@ -122,6 +122,16 @@ class TrainingTask(ABC):
         """The trained world model behind the shared protocol, if the task has one."""
         return None
 
+    def export(self, directory: Path) -> Optional[Path]:
+        """Write the trained model in its own reusable form; return ``directory``.
+
+        For models that are not world models (DiT, I-JEPA, a VAE), which
+        :meth:`world_model` cannot return. Called once, when training ends,
+        with ``<run_dir>/model``. The default writes nothing.
+        """
+        del directory
+        return None
+
     def state_dict(self) -> dict[str, Any]:
         """Everything needed to resume: weights, optimizer and scaler states."""
         return {}

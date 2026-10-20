@@ -133,6 +133,7 @@ class TrainResult:
     metrics: dict[str, float] = field(default_factory=dict)
     checkpoint: Optional[Path] = None
     world_model_path: Optional[Path] = None
+    model_path: Optional[Path] = None
     stopped_early: bool = False
 
 
@@ -206,6 +207,21 @@ class Trainer:
             return self.accelerator.prepare_model(module)
         return module
 
+    def broadcast_parameters(self, modules: Iterable[nn.Module]) -> None:
+        """Copy process 0's weights and buffers to every process.
+
+        DDP does this when it wraps a module. Modules trained unwrapped (with
+        ``gradient_update(..., all_reduce=True)``) must start identical too,
+        and each process is seeded differently. A no-op in one process.
+        """
+        if self.num_processes == 1:
+            return
+        import torch.distributed as dist
+
+        for module in modules:
+            for tensor in [*module.parameters(), *module.buffers()]:
+                dist.broadcast(tensor.data, src=0)
+
     def prepare_dataloader(self, loader: Any) -> Any:
         """Shard ``loader`` across processes and move its batches to the device."""
         return self.accelerator.prepare_data_loader(loader)
@@ -222,8 +238,14 @@ class Trainer:
         max_grad_norm: Optional[float] = None,
         modules: Iterable[nn.Module] = (),
         accumulate: bool = True,
+        all_reduce: bool = False,
     ) -> GradientUpdate:
-        """A :class:`GradientUpdate` at this run's precision and accumulation."""
+        """A :class:`GradientUpdate` at this run's precision and accumulation.
+
+        Pass the DDP-wrapped ``modules`` the parameters belong to, or
+        ``all_reduce=True`` for parameters of modules left unwrapped (see
+        :class:`GradientUpdate`).
+        """
         return GradientUpdate(
             optimizer,
             parameters,
@@ -231,6 +253,7 @@ class Trainer:
             max_grad_norm=max_grad_norm,
             accumulation_steps=self.config.grad_accumulation if accumulate else 1,
             modules=modules,
+            all_reduce=all_reduce and self.num_processes > 1,
         )
 
     def reduce(self, metrics: Mapping[str, float]) -> dict[str, float]:
@@ -366,6 +389,7 @@ class Trainer:
         world_model_path = None
         if cfg.export_world_model:
             world_model_path = self._export_world_model(task)
+        model_path = self._export_model(task)
         task.close()
         self._close_logger()
         return TrainResult(
@@ -375,6 +399,7 @@ class Trainer:
             metrics=final,
             checkpoint=last_checkpoint,
             world_model_path=world_model_path,
+            model_path=model_path,
             stopped_early=stopped_early,
         )
 
@@ -506,6 +531,15 @@ class Trainer:
         if self.is_main_process:
             model.save(path)
             logger.info("World model written to %s", path)
+        self.accelerator.wait_for_everyone()
+        return path
+
+    def _export_model(self, task: TrainingTask) -> Optional[Path]:
+        path: Optional[Path] = None
+        if self.is_main_process:
+            path = task.export(self.run_dir / "model")
+            if path is not None:
+                logger.info("Model written to %s", path)
         self.accelerator.wait_for_everyone()
         return path
 

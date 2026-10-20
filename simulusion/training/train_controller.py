@@ -121,7 +121,8 @@ def _run_rollout(
             mu, logsigma = vae.encoder(obs_tensor)
             z = mu + logsigma.exp() * torch.randn_like(logsigma)
 
-            action = ctrl(h, z).cpu().numpy().flatten()
+            # Controller.forward takes the concatenated [z, h] state.
+            action = ctrl(torch.cat([z, h], dim=-1)).cpu().numpy().flatten()
 
             action_t = torch.tensor(action).float().to(device)
             _, _, _, _, _, (h, c) = cell_rnn(action_t, z, (h, c))
@@ -168,7 +169,11 @@ def slave_routine(
                 time_limit,
                 device,
             )
-            r_queue.put((s_id, reward))
+            # CMA-ES minimises, and everything downstream (argmin for the
+            # best solution, `-best > target_return`, the saved `-cur_best`)
+            # treats results as negated returns. Queueing the raw return
+            # made the search minimise the reward it was meant to maximise.
+            r_queue.put((s_id, -reward))
 
 
 def evaluate(

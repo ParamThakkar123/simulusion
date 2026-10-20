@@ -723,140 +723,20 @@ class DiT(ExportableAgentMixin, nn.Module):
             device = torch.device("cpu")
             print("WARNING: CUDA not available, using CPU")
 
-        if dataset.lower() == "cifar10":
-            # Scale to [-1, 1], the range the DDPM forward process, the sampler's
-            # final clamp and every `(x + 1) / 2` display path assume. Plain
-            # ToTensor() trained on [0, 1] and sampled washed-out images.
-            transform = Compose(
-                [
-                    RandomHorizontalFlip(),
-                    ToTensor(),
-                    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]
-            )
-        else:
-            # Default the crop to the model's own input size. These are two
-            # independent knobs, and a mismatch does not fail until the first
-            # forward pass, as a bare shape error naming neither of them.
-            resolved_crop = crop_size if crop_size else img_size
-            transform = make_transforms(
-                crop_size=resolved_crop,
-                crop_scale=(0.3, 1.0),
-                color_jitter=0.5,
-                horizontal_flip=True,
-                color_distortion=True,
-                gaussian_blur=True,
-                normalization=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-            )
-
-        # Held-out loader, built only when early stopping needs one. Training
-        # loss cannot drive it: it keeps falling well past the point where
-        # samples stop improving, so a plateau on it never arrives.
-        val_loader: torch.utils.data.DataLoader | None = None
-
-        if dataset.lower() == "cifar10":
-            _, train_loader, _ = make_cifar10(
-                transform=transform,
-                batch_size=batch_size,
-                collator=None,
-                pin_mem=True,
-                num_workers=num_workers,
-                world_size=1,
-                rank=0,
-                root_path=root_path,
-                drop_last=True,
-                train=True,
-                download=download,
-            )
-            if early_stopping:
-                # CIFAR-10 ships a test split, so nothing has to come out of
-                # the training set.
-                _, val_loader, _ = make_cifar10(
-                    transform=transform,
-                    batch_size=batch_size,
-                    collator=None,
-                    pin_mem=True,
-                    num_workers=num_workers,
-                    world_size=1,
-                    rank=0,
-                    root_path=root_path,
-                    drop_last=False,
-                    train=False,
-                    download=download,
-                )
-        elif dataset.lower() == "imagenet":
-            _, train_loader, _ = make_imagenet1k(
-                transform=transform,
-                batch_size=batch_size,
-                collator=None,
-                pin_mem=True,
-                num_workers=num_workers,
-                world_size=1,
-                rank=0,
-                root_path=root_path,
-                image_folder=image_folder,
-                training=True,
-                copy_data=copy_data,
-                drop_last=True,
-                subset_file=subset_file,
-            )
-            if early_stopping:
-                # ImageNet's own validation split; `training=False` selects it.
-                _, val_loader, _ = make_imagenet1k(
-                    transform=transform,
-                    batch_size=batch_size,
-                    collator=None,
-                    pin_mem=True,
-                    num_workers=num_workers,
-                    world_size=1,
-                    rank=0,
-                    root_path=root_path,
-                    image_folder=image_folder,
-                    training=False,
-                    copy_data=copy_data,
-                    drop_last=False,
-                    subset_file=subset_file,
-                )
-        elif dataset.lower() == "imagefolder":
-            _, train_loader, _ = make_imagefolder(
-                transform=transform,
-                batch_size=batch_size,
-                collator=None,
-                pin_mem=True,
-                num_workers=num_workers,
-                world_size=1,
-                rank=0,
-                root_path=root_path,
-                image_folder=image_folder,
-                drop_last=True,
-                val_split=val_split,
-                split="train",
-            )
-            if early_stopping:
-                if not val_split:
-                    raise ValueError(
-                        "early_stopping on an imagefolder needs val_split > 0 "
-                        "so there is held-out data to measure; pass e.g. "
-                        "val_split=0.05"
-                    )
-                _, val_loader, _ = make_imagefolder(
-                    transform=transform,
-                    batch_size=batch_size,
-                    collator=None,
-                    pin_mem=True,
-                    num_workers=num_workers,
-                    world_size=1,
-                    rank=0,
-                    root_path=root_path,
-                    image_folder=image_folder,
-                    drop_last=False,
-                    val_split=val_split,
-                    split="val",
-                )
-        else:
-            raise ValueError(
-                f"Unsupported dataset: {dataset}. Supported: cifar10, imagenet, imagefolder"
-            )
+        train_loader, val_loader = dit_loaders(
+            dataset,
+            batch_size=batch_size,
+            img_size=img_size,
+            root_path=root_path,
+            image_folder=image_folder,
+            crop_size=crop_size,
+            num_workers=num_workers,
+            download=download,
+            copy_data=copy_data,
+            subset_file=subset_file,
+            val_split=val_split,
+            with_val=early_stopping,
+        )
 
         ddpm = DDPM(
             timesteps=timesteps,
@@ -1089,6 +969,201 @@ class DiT(ExportableAgentMixin, nn.Module):
             os.makedirs(workdir, exist_ok=True)
             save_image((samples + 1) / 2, f"{workdir}/generated_samples.png", nrow=4)
             print(f"Generated samples saved to {workdir}/generated_samples.png")
+
+
+def dit_loaders(
+    dataset: str,
+    *,
+    batch_size: int,
+    img_size: int,
+    root_path: str = "./data",
+    image_folder: str | None = None,
+    crop_size: int | None = None,
+    num_workers: int = 4,
+    download: bool = True,
+    copy_data: bool = False,
+    subset_file: str | None = None,
+    val_split: float | None = None,
+    with_val: bool = False,
+) -> tuple[Any, Any]:
+    """DiT's ``(train_loader, val_loader)``; ``val_loader`` is ``None`` without ``with_val``.
+
+    ``dataset`` is ``"cifar10"`` (downloads into ``root_path``), ``"imagenet"``
+    or ``"imagefolder"``. Images are scaled to ``[-1, 1]`` for CIFAR-10.
+    """
+    if dataset.lower() == "cifar10":
+        # Scale to [-1, 1], the range the DDPM forward process, the sampler's
+        # final clamp and every `(x + 1) / 2` display path assume. Plain
+        # ToTensor() trained on [0, 1] and sampled washed-out images.
+        transform = Compose(
+            [
+                RandomHorizontalFlip(),
+                ToTensor(),
+                Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
+    else:
+        # Default the crop to the model's own input size. These are two
+        # independent knobs, and a mismatch does not fail until the first
+        # forward pass, as a bare shape error naming neither of them.
+        resolved_crop = crop_size if crop_size else img_size
+        transform = make_transforms(
+            crop_size=resolved_crop,
+            crop_scale=(0.3, 1.0),
+            color_jitter=0.5,
+            horizontal_flip=True,
+            color_distortion=True,
+            gaussian_blur=True,
+            normalization=((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        )
+
+    # Held-out loader, built only when early stopping needs one. Training
+    # loss cannot drive it: it keeps falling well past the point where
+    # samples stop improving, so a plateau on it never arrives.
+    val_loader: torch.utils.data.DataLoader | None = None
+
+    if dataset.lower() == "cifar10":
+        _, train_loader, _ = make_cifar10(
+            transform=transform,
+            batch_size=batch_size,
+            collator=None,
+            pin_mem=True,
+            num_workers=num_workers,
+            world_size=1,
+            rank=0,
+            root_path=root_path,
+            drop_last=True,
+            train=True,
+            download=download,
+        )
+        if with_val:
+            # CIFAR-10 ships a test split, so nothing has to come out of
+            # the training set.
+            _, val_loader, _ = make_cifar10(
+                transform=transform,
+                batch_size=batch_size,
+                collator=None,
+                pin_mem=True,
+                num_workers=num_workers,
+                world_size=1,
+                rank=0,
+                root_path=root_path,
+                drop_last=False,
+                train=False,
+                download=download,
+            )
+    elif dataset.lower() == "imagenet":
+        _, train_loader, _ = make_imagenet1k(
+            transform=transform,
+            batch_size=batch_size,
+            collator=None,
+            pin_mem=True,
+            num_workers=num_workers,
+            world_size=1,
+            rank=0,
+            root_path=root_path,
+            image_folder=image_folder,
+            training=True,
+            copy_data=copy_data,
+            drop_last=True,
+            subset_file=subset_file,
+        )
+        if with_val:
+            # ImageNet's own validation split; `training=False` selects it.
+            _, val_loader, _ = make_imagenet1k(
+                transform=transform,
+                batch_size=batch_size,
+                collator=None,
+                pin_mem=True,
+                num_workers=num_workers,
+                world_size=1,
+                rank=0,
+                root_path=root_path,
+                image_folder=image_folder,
+                training=False,
+                copy_data=copy_data,
+                drop_last=False,
+                subset_file=subset_file,
+            )
+    elif dataset.lower() == "imagefolder":
+        _, train_loader, _ = make_imagefolder(
+            transform=transform,
+            batch_size=batch_size,
+            collator=None,
+            pin_mem=True,
+            num_workers=num_workers,
+            world_size=1,
+            rank=0,
+            root_path=root_path,
+            image_folder=image_folder,
+            drop_last=True,
+            val_split=val_split,
+            split="train",
+        )
+        if with_val:
+            if not val_split:
+                raise ValueError(
+                    "early_stopping on an imagefolder needs val_split > 0 "
+                    "so there is held-out data to measure; pass e.g. "
+                    "val_split=0.05"
+                )
+            _, val_loader, _ = make_imagefolder(
+                transform=transform,
+                batch_size=batch_size,
+                collator=None,
+                pin_mem=True,
+                num_workers=num_workers,
+                world_size=1,
+                rank=0,
+                root_path=root_path,
+                image_folder=image_folder,
+                drop_last=False,
+                val_split=val_split,
+                split="val",
+            )
+    else:
+        raise ValueError(
+            f"Unsupported dataset: {dataset}. Supported: cifar10, imagenet, imagefolder"
+        )
+    return train_loader, val_loader
+
+
+def dit_ema_update(model: nn.Module, ema_model: nn.Module, decay: float) -> None:
+    """``ema = decay * ema + (1 - decay) * model``, parameter by parameter."""
+    with torch.no_grad():
+        # Fused multi-tensor EMA: identical arithmetic to the per-tensor
+        # mul_/add_ pair, but one kernel launch for the whole model.
+        ema_params: list[torch.Tensor] = list(ema_model.parameters())
+        src_params: list[torch.Tensor] = list(model.parameters())
+        torch._foreach_mul_(ema_params, decay)
+        torch._foreach_add_(ema_params, src_params, alpha=1 - decay)
+
+
+def dit_l_simple(
+    model: nn.Module,
+    ddpm: Any,
+    images: torch.Tensor,
+    labels: torch.Tensor | None,
+    timesteps: int,
+) -> torch.Tensor:
+    """DiT's training objective, L_simple, on one batch.
+
+    With ``learn_sigma`` the model emits 2C channels: noise then the covariance
+    parameterisation. Paper 3.1 trains eps with L_simple and Sigma with the
+    full variational bound; only the L_simple half is applied here, so the
+    covariance head is carried but not learned. Set ``learn_sigma=False`` for
+    a strictly epsilon-only model.
+    """
+    inner: Any = getattr(model, "module", model)  # through a DDP wrapper
+    b = images.size(0)
+    t = torch.randint(0, timesteps, (b,), device=images.device).long()
+    noise = torch.randn_like(images)
+    x_t = ddpm.q_sample(images, t, noise)
+    y = labels if inner.y_embedder is not None else None
+    pred = model(x_t, t, y)
+    if inner.learn_sigma:
+        pred = pred[:, : inner.in_channels]
+    return F.mse_loss(pred, noise)
 
 
 def create_dit(config: Any = None, **overrides: Any) -> DiT:

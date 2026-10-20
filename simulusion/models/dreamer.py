@@ -19,6 +19,7 @@ from simulusion.memory.dreamer_memory import ReplayBuffer
 from simulusion.models.dreamer_rssm import RSSM
 from simulusion.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionDecoder
 from simulusion.vision.dreamer_encoder import ConvEncoder
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.memory_utils import enable_performance_defaults
 from simulusion.utils.train_utils import EarlyStopping
 from simulusion.utils.dreamer_utils import (
@@ -405,6 +406,9 @@ class Dreamer:
             getattr(args, "use_amp", True)
             and getattr(device, "type", str(device)) == "cuda"
         )
+        # What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The
+        # shared Trainer replaces it with the run's precision (set_precision).
+        self.precision = MixedPrecision.from_use_amp(self.use_amp, self.device)
         # `ConvDecoder` emits Independent(Normal(mean, 1), len(obs_shape)), whose
         # negative log-likelihood carries a constant term of
         # prod(obs_shape) * 0.5 * log(2*pi). For 3x64x64 that is ~11292 nats,
@@ -416,6 +420,7 @@ class Dreamer:
         # Latest per-component loss values, refreshed by `train_one_batch`.
         self.metrics: dict[str, float] = {}
         self._model_components: dict[str, float] = {}
+        self._all_reduce = False
         self._build_model(restore=self.restore)
 
     def _build_model(self, restore: bool = False) -> None:
@@ -505,9 +510,7 @@ class Dreamer:
         self.actor_opt = optim.Adam(
             self.actor.parameters(), self.args.actor_learning_rate
         )
-        self.world_model_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.actor_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.value_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+        self._build_updates()
 
         self.world_model_modules: list[nn.Module]
         if self.args.use_disc_model:
@@ -677,6 +680,58 @@ class Dreamer:
         }
 
     @assert_finite
+    def _build_updates(self) -> None:
+        clip = self.args.grad_clip_norm
+        self.world_model_update = GradientUpdate(
+            self.world_model_opt,
+            self.world_model_params,
+            self.precision,
+            max_grad_norm=clip,
+            all_reduce=self._all_reduce,
+        )
+        self.actor_update = GradientUpdate(
+            self.actor_opt, self.actor.parameters(), self.precision, max_grad_norm=clip
+        )
+        self.value_update = GradientUpdate(
+            self.value_opt,
+            self.value_model.parameters(),
+            self.precision,
+            max_grad_norm=clip,
+        )
+
+    def set_precision(
+        self, precision: MixedPrecision, *, all_reduce: bool = False
+    ) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers).
+
+        ``all_reduce`` averages the world model's gradients across processes,
+        for training it data-parallel (the RSSM is driven through
+        ``observe_rollout``, which a DDP wrapper would not see).
+        """
+        self.precision = precision
+        self.use_amp = precision.enabled
+        self._all_reduce = all_reduce
+        self._build_updates()
+
+    def update_world_model(
+        self,
+        obs: torch.Tensor,
+        acs: torch.Tensor,
+        rews: torch.Tensor,
+        nonterms: torch.Tensor,
+        continues: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """One world-model optimizer step; returns ``(loss, grad_norm)``.
+
+        Inputs are time-major, as the replay buffer samples them: ``obs``
+        ``(L, B, C, H, W)`` uint8, ``acs`` ``(L, B, A)``, ``rews``,
+        ``nonterms`` and ``continues`` ``(L, B, 1)``, where row ``t`` holds
+        the action taken at ``obs[t]`` and what followed it.
+        """
+        with self.precision.autocast():
+            model_loss = self.world_model_loss(obs, acs, rews, nonterms, continues)
+        return model_loss, self.world_model_update(model_loss)
+
     def world_model_loss(
         self,
         obs: torch.Tensor,
@@ -835,49 +890,17 @@ class Dreamer:
         nonterms = (1.0 - self._to_device(terms).to(torch.float32)).unsqueeze(-1)
         continues = (1.0 - self._to_device(terminated).to(torch.float32)).unsqueeze(-1)
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
-            model_loss = self.world_model_loss(
-                obs_t, acs_t, rews_t, nonterms, continues
-            )
-        self.world_model_opt.zero_grad(set_to_none=True)
-        self.world_model_scaler.scale(model_loss).backward()
-        self.world_model_scaler.unscale_(self.world_model_opt)
-        model_grad_norm = nn.utils.clip_grad_norm_(
-            self.world_model_params, self.args.grad_clip_norm
+        model_loss, model_grad_norm = self.update_world_model(
+            obs_t, acs_t, rews_t, nonterms, continues
         )
-        self.world_model_scaler.step(self.world_model_opt)
-        self.world_model_scaler.update()
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             actor_loss = self.actor_loss()
-        self.actor_opt.zero_grad(set_to_none=True)
-        self.actor_scaler.scale(actor_loss).backward()
-        self.actor_scaler.unscale_(self.actor_opt)
-        actor_grad_norm = nn.utils.clip_grad_norm_(
-            self.actor.parameters(), self.args.grad_clip_norm
-        )
-        self.actor_scaler.step(self.actor_opt)
-        self.actor_scaler.update()
+        actor_grad_norm = self.actor_update(actor_loss)
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             value_loss = self.value_loss()
-        self.value_opt.zero_grad(set_to_none=True)
-        self.value_scaler.scale(value_loss).backward()
-        self.value_scaler.unscale_(self.value_opt)
-        value_grad_norm = nn.utils.clip_grad_norm_(
-            self.value_model.parameters(), self.args.grad_clip_norm
-        )
-        self.value_scaler.step(self.value_opt)
-        self.value_scaler.update()
+        value_grad_norm = self.value_update(value_loss)
 
         clip = self.args.grad_clip_norm
         self.metrics = dict(self._model_components)
@@ -886,7 +909,7 @@ class Dreamer:
             ("actor", actor_grad_norm),
             ("value", value_grad_norm),
         ):
-            norm_value = float(norm)
+            norm_value = float("nan") if norm is None else float(norm)
             self.metrics[f"grad_norm/{name}"] = norm_value
             # A norm that is non-finite means AMP overflowed and GradScaler
             # silently skipped the update; a norm above `clip` means the step

@@ -16,6 +16,7 @@ from simulusion.models.model_io import (
     resolve_pretrained_file,
     save_config_next_to_checkpoint,
 )
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.configs.diamond_config import (
     DiamondConfig,
     HUMAN_SCORES,
@@ -58,21 +59,33 @@ class DiamondAgent:
     RL agent trained entirely within a diffusion world model.
     """
 
-    def __init__(self, config: DiamondConfig) -> None:
+    def __init__(self, config: DiamondConfig, *, env: Optional[Any] = None) -> None:
+        """Args:
+        config: DIAMOND's settings.
+        env: An environment to train on instead of the Atari one built from
+            ``config.game``. It must follow the DIAMOND wrapper's API:
+            ``reset() -> (obs, info)`` and ``step(a) -> (obs, reward, done,
+            info)`` with ``info["terminated"]`` / ``info["truncated"]``, and
+            ``(obs_size, obs_size, 3)`` uint8 frames.
+        """
         self.config = coerce_config(DiamondConfig, config)
         config = self.config
         from simulusion.utils.device import resolve_device
 
         self.device = resolve_device(config.device)
 
-        self.env = make_diamond_atari_env(
-            game=config.game,
-            frameskip=config.frameskip,
-            max_noop=config.max_noop,
-            terminate_on_life_loss=config.terminate_on_life_loss,
-            reward_clip=True,
-            resize=(config.obs_size, config.obs_size),
-            seed=config.seed,
+        self.env = (
+            env
+            if env is not None
+            else make_diamond_atari_env(
+                game=config.game,
+                frameskip=config.frameskip,
+                max_noop=config.max_noop,
+                terminate_on_life_loss=config.terminate_on_life_loss,
+                reward_clip=True,
+                resize=(config.obs_size, config.obs_size),
+                seed=config.seed,
+            )
         )
 
         # action_space may be different Space types; prefer Discrete.n when available
@@ -101,6 +114,9 @@ class DiamondAgent:
             getattr(config, "use_amp", True)
             and getattr(self.device, "type", str(self.device)) == "cuda"
         )
+        # What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The
+        # shared Trainer replaces it with the run's precision (set_precision).
+        self.precision = MixedPrecision.from_use_amp(self.use_amp, self.device)
 
         self._build_models()
 
@@ -252,9 +268,37 @@ class DiamondAgent:
             eps=self.config.adam_epsilon,
             weight_decay=self.config.weight_decay_actor,
         )
-        self.diffusion_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.reward_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
-        self.actor_scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+        self._build_updates()
+
+    def _build_updates(self, all_reduce: bool = False) -> None:
+        # DIAMOND does not clip gradients (Appendix C lists no clipping).
+        self.diffusion_update = GradientUpdate(
+            self.diffusion_opt,
+            self.diffusion_model.parameters(),
+            self.precision,
+            all_reduce=all_reduce,
+        )
+        self.reward_update = GradientUpdate(
+            self.reward_opt,
+            self.reward_model.parameters(),
+            self.precision,
+            all_reduce=all_reduce,
+        )
+        self.actor_update = GradientUpdate(
+            self.actor_opt, self.actor_critic.parameters(), self.precision
+        )
+
+    def set_precision(
+        self, precision: MixedPrecision, *, all_reduce: bool = False
+    ) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers).
+
+        ``all_reduce`` averages the world model's gradients across processes,
+        for data-parallel training of the denoiser and reward model.
+        """
+        self.precision = precision
+        self.use_amp = precision.enabled
+        self._build_updates(all_reduce=all_reduce)
 
     def _move_batch_to_device(
         self, batch: Dict[str, torch.Tensor]
@@ -295,10 +339,7 @@ class DiamondAgent:
         t_cond = precond["c_noise"].squeeze(-1).squeeze(-1)
 
         # Debug asserts: ensure shapes are as expected
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             model_output: Any = self.diffusion_model(
                 x=model_input,
                 t=t_cond,
@@ -310,10 +351,7 @@ class DiamondAgent:
 
             loss = F.mse_loss(model_output, target)
 
-        self.diffusion_opt.zero_grad(set_to_none=True)
-        cast(Any, self.diffusion_scaler.scale(loss)).backward()
-        self.diffusion_scaler.step(self.diffusion_opt)
-        self.diffusion_scaler.update()
+        self.diffusion_update(loss)
 
         return loss.detach().item()
 
@@ -328,10 +366,7 @@ class DiamondAgent:
 
         B, T, C, H, W = obs_seq.shape
 
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             reward_logits, term_logits, _ = self.reward_model(
                 obs=obs_seq,
                 actions=action_seq,
@@ -352,10 +387,7 @@ class DiamondAgent:
                 terminated=dones_target,
             )
 
-        self.reward_opt.zero_grad(set_to_none=True)
-        self.reward_scaler.scale(total_loss).backward()
-        self.reward_scaler.step(self.reward_opt)
-        self.reward_scaler.update()
+        self.reward_update(total_loss)
 
         return total_loss.detach()
 
@@ -447,10 +479,7 @@ class DiamondAgent:
         # Compute policy logits and values for imagined observations using the
         # same initial policy hidden state used during imagination so the
         # logits align with the sampled actions.
-        with torch.amp.autocast(
-            device_type=getattr(self.device, "type", str(self.device)),
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             # obs_imag is x_0..x_H, so this yields H+1 logits/values. The
             # trailing value is V(x_H), the lambda-return's bootstrap (paper
             # eq. 14); the trailing logits belong to an action that was never
@@ -481,10 +510,7 @@ class DiamondAgent:
 
             total_loss = policy_loss + value_loss
 
-        self.actor_opt.zero_grad(set_to_none=True)
-        cast(Any, self.actor_scaler.scale(total_loss)).backward()
-        self.actor_scaler.step(self.actor_opt)
-        self.actor_scaler.update()
+        self.actor_update(total_loss)
 
         return policy_loss.detach(), value_loss.detach()
 
@@ -703,72 +729,17 @@ class DiamondAgent:
             )
 
         for epoch in tqdm(range(self.config.num_epochs), desc="Training"):
-            collected_rewards = self._collect_experience(
-                self.config.environment_steps_per_epoch
-            )
-
-            if not self.replay_buffer.is_ready(self.config.batch_size):
+            epoch_metrics = self.train_epoch()
+            if epoch_metrics is None:
                 continue
-
-            dataset = SequenceDataset(
-                replay_buffer=self.replay_buffer,
-                sequence_length=self.config.burn_in_length
-                + self.config.imagination_horizon,
-                burn_in=self.config.burn_in_length,
-            )
-            num_workers = getattr(self.config, "data_loader_num_workers", 4)
-            dataloader = DataLoader(
-                dataset,
-                batch_size=self.config.batch_size,
-                shuffle=True,
-                num_workers=num_workers,
-                pin_memory=getattr(self.config, "pin_memory", True)
-                and self.device.type == "cuda",
-                persistent_workers=getattr(self.config, "persistent_workers", True)
-                and num_workers > 0,
-            )
-
-            diffusion_losses = []
-            reward_losses = []
-            policy_losses = []
-            value_losses = []
-
-            # iterate over the dataloader properly; avoid recreating iterator each step
-            data_iter = iter(dataloader)
-            for _ in tqdm(
-                range(self.config.training_steps_per_epoch),
-                desc="Training",
-                leave=False,
-            ):
-                try:
-                    batch = next(data_iter)
-                except StopIteration:
-                    data_iter = iter(dataloader)
-                    batch = next(data_iter)
-
-                batch = self._move_batch_to_device(batch)
-
-                diffusion_loss = self._update_diffusion_model(batch)
-                diffusion_losses.append(diffusion_loss)
-
-                reward_loss = self._update_reward_model(batch)
-                reward_losses.append(reward_loss)
-
-                policy_loss, value_loss = self._update_actor_critic(batch)
-                policy_losses.append(policy_loss)
-                value_losses.append(value_loss)
 
             if epoch % self.config.log_interval == 0:
                 print(f"\nEpoch {epoch}:")
-                diffusion_mean = torch.tensor(diffusion_losses).mean().detach().cpu()
-                reward_mean = torch.tensor(reward_losses).mean().detach().cpu()
-                policy_mean = torch.stack(policy_losses).mean().detach().cpu()
-                value_mean = torch.stack(value_losses).mean().detach().cpu()
-                print(f"  Diffusion loss: {float(diffusion_mean):.4f}")
-                print(f"  Reward loss: {float(reward_mean):.4f}")
-                print(f"  Policy loss: {float(policy_mean):.4f}")
-                print(f"  Value loss: {float(value_mean):.4f}")
-                print(f"  Collected reward: {np.mean(collected_rewards):.2f}")
+                print(f"  Diffusion loss: {epoch_metrics['diffusion_loss']:.4f}")
+                print(f"  Reward loss: {epoch_metrics['reward_loss']:.4f}")
+                print(f"  Policy loss: {epoch_metrics['policy_loss']:.4f}")
+                print(f"  Value loss: {epoch_metrics['value_loss']:.4f}")
+                print(f"  Collected reward: {epoch_metrics['collected_reward']:.2f}")
 
             if epoch % self.config.eval_interval == 0:
                 eval_reward = self.evaluate()
@@ -788,6 +759,77 @@ class DiamondAgent:
 
             if epoch % self.config.save_interval == 0:
                 self.save_checkpoint(f"checkpoint_{epoch}.pt")
+
+    def train_epoch(self) -> Optional[Dict[str, float]]:
+        """One epoch of Algorithm 1: collect, then train every component.
+
+        Collects ``environment_steps_per_epoch`` steps, then runs
+        ``training_steps_per_epoch`` updates of the diffusion model, the
+        reward/termination model and the actor-critic. Returns the epoch's
+        mean losses, or ``None`` while the replay holds too little to train.
+        """
+        collected_rewards = self._collect_experience(
+            self.config.environment_steps_per_epoch
+        )
+
+        if not self.replay_buffer.is_ready(self.config.batch_size):
+            return None
+
+        dataset = SequenceDataset(
+            replay_buffer=self.replay_buffer,
+            sequence_length=self.config.burn_in_length
+            + self.config.imagination_horizon,
+            burn_in=self.config.burn_in_length,
+        )
+        num_workers = getattr(self.config, "data_loader_num_workers", 4)
+        dataloader = DataLoader(
+            dataset,
+            batch_size=self.config.batch_size,
+            shuffle=True,
+            num_workers=num_workers,
+            pin_memory=getattr(self.config, "pin_memory", True)
+            and self.device.type == "cuda",
+            persistent_workers=getattr(self.config, "persistent_workers", True)
+            and num_workers > 0,
+        )
+
+        diffusion_losses = []
+        reward_losses = []
+        policy_losses = []
+        value_losses = []
+
+        # iterate over the dataloader properly; avoid recreating iterator each step
+        data_iter = iter(dataloader)
+        for _ in tqdm(
+            range(self.config.training_steps_per_epoch),
+            desc="Training",
+            leave=False,
+        ):
+            try:
+                batch = next(data_iter)
+            except StopIteration:
+                data_iter = iter(dataloader)
+                batch = next(data_iter)
+
+            batch = self._move_batch_to_device(batch)
+
+            diffusion_loss = self._update_diffusion_model(batch)
+            diffusion_losses.append(diffusion_loss)
+
+            reward_loss = self._update_reward_model(batch)
+            reward_losses.append(reward_loss)
+
+            policy_loss, value_loss = self._update_actor_critic(batch)
+            policy_losses.append(policy_loss)
+            value_losses.append(value_loss)
+
+        return {
+            "diffusion_loss": float(torch.tensor(diffusion_losses).mean()),
+            "reward_loss": float(torch.tensor(reward_losses).mean()),
+            "policy_loss": float(torch.stack(policy_losses).mean()),
+            "value_loss": float(torch.stack(value_losses).mean()),
+            "collected_reward": float(np.mean(collected_rewards)),
+        }
 
     @torch.no_grad()
     def evaluate(self, num_episodes: int = 1) -> float:
@@ -902,7 +944,11 @@ class DiamondAgent:
                     "truncations": rb_state["truncations"][:n].copy(),
                     "position": int(self.replay_buffer.position),
                     "size": int(n),
-                    "capacity": int(n),
+                    # The buffer's real capacity, not the trimmed length: it
+                    # used to record `n`, so a resumed run continued with a
+                    # replay only as large as it was at the checkpoint and
+                    # overwrote its oldest data from then on.
+                    "capacity": int(self.replay_buffer.capacity),
                 }
             else:
                 rb_state_trim = rb_state
@@ -936,7 +982,9 @@ class DiamondAgent:
             # np.savez_compressed will store arrays with the provided keys
             try:
                 np.savez_compressed(replay_file, **rb_state_trim)
-                checkpoint["replay_buffer_file"] = str(replay_file)
+                # Just the file name: it sits next to the checkpoint, and an
+                # absolute path breaks as soon as the directory is moved.
+                checkpoint["replay_buffer_file"] = os.path.basename(replay_file)
             except Exception:
                 # If saving fails, do not embed large Python objects in the
                 # torch checkpoint; simply omit the replay buffer files and
@@ -949,7 +997,7 @@ class DiamondAgent:
                 # Stack into a single array (N, H, W, C)
                 obs_arr = np.stack(self.obs_history_raw)
                 np.save(obs_file, obs_arr)
-                checkpoint["obs_history_file"] = str(obs_file)
+                checkpoint["obs_history_file"] = os.path.basename(obs_file)
             except Exception:
                 print("Warning: failed to write obs_history file; skipping embedding")
 
@@ -1013,7 +1061,7 @@ class DiamondAgent:
         # to embedded dict when necessary.
         if "replay_buffer_file" in checkpoint:
             try:
-                replay_file = checkpoint["replay_buffer_file"]
+                replay_file = _beside(fpath, checkpoint["replay_buffer_file"])
                 with np.load(replay_file, allow_pickle=False) as data:
                     rb_state = {k: data[k] for k in data.files}
                 self.replay_buffer.load_state_dict(rb_state)
@@ -1036,7 +1084,7 @@ class DiamondAgent:
         # restore obs_history_raw from separate .npy file if present
         if "obs_history_file" in checkpoint:
             try:
-                obs_file = checkpoint["obs_history_file"]
+                obs_file = _beside(fpath, checkpoint["obs_history_file"])
                 obs_arr = np.load(obs_file, allow_pickle=False)
                 self.obs_history_raw = [o for o in obs_arr]
                 self.obs_history = [_normalize_frame(o) for o in self.obs_history_raw]
@@ -1060,6 +1108,12 @@ class DiamondAgent:
                 self.obs_history = [_normalize_frame(o) for o in self.obs_history_raw]
             except Exception:
                 print("Warning: failed to load obs_history_raw from checkpoint")
+
+
+def _beside(checkpoint_path: str, name: str) -> str:
+    """A side file of a checkpoint, by name (or a legacy absolute path)."""
+    local = os.path.join(os.path.dirname(checkpoint_path), os.path.basename(name))
+    return local if os.path.exists(local) else name
 
 
 def train_diamond(

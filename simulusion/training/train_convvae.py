@@ -17,6 +17,7 @@ from simulusion.datasets.wm_dataset import ObservationDataset
 from simulusion.vision.VAE.ConvVAE import ConvVAE
 from simulusion.configs.wm_config import WMVAEConfig
 from simulusion.losses.convae_loss import conv_vae_loss_fn
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.train_utils import EarlyStopping, ReduceLROnPlateau
 
 
@@ -86,7 +87,8 @@ def train_epoch(
     train_dataset: Any,
     loss_fn: Any,
     use_amp: bool = False,
-    scaler: Optional["torch.cuda.amp.GradScaler"] = None,
+    scaler: Optional["torch.amp.GradScaler"] = None,
+    update: Optional[GradientUpdate] = None,
 ) -> float:
     """Run one epoch of training.
 
@@ -100,29 +102,27 @@ def train_epoch(
         loss_fn: Loss function to use.
         use_amp: Whether to use automatic mixed precision.
         scaler: GradScaler for mixed precision training.
+        update: Steps ``optimizer`` at its own precision (the shared Trainer
+            passes one); without it one is built from ``use_amp`` and
+            ``scaler``.
     """
     model.train()
+    if update is None:
+        update = GradientUpdate(
+            optimizer, model.parameters(), MixedPrecision.from_use_amp(use_amp, device)
+        )
+        if scaler is not None:
+            update.scaler = scaler  # keep the caller's loss scale across epochs
     train_loss = 0.0
     if hasattr(train_dataset, "load_next_buffer"):
         train_dataset.load_next_buffer()
 
     for batch_idx, data in enumerate(train_loader):
         data = data.to(device)
-        optimizer.zero_grad()
-
-        if use_amp:
-            assert scaler is not None
-            with torch.cuda.amp.autocast():
-                reconst, mu, logvar = model(data)
-                loss = loss_fn(reconst, data, mu, logvar)
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
+        with update.precision.autocast():
             reconst, mu, logvar = model(data)
             loss = loss_fn(reconst, data, mu, logvar)
-            loss.backward()
-            optimizer.step()
+        update(loss)
 
         train_loss += loss.item()
 
@@ -250,7 +250,9 @@ def train_convae(config: WMVAEConfig) -> None:
     print(f"Test dataset size: {len(test_dataset)}, batches: {len(test_loader)}")
 
     use_amp = device.type == "cuda"
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    update = GradientUpdate(
+        optimizer, model.parameters(), MixedPrecision.from_use_amp(use_amp, device)
+    )
 
     cur_best = None
 
@@ -264,8 +266,7 @@ def train_convae(config: WMVAEConfig) -> None:
             device,
             train_dataset,
             conv_vae_loss_fn,
-            use_amp=use_amp,
-            scaler=scaler,
+            update=update,
         )
         print("Training complete, starting validation...")
         test_loss = test_epoch(model, test_loader, device, conv_vae_loss_fn)

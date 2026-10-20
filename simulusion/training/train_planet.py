@@ -1,9 +1,8 @@
-from typing import Any
+from typing import Any, Optional
 import argparse
 import pdb
 import torch
 import numpy as np
-import torch.nn as nn
 import torch.nn.functional as F
 from tqdm import trange
 from functools import partial
@@ -22,6 +21,7 @@ from simulusion.utils.utils import (
     normalize_frames_for_saving,
 )
 from simulusion.memory.planet_memory import Memory, Episode
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.models.rssm import RecurrentStateSpaceModel
 from simulusion.controller.rssm_policy import RSSMPolicy
 from simulusion.controller.rollout_generator import RolloutGenerator
@@ -36,6 +36,8 @@ def train(
     H: int = 50,
     beta: float = 1.0,
     grads: bool = False,
+    update: Optional[GradientUpdate] = None,
+    precision: Optional[MixedPrecision] = None,
 ) -> dict:
     """
     Training implementation as indicated in:
@@ -44,7 +46,20 @@ def train(
 
     (a.) The Standard Variational Bound Method
         using only single step predictions.
+
+    ``update`` steps ``optimizer`` (the shared Trainer passes one at the run's
+    precision); without it the step is plain fp32 with the gradient norm
+    clipped at 1000, as it always was. ``precision`` sets the autocast for the
+    loss.
     """
+    if precision is None:
+        precision = (
+            update.precision if update is not None else MixedPrecision("fp32", device)
+        )
+    if update is None:
+        update = GradientUpdate(
+            optimizer, rssm.parameters(), precision, max_grad_norm=1000.0
+        )
     free_nats = torch.ones(1, device=device) * 3.0
     (x, u, r, t), lengths = memory.sample(N, H, time_first=True)
     x, u, r, t = [
@@ -53,6 +68,38 @@ def train(
     ]
     preprocess_img(x, depth=5)
 
+    with precision.autocast():
+        loss, kld_loss, rec_loss, rew_loss = _variational_bound(
+            rssm, x, u, r, beta, free_nats
+        )
+    grad_norm = update(loss)
+
+    metrics: dict[str, Any] = {
+        "losses": {
+            "kl": kld_loss.item(),
+            "reconstruction": rec_loss.item(),
+            "reward_pred": rew_loss.item(),
+        },
+    }
+    if grad_norm is not None:
+        metrics["grad_norm"] = float(grad_norm)
+    if grads:
+        metrics["grad_norms"] = {
+            k: 0 if v.grad is None else v.grad.norm().item()
+            for k, v in rssm.named_parameters()
+        }
+    return metrics
+
+
+def _variational_bound(
+    rssm: Any,
+    x: torch.Tensor,
+    u: torch.Tensor,
+    r: torch.Tensor,
+    beta: float,
+    free_nats: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """PlaNet's one-step variational bound over a time-major batch."""
     e_t = bottle(rssm.encoder, x)
     h_t, s_t = rssm.get_init_state(e_t[0])
     states, priors, posteriors, posterior_samples = [], [], [], []
@@ -93,25 +140,8 @@ def train(
         bottle(rssm.pred_reward, states_stacked, posterior_samples_stacked), r
     )
 
-    optimizer.zero_grad()
     loss = beta * kld_loss + rec_loss + rew_loss
-    loss.backward()  # type: ignore[no-untyped-call]
-    nn.utils.clip_grad_norm_(rssm.parameters(), 1000.0, norm_type=2)
-    optimizer.step()
-
-    metrics = {
-        "losses": {
-            "kl": kld_loss.item(),
-            "reconstruction": rec_loss.item(),
-            "reward_pred": rew_loss.item(),
-        },
-    }
-    if grads:
-        metrics["grad_norms"] = {
-            k: 0 if v.grad is None else v.grad.norm().item()
-            for k, v in rssm.named_parameters()
-        }
-    return metrics
+    return loss, kld_loss, rec_loss, rew_loss
 
 
 def build_parser() -> argparse.ArgumentParser:
