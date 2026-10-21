@@ -687,148 +687,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">for world model learning.</span>
 <span class="sd">"""</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">exists</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">join</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.utils.data</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">optim</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_image</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">albumentations</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">A</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.wm_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObservationDataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.VAE.ConvVAE</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvVAE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.wm_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WMVAEConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.losses.convae_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">conv_vae_loss_fn</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span><span class="p">,</span> <span class="n">ReduceLROnPlateau</span>
-
-
-<div class="viewcode-block" id="save_checkpoint">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_convvae.save_checkpoint">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">save_checkpoint</span><span class="p">(</span>
-    <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">is_best</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">best_filename</span><span class="p">:</span> <span class="nb">str</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Save model checkpoint.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        state: Dictionary containing model state to save.</span>
-<span class="sd">        is_best: If True, also save as best checkpoint.</span>
-<span class="sd">        filename: Path to save checkpoint.</span>
-<span class="sd">        best_filename: Path to save best checkpoint.</span>
-<span class="sd">    """</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
-        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">best_filename</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="test_epoch">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_convvae.test_epoch">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_epoch</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">ConvVAE</span><span class="p">,</span>
-    <span class="n">test_loader</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">,</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-    <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Run one epoch of validation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model: The VAE model to evaluate.</span>
-<span class="sd">        test_loader: DataLoader for test/validation data.</span>
-<span class="sd">        device: Device to run evaluation on.</span>
-<span class="sd">        loss_fn: Loss function to use.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        float: Average test loss for the epoch.</span>
-<span class="sd">    """</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-    <span class="n">test_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">total_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"Test epoch: </span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s2"> batches, dataset size: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="p">)</span>
-
-    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">test_loader</span><span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-            <span class="n">recon</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">recon</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span><span class="p">)</span>
-            <span class="n">test_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="n">batch_idx</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Test batch </span><span class="si">{</span><span class="n">batch_idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_batches</span><span class="si">}</span><span class="s2">, loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span>
-                <span class="p">)</span>
-
-    <span class="n">test_loss</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"---&gt; Test set loss: </span><span class="si">{:.4f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">test_loss</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">test_loss</span></div>
-
-
-
-<div class="viewcode-block" id="train_epoch">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_convvae.train_epoch">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">train_epoch</span><span class="p">(</span>
-    <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">optimizer</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">train_loader</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">loss_fn</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">scaler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"torch.cuda.amp.GradScaler"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Run one epoch of training.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        epoch: Current epoch number.</span>
-<span class="sd">        model: The VAE model to train.</span>
-<span class="sd">        optimizer: Optimizer for training.</span>
-<span class="sd">        train_loader: DataLoader for training data.</span>
-<span class="sd">        device: Device to run training on.</span>
-<span class="sd">        train_dataset: Training dataset (used to load next buffer if applicable).</span>
-<span class="sd">        loss_fn: Loss function to use.</span>
-<span class="sd">        use_amp: Whether to use automatic mixed precision.</span>
-<span class="sd">        scaler: GradScaler for mixed precision training.</span>
-<span class="sd">    """</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-    <span class="n">train_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="s2">"load_next_buffer"</span><span class="p">):</span>
-        <span class="n">train_dataset</span><span class="o">.</span><span class="n">load_next_buffer</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">use_amp</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">scaler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
-                <span class="n">reconst</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">reconst</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span><span class="p">)</span>
-            <span class="n">scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-            <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
-            <span class="n">scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">reconst</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">reconst</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">logvar</span><span class="p">)</span>
-            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-            <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-        <span class="n">train_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">batch_idx</span> <span class="o">%</span> <span class="mi">20</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"train epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">batch_idx</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">loss: </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-
-    <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">"---&gt; Epoch: </span><span class="si">{}</span><span class="s2"> Average Loss: </span><span class="si">{:.4f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">epoch</span><span class="p">,</span> <span class="n">train_loss</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">train_loss</span></div>
-
 
 
 <div class="viewcode-block" id="train_convae">
@@ -836,21 +699,21 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">train_convae</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">WMVAEConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Train a Convolutional VAE model.</span>
 
-<span class="sd">    This function trains a ConvVAE on observation data using the provided</span>
-<span class="sd">    configuration. It handles data loading, model initialization, training</span>
-<span class="sd">    loop, checkpointing, and sample generation.</span>
+<span class="sd">    Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">    ``vae`` task, on the rollouts in ``config.data_dir`` (``.npz`` files with</span>
+<span class="sd">    ``observations``, or any episode folder). As before, everything goes to</span>
+<span class="sd">    ``&lt;logdir&gt;/vae``:</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        config: WMVAEConfig object containing all training hyperparameters.</span>
+<span class="sd">        - ``checkpoint.tar`` every epoch and ``best.tar`` for the lowest</span>
+<span class="sd">          held-out loss (the last 600 rollouts are held out when there are</span>
+<span class="sd">          more), resumed from unless ``noreload`` is set</span>
+<span class="sd">        - ``ReduceLROnPlateau`` and early stopping on that loss</span>
+<span class="sd">        - ``samples/sample_epoch_&lt;N&gt;.png`` every ``sample_interval`` epochs</span>
+<span class="sd">          unless ``nosamples``</span>
+<span class="sd">        - ``convae_final.pth``, the final weights</span>
 
-<span class="sd">    The training process includes:</span>
-<span class="sd">        - Loading pretrained VAE if available (unless noreload is True)</span>
-<span class="sd">        - Training for specified number of epochs</span>
-<span class="sd">        - Validating after each epoch</span>
-<span class="sd">        - Learning rate scheduling with ReduceLROnPlateau</span>
-<span class="sd">        - Early stopping based on validation loss</span>
-<span class="sd">        - Checkpointing best and current models</span>
-<span class="sd">        - Generating sample images at specified intervals</span>
+<span class="sd">    The trainer adds ``checkpoints/``, ``run.json``, ``run_config.yaml`` and</span>
+<span class="sd">    ``train_metrics.jsonl``.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; config = WMVAEConfig(</span>
@@ -858,148 +721,27 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; train_convae(config)</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.world_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">VAETask</span><span class="p">,</span> <span class="n">VAETaskConfig</span>
+
+    <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cpu"</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"WARNING: CUDA not available, using CPU"</span><span class="p">)</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Using device: </span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">ConvVAE</span><span class="p">(</span><span class="n">img_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">latent_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="p">,</span> <span class="s2">"compile"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cuda"</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Compiling model with torch.compile for faster training..."</span><span class="p">)</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">ConvVAE</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"reduce-overhead"</span><span class="p">))</span>
-
-    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">)</span>
-    <span class="n">scheduler</span> <span class="o">=</span> <span class="n">ReduceLROnPlateau</span><span class="p">(</span>
-        <span class="n">optimizer</span><span class="p">,</span>
-        <span class="s2">"min"</span><span class="p">,</span>
-        <span class="n">factor</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">scheduler_factor</span><span class="p">,</span>
-        <span class="n">patience</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">scheduler_patience</span><span class="p">,</span>
+    <span class="n">vae_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"vae"</span><span class="p">)</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">VAETask</span><span class="p">(</span><span class="n">VAETaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">config</span><span class="p">),</span> <span class="n">legacy_dir</span><span class="o">=</span><span class="n">vae_dir</span><span class="p">)</span>
+    <span class="n">fit_legacy</span><span class="p">(</span>
+        <span class="n">task</span><span class="p">,</span>
+        <span class="n">vae_dir</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="c1"># What use_amp selected here: fp16 with loss scaling on CUDA.</span>
+        <span class="n">precision</span><span class="o">=</span><span class="s2">"fp16"</span> <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cuda"</span> <span class="k">else</span> <span class="s2">"fp32"</span><span class="p">,</span>
+        <span class="n">eval_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">checkpoint_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">early_stopping_metric</span><span class="o">=</span><span class="s2">"val_loss"</span><span class="p">,</span>
+        <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
+        <span class="n">patience</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">earlystopping</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span><span class="s2">"min"</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">)</span>
-
-    <span class="n">RED_SIZE</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">height</span>
-
-    <span class="n">vae_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"vae"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"logdir"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"vae"</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">):</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"samples"</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">noreload</span><span class="p">:</span>
-        <span class="n">reload_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">reload_file</span><span class="p">):</span>
-            <span class="n">state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">reload_file</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">"Reloading model at epoch </span><span class="si">{}</span><span class="s2">, with test error </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">[</span><span class="s2">"epoch"</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s2">"precision"</span><span class="p">]</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-            <span class="n">optimizer</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"optimizer"</span><span class="p">])</span>
-            <span class="n">scheduler</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"scheduler"</span><span class="p">])</span>
-            <span class="n">earlystopping</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"earlystopping"</span><span class="p">])</span>
-
-    <span class="n">transform_train</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">A</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="n">RED_SIZE</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">RED_SIZE</span><span class="p">),</span>
-            <span class="n">A</span><span class="o">.</span><span class="n">HorizontalFlip</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-
-    <span class="n">transform_test</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">A</span><span class="o">.</span><span class="n">Resize</span><span class="p">(</span><span class="n">height</span><span class="o">=</span><span class="n">RED_SIZE</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">RED_SIZE</span><span class="p">),</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-
-    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">ObservationDataset</span><span class="p">(</span>
-        <span class="n">root</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform_train</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span>
-    <span class="p">)</span>
-    <span class="n">num_workers</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">pin_memory</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="n">train_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
-        <span class="n">train_dataset</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
-        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">ObservationDataset</span><span class="p">(</span>
-        <span class="n">root</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform_test</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"WARNING: Test dataset is empty! Using training data for validation."</span><span class="p">)</span>
-        <span class="n">test_loader</span> <span class="o">=</span> <span class="n">train_loader</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">test_dataset</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
-            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Test dataset size: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">, batches: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-    <span class="n">use_amp</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cuda"</span>
-    <span class="n">scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">()</span> <span class="k">if</span> <span class="n">use_amp</span> <span class="k">else</span> <span class="kc">None</span>
-
-    <span class="n">cur_best</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">=== Starting Epoch </span><span class="si">{</span><span class="n">ep</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2"> ==="</span><span class="p">)</span>
-        <span class="n">train_epoch</span><span class="p">(</span>
-            <span class="n">ep</span><span class="p">,</span>
-            <span class="n">model</span><span class="p">,</span>
-            <span class="n">optimizer</span><span class="p">,</span>
-            <span class="n">train_loader</span><span class="p">,</span>
-            <span class="n">device</span><span class="p">,</span>
-            <span class="n">train_dataset</span><span class="p">,</span>
-            <span class="n">conv_vae_loss_fn</span><span class="p">,</span>
-            <span class="n">use_amp</span><span class="o">=</span><span class="n">use_amp</span><span class="p">,</span>
-            <span class="n">scaler</span><span class="o">=</span><span class="n">scaler</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Training complete, starting validation..."</span><span class="p">)</span>
-        <span class="n">test_loss</span> <span class="o">=</span> <span class="n">test_epoch</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">conv_vae_loss_fn</span><span class="p">)</span>
-        <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">test_loss</span><span class="p">)</span>
-        <span class="n">earlystopping</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">test_loss</span><span class="p">)</span>
-
-        <span class="n">best_filename</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">)</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"checkpoint.tar"</span><span class="p">)</span>
-        <span class="n">is_best</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">cur_best</span> <span class="ow">or</span> <span class="n">test_loss</span> <span class="o">&lt;</span> <span class="n">cur_best</span>
-        <span class="k">if</span> <span class="n">is_best</span><span class="p">:</span>
-            <span class="n">cur_best</span> <span class="o">=</span> <span class="n">test_loss</span>
-
-        <span class="n">save_checkpoint</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">"epoch"</span><span class="p">:</span> <span class="n">ep</span><span class="p">,</span>
-                <span class="s2">"state_dict"</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
-                <span class="s2">"precision"</span><span class="p">:</span> <span class="n">test_loss</span><span class="p">,</span>
-                <span class="s2">"optimizer"</span><span class="p">:</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
-                <span class="s2">"scheduler"</span><span class="p">:</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
-                <span class="s2">"earlystopping"</span><span class="p">:</span> <span class="n">earlystopping</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
-            <span class="p">},</span>
-            <span class="n">is_best</span><span class="p">,</span>
-            <span class="n">filename</span><span class="p">,</span>
-            <span class="n">best_filename</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">ep</span> <span class="o">%</span> <span class="n">config</span><span class="o">.</span><span class="n">sample_interval</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">nosamples</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-                <span class="n">sample</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">latent_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-                <span class="n">sample</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
-                <span class="n">save_image</span><span class="p">(</span>
-                    <span class="n">sample</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">RED_SIZE</span><span class="p">,</span> <span class="n">RED_SIZE</span><span class="p">),</span>
-                    <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"samples"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"sample_epoch_</span><span class="si">{</span><span class="n">ep</span><span class="si">}</span><span class="s2">.png"</span><span class="p">),</span>
-                <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">earlystopping</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"End of Training because of early stopping at epoch </span><span class="si">{}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ep</span><span class="p">))</span>
-            <span class="k">break</span>
-
-    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"convae_final.pth"</span><span class="p">))</span></div>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">vae</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">join</span><span class="p">(</span><span class="n">vae_dir</span><span class="p">,</span> <span class="s2">"convae_final.pth"</span><span class="p">))</span></div>
 
 </pre></div>
 
@@ -1051,7 +793,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

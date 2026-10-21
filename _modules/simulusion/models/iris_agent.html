@@ -698,6 +698,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">resolve_pretrained_file</span><span class="p">,</span>
     <span class="n">save_config_next_to_checkpoint</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientUpdate</span><span class="p">,</span> <span class="n">MixedPrecision</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.iris_encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISEncoder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.iris_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISDecoder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.perceptual_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_perceptual_loss</span>
@@ -845,9 +846,10 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># === Optimizers ===</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_optimizers</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
+        <span class="c1"># What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The</span>
+        <span class="c1"># shared Trainer replaces it with the run's precision (set_precision).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">MixedPrecision</span><span class="o">.</span><span class="n">from_use_amp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span>
 
         <span class="c1"># === Training state ===</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1053,6 +1055,39 @@ window.runMermaid = runMermaid;</script>
             <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_learning_rate</span><span class="p">,</span>
             <span class="n">betas</span><span class="o">=</span><span class="n">betas</span><span class="p">,</span>
         <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">grad_clip_norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="IRISAgent.set_precision">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.set_precision">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="n">precision</span><span class="o">.</span><span class="n">enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_losses_to_floats</span><span class="p">(</span><span class="n">losses</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
@@ -1506,10 +1541,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
             <span class="c1"># Encode</span>
             <span class="n">z_q</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">vq_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
 
@@ -1529,15 +1561,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">perc_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((),</span> <span class="n">device</span><span class="o">=</span><span class="n">frames</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="c1"># Update</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="p">)</span>
-        <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">grad_clip_norm</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
 
         <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
             <span class="p">{</span>
@@ -1596,10 +1620,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, T)</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
             <span class="c1"># Get predictions. The transformer consumes the full T+1 frame</span>
             <span class="c1"># sequence (teacher forcing) and predicts frames 1..T.</span>
             <span class="n">token_logits</span><span class="p">,</span> <span class="n">rewards_pred</span><span class="p">,</span> <span class="n">terms_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">(</span>
@@ -1643,14 +1664,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">token_loss</span> <span class="o">+</span> <span class="n">reward_loss</span> <span class="o">+</span> <span class="n">term_loss</span>
 
         <span class="c1"># Update</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>  <span class="c1"># type: ignore[no-untyped-call]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="p">)</span>
-        <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">grad_clip_norm</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
 
         <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
             <span class="p">{</span>
@@ -1686,10 +1700,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">B</span><span class="p">,</span> <span class="n">T_plus_1</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
             <span class="c1"># Forward pass over all T+1 frames: the trailing frame supplies the</span>
             <span class="c1"># bootstrap value V(x_H) for the lambda-return. Previously only the</span>
             <span class="c1"># first T frames were forwarded and the bootstrap was hardcoded to</span>
@@ -1752,18 +1763,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">actor_loss</span> <span class="o">+</span> <span class="n">value_loss</span>
 
         <span class="c1"># Update</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>  <span class="c1"># type: ignore[no-untyped-call]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="p">)</span>
-        <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
-            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
-            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
-            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">grad_clip_norm</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ac_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
 
         <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
             <span class="p">{</span>
@@ -1911,7 +1911,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

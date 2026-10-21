@@ -10,12 +10,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/simulusion/training_guide.html" />
 <meta property="og:site_name" content="Simulusion Documentation" />
-<meta property="og:description" content="This guide covers how to train world models in Simulusion. Contents: Training Guide- Overview, Basic Training Flow, Dreamer Training, JEPA Training, IRIS Training, Custom Training Loop, Configurati..." />
+<meta property="og:description" content="This guide covers each family’s own training entrypoints. Every family also trains on the shared Trainer from one YAML run config, with resuming, data parallelism and reproducible run directories: ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/_images/social_previews/summary_training_guide_afa39cad.png" />
-<meta property="og:image:alt" content="This guide covers how to train world models in Simulusion. Contents: Training Guide- Overview, Basic Training Flow, Dreamer Training, JEPA Training, IRIS Training, Custom Training Loop, Configurati..." />
-<meta name="description" content="This guide covers how to train world models in Simulusion. Contents: Training Guide- Overview, Basic Training Flow, Dreamer Training, JEPA Training, IRIS Training, Custom Training Loop, Configurati..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/_images/social_previews/summary_training_guide_e51ee93e.png" />
+<meta property="og:image:alt" content="This guide covers each family’s own training entrypoints. Every family also trains on the shared Trainer from one YAML run config, with resuming, data parallelism and reproducible run directories: ..." />
+<meta name="description" content="This guide covers each family’s own training entrypoints. Every family also trains on the shared Trainer from one YAML run config, with resuming, data parallelism and reproducible run directories: ..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Training Guide &#8212; Simulusion</title>
@@ -64,7 +64,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Inference Guide" href="inference_guide.html" />
-    <link rel="prev" title="Public API Quick Reference" href="public_api.html" />
+    <link rel="prev" title="Your Own Data: Episodes and LeRobot" href="episodes_guide.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -303,6 +303,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
@@ -405,7 +407,11 @@
                   
   <section id="training-guide">
 <h1><a class="toc-backref" href="#id1" role="doc-backlink">Training Guide</a><a class="headerlink" href="#training-guide" title="Link to this heading">#</a></h1>
-<p>This guide covers how to train world models in Simulusion.</p>
+<p>This guide covers each family’s own training entrypoints. Every family also
+trains on the shared <code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code> from one YAML run
+config, with resuming, data parallelism and reproducible run directories:
+see <a class="reference internal" href="trainer_guide.html"><span class="doc">One Trainer for Every Model</span></a>, and <a class="reference internal" href="episodes_guide.html"><span class="doc">Your Own Data: Episodes and LeRobot</span></a> for training world models
+from your own or LeRobot data.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
@@ -440,9 +446,8 @@
 </ul>
 </li>
 <li><p><a class="reference internal" href="#checkpointing" id="id21">Checkpointing</a></p></li>
-<li><p><a class="reference internal" href="#distributed-training" id="id22">Distributed Training</a></p></li>
-<li><p><a class="reference internal" href="#best-practices" id="id23">Best Practices</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id24">See Also</a></p></li>
+<li><p><a class="reference internal" href="#best-practices" id="id22">Best Practices</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id23">See Also</a></p></li>
 </ul>
 </li>
 </ul>
@@ -699,16 +704,8 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </pre></div>
 </div>
 </section>
-<section id="distributed-training">
-<h2><a class="toc-backref" href="#id22" role="doc-backlink">Distributed Training</a><a class="headerlink" href="#distributed-training" title="Link to this heading">#</a></h2>
-<p>For multi-GPU training:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="o">.</span><span class="n">num_gpus</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="c1"># Simulusion handles distributed setup automatically</span>
-</pre></div>
-</div>
-</section>
 <section id="best-practices">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p><strong>Start small</strong>: Use short episodes and few steps for debugging</p></li>
 <li><p><strong>Monitor metrics</strong>: Watch loss curves and environment rewards</p></li>
@@ -718,7 +715,7 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </ol>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id24" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="evaluation_guide.html"><span class="doc">Evaluation Guide</span></a> — how to evaluate trained agents</p></li>
 <li><p><a class="reference internal" href="memory_guide.html"><span class="doc">Memory &amp; Replay Buffers</span></a> — replay buffer setup for each agent</p></li>
@@ -739,12 +736,12 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="public_api.html"
+       href="episodes_guide.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Public API Quick Reference</p>
+        <p class="prev-next-title">Your Own Data: Episodes and LeRobot</p>
       </div>
     </a>
     <a class="right-next"
@@ -801,7 +798,6 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkpointing">Checkpointing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-training">Distributed Training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>
@@ -850,7 +846,7 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

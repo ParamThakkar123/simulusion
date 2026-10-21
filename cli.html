@@ -303,6 +303,8 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
@@ -433,15 +435,24 @@ default.</p></li>
 (random) policy for a number of environment steps and save interactions to
 a compressed <code class="docutils literal notranslate"><span class="pre">.npz</span></code> with keys <code class="docutils literal notranslate"><span class="pre">observations</span></code>, <code class="docutils literal notranslate"><span class="pre">actions</span></code>, <code class="docutils literal notranslate"><span class="pre">rewards</span></code>,
 <code class="docutils literal notranslate"><span class="pre">dones</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">&lt;model&gt;</span> <span class="pre">[extra</span> <span class="pre">args...]</span> <span class="pre">[--inproc]</span></code> - Launch an existing training
-entrypoint. The CLI maps simple model names to modules in
-<code class="docutils literal notranslate"><span class="pre">simulusion.training</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">iris</span></code>, <code class="docutils literal notranslate"><span class="pre">planet</span></code>, <code class="docutils literal notranslate"><span class="pre">jepa</span></code>, <code class="docutils literal notranslate"><span class="pre">rssm</span></code>,
-<code class="docutils literal notranslate"><span class="pre">genie</span></code>). By default <code class="docutils literal notranslate"><span class="pre">train</span></code> spawns a subprocess running
-<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">simulusion.training.&lt;name&gt;</span></code> and forwards any extra args. Use
-<code class="docutils literal notranslate"><span class="pre">--inproc</span></code> to attempt running the training entrypoint in-process (calls the
-module’s <code class="docutils literal notranslate"><span class="pre">main()</span></code> if available). DIAMOND, IRIS, and JEPA accept
-<code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">PATH</span></code>, <code class="docutils literal notranslate"><span class="pre">--print-config</span></code>, and OmegaConf/Hydra-style dot-list
-overrides such as <code class="docutils literal notranslate"><span class="pre">total_epochs=100</span></code> or <code class="docutils literal notranslate"><span class="pre">optimization.lr=3e-4</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">import</span> <span class="pre">lerobot</span> <span class="pre">&lt;source&gt;</span> <span class="pre">&lt;out_dir&gt;</span></code> - Convert a local LeRobot
+dataset folder into an episode folder, the format every training task reads.
+Options: <code class="docutils literal notranslate"><span class="pre">--camera</span></code>, <code class="docutils literal notranslate"><span class="pre">--all-cameras</span></code>, <code class="docutils literal notranslate"><span class="pre">--episodes</span> <span class="pre">0-9</span></code>. See
+<a class="reference internal" href="episodes_guide.html"><span class="doc">Your Own Data: Episodes and LeRobot</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">info</span> <span class="pre">&lt;path&gt;</span></code> - Summarise an episode folder: episodes, frames,
+action space, cameras, observations, source.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">[task]</span> <span class="pre">[--config</span> <span class="pre">FILE]</span> <span class="pre">[--print-config]</span> <span class="pre">[key=value</span> <span class="pre">...]</span></code> - Train on
+the shared Trainer from a run config. <code class="docutils literal notranslate"><span class="pre">task</span></code> is any registered training task
+(<code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">train</span> <span class="pre">--help-tasks</span></code> lists them), optional when the config names
+one; <code class="docutils literal notranslate"><span class="pre">--config</span></code> takes a YAML file or the name of a shipped config in
+<code class="docutils literal notranslate"><span class="pre">simulusion/configs/runs/</span></code>; every field can be overridden with dotted
+<code class="docutils literal notranslate"><span class="pre">key=value</span></code> pairs. See <a class="reference internal" href="trainer_guide.html"><span class="doc">One Trainer for Every Model</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">&lt;model&gt;</span> <span class="pre">--legacy</span> <span class="pre">[extra</span> <span class="pre">args...]</span> <span class="pre">[--inproc]</span></code> - Launch a family’s own,
+older training entrypoint (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">simulusion.training.train_&lt;name&gt;</span></code>),
+forwarding the extra args; <code class="docutils literal notranslate"><span class="pre">--inproc</span></code> calls its <code class="docutils literal notranslate"><span class="pre">main()</span></code> in-process instead
+of spawning a subprocess. Commands written for those entrypoints (a
+<code class="docutils literal notranslate"><span class="pre">--config</span></code> file without <code class="docutils literal notranslate"><span class="pre">task:</span></code>, or flat overrides such as
+<code class="docutils literal notranslate"><span class="pre">total_epochs=100</span></code>) are recognised and still run there.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">eval</span> <span class="pre">--model</span> <span class="pre">&lt;NAME&gt;</span> <span class="pre">--checkpoint</span> <span class="pre">&lt;PATH&gt;</span> <span class="pre">[options]</span></code> - Evaluate a trained world
 model. Generative models (<code class="docutils literal notranslate"><span class="pre">diamond</span></code>) are scored with FID, FVD, LPIPS, and PSNR,
 comparing real trajectories (collected from the environment) against generated
@@ -522,6 +533,25 @@ repository.</p></li>
 <li><p>Example: collect 1000 steps from Pong and save as <code class="docutils literal notranslate"><span class="pre">pong.npz</span></code></p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>collect<span class="w"> </span>--env<span class="w"> </span>ALE/Pong-v5<span class="w"> </span>--steps<span class="w"> </span><span class="m">1000</span><span class="w"> </span>--out<span class="w"> </span>pong.npz
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example: train Genie on a folder of clips with the shared Trainer, in bf16</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>train<span class="w"> </span>genie<span class="w"> </span>data.path<span class="o">=</span>data/clips<span class="w"> </span>trainer.precision<span class="o">=</span>bf16<span class="w"> </span>trainer.max_steps<span class="o">=</span><span class="m">20000</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example: repeat a finished run exactly</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>runs/genie_20261020-120000/config.yaml
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Example: import a LeRobot dataset and train Dreamer’s world model on it</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>datasets<span class="w"> </span>import<span class="w"> </span>lerobot<span class="w"> </span>datasets/pusht<span class="w"> </span>data/pusht
+simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>dreamer-wm<span class="w"> </span>data.path<span class="o">=</span>data/pusht
 </pre></div>
 </div>
 <ul class="simple">
@@ -666,7 +696,7 @@ new usage, examples, and any additional optional dependencies.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

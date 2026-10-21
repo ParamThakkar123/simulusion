@@ -1,6 +1,10 @@
 # Training Guide
 
-This guide covers how to train world models in Simulusion.
+This guide covers each family's own training entrypoints. Every family also
+trains on the shared {py:class}`~simulusion.training.Trainer` from one YAML run
+config, with resuming, data parallelism and reproducible run directories:
+see {doc}`trainer_guide`, and {doc}`episodes_guide` for training world models
+from your own or LeRobot data.
 
 ```{contents} Contents
 ```
@@ -219,15 +223,6 @@ Models are automatically saved:
 # Resume training
 cfg.restore = True
 cfg.checkpoint_path = "path/to/checkpoint"
-```
-
-## Distributed Training
-
-For multi-GPU training:
-
-```python
-cfg.num_gpus = 4
-# Simulusion handles distributed setup automatically
 ```
 
 ## Best Practices

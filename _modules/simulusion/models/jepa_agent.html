@@ -808,9 +808,43 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="JEPAAgent.train">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.JEPAAgent.train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_jepa</span><span class="w"> </span><span class="kn">import</span> <span class="n">main</span> <span class="k">as</span> <span class="n">train_jepa_main</span>
+<span class="w">        </span><span class="sd">"""Train for ``cfg.epochs`` epochs.</span>
 
-        <span class="n">train_jepa_main</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span></div>
+<span class="sd">        Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">        ``jepa`` task, in ``cfg.folder``: per-epoch checkpoints in</span>
+<span class="sd">        ``train_jepa``'s format (``&lt;write_tag&gt;-latest.pth.tar``, and</span>
+<span class="sd">        ``&lt;write_tag&gt;-ep&lt;N&gt;.pth.tar`` every 50 epochs), resuming from</span>
+<span class="sd">        ``read_checkpoint`` when ``load_checkpoint`` is set, bf16 with</span>
+<span class="sd">        ``use_bfloat16``, and per-epoch held-out early stopping with</span>
+<span class="sd">        ``early_stopping``. W&amp;B sweeps (``enable_sweep``) still run through</span>
+<span class="sd">        ``train_jepa``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="o">.</span><span class="n">enable_sweep</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_jepa</span><span class="w"> </span><span class="kn">import</span> <span class="n">main</span> <span class="k">as</span> <span class="n">train_jepa_main</span>
+
+            <span class="n">train_jepa_main</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfg</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.jepa</span><span class="w"> </span><span class="kn">import</span> <span class="n">JEPATask</span><span class="p">,</span> <span class="n">JEPATaskConfig</span>
+
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfg</span>
+        <span class="n">early</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">early_stopping</span><span class="p">)</span>
+        <span class="n">fit_legacy</span><span class="p">(</span>
+            <span class="n">JEPATask</span><span class="p">(</span>
+                <span class="n">JEPATaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">val_batches</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">legacy_folder</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">folder</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">folder</span><span class="p">,</span>
+            <span class="n">precision</span><span class="o">=</span><span class="s2">"bf16"</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">use_bfloat16</span> <span class="k">else</span> <span class="s2">"fp32"</span><span class="p">,</span>
+            <span class="n">log_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">eval_every</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">checkpoint_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">early_stopping_metric</span><span class="o">=</span><span class="s2">"val_loss"</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>
@@ -863,7 +897,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

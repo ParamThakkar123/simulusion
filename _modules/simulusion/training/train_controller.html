@@ -693,196 +693,29 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">exists</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">mkdir</span><span class="p">,</span> <span class="n">unlink</span><span class="p">,</span> <span class="n">listdir</span><span class="p">,</span> <span class="n">getpid</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">join</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">cma</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controller</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.mdrnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDRNN</span><span class="p">,</span> <span class="n">MDRNNCell</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.VAE.ConvVAE</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvVAE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.wm_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WMControllerConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.gym_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymImageEnv</span>
 
 
-<div class="viewcode-block" id="flatten_parameters">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.flatten_parameters">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">flatten_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">])</span></div>
+<div class="viewcode-block" id="make_controller_env">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.make_controller_env">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_controller_env</span><span class="p">(</span><span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``env_name`` as the controller sees it: 64x64 image observations.</span>
 
-
-
-<div class="viewcode-block" id="load_parameters">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.load_parameters">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">load_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">controller</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">pointer</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">controller</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
-        <span class="n">param_shape</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">param_shape</span><span class="p">:</span>
-            <span class="n">size</span> <span class="o">*=</span> <span class="n">s</span>
-        <span class="n">param</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">pointer</span> <span class="p">:</span> <span class="n">pointer</span> <span class="o">+</span> <span class="n">size</span><span class="p">])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">param_shape</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">pointer</span> <span class="o">+=</span> <span class="n">size</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_run_rollout</span><span class="p">(</span>
-    <span class="n">ctrl_params</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">logdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">time_limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Run a single rollout with given controller parameters.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ctrl_params: Flattened controller parameters as numpy array.</span>
-<span class="sd">        logdir: Directory containing trained VAE and MDRNN checkpoints.</span>
-<span class="sd">        env_name: Gym environment name.</span>
-<span class="sd">        action_size: Dimensionality of action space.</span>
-<span class="sd">        time_limit: Maximum steps per episode.</span>
-<span class="sd">        device: torch device.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        float: Total cumulative reward.</span>
+<span class="sd">    Environments that take ``continuous`` (CarRacing) get the continuous</span>
+<span class="sd">    action space the World Models controller outputs. Environments are made</span>
+<span class="sd">    with ``render_mode="rgb_array"``, so those whose observations are vectors</span>
+<span class="sd">    (Pendulum, BipedalWalker) are seen through their rendered frames.</span>
 <span class="sd">    """</span>
-    <span class="n">vae_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"vae"</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">)</span>
-    <span class="n">rnn_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"mdrnn"</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">)</span>
-
-    <span class="n">vae_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">vae_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">rnn_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">rnn_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">latent_size</span> <span class="o">=</span> <span class="mi">32</span>
-
-    <span class="n">vae</span> <span class="o">=</span> <span class="n">ConvVAE</span><span class="p">(</span><span class="n">img_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="n">latent_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">vae</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">vae_state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-    <span class="n">vae</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-
-    <span class="n">batch_rnn</span> <span class="o">=</span> <span class="n">MDRNN</span><span class="p">(</span>
-        <span class="n">latents</span><span class="o">=</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span>
-    <span class="p">)</span>
-    <span class="n">batch_rnn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">rnn_state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-    <span class="n">batch_rnn</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-
-    <span class="n">cell_rnn</span> <span class="o">=</span> <span class="n">MDRNNCell</span><span class="p">(</span>
-        <span class="n">latents</span><span class="o">=</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_hh_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_ih</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_ih_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_hh</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_hh_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">gmm_linear</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">gmm_linear</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-    <span class="k">del</span> <span class="n">batch_rnn</span>
-
-    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">latent_size</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">action_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">load_parameters</span><span class="p">(</span><span class="n">ctrl_params</span><span class="p">,</span> <span class="n">ctrl</span><span class="p">)</span>
-    <span class="n">ctrl</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-
-    <span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-    <span class="n">h</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cell_rnn</span><span class="o">.</span><span class="n">get_init_hidden</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">h</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-    <span class="n">total_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">time_limit</span><span class="p">):</span>
-            <span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">])</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-            <span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span>
-                <span class="n">obs_tensor</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span>
-            <span class="p">)</span>
-            <span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">obs_tensor</span> <span class="o">/</span> <span class="mf">255.0</span>
-
-            <span class="n">mu</span><span class="p">,</span> <span class="n">logsigma</span> <span class="o">=</span> <span class="n">vae</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">obs_tensor</span><span class="p">)</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">logsigma</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn_like</span><span class="p">(</span><span class="n">logsigma</span><span class="p">)</span>
-
-            <span class="n">action</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-
-            <span class="n">action_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="n">cell_rnn</span><span class="p">(</span><span class="n">action_t</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
-
-            <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-            <span class="n">total_reward</span> <span class="o">+=</span> <span class="n">reward</span>
-            <span class="n">obs</span> <span class="o">=</span> <span class="n">next_obs</span>
-            <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
-                <span class="k">break</span>
-
-    <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">total_reward</span>
-
-
-<div class="viewcode-block" id="slave_routine">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.slave_routine">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">slave_routine</span><span class="p">(</span>
-    <span class="n">p_queue</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">r_queue</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">e_queue</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">p_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">time_limit</span><span class="p">:</span> <span class="nb">int</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Worker process routine for parallel rollout evaluation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        p_queue: Queue containing (s_id, parameters) to evaluate.</span>
-<span class="sd">        r_queue: Queue where to place results (s_id, reward).</span>
-<span class="sd">        e_queue: End queue - when non-empty, process terminates.</span>
-<span class="sd">        p_index: Process index for GPU assignment.</span>
-<span class="sd">        config: Controller configuration (must include env_name and action_size).</span>
-<span class="sd">        time_limit: Maximum steps per episode.</span>
-<span class="sd">    """</span>
-    <span class="n">gpu</span> <span class="o">=</span> <span class="n">p_index</span> <span class="o">%</span> <span class="nb">max</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cuda:</span><span class="si">{</span><span class="n">gpu</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
-
-    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"tmp"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">getpid</span><span class="p">())</span> <span class="o">+</span> <span class="s2">".out"</span><span class="p">),</span> <span class="s2">"a"</span><span class="p">)</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"tmp"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">getpid</span><span class="p">())</span> <span class="o">+</span> <span class="s2">".err"</span><span class="p">),</span> <span class="s2">"a"</span><span class="p">)</span>
-
-    <span class="k">while</span> <span class="n">e_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">p_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">s_id</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">p_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-            <span class="n">reward</span> <span class="o">=</span> <span class="n">_run_rollout</span><span class="p">(</span>
-                <span class="n">params</span><span class="p">,</span>
-                <span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
-                <span class="n">config</span><span class="o">.</span><span class="n">env_name</span><span class="p">,</span>
-                <span class="n">config</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span>
-                <span class="n">time_limit</span><span class="p">,</span>
-                <span class="n">device</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">r_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">s_id</span><span class="p">,</span> <span class="n">reward</span><span class="p">))</span></div>
-
-
-
-<div class="viewcode-block" id="evaluate">
-<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.evaluate">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
-    <span class="n">solutions</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">rollouts</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p_queue</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">r_queue</span><span class="p">:</span> <span class="n">Any</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Evaluate current controller."""</span>
-    <span class="n">index_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-    <span class="n">best_guess</span> <span class="o">=</span> <span class="n">solutions</span><span class="p">[</span><span class="n">index_min</span><span class="p">]</span>
-    <span class="n">restimates</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">s_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rollouts</span><span class="p">):</span>
-        <span class="n">p_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">s_id</span><span class="p">,</span> <span class="n">best_guess</span><span class="p">))</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Evaluating..."</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rollouts</span><span class="p">)):</span>
-        <span class="k">while</span> <span class="n">r_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-            <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-        <span class="n">restimates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">best_guess</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">restimates</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">restimates</span><span class="p">)</span></div>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">"rgb_array"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">"rgb_array"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span></div>
 
 
 
@@ -891,111 +724,52 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">train_controller</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">WMControllerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Train a linear controller using CMA-ES.</span>
 
+<span class="sd">    Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">    ``controller`` task, with the VAE and MDN-RNN in ``&lt;logdir&gt;/vae/best.tar``</span>
+<span class="sd">    and ``&lt;logdir&gt;/mdrnn/best.tar``. One step is one CMA-ES generation of</span>
+<span class="sd">    ``pop_size`` candidates, each scored over ``n_samples`` episodes of up to</span>
+<span class="sd">    ``time_limit`` steps in ``env_name``. The best controller so far is kept</span>
+<span class="sd">    in ``&lt;logdir&gt;/ctrl/best.tar`` (and started from when it exists); training</span>
+<span class="sd">    stops when CMA-ES converges or the best return passes ``target_return``.</span>
+
+<span class="sd">    Candidates are scored one after another in this process, so</span>
+<span class="sd">    ``max_workers`` and ``display`` no longer apply. The controller's sizes</span>
+<span class="sd">    come from the trained models, whatever ``latent_size`` / ``hidden_size``</span>
+<span class="sd">    / ``action_size`` say.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        config: WMControllerConfig containing training hyperparameters,</span>
 <span class="sd">                including env_name and action_size.</span>
-
-<span class="sd">    The training process includes:</span>
-<span class="sd">        - Setting up parallel evaluation workers (each loads VAE + MDRNN)</span>
-<span class="sd">        - Running CMA-ES optimization with parallel rollout evaluation</span>
-<span class="sd">        - Evaluating and saving best controller checkpoint</span>
 <span class="sd">    """</span>
-    <span class="n">n_samples</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_samples</span>
-    <span class="n">pop_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pop_size</span>
-    <span class="n">num_workers</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_workers</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">*</span> <span class="n">pop_size</span><span class="p">)</span>
-    <span class="n">time_limit</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">time_limit</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.world_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ControllerTask</span><span class="p">,</span>
+        <span class="n">ControllerTaskConfig</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.world_model.vae_mdrnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDRNNWorldModel</span>
 
-    <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"tmp"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">):</span>
-        <span class="n">mkdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">listdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">):</span>
-            <span class="n">unlink</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">fname</span><span class="p">))</span>
-
-    <span class="n">ctrl_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ctrl"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">(</span><span class="n">ctrl_dir</span><span class="p">):</span>
-        <span class="n">mkdir</span><span class="p">(</span><span class="n">ctrl_dir</span><span class="p">)</span>
-
-    <span class="n">p_queue</span><span class="p">:</span> <span class="n">Queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
-    <span class="n">r_queue</span><span class="p">:</span> <span class="n">Queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
-    <span class="n">e_queue</span><span class="p">:</span> <span class="n">Queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
-
-    <span class="k">for</span> <span class="n">p_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">):</span>
-        <span class="n">Process</span><span class="p">(</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">slave_routine</span><span class="p">,</span>
-            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">p_queue</span><span class="p">,</span> <span class="n">r_queue</span><span class="p">,</span> <span class="n">e_queue</span><span class="p">,</span> <span class="n">p_index</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">time_limit</span><span class="p">),</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-
-    <span class="n">controller</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">action_size</span><span class="p">)</span>
-
-    <span class="n">cur_best</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">ctrl_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">ctrl_dir</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Attempting to load previous best..."</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">ctrl_file</span><span class="p">):</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ctrl_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="p">{</span><span class="s2">"cuda:0"</span><span class="p">:</span> <span class="s2">"cpu"</span><span class="p">},</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">cur_best</span> <span class="o">=</span> <span class="o">-</span><span class="n">state</span><span class="p">[</span><span class="s2">"reward"</span><span class="p">]</span>
-        <span class="n">controller</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Previous best was </span><span class="si">{</span><span class="o">-</span><span class="n">cur_best</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
-
-    <span class="n">parameters</span> <span class="o">=</span> <span class="n">controller</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span>
-    <span class="n">es</span> <span class="o">=</span> <span class="n">cma</span><span class="o">.</span><span class="n">CMAEvolutionStrategy</span><span class="p">(</span>
-        <span class="n">flatten_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">),</span> <span class="mf">0.1</span><span class="p">,</span> <span class="p">{</span><span class="s2">"popsize"</span><span class="p">:</span> <span class="n">pop_size</span><span class="p">}</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cuda"</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"cpu"</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MDRNNWorldModel</span><span class="o">.</span><span class="n">from_checkpoints</span><span class="p">(</span>
+        <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"vae"</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">),</span>
+        <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"mdrnn"</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">),</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">log_step</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="k">while</span> <span class="ow">not</span> <span class="n">es</span><span class="o">.</span><span class="n">stop</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">cur_best</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="o">-</span><span class="n">cur_best</span> <span class="o">&gt;</span> <span class="n">config</span><span class="o">.</span><span class="n">target_return</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"Already better than target, breaking..."</span><span class="p">)</span>
-            <span class="k">break</span>
-
-        <span class="n">r_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">pop_size</span>
-        <span class="n">solutions</span> <span class="o">=</span> <span class="n">es</span><span class="o">.</span><span class="n">ask</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">s_id</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">solutions</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
-                <span class="n">p_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">s_id</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">display</span><span class="p">:</span>
-            <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">pop_size</span> <span class="o">*</span> <span class="n">n_samples</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pop_size</span> <span class="o">*</span> <span class="n">n_samples</span><span class="p">):</span>
-            <span class="k">while</span> <span class="n">r_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-                <span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
-            <span class="n">r_s_id</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">r_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-            <span class="n">r_list</span><span class="p">[</span><span class="n">r_s_id</span><span class="p">]</span> <span class="o">+=</span> <span class="n">r</span> <span class="o">/</span> <span class="n">n_samples</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">display</span><span class="p">:</span>
-                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">display</span><span class="p">:</span>
-            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-        <span class="n">es</span><span class="o">.</span><span class="n">tell</span><span class="p">(</span><span class="n">solutions</span><span class="p">,</span> <span class="n">r_list</span><span class="p">)</span>
-        <span class="n">es</span><span class="o">.</span><span class="n">disp</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="n">log_step</span> <span class="o">==</span> <span class="n">log_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">best_params</span><span class="p">,</span> <span class="n">best</span><span class="p">,</span> <span class="n">std_best</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span>
-                <span class="n">solutions</span><span class="p">,</span> <span class="n">r_list</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">*</span> <span class="n">pop_size</span><span class="p">,</span> <span class="n">p_queue</span><span class="p">,</span> <span class="n">r_queue</span>
-            <span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Current evaluation: </span><span class="si">{</span><span class="n">best</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">cur_best</span> <span class="ow">or</span> <span class="n">cur_best</span> <span class="o">&gt;</span> <span class="n">best</span><span class="p">:</span>
-                <span class="n">cur_best</span> <span class="o">=</span> <span class="n">best</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Saving new best with value </span><span class="si">{</span><span class="o">-</span><span class="n">cur_best</span><span class="si">}</span><span class="s2"> +- </span><span class="si">{</span><span class="n">std_best</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
-                <span class="n">load_parameters</span><span class="p">(</span><span class="n">best_params</span><span class="p">,</span> <span class="n">controller</span><span class="p">)</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="s2">"epoch"</span><span class="p">:</span> <span class="n">epoch</span><span class="p">,</span>
-                        <span class="s2">"reward"</span><span class="p">:</span> <span class="o">-</span><span class="n">cur_best</span><span class="p">,</span>
-                        <span class="s2">"state_dict"</span><span class="p">:</span> <span class="n">controller</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
-                    <span class="p">},</span>
-                    <span class="n">join</span><span class="p">(</span><span class="n">ctrl_dir</span><span class="p">,</span> <span class="s2">"best.tar"</span><span class="p">),</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="o">-</span><span class="n">best</span> <span class="o">&gt;</span> <span class="n">config</span><span class="o">.</span><span class="n">target_return</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Terminating controller training with value </span><span class="si">{</span><span class="n">best</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
-                <span class="k">break</span>
-
-        <span class="n">epoch</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="n">es</span><span class="o">.</span><span class="n">result_pretty</span><span class="p">()</span>
-    <span class="n">e_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"EOP"</span><span class="p">)</span></div>
+    <span class="n">ctrl_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ctrl"</span><span class="p">)</span>
+    <span class="n">fit_legacy</span><span class="p">(</span>
+        <span class="n">ControllerTask</span><span class="p">(</span>
+            <span class="n">ControllerTaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
+            <span class="n">env_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">make_controller_env</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_name</span><span class="p">),</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">legacy_dir</span><span class="o">=</span><span class="n">ctrl_dir</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">ctrl_dir</span><span class="p">,</span>
+        <span class="c1"># CMA-ES has no fixed number of generations; it runs until it</span>
+        <span class="c1"># converges or reaches target_return (ControllerTask.should_stop).</span>
+        <span class="n">max_steps</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">eval_every</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 </pre></div>
 
@@ -1047,7 +821,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

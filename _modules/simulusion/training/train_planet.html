@@ -681,15 +681,12 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for simulusion.training.train_planet</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pdb</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">trange</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normal</span>
@@ -698,16 +695,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">preprocess_img</span><span class="p">,</span>
     <span class="n">bottle</span><span class="p">,</span>
-    <span class="n">TensorBoardMetrics</span><span class="p">,</span>
-    <span class="n">save_video</span><span class="p">,</span>
-    <span class="n">flatten_dict</span><span class="p">,</span>
-    <span class="n">postprocess_img</span><span class="p">,</span>
-    <span class="n">normalize_frames_for_saving</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.memory.planet_memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">Memory</span><span class="p">,</span> <span class="n">Episode</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecurrentStateSpaceModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.controller.rssm_policy</span><span class="w"> </span><span class="kn">import</span> <span class="n">RSSMPolicy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.controller.rollout_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">RolloutGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientUpdate</span><span class="p">,</span> <span class="n">MixedPrecision</span>
 
 
 <div class="viewcode-block" id="train">
@@ -721,6 +710,8 @@ window.runMermaid = runMermaid;</script>
     <span class="n">H</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
     <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="n">grads</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">update</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientUpdate</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MixedPrecision</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Training implementation as indicated in:</span>
@@ -729,7 +720,20 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    (a.) The Standard Variational Bound Method</span>
 <span class="sd">        using only single step predictions.</span>
+
+<span class="sd">    ``update`` steps ``optimizer`` (the shared Trainer passes one at the run's</span>
+<span class="sd">    precision); without it the step is plain fp32 with the gradient norm</span>
+<span class="sd">    clipped at 1000, as it always was. ``precision`` sets the autocast for the</span>
+<span class="sd">    loss.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">precision</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">update</span><span class="o">.</span><span class="n">precision</span> <span class="k">if</span> <span class="n">update</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">MixedPrecision</span><span class="p">(</span><span class="s2">"fp32"</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">update</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="p">,</span> <span class="n">rssm</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">precision</span><span class="p">,</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="mf">1000.0</span>
+        <span class="p">)</span>
     <span class="n">free_nats</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="mf">3.0</span>
     <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">lengths</span> <span class="o">=</span> <span class="n">memory</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">time_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="p">[</span>
@@ -738,6 +742,39 @@ window.runMermaid = runMermaid;</script>
     <span class="p">]</span>
     <span class="n">preprocess_img</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 
+    <span class="k">with</span> <span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">kld_loss</span><span class="p">,</span> <span class="n">rec_loss</span><span class="p">,</span> <span class="n">rew_loss</span> <span class="o">=</span> <span class="n">_variational_bound</span><span class="p">(</span>
+            <span class="n">rssm</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">free_nats</span>
+        <span class="p">)</span>
+    <span class="n">grad_norm</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"losses"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"kl"</span><span class="p">:</span> <span class="n">kld_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+            <span class="s2">"reconstruction"</span><span class="p">:</span> <span class="n">rec_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+            <span class="s2">"reward_pred"</span><span class="p">:</span> <span class="n">rew_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">grad_norm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">"grad_norm"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">grad_norm</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">grads</span><span class="p">:</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">"grad_norms"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">v</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rssm</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_variational_bound</span><span class="p">(</span>
+    <span class="n">rssm</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">u</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">r</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">free_nats</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""PlaNet's one-step variational bound over a time-major batch."""</span>
     <span class="n">e_t</span> <span class="o">=</span> <span class="n">bottle</span><span class="p">(</span><span class="n">rssm</span><span class="o">.</span><span class="n">encoder</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
     <span class="n">h_t</span><span class="p">,</span> <span class="n">s_t</span> <span class="o">=</span> <span class="n">rssm</span><span class="o">.</span><span class="n">get_init_state</span><span class="p">(</span><span class="n">e_t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">states</span><span class="p">,</span> <span class="n">priors</span><span class="p">,</span> <span class="n">posteriors</span><span class="p">,</span> <span class="n">posterior_samples</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -778,26 +815,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">bottle</span><span class="p">(</span><span class="n">rssm</span><span class="o">.</span><span class="n">pred_reward</span><span class="p">,</span> <span class="n">states_stacked</span><span class="p">,</span> <span class="n">posterior_samples_stacked</span><span class="p">),</span> <span class="n">r</span>
     <span class="p">)</span>
 
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
     <span class="n">loss</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">kld_loss</span> <span class="o">+</span> <span class="n">rec_loss</span> <span class="o">+</span> <span class="n">rew_loss</span>
-    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>  <span class="c1"># type: ignore[no-untyped-call]</span>
-    <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">rssm</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="n">norm_type</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-    <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"losses"</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">"kl"</span><span class="p">:</span> <span class="n">kld_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
-            <span class="s2">"reconstruction"</span><span class="p">:</span> <span class="n">rec_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
-            <span class="s2">"reward_pred"</span><span class="p">:</span> <span class="n">rew_loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
-        <span class="p">},</span>
-    <span class="p">}</span>
-    <span class="k">if</span> <span class="n">grads</span><span class="p">:</span>
-        <span class="n">metrics</span><span class="p">[</span><span class="s2">"grad_norms"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">k</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">grad</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">v</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">norm</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rssm</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">()</span>
-        <span class="p">}</span>
-    <span class="k">return</span> <span class="n">metrics</span></div>
-
+    <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">kld_loss</span><span class="p">,</span> <span class="n">rec_loss</span><span class="p">,</span> <span class="n">rew_loss</span>
 
 
 <div class="viewcode-block" id="build_parser">
@@ -840,73 +859,39 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_planet.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Example PlaNet/RSSM training script with rollout collection and evaluation.</span>
+<span class="w">    </span><span class="sd">"""PlaNet/RSSM training from the command line.</span>
 
-<span class="sd">    Builds environment/model/policy objects, iteratively trains on replayed</span>
-<span class="sd">    episodes, and periodically saves videos and checkpoints.</span>
+<span class="sd">    Builds a :class:`~simulusion.models.planet.Planet` on ``--env`` and runs</span>
+<span class="sd">    :meth:`Planet.train` (so the shared Trainer): ``--iters`` gradient steps</span>
+<span class="sd">    per epoch, one exploration and one evaluation episode per epoch, videos</span>
+<span class="sd">    and ``ckpt_&lt;epoch&gt;.pth`` checkpoints in ``--outdir``. The optimizer is the</span>
+<span class="sd">    one this script always used: Adam at 1e-3, eps 1e-4, no weight decay,</span>
+<span class="sd">    no learning-rate schedule.</span>
 <span class="sd">    """</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">build_parser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchImageEnvWrapper</span>
-
-    <span class="n">env</span> <span class="o">=</span> <span class="n">TorchImageEnvWrapper</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">bit_depth</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">bit_depth</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.planet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Planet</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_device</span>
 
     <span class="n">device</span> <span class="o">=</span> <span class="n">resolve_device</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">device</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cpu"</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"WARNING: no GPU (CUDA or MPS) available, using CPU"</span><span class="p">)</span>
-    <span class="n">rssm_model</span> <span class="o">=</span> <span class="n">RecurrentStateSpaceModel</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">rssm_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
-
-    <span class="n">policy</span> <span class="o">=</span> <span class="n">RSSMPolicy</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">=</span><span class="n">rssm_model</span><span class="p">,</span>
-        <span class="n">planning_horizon</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-        <span class="n">num_candidates</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="n">num_iterations</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-        <span class="n">top_candidates</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">planet</span> <span class="o">=</span> <span class="n">Planet</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span>
+        <span class="n">bit_depth</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">bit_depth</span><span class="p">,</span>
         <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">rollout_gen</span> <span class="o">=</span> <span class="n">RolloutGenerator</span><span class="p">(</span>
-        <span class="n">env</span><span class="p">,</span>
-        <span class="n">device</span><span class="p">,</span>
-        <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
-        <span class="n">episode_gen</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">Episode</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="n">postprocess_img</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">bit_depth</span><span class="p">)),</span>
+        <span class="n">memory_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">max_episode_steps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">max_episode_steps</span><span class="p">,</span>
+        <span class="n">results_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="n">mem</span> <span class="o">=</span> <span class="n">Memory</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
-    <span class="n">mem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rollout_gen</span><span class="o">.</span><span class="n">rollout_n</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_policy</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="n">res_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">outdir</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">res_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">summary</span> <span class="o">=</span> <span class="n">TensorBoardMetrics</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">res_dir</span><span class="si">}</span><span class="s2">/"</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">"Epoch"</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">"Iter "</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-            <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">train</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">rssm_model</span><span class="o">.</span><span class="n">train</span><span class="p">(),</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">flatten_dict</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
-                    <span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-                <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">_mean"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-
-        <span class="n">summary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
-        <span class="n">mem</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">rollout_gen</span><span class="o">.</span><span class="n">rollout_once</span><span class="p">(</span><span class="n">explore</span><span class="o">=</span><span class="kc">True</span><span class="p">)])</span>
-        <span class="c1"># rollout_eval returns (episode, frames, metrics, latents); unpacking</span>
-        <span class="c1"># three raised ValueError at the end of the first epoch, so this loop</span>
-        <span class="c1"># had never run to completion.</span>
-        <span class="n">eval_episode</span><span class="p">,</span> <span class="n">eval_frames</span><span class="p">,</span> <span class="n">eval_metrics</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">rollout_gen</span><span class="o">.</span><span class="n">rollout_eval</span><span class="p">()</span>
-        <span class="n">mem</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">eval_episode</span><span class="p">])</span>
-        <span class="c1"># normalize frames to (T,H,W,3) float in [0,1] before saving</span>
-        <span class="n">safe_frames</span> <span class="o">=</span> <span class="n">normalize_frames_for_saving</span><span class="p">(</span><span class="n">eval_frames</span><span class="p">)</span>
-        <span class="n">save_video</span><span class="p">(</span><span class="n">safe_frames</span><span class="p">,</span> <span class="n">res_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"vid_</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-        <span class="n">summary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">eval_metrics</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">checkpoint_interval</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">args</span><span class="o">.</span><span class="n">checkpoint_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"ckpt_</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">.pth"</span><span class="p">)</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">rssm_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">path</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Wrote </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">planet</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">planet</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+    <span class="n">planet</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">iters</span><span class="p">,</span>
+        <span class="n">save_every</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">checkpoint_interval</span><span class="p">,</span>
+        <span class="n">results_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span>
+        <span class="n">scheduler_type</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"TRAIN_RSSM_DEBUG"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span><span class="p">:</span>
         <span class="n">pdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span></div>
@@ -965,7 +950,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

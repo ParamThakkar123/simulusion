@@ -797,6 +797,120 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="n">_wandb</span>
 
 
+<div class="viewcode-block" id="make_jepa_loaders">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_jepa.make_jepa_loaders">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_jepa_loaders</span><span class="p">(</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">mask_collator</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">with_val</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""I-JEPA's ``(train_loader, train_sampler, val_loader)`` for a nested config.</span>
+
+<span class="sd">    The loaders shard across ``world_size`` processes themselves (a</span>
+<span class="sd">    ``DistributedSampler`` per rank). ``val_loader`` is built only with</span>
+<span class="sd">    ``with_val``, from CIFAR-10's test split or ``data.val_split`` of an image</span>
+<span class="sd">    folder, with the same mask collator, so its loss is the training objective.</span>
+<span class="sd">    """</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"batch_size"</span><span class="p">]</span>
+    <span class="n">pin_mem</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"pin_mem"</span><span class="p">]</span>
+    <span class="n">num_workers</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"num_workers"</span><span class="p">]</span>
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"root_path"</span><span class="p">]</span>
+    <span class="n">image_folder</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"image_folder"</span><span class="p">]</span>
+    <span class="n">copy_data</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"copy_data"</span><span class="p">]</span>
+    <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"dataset"</span><span class="p">]</span>
+    <span class="n">val_split</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"val_split"</span><span class="p">]</span>
+    <span class="n">download</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"download"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"imagenet"</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+            <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+            <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+            <span class="n">copy_data</span><span class="o">=</span><span class="n">copy_data</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>  <span class="c1"># pass through</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+            <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="c1"># Held-out loader for early stopping. Built with the same mask collator, so</span>
+    <span class="c1"># the validation loss is the exact objective being trained, just on data the</span>
+    <span class="c1"># encoder never sees.</span>
+    <span class="n">val_loader</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">with_val</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val_split</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"optimization.early_stopping needs data.val_split &gt; 0 so "</span>
+                    <span class="s2">"there is held-out data to measure; pass e.g. "</span>
+                    <span class="s2">"data.val_split=0.05"</span>
+                <span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
+                <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
+                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
+                <span class="n">split</span><span class="o">=</span><span class="s2">"val"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span><span class="p">,</span> <span class="n">val_loader</span></div>
+
+
+
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_jepa.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resume_preempt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -830,7 +944,6 @@ window.runMermaid = runMermaid;</script>
     <span class="n">model_name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"model_name"</span><span class="p">]</span>
     <span class="n">load_model</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"load_checkpoint"</span><span class="p">]</span> <span class="ow">or</span> <span class="n">resume_preempt</span>
     <span class="n">r_file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"read_checkpoint"</span><span class="p">]</span>
-    <span class="n">copy_data</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"copy_data"</span><span class="p">]</span>
     <span class="n">pred_depth</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"pred_depth"</span><span class="p">]</span>
     <span class="n">pred_emb_dim</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">][</span><span class="s2">"pred_emb_dim"</span><span class="p">]</span>
     <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">build_loss_fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s2">"meta"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"loss_type"</span><span class="p">,</span> <span class="s2">"l2"</span><span class="p">))</span>
@@ -850,10 +963,6 @@ window.runMermaid = runMermaid;</script>
     <span class="n">color_jitter</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"color_jitter_strength"</span><span class="p">]</span>
     <span class="c1"># --</span>
     <span class="n">batch_size</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"batch_size"</span><span class="p">]</span>
-    <span class="n">pin_mem</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"pin_mem"</span><span class="p">]</span>
-    <span class="n">num_workers</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"num_workers"</span><span class="p">]</span>
-    <span class="n">root_path</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"root_path"</span><span class="p">]</span>
-    <span class="n">image_folder</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"image_folder"</span><span class="p">]</span>
     <span class="n">crop_size</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"crop_size"</span><span class="p">]</span>
     <span class="n">crop_scale</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"crop_scale"</span><span class="p">]</span>
     <span class="c1"># --</span>
@@ -980,93 +1089,15 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span>
 
     <span class="c1"># -- init data-loaders/samplers</span>
-    <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"dataset"</span><span class="p">]</span>
-    <span class="n">val_split</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">][</span><span class="s2">"val_split"</span><span class="p">]</span>
-    <span class="n">download</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"data"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"download"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"imagenet"</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
-            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
-            <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
-            <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
-            <span class="n">copy_data</span><span class="o">=</span><span class="n">copy_data</span><span class="p">,</span>
-            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
-            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
-            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
-            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>  <span class="c1"># pass through</span>
-        <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
-            <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
-            <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
-            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-            <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-            <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-            <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
-            <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
-            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="c1"># Held-out loader for early stopping. Built with the same mask collator, so</span>
-    <span class="c1"># the validation loss is the exact objective being trained, just on data the</span>
-    <span class="c1"># encoder never sees.</span>
     <span class="n">early_stopping</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s2">"optimization"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-    <span class="n">val_loader</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">early_stopping</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">dataset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"cifar10"</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
-                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
-                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
-                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">download</span><span class="o">=</span><span class="n">download</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">val_split</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">"optimization.early_stopping needs data.val_split &gt; 0 so "</span>
-                    <span class="s2">"there is held-out data to measure; pass e.g. "</span>
-                    <span class="s2">"data.val_split=0.05"</span>
-                <span class="p">)</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
-                <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
-                <span class="n">pin_mem</span><span class="o">=</span><span class="n">pin_mem</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-                <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-                <span class="n">root_path</span><span class="o">=</span><span class="n">root_path</span><span class="p">,</span>
-                <span class="n">image_folder</span><span class="o">=</span><span class="n">image_folder</span><span class="p">,</span>
-                <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">val_split</span><span class="o">=</span><span class="n">val_split</span><span class="p">,</span>
-                <span class="n">split</span><span class="o">=</span><span class="s2">"val"</span><span class="p">,</span>
-            <span class="p">)</span>
+    <span class="n">unsupervised_loader</span><span class="p">,</span> <span class="n">unsupervised_sampler</span><span class="p">,</span> <span class="n">val_loader</span> <span class="o">=</span> <span class="n">make_jepa_loaders</span><span class="p">(</span>
+        <span class="n">args</span><span class="p">,</span>
+        <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+        <span class="n">mask_collator</span><span class="o">=</span><span class="n">mask_collator</span><span class="p">,</span>
+        <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+        <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">with_val</span><span class="o">=</span><span class="n">early_stopping</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">ipe</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unsupervised_loader</span><span class="p">)</span>
 
@@ -1379,7 +1410,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">sweep_id</span> <span class="o">=</span> <span class="n">wandb</span><span class="o">.</span><span class="n">sweep</span><span class="p">(</span>
             <span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sweep_config"</span><span class="p">,</span> <span class="p">{}),</span>
             <span class="n">project</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_project"</span><span class="p">,</span> <span class="s2">"simulusion"</span><span class="p">),</span>
-            <span class="n">entity</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_entity"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="n">entity</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_entity"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">wandb</span><span class="o">.</span><span class="n">agent</span><span class="p">(</span><span class="n">sweep_id</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">sweep_train</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1440,7 +1471,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

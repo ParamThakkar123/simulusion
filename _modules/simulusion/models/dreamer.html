@@ -702,8 +702,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.dreamer_rssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">RSSM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.dreamer_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvDecoder</span><span class="p">,</span> <span class="n">DenseDecoder</span><span class="p">,</span> <span class="n">ActionDecoder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.dreamer_encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvEncoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientUpdate</span><span class="p">,</span> <span class="n">MixedPrecision</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.memory_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">enable_performance_defaults</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.dreamer_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Logger</span><span class="p">,</span>
     <span class="n">FreezeParameters</span><span class="p">,</span>
@@ -713,7 +713,6 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportableAgentMixin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.logging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">assert_finite</span><span class="p">,</span>
-    <span class="n">collect_system_stats</span><span class="p">,</span>
     <span class="n">get_package_logger</span><span class="p">,</span>
     <span class="n">setup_logging</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1099,6 +1098,9 @@ window.runMermaid = runMermaid;</script>
             <span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"use_amp"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">))</span> <span class="o">==</span> <span class="s2">"cuda"</span>
         <span class="p">)</span>
+        <span class="c1"># What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The</span>
+        <span class="c1"># shared Trainer replaces it with the run's precision (set_precision).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">MixedPrecision</span><span class="o">.</span><span class="n">from_use_amp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="c1"># `ConvDecoder` emits Independent(Normal(mean, 1), len(obs_shape)), whose</span>
         <span class="c1"># negative log-likelihood carries a constant term of</span>
         <span class="c1"># prod(obs_shape) * 0.5 * log(2*pi). For 3x64x64 that is ~11292 nats,</span>
@@ -1199,9 +1201,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">actor_learning_rate</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_scaler</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">(</span><span class="s2">"cuda"</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">world_model_modules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">use_disc_model</span><span class="p">:</span>
@@ -1382,9 +1382,58 @@ window.runMermaid = runMermaid;</script>
         <span class="p">}</span></div>
 
 
+    <span class="nd">@assert_finite</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">grad_clip_norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_model_opt</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">world_model_params</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actor_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_opt</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Dreamer.set_precision">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.Dreamer.set_precision">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="n">precision</span><span class="o">.</span><span class="n">enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Dreamer.update_world_model">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.Dreamer.update_world_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_world_model</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">acs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">rews</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">nonterms</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">continues</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""One world-model optimizer step; returns ``(loss, grad_norm)``.</span>
+
+<span class="sd">        Inputs are time-major, as the replay buffer samples them: ``obs``</span>
+<span class="sd">        ``(L, B, C, H, W)`` uint8, ``acs`` ``(L, B, A)``, ``rews``,</span>
+<span class="sd">        ``nonterms`` and ``continues`` ``(L, B, 1)``, where row ``t`` holds</span>
+<span class="sd">        the action taken at ``obs[t]`` and what followed it.</span>
+<span class="sd">        """</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+            <span class="n">model_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_model_loss</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">acs</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">nonterms</span><span class="p">,</span> <span class="n">continues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model_loss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_model_update</span><span class="p">(</span><span class="n">model_loss</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Dreamer.world_model_loss">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.Dreamer.world_model_loss">[docs]</a>
-    <span class="nd">@assert_finite</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">world_model_loss</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">obs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -1552,49 +1601,17 @@ window.runMermaid = runMermaid;</script>
         <span class="n">nonterms</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_device</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">continues</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_device</span><span class="p">(</span><span class="n">terminated</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="n">model_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_model_loss</span><span class="p">(</span>
-                <span class="n">obs_t</span><span class="p">,</span> <span class="n">acs_t</span><span class="p">,</span> <span class="n">rews_t</span><span class="p">,</span> <span class="n">nonterms</span><span class="p">,</span> <span class="n">continues</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">model_loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world_model_opt</span><span class="p">)</span>
-        <span class="n">model_grad_norm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">world_model_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">grad_clip_norm</span>
+        <span class="n">model_loss</span><span class="p">,</span> <span class="n">model_grad_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_world_model</span><span class="p">(</span>
+            <span class="n">obs_t</span><span class="p">,</span> <span class="n">acs_t</span><span class="p">,</span> <span class="n">rews_t</span><span class="p">,</span> <span class="n">nonterms</span><span class="p">,</span> <span class="n">continues</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world_model_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">world_model_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
             <span class="n">actor_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_loss</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">actor_loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span><span class="p">)</span>
-        <span class="n">actor_grad_norm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">grad_clip_norm</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">actor_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">actor_grad_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_update</span><span class="p">(</span><span class="n">actor_loss</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span>
-            <span class="n">device_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)),</span>
-            <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
             <span class="n">value_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_loss</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">value_loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_opt</span><span class="p">)</span>
-        <span class="n">value_grad_norm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">value_model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">grad_clip_norm</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="n">value_grad_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_update</span><span class="p">(</span><span class="n">value_loss</span><span class="p">)</span>
 
         <span class="n">clip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">grad_clip_norm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_components</span><span class="p">)</span>
@@ -1603,7 +1620,7 @@ window.runMermaid = runMermaid;</script>
             <span class="p">(</span><span class="s2">"actor"</span><span class="p">,</span> <span class="n">actor_grad_norm</span><span class="p">),</span>
             <span class="p">(</span><span class="s2">"value"</span><span class="p">,</span> <span class="n">value_grad_norm</span><span class="p">),</span>
         <span class="p">):</span>
-            <span class="n">norm_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+            <span class="n">norm_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span> <span class="k">if</span> <span class="n">norm</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">"grad_norm/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">norm_value</span>
             <span class="c1"># A norm that is non-finite means AMP overflowed and GradScaler</span>
             <span class="c1"># silently skipped the update; a norm above `clip` means the step</span>
@@ -2079,158 +2096,40 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="DreamerAgent.train">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerAgent.train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">total_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">total_steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">total_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">total_steps</span>
+<span class="w">        </span><span class="sd">"""Train for ``total_steps`` environment steps (``args.total_steps`` by default).</span>
 
-        <span class="n">initial_logs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">seed_episode_rews</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">collect_random_episodes</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">seed_steps</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span>
-        <span class="p">)</span>
-        <span class="n">global_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span>
-        <span class="c1"># without loss of generality intial rews for both train and eval are assumed same</span>
-        <span class="n">initial_logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="p">{</span>
-                <span class="s2">"train_avg_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"train_max_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"train_min_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"train_std_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"eval_avg_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"eval_max_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"eval_min_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-                <span class="s2">"eval_std_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">seed_episode_rews</span><span class="p">),</span>
-            <span class="p">}</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_scalars</span><span class="p">(</span><span class="n">initial_logs</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+<span class="sd">        Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">        ``dreamer`` task, with this agent's environments, model and logger, so</span>
+<span class="sd">        metrics and evaluation videos go where they always went. Evaluation</span>
+<span class="sd">        runs every ``test_interval`` steps, early stopping on its average</span>
+<span class="sd">        reward when ``early_stopping`` is set, and checkpoints land in</span>
+<span class="sd">        ``&lt;logdir&gt;/ckpts/&lt;step&gt;_ckpt.pt`` every ``checkpoint_interval`` steps</span>
+<span class="sd">        and at the end, as before. The trainer adds a resumable copy of each</span>
+<span class="sd">        under ``&lt;logdir&gt;/checkpoints/``, plus ``run.json``,</span>
+<span class="sd">        ``run_config.yaml`` and ``train_metrics.jsonl``.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.dreamer</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerTask</span><span class="p">,</span> <span class="n">DreamerTaskConfig</span>
 
-        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
-                <span class="n">mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
-                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
-                <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">last_saved_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">while</span> <span class="n">global_step</span> <span class="o">&lt;=</span> <span class="n">total_steps</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"At global step </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">global_step</span><span class="p">)</span>
-
-            <span class="n">logs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-            <span class="n">video_images</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="n">update_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-            <span class="c1"># The summed `model_loss` is dominated by the Gaussian NLL constant</span>
-            <span class="c1"># of the observation head, so accumulate the per-component metrics</span>
-            <span class="c1"># and average them over the whole update block instead of reporting</span>
-            <span class="c1"># whatever the final batch happened to produce.</span>
-            <span class="n">metric_sums</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update_steps</span><span class="p">):</span>
-                <span class="n">model_loss</span><span class="p">,</span> <span class="n">actor_loss</span><span class="p">,</span> <span class="n">value_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">train_one_batch</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">metric_sums</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">metric_sums</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span>
-            <span class="n">update_elapsed</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">update_start</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>
-            <span class="n">update_steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update_steps</span><span class="p">)</span>
-            <span class="n">averaged_metrics</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">name</span><span class="p">:</span> <span class="n">total</span> <span class="o">/</span> <span class="n">update_steps</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">total</span> <span class="ow">in</span> <span class="n">metric_sums</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">}</span>
-
-            <span class="n">collect_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">collect_steps</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span>
-            <span class="n">collect_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-            <span class="n">train_rews</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">act_and_collect_data</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">,</span> <span class="n">collect_count</span>
-            <span class="p">)</span>
-            <span class="n">collect_elapsed</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">collect_start</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>
-
-            <span class="n">logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">"model_loss"</span><span class="p">:</span> <span class="n">model_loss</span><span class="p">,</span>
-                    <span class="s2">"actor_loss"</span><span class="p">:</span> <span class="n">actor_loss</span><span class="p">,</span>
-                    <span class="s2">"value_loss"</span><span class="p">:</span> <span class="n">value_loss</span><span class="p">,</span>
-                    <span class="s2">"train_avg_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">train_rews</span><span class="p">),</span>
-                    <span class="s2">"train_max_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">train_rews</span><span class="p">),</span>
-                    <span class="s2">"train_min_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">train_rews</span><span class="p">),</span>
-                    <span class="s2">"train_std_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">train_rews</span><span class="p">),</span>
-                    <span class="s2">"throughput/env_steps_per_sec"</span><span class="p">:</span> <span class="p">(</span>
-                        <span class="n">collect_count</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span>
-                    <span class="p">)</span>
-                    <span class="o">/</span> <span class="n">collect_elapsed</span><span class="p">,</span>
-                    <span class="s2">"throughput/grad_steps_per_sec"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">update_steps</span>
-                    <span class="o">/</span> <span class="n">update_elapsed</span><span class="p">,</span>
-                    <span class="s2">"replay/fill_ratio"</span><span class="p">:</span> <span class="nb">min</span><span class="p">(</span>
-                        <span class="mf">1.0</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">steps</span>
-                        <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
-                    <span class="p">),</span>
-                    <span class="s2">"replay/steps"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
-                    <span class="s2">"replay/episodes"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">episodes</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
-            <span class="n">logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">averaged_metrics</span><span class="p">)</span>
-
-            <span class="n">stats_freq</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s2">"log_system_stats_freq"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">stats_freq</span> <span class="ow">and</span> <span class="n">global_step</span> <span class="o">%</span> <span class="n">stats_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">collect_system_stats</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
-
-            <span class="k">if</span> <span class="n">global_step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">test_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">episode_rews</span><span class="p">,</span> <span class="n">video_images</span><span class="p">,</span> <span class="n">latents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">test_episodes</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_latents_ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">latents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">last_latents_ref</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">latents</span>
-
-                <span class="n">logs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="s2">"eval_avg_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">episode_rews</span><span class="p">),</span>
-                        <span class="s2">"eval_max_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">episode_rews</span><span class="p">),</span>
-                        <span class="s2">"eval_min_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">episode_rews</span><span class="p">),</span>
-                        <span class="s2">"eval_std_reward"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">episode_rews</span><span class="p">),</span>
-                    <span class="p">}</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">episode_rews</span><span class="p">)))</span>
-                    <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_scalars</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">global_step</span><span class="p">)</span>
-                        <span class="nb">print</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"Early stopping at step </span><span class="si">{</span><span class="n">global_step</span><span class="si">}</span><span class="s2">: evaluation "</span>
-                            <span class="sa">f</span><span class="s2">"return has not improved by </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> "</span>
-                            <span class="sa">f</span><span class="s2">"for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">patience</span><span class="si">}</span><span class="s2"> evaluations."</span>
-                        <span class="p">)</span>
-                        <span class="n">ckpt_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ckpts/"</span><span class="p">)</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
-                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">global_step</span><span class="si">}</span><span class="s2">_ckpt.pt"</span><span class="p">)</span>
-                        <span class="p">)</span>
-                        <span class="n">last_saved_step</span> <span class="o">=</span> <span class="n">global_step</span>
-                        <span class="k">break</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_scalars</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">global_step</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">global_step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">log_video_freq</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">log_video_freq</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_images</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_images</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span>
-            <span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log_videos</span><span class="p">(</span>
-                    <span class="n">video_images</span><span class="p">,</span> <span class="n">global_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">max_videos_to_save</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">global_step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">checkpoint_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">ckpt_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ckpts/"</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">)):</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">global_step</span><span class="si">}</span><span class="s2">_ckpt.pt"</span><span class="p">))</span>
-                <span class="n">last_saved_step</span> <span class="o">=</span> <span class="n">global_step</span>
-
-            <span class="n">global_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-        <span class="c1"># Always leave a checkpoint of the finished run. Short runs never reach</span>
-        <span class="c1"># `checkpoint_interval`, and without this they trained and saved nothing.</span>
-        <span class="k">if</span> <span class="n">last_saved_step</span> <span class="o">!=</span> <span class="n">global_step</span><span class="p">:</span>
-            <span class="n">ckpt_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ckpts/"</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">global_step</span><span class="si">}</span><span class="s2">_ckpt.pt"</span><span class="p">))</span></div>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">early</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">fit_legacy</span><span class="p">(</span>
+            <span class="c1"># The replay buffer is not checkpointed here: this loop never</span>
+            <span class="c1"># resumed, and the buffer can hold millions of frames.</span>
+            <span class="n">DreamerTask</span><span class="p">(</span><span class="n">DreamerTaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">save_replay</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">agent</span><span class="o">=</span><span class="bp">self</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
+            <span class="n">max_steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_steps</span> <span class="k">if</span> <span class="n">total_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">args</span><span class="o">.</span><span class="n">total_steps</span><span class="p">),</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">eval_every</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">test_interval</span><span class="p">,</span>
+            <span class="n">checkpoint_every</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">checkpoint_interval</span><span class="p">,</span>
+            <span class="n">early_stopping_metric</span><span class="o">=</span><span class="s2">"eval_avg_reward"</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"patience"</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"min_delta"</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">),</span>
+            <span class="c1"># The agent's own logger already prints to the console.</span>
+            <span class="n">console</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DreamerAgent.evaluate">
@@ -2308,7 +2207,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       

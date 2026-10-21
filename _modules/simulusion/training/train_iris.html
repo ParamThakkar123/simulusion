@@ -686,10 +686,9 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
@@ -703,7 +702,6 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.iris_agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISAgent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.memory.iris_memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISReplayBuffer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.ale_atari_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_atari_env</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.train_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">EarlyStopping</span>
 
 <span class="c1"># Optional OpenCV import at module scope (avoid function-local imports)</span>
 <span class="n">cv2</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1272,114 +1270,88 @@ window.runMermaid = runMermaid;</script>
         <span class="n">total_epochs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">eval_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
         <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"checkpoints/iris"</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Full training loop.</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train for ``total_epochs`` epochs (``config.total_epochs`` by default).</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            total_epochs: Total training epochs</span>
-<span class="sd">            eval_interval: Evaluate every N epochs</span>
-<span class="sd">            save_dir: Directory to save checkpoints</span>
+<span class="sd">        Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">        ``iris`` task, with this trainer's environment, replay and agent.</span>
+<span class="sd">        Every ``eval_interval`` epochs, once the policy trains, it evaluates</span>
+<span class="sd">        (monitoring only); the best of those is written to</span>
+<span class="sd">        ``&lt;save_dir&gt;/best_&lt;game&gt;.pt``, and early stopping on it applies when</span>
+<span class="sd">        ``config.early_stopping`` is set. ``checkpoint_&lt;epoch&gt;.pt`` is written</span>
+<span class="sd">        every ``config.checkpoint_interval`` epochs. The paper's benchmark</span>
+<span class="sd">        number is the final evaluation over ``config.eval_episodes``</span>
+<span class="sd">        (``self.final_eval_return``, model in ``final_&lt;game&gt;.pt``). The</span>
+<span class="sd">        trainer adds resumable checkpoints under ``&lt;save_dir&gt;/checkpoints/``,</span>
+<span class="sd">        ``run.json``, ``run_config.yaml`` and ``train_metrics.jsonl``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``self.metrics``: every epoch's metrics, by name.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="n">total_epochs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">total_epochs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">total_epochs</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.iris</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISTask</span><span class="p">,</span> <span class="n">IRISTaskConfig</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">epochs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_epochs</span> <span class="k">if</span> <span class="n">total_epochs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">total_epochs</span><span class="p">)</span>
+        <span class="n">early</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Starting training for </span><span class="si">{</span><span class="n">total_epochs</span><span class="si">}</span><span class="s2"> epochs on </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Starting training for </span><span class="si">{</span><span class="n">epochs</span><span class="si">}</span><span class="s2"> epochs on </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Action space: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Device: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-        <span class="n">best_eval_return</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">)</span>
-
-        <span class="c1"># Return, not loss: the autoencoder and transformer losses keep falling</span>
-        <span class="c1"># well after the policy stops improving, so a loss plateau never comes.</span>
-        <span class="n">stopper</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="n">stopper</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
-                <span class="n">mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
-                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
-                <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="n">IRISTask</span><span class="p">(</span>
+            <span class="c1"># No replay in checkpoints: 100k frames per checkpoint, and this</span>
+            <span class="c1"># loop never resumed.</span>
+            <span class="n">IRISTaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">game</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="p">,</span> <span class="n">save_replay</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">iris</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">legacy_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fit_legacy</span><span class="p">(</span>
+            <span class="n">task</span><span class="p">,</span>
+            <span class="n">save_dir</span><span class="p">,</span>
+            <span class="n">max_steps</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">log_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">eval_every</span><span class="o">=</span><span class="n">eval_interval</span><span class="p">,</span>
+            <span class="n">checkpoint_every</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_interval</span><span class="p">,</span>
+            <span class="c1"># Return, not loss: the autoencoder and transformer losses keep</span>
+            <span class="c1"># falling well after the policy stops improving.</span>
+            <span class="n">best_metric</span><span class="o">=</span><span class="s2">"eval_mean_return"</span><span class="p">,</span>
+            <span class="n">best_mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+            <span class="n">early_stopping_metric</span><span class="o">=</span><span class="s2">"eval_mean_return"</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">best_checkpoint</span> <span class="o">/</span> <span class="s2">"task"</span> <span class="o">/</span> <span class="s2">"agent.pt"</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"best_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">),</span>
             <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">total_epochs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">"Training"</span><span class="p">):</span>
-            <span class="c1"># Train one epoch</span>
-            <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
-
-            <span class="c1"># Log metrics</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-            <span class="c1"># Print progress</span>
-            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">:"</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-            <span class="c1"># Evaluate periodically</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">epoch</span> <span class="o">%</span> <span class="n">eval_interval</span> <span class="o">==</span> <span class="mi">0</span>
-                <span class="ow">and</span> <span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">start_actor_critic_after</span>
-            <span class="p">):</span>
-                <span class="n">eval_metrics</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
-                    <span class="nb">dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">num_episodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_episodes</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Evaluation at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2"> (monitoring only):"</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"  Mean return: </span><span class="si">{</span><span class="n">eval_metrics</span><span class="p">[</span><span class="s1">'eval_mean_return'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">eval_metrics</span><span class="p">[</span><span class="s1">'eval_std_return'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Save best model</span>
-                <span class="k">if</span> <span class="n">eval_metrics</span><span class="p">[</span><span class="s2">"eval_mean_return"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">best_eval_return</span><span class="p">:</span>
-                    <span class="n">best_eval_return</span> <span class="o">=</span> <span class="n">eval_metrics</span><span class="p">[</span><span class="s2">"eval_mean_return"</span><span class="p">]</span>
-                    <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"best_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.pt"</span>
-                    <span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Saved best model: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">stopper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">stopper</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">eval_metrics</span><span class="p">[</span><span class="s2">"eval_mean_return"</span><span class="p">])</span>
-                    <span class="k">if</span> <span class="n">stopper</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Early stopping at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">: evaluation return "</span>
-                            <span class="sa">f</span><span class="s2">"has not improved by </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="si">}</span><span class="s2"> for "</span>
-                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="si">}</span><span class="s2"> evaluations "</span>
-                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">eval_interval</span><span class="si">}</span><span class="s2"> epochs)."</span>
-                        <span class="p">)</span>
-                        <span class="k">break</span>
-
-            <span class="c1"># Checkpoint periodically</span>
-            <span class="k">if</span> <span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"checkpoint_</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-
-        <span class="c1"># Paper 3.2: "we evaluate IRIS by computing an average over 100 episodes</span>
-        <span class="c1"># collected at the end of training for each game (5 runs)". This final</span>
-        <span class="c1"># number -- not the best periodic evaluation -- is what is comparable to</span>
-        <span class="c1"># Table 1. Reporting the best of several evaluations would be</span>
-        <span class="c1"># optimistically biased: it takes the maximum of a noisy quantity.</span>
-        <span class="n">final_metrics</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">num_episodes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_episodes</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span> <span class="o">=</span> <span class="n">final_metrics</span><span class="p">[</span><span class="s2">"eval_mean_return"</span><span class="p">]</span>
-
-        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"final_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span>
+        <span class="c1"># Paper 3.2: the benchmark number is the average over eval_episodes</span>
+        <span class="c1"># episodes at the end of training -- not the best periodic evaluation,</span>
+        <span class="c1"># which takes the maximum of a noisy quantity.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eval_mean_return"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"final_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Training complete. Benchmark score (mean over "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_episodes</span><span class="si">}</span><span class="s2"> episodes at end of training): "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">final_metrics</span><span class="p">[</span><span class="s1">'eval_std_return'</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
+            <span class="s2">"</span><span class="se">\n</span><span class="s2">Training complete. Benchmark score (mean over "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">eval_episodes</span><span class="si">}</span><span class="s2"> episodes at end of training): "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> +/- "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'eval_std_return'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">best_eval_return</span> <span class="o">&gt;</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"-inf"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"  (best periodic evaluation during training was "</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">best_eval_return</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">; monitoring only, not comparable to "</span>
+                <span class="sa">f</span><span class="s2">"  (best evaluation during training was "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">; monitoring only, not comparable to "</span>
                 <span class="sa">f</span><span class="s2">"the paper's Table 1)"</span>
             <span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Final model: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span>  <span class="c1"># type: ignore[return-value]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span></div>
 </div>
 
 
@@ -1498,7 +1470,7 @@ window.runMermaid = runMermaid;</script>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
