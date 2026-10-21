@@ -223,7 +223,7 @@ See {doc}`trainer_guide`.
 
 | Name | Source | Description |
 |---|---|---|
-| `Trainer` | `simulusion.training.trainer` | Runs any training task to its budget on Accelerate: precision, data parallelism, logging, evaluation, early stopping, checkpoints and resume, world model export. |
+| `Trainer` | `simulusion.training.trainer` | Runs any training task to its budget on one device: precision, logging, evaluation, early stopping, checkpoints and resume, world model export. |
 | `TrainerConfig` | `simulusion.training.trainer` | Settings shared by every run (the `trainer:` section of a run config). |
 | `TrainResult` | `simulusion.training.trainer` | What `Trainer.fit` returns: run directory, progress, final metrics, checkpoint and export paths. |
 | `TrainingTask` | `simulusion.training.task` | Base class of a family's training (networks, optimizers, data, one step). |

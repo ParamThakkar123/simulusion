@@ -810,9 +810,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
         <span class="n">patience</span><span class="o">=</span><span class="n">mdrnn_config</span><span class="o">.</span><span class="n">early_stopping_patience</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
-        <span class="n">task</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">mdrnn</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">join</span><span class="p">(</span><span class="n">rnn_dir</span><span class="p">,</span> <span class="s2">"mdrnn_final.pth"</span><span class="p">)</span>
-    <span class="p">)</span></div>
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">mdrnn</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">join</span><span class="p">(</span><span class="n">rnn_dir</span><span class="p">,</span> <span class="s2">"mdrnn_final.pth"</span><span class="p">))</span></div>
 
 </pre></div>
 

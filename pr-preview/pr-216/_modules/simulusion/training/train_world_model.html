@@ -689,7 +689,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">3. Controller - Linear controller trained with CMA-ES</span>
 
 <span class="sd">Usage:</span>
-<span class="sd">    python train_world_model.py --env CarRacing-v2 --data_dir ./data --logdir ./results</span>
+<span class="sd">    python train_world_model.py --env CarRacing-v3 --data_dir ./data --logdir ./results</span>
 <span class="sd">    python train_world_model.py --env BipedalWalker-v3 --action_size 4  # if env loading fails</span>
 
 <span class="sd">The script will:</span>
@@ -701,7 +701,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">glob</span><span class="w"> </span><span class="kn">import</span> <span class="n">glob</span>
@@ -709,7 +709,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_device_name</span>
 
@@ -721,10 +720,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_convvae</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_convae</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_mdn_rnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_mdn_rnn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_controller</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.gym_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymImageEnv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">Controller</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.mdrnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDRNN</span><span class="p">,</span> <span class="n">MDRNNCell</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.VAE.ConvVAE</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvVAE</span>
 
 
 <div class="viewcode-block" id="generate_rollouts">
@@ -752,17 +748,23 @@ window.runMermaid = runMermaid;</script>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Found </span><span class="si">{</span><span class="n">existing</span><span class="si">}</span><span class="s2"> existing rollouts, skipping generation."</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generating </span><span class="si">{</span><span class="n">num_rollouts</span><span class="si">}</span><span class="s2"> rollouts with </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s2"> workers..."</span><span class="p">)</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">num_rollouts</span> <span class="o">-</span> <span class="n">existing</span>
+    <span class="n">num_workers</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_workers</span><span class="p">,</span> <span class="n">missing</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generating </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> rollouts with </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s2"> workers..."</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">rollouts_per_worker</span> <span class="o">=</span> <span class="n">num_rollouts</span> <span class="o">//</span> <span class="n">num_workers</span>
+        <span class="c1"># Spread the remainder too, so exactly `missing` rollouts are attempted.</span>
+        <span class="n">share</span><span class="p">,</span> <span class="n">extra</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">)</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">rollouts_per_worker</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span>
+            <span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">share</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">extra</span> <span class="k">else</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span>
         <span class="p">]</span>
 
-        <span class="k">with</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
-            <span class="nb">list</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_generate_worker</span><span class="p">,</span> <span class="n">args</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">num_workers</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">num_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">_generate_worker</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">mp</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">_generate_worker</span><span class="p">,</span> <span class="n">args</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">num_workers</span><span class="p">))</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generated rollouts in </span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
@@ -774,35 +776,36 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_generate_worker</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Worker function for parallel rollout generation."""</span>
-    <span class="n">data_dir</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">num_rollouts</span> <span class="o">=</span> <span class="n">args</span>
+<span class="w">    </span><span class="sd">"""Worker function for parallel rollout generation.</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+<span class="sd">    Rollouts are recorded through the environment the controller later acts</span>
+<span class="sd">    in (:func:`~simulusion.training.train_controller.make_controller_env`):</span>
+<span class="sd">    64x64 RGB frames, rendered for environments whose observations are</span>
+<span class="sd">    vectors, and actions as the controller emits them (for a discrete action</span>
+<span class="sd">    space, +1 for the action taken and -1 for the others).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_controller_env</span>
+
+    <span class="n">data_dir</span><span class="p">,</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">num_rollouts</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">make_controller_env</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_rollouts</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-            <span class="n">observations</span> <span class="o">=</span> <span class="p">[</span><span class="n">obs</span><span class="p">]</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="n">observations</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">rewards</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">terminals</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">seq_len</span><span class="p">):</span>
-                <span class="n">action</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
-                <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-
-                <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-                <span class="n">observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+                <span class="n">observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+                <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span>
+                <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"action"</span><span class="p">])</span>
                 <span class="n">rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
-                <span class="n">terminals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">terminated</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
+                <span class="n">terminals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"terminated"</span><span class="p">,</span> <span class="n">done</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
                     <span class="k">break</span>
 
-            <span class="n">observations</span> <span class="o">=</span> <span class="n">observations</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -819,6 +822,24 @@ window.runMermaid = runMermaid;</script>
             <span class="k">continue</span>
 
     <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="env_action_size">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_world_model.env_action_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">env_action_size</span><span class="p">(</span><span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The action size the models see in ``env_name``.</span>
+
+<span class="sd">    The size of a continuous action, or the number of choices of a discrete</span>
+<span class="sd">    one (the controller emits a score per choice).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_controller_env</span>
+
+    <span class="n">env</span> <span class="o">=</span> <span class="n">make_controller_env</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
 
 
 <div class="viewcode-block" id="run_training_pipeline">
@@ -913,11 +934,33 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="test_trained_model">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_world_model.test_trained_model">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_trained_model</span><span class="p">(</span>
-    <span class="n">logdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Test the trained world model with controller in the environment."""</span>
+    <span class="n">logdir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">action_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">num_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run the trained V + M + C in the environment; the episode returns.</span>
 
+<span class="sd">    Reads ``&lt;logdir&gt;/{vae,mdrnn,ctrl}/best.tar``. The models' sizes come</span>
+<span class="sd">    from the checkpoints, so ``action_size`` is only checked against them.</span>
+<span class="sd">    Returns an empty list (after saying which) when a checkpoint is missing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        logdir: The pipeline's ``--logdir``.</span>
+<span class="sd">        env_name: The environment to act in.</span>
+<span class="sd">        action_size: The action size the models must have, if given.</span>
+<span class="sd">        num_episodes: Episodes to run.</span>
+<span class="sd">        time_limit: Steps per episode at most.</span>
+<span class="sd">        env: An environment to use instead of making ``env_name`` (it is</span>
+<span class="sd">            closed afterwards).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.world_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">controller_episode</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_controller_env</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_device</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.world_model.vae_mdrnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDRNNWorldModel</span>
 
     <span class="n">device</span> <span class="o">=</span> <span class="n">get_default_device</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cpu"</span><span class="p">:</span>
@@ -930,86 +973,41 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="n">vae_file</span><span class="p">,</span> <span class="n">rnn_file</span><span class="p">,</span> <span class="n">ctrl_file</span><span class="p">]:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Missing: </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-            <span class="k">return</span>
+            <span class="k">return</span> <span class="p">[]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Loading trained models..."</span><span class="p">)</span>
-
-    <span class="n">vae_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">vae_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">vae</span> <span class="o">=</span> <span class="n">ConvVAE</span><span class="p">(</span><span class="n">img_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-    <span class="n">vae</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">vae_state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-    <span class="n">vae</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-
-    <span class="n">rnn_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">rnn_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">batch_rnn</span> <span class="o">=</span> <span class="n">MDRNN</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="n">batch_rnn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">rnn_state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
-
-    <span class="n">cell_rnn</span> <span class="o">=</span> <span class="n">MDRNNCell</span><span class="p">(</span><span class="n">latents</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">actions</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span> <span class="n">hiddens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">gaussians</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
-        <span class="n">device</span>
-    <span class="p">)</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_ih_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">weight_hh_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_ih</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_ih_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_hh</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">rnn</span><span class="o">.</span><span class="n">bias_hh_l0</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># type: ignore[arg-type]</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">gmm_linear</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">batch_rnn</span><span class="o">.</span><span class="n">gmm_linear</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
-    <span class="n">cell_rnn</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-    <span class="k">del</span> <span class="n">batch_rnn</span>
-
+    <span class="n">wm</span> <span class="o">=</span> <span class="n">MDRNNWorldModel</span><span class="o">.</span><span class="n">from_checkpoints</span><span class="p">(</span><span class="n">vae_file</span><span class="p">,</span> <span class="n">rnn_file</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">cell</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="s2">"cell"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action_size</span> <span class="o">!=</span> <span class="n">cell</span><span class="o">.</span><span class="n">actions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The trained models act with </span><span class="si">{</span><span class="n">cell</span><span class="o">.</span><span class="n">actions</span><span class="si">}</span><span class="s2"> actions, not </span><span class="si">{</span><span class="n">action_size</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">cell</span><span class="o">.</span><span class="n">latents</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">hiddens</span><span class="p">,</span> <span class="n">cell</span><span class="o">.</span><span class="n">actions</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
     <span class="n">ctrl_state</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ctrl_file</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">ctrl</span> <span class="o">=</span> <span class="n">Controller</span><span class="p">(</span><span class="n">latent_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">action_size</span><span class="o">=</span><span class="n">action_size</span><span class="p">)</span>
     <span class="n">ctrl</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">ctrl_state</span><span class="p">[</span><span class="s2">"state_dict"</span><span class="p">])</span>
     <span class="n">ctrl</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">make_controller_env</span><span class="p">(</span><span class="n">env_name</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Running </span><span class="si">{</span><span class="n">num_episodes</span><span class="si">}</span><span class="s2"> episodes..."</span><span class="p">)</span>
-
+    <span class="n">returns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">episode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_episodes</span><span class="p">):</span>
-            <span class="n">obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-            <span class="n">total_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="n">h</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cell_rnn</span><span class="o">.</span><span class="n">get_init_hidden</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">h</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">c</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
-                <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-                    <span class="n">obs_tensor</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">])</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span>
-                        <span class="n">obs_tensor</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span>
-                    <span class="p">)</span>
-                    <span class="n">obs_tensor</span> <span class="o">=</span> <span class="n">obs_tensor</span> <span class="o">/</span> <span class="mf">255.0</span>
-
-                    <span class="n">mu</span><span class="p">,</span> <span class="n">logsigma</span> <span class="o">=</span> <span class="n">vae</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">obs_tensor</span><span class="p">)</span>
-                    <span class="n">z</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">logsigma</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn_like</span><span class="p">(</span><span class="n">logsigma</span><span class="p">)</span>
-
-                    <span class="n">action</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-
-                    <span class="n">action_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">action</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-                    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="o">=</span> <span class="n">cell_rnn</span><span class="p">(</span><span class="n">action_t</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
-
-                    <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-                    <span class="n">total_reward</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
-                    <span class="n">obs</span> <span class="o">=</span> <span class="n">next_obs</span>
-
-                    <span class="k">if</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">:</span>
-                        <span class="k">break</span>
-
+            <span class="n">total_reward</span> <span class="o">=</span> <span class="n">controller_episode</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">ctrl</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">time_limit</span><span class="o">=</span><span class="n">time_limit</span><span class="p">)</span>
+            <span class="n">returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_reward</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Episode </span><span class="si">{</span><span class="n">episode</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: Total Reward = </span><span class="si">{</span><span class="n">total_reward</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Testing interrupted by user (Ctrl+C)"</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+        <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">returns</span></div>
 
 
 
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_world_model.main">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Train World Model on any Gym environment"</span>
     <span class="p">)</span>
@@ -1018,7 +1016,7 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">"--env"</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">"Gym environment name (e.g., CarRacing-v2, Pendulum-v1)"</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">"Gym environment name (e.g., CarRacing-v3, Pendulum-v1)"</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -1137,7 +1135,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">help</span><span class="o">=</span><span class="s2">"Disable mixed precision training"</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">argv</span><span class="p">)</span>
 
     <span class="c1"># Set default directories based on environment</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">data_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1150,16 +1148,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">action_size</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">action_size</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">temp_env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="n">temp_env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">temp_env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">):</span>
-                <span class="n">action_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span> <span class="ow">or</span> <span class="p">(</span><span class="mi">0</span><span class="p">,))[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">action_size</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">temp_env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="n">temp_env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">action_size</span> <span class="o">=</span> <span class="n">env_action_size</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Failed to load environment '</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="si">}</span><span class="s2">' to determine action size: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>

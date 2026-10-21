@@ -3,9 +3,7 @@
 Every family in Simulusion trains on the same loop,
 {py:class}`simulusion.training.Trainer`, from the same kind of file: a YAML
 **run config** that names a **task** and fills its sections. The trainer owns
-what is common to all of them: devices and data parallelism (through
-[Hugging Face Accelerate](https://huggingface.co/docs/accelerate)), one
-precision setting, seeding, the step budget, logging, evaluation, early
+what is common to all of them: the device, one precision setting, seeding, the step budget, logging, evaluation, early
 stopping, checkpoints and resuming, and exporting the trained world model.
 
 ```{contents} Contents
@@ -60,20 +58,20 @@ A task is one family's training: its networks, optimizers, where batches come
 from and what one unit of progress is. The trainer's budget
 (`trainer.max_steps`) counts that unit.
 
-| Task | Trains | Data | Progress | Data parallel |
-|---|---|---|---|---|
-| `dreamer`, `dreamer-v1`, `dreamer-v2` | world model + actor + critic | environment | env steps | no |
-| `dreamer-wm` | Dreamer's world model alone | episode folder | optimizer steps | yes |
-| `planet` | RSSM, acting by CEM planning | environment | epochs | no |
-| `iris` | tokenizer + transformer + actor-critic (paper settings) | environment | epochs | no |
-| `iris-wm` | IRIS's world model alone | episode folder | optimizer steps | yes |
-| `diamond` | denoiser + reward model + actor-critic | environment | epochs | no |
-| `diamond-wm` | DIAMOND's world model alone | episode folder | optimizer steps | yes |
-| `genie` | tokenizer + latent actions + dynamics | episode folder / videos | optimizer steps | yes |
-| `vae`, `mdrnn` | World Models' V, then M | episode folder | optimizer steps | yes |
-| `controller` | World Models' C, by CMA-ES (real env or dream) | world model | generations | no |
-| `dit` | DiT image diffusion | image dataset | optimizer steps | yes |
-| `jepa` | I-JEPA image representations | image dataset | optimizer steps | yes |
+| Task | Trains | Data | Progress |
+|---|---|---|---|
+| `dreamer`, `dreamer-v1`, `dreamer-v2` | world model + actor + critic | environment | env steps |
+| `dreamer-wm` | Dreamer's world model alone | episode folder | optimizer steps |
+| `planet` | RSSM, acting by CEM planning | environment | epochs |
+| `iris` | tokenizer + transformer + actor-critic (paper settings) | environment | epochs |
+| `iris-wm` | IRIS's world model alone | episode folder | optimizer steps |
+| `diamond` | denoiser + reward model + actor-critic | environment | epochs |
+| `diamond-wm` | DIAMOND's world model alone | episode folder | optimizer steps |
+| `genie` | tokenizer + latent actions + dynamics | episode folder / videos | optimizer steps |
+| `vae`, `mdrnn` | World Models' V, then M | episode folder | optimizer steps |
+| `controller` | World Models' C, by CMA-ES (real env or dream) | world model | generations |
+| `dit` | DiT image diffusion | image dataset | optimizer steps |
+| `jepa` | I-JEPA image representations | image dataset | optimizer steps |
 
 The `-wm` tasks train a world model **without its agent**: no environment and
 no policy, only recorded episodes (your own, or converted from LeRobot; see
@@ -116,9 +114,9 @@ Shipped configs for every task live in `simulusion/configs/runs/`;
 | Field | Meaning |
 |---|---|
 | `max_steps` | Budget in the task's progress unit; the task's default when unset. |
-| `seed`, `deterministic` | Seeds Python, NumPy and PyTorch (offset per process); `deterministic` asks for deterministic kernels. |
+| `seed`, `deterministic` | Seeds Python, NumPy and PyTorch; `deterministic` asks for deterministic kernels. |
 | `precision` | `fp32`, `bf16`, `fp16` (loss-scaled) or `auto` (bf16 where supported, fp16 on older GPUs, fp32 on CPU). Replaces the per-family `use_amp` flags for runs on the trainer. |
-| `device` | `null` lets Accelerate choose; `cpu` forces the CPU. |
+| `device` | `null` (or `auto`) picks CUDA, then MPS, else the CPU; `cpu`, `cuda`, `cuda:1` or `mps` choose one. Training runs on one device. |
 | `grad_accumulation` | Batches per optimizer step (dataset-driven tasks). |
 | `log_every`, `eval_every`, `checkpoint_every` | Intervals in progress units. Progress may jump (env steps), so each fires when a multiple is crossed. |
 | `keep_checkpoints` | Periodic checkpoints kept; the final one always is. |
@@ -144,28 +142,9 @@ runs/genie_20261020-120000/
 Checkpoints are written to a staging directory and renamed when complete, so
 an interrupted write never looks like a checkpoint. They hold the task's
 weights, optimizer and loss-scaler states, the loop position and RNG states
-(resuming a single-process run is bit-exact), and for online tasks the replay
+(resuming is bit-exact), and for online tasks the replay
 buffer, so a resumed run trains on the same data. Ctrl+C writes one before
 exiting.
-
-## Several processes
-
-Data-parallel tasks run unchanged on several processes, under any launcher
-that sets the standard `torch.distributed` environment (`RANK`,
-`WORLD_SIZE`, `LOCAL_RANK`, `MASTER_ADDR`, `MASTER_PORT`); Accelerate picks it
-up. Batches are sharded across processes and metrics averaged over them.
-Modules called through `forward()` are wrapped in DDP; world models driven
-through other methods (Dreamer's `rssm.observe_rollout`, IRIS's tokenizer)
-start from process 0's weights and average their gradients before every step
-instead. Vector-quantizer codebooks, which change outside the optimizer, are
-re-broadcast from process 0 after each step. Tasks that collect from an
-environment into a replay buffer are single-process and refuse to start
-under data parallelism.
-
-This is tested with two CPU processes (gloo): every rank ends with identical
-weights. Multi-GPU runs use the same code path but have not been tested yet.
-Sharded training (FSDP, DeepSpeed) is refused: gradient clipping and
-checkpoints assume every process holds the whole model.
 
 ## Writing a task
 
@@ -187,13 +166,12 @@ class MyConfig:
 @register_task("my-model")
 class MyTask(TrainingTask):
     config_cls = MyConfig  # its fields are the run config's sections
-    distributed = True
 
     def setup(self, trainer):
         self.model = trainer.prepare_module(MyModel())
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config.lr)
         self.update = trainer.gradient_update(
-            optimizer, self.model.parameters(), max_grad_norm=1.0, modules=[self.model]
+            optimizer, self.model.parameters(), max_grad_norm=1.0
         )
         self.batches, self.val, _ = sequence_loaders(
             self.config.data, trainer, sequence_length=8, image_size=64
@@ -207,10 +185,10 @@ class MyTask(TrainingTask):
         return {"loss": loss.item()}
 
     def state_dict(self):
-        return {"model": self.trainer.unwrap(self.model).state_dict()}
+        return {"model": self.model.state_dict()}
 
     def load_state_dict(self, state):
-        self.trainer.unwrap(self.model).load_state_dict(state["model"])
+        self.model.load_state_dict(state["model"])
 ```
 
 Optional hooks: `progress()` (a budget in env steps or epochs),

@@ -410,9 +410,7 @@
 <p>Every family in Simulusion trains on the same loop,
 <code class="xref py py-class docutils literal notranslate"><span class="pre">simulusion.training.Trainer</span></code>, from the same kind of file: a YAML
 <strong>run config</strong> that names a <strong>task</strong> and fills its sections. The trainer owns
-what is common to all of them: devices and data parallelism (through
-<a class="reference external" href="https://huggingface.co/docs/accelerate">Hugging Face Accelerate</a>), one
-precision setting, seeding, the step budget, logging, evaluation, early
+what is common to all of them: the device, one precision setting, seeding, the step budget, logging, evaluation, early
 stopping, checkpoints and resuming, and exporting the trained world model.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
@@ -424,9 +422,8 @@ stopping, checkpoints and resuming, and exporting the trained world model.</p>
 <li><p><a class="reference internal" href="#tasks" id="id4">Tasks</a></p></li>
 <li><p><a class="reference internal" href="#run-configs" id="id5">Run configs</a></p></li>
 <li><p><a class="reference internal" href="#what-a-run-leaves-behind" id="id6">What a run leaves behind</a></p></li>
-<li><p><a class="reference internal" href="#several-processes" id="id7">Several processes</a></p></li>
-<li><p><a class="reference internal" href="#writing-a-task" id="id8">Writing a task</a></p></li>
-<li><p><a class="reference internal" href="#the-older-entrypoints" id="id9">The older entrypoints</a></p></li>
+<li><p><a class="reference internal" href="#writing-a-task" id="id7">Writing a task</a></p></li>
+<li><p><a class="reference internal" href="#the-older-entrypoints" id="id8">The older entrypoints</a></p></li>
 </ul>
 </li>
 </ul>
@@ -481,7 +478,6 @@ from and what one unit of progress is. The trainer’s budget
 <th class="head"><p>Trains</p></th>
 <th class="head"><p>Data</p></th>
 <th class="head"><p>Progress</p></th>
-<th class="head"><p>Data parallel</p></th>
 </tr>
 </thead>
 <tbody>
@@ -489,73 +485,61 @@ from and what one unit of progress is. The trainer’s budget
 <td><p>world model + actor + critic</p></td>
 <td><p>environment</p></td>
 <td><p>env steps</p></td>
-<td><p>no</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dreamer-wm</span></code></p></td>
 <td><p>Dreamer’s world model alone</p></td>
 <td><p>episode folder</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">planet</span></code></p></td>
 <td><p>RSSM, acting by CEM planning</p></td>
 <td><p>environment</p></td>
 <td><p>epochs</p></td>
-<td><p>no</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iris</span></code></p></td>
 <td><p>tokenizer + transformer + actor-critic (paper settings)</p></td>
 <td><p>environment</p></td>
 <td><p>epochs</p></td>
-<td><p>no</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iris-wm</span></code></p></td>
 <td><p>IRIS’s world model alone</p></td>
 <td><p>episode folder</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diamond</span></code></p></td>
 <td><p>denoiser + reward model + actor-critic</p></td>
 <td><p>environment</p></td>
 <td><p>epochs</p></td>
-<td><p>no</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diamond-wm</span></code></p></td>
 <td><p>DIAMOND’s world model alone</p></td>
 <td><p>episode folder</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">genie</span></code></p></td>
 <td><p>tokenizer + latent actions + dynamics</p></td>
 <td><p>episode folder / videos</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vae</span></code>, <code class="docutils literal notranslate"><span class="pre">mdrnn</span></code></p></td>
 <td><p>World Models’ V, then M</p></td>
 <td><p>episode folder</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">controller</span></code></p></td>
 <td><p>World Models’ C, by CMA-ES (real env or dream)</p></td>
 <td><p>world model</p></td>
 <td><p>generations</p></td>
-<td><p>no</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dit</span></code></p></td>
 <td><p>DiT image diffusion</p></td>
 <td><p>image dataset</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jepa</span></code></p></td>
 <td><p>I-JEPA image representations</p></td>
 <td><p>image dataset</p></td>
 <td><p>optimizer steps</p></td>
-<td><p>yes</p></td>
 </tr>
 </tbody>
 </table>
@@ -606,13 +590,13 @@ speaks the protocol, such as <code class="xref py py-class docutils literal notr
 <td><p>Budget in the task’s progress unit; the task’s default when unset.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>, <code class="docutils literal notranslate"><span class="pre">deterministic</span></code></p></td>
-<td><p>Seeds Python, NumPy and PyTorch (offset per process); <code class="docutils literal notranslate"><span class="pre">deterministic</span></code> asks for deterministic kernels.</p></td>
+<td><p>Seeds Python, NumPy and PyTorch; <code class="docutils literal notranslate"><span class="pre">deterministic</span></code> asks for deterministic kernels.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code> (loss-scaled) or <code class="docutils literal notranslate"><span class="pre">auto</span></code> (bf16 where supported, fp16 on older GPUs, fp32 on CPU). Replaces the per-family <code class="docutils literal notranslate"><span class="pre">use_amp</span></code> flags for runs on the trainer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code> lets Accelerate choose; <code class="docutils literal notranslate"><span class="pre">cpu</span></code> forces the CPU.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code> (or <code class="docutils literal notranslate"><span class="pre">auto</span></code>) picks CUDA, then MPS, else the CPU; <code class="docutils literal notranslate"><span class="pre">cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">cuda</span></code>, <code class="docutils literal notranslate"><span class="pre">cuda:1</span></code> or <code class="docutils literal notranslate"><span class="pre">mps</span></code> choose one. Training runs on one device.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grad_accumulation</span></code></p></td>
 <td><p>Batches per optimizer step (dataset-driven tasks).</p></td>
@@ -658,30 +642,12 @@ speaks the protocol, such as <code class="xref py py-class docutils literal notr
 <p>Checkpoints are written to a staging directory and renamed when complete, so
 an interrupted write never looks like a checkpoint. They hold the task’s
 weights, optimizer and loss-scaler states, the loop position and RNG states
-(resuming a single-process run is bit-exact), and for online tasks the replay
+(resuming is bit-exact), and for online tasks the replay
 buffer, so a resumed run trains on the same data. Ctrl+C writes one before
 exiting.</p>
 </section>
-<section id="several-processes">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Several processes</a><a class="headerlink" href="#several-processes" title="Link to this heading">#</a></h2>
-<p>Data-parallel tasks run unchanged on several processes, under any launcher
-that sets the standard <code class="docutils literal notranslate"><span class="pre">torch.distributed</span></code> environment (<code class="docutils literal notranslate"><span class="pre">RANK</span></code>,
-<code class="docutils literal notranslate"><span class="pre">WORLD_SIZE</span></code>, <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code>, <code class="docutils literal notranslate"><span class="pre">MASTER_ADDR</span></code>, <code class="docutils literal notranslate"><span class="pre">MASTER_PORT</span></code>); Accelerate picks it
-up. Batches are sharded across processes and metrics averaged over them.
-Modules called through <code class="docutils literal notranslate"><span class="pre">forward()</span></code> are wrapped in DDP; world models driven
-through other methods (Dreamer’s <code class="docutils literal notranslate"><span class="pre">rssm.observe_rollout</span></code>, IRIS’s tokenizer)
-start from process 0’s weights and average their gradients before every step
-instead. Vector-quantizer codebooks, which change outside the optimizer, are
-re-broadcast from process 0 after each step. Tasks that collect from an
-environment into a replay buffer are single-process and refuse to start
-under data parallelism.</p>
-<p>This is tested with two CPU processes (gloo): every rank ends with identical
-weights. Multi-GPU runs use the same code path but have not been tested yet.
-Sharded training (FSDP, DeepSpeed) is refused: gradient clipping and
-checkpoints assume every process holds the whole model.</p>
-</section>
 <section id="writing-a-task">
-<h2><a class="toc-backref" href="#id8" role="doc-backlink">Writing a task</a><a class="headerlink" href="#writing-a-task" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Writing a task</a><a class="headerlink" href="#writing-a-task" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -699,13 +665,12 @@ checkpoints assume every process holds the whole model.</p>
 <span class="nd">@register_task</span><span class="p">(</span><span class="s2">"my-model"</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="p">(</span><span class="n">TrainingTask</span><span class="p">):</span>
     <span class="n">config_cls</span> <span class="o">=</span> <span class="n">MyConfig</span>  <span class="c1"># its fields are the run config's sections</span>
-    <span class="n">distributed</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainer</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">prepare_module</span><span class="p">(</span><span class="n">MyModel</span><span class="p">())</span>
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">gradient_update</span><span class="p">(</span>
-            <span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">]</span>
+            <span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="mf">1.0</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sequence_loaders</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">trainer</span><span class="p">,</span> <span class="n">sequence_length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span>
@@ -719,10 +684,10 @@ checkpoints assume every process holds the whole model.</p>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"loss"</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"model"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"model"</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Optional hooks: <code class="docutils literal notranslate"><span class="pre">progress()</span></code> (a budget in env steps or epochs),
@@ -732,7 +697,7 @@ protocol), <code class="docutils literal notranslate"><span class="pre">export(d
 and <code class="docutils literal notranslate"><span class="pre">close()</span></code>.</p>
 </section>
 <section id="the-older-entrypoints">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">The older entrypoints</a><a class="headerlink" href="#the-older-entrypoints" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">The older entrypoints</a><a class="headerlink" href="#the-older-entrypoints" title="Link to this heading">#</a></h2>
 <p>The per-family entrypoints keep their signatures and still write the files
 they always wrote, but each now runs on the shared Trainer: it builds its
 family’s task around the object it was called on and runs it with
@@ -872,7 +837,6 @@ trained models.</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-run-leaves-behind">What a run leaves behind</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#several-processes">Several processes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-task">Writing a task</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-older-entrypoints">The older entrypoints</a></li>
 </ul>

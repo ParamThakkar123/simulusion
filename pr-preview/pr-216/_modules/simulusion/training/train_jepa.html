@@ -1410,7 +1410,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">sweep_id</span> <span class="o">=</span> <span class="n">wandb</span><span class="o">.</span><span class="n">sweep</span><span class="p">(</span>
             <span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sweep_config"</span><span class="p">,</span> <span class="p">{}),</span>
             <span class="n">project</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_project"</span><span class="p">,</span> <span class="s2">"simulusion"</span><span class="p">),</span>
-            <span class="n">entity</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_entity"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="n">entity</span><span class="o">=</span><span class="n">logging_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wandb_entity"</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">wandb</span><span class="o">.</span><span class="n">agent</span><span class="p">(</span><span class="n">sweep_id</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">sweep_train</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

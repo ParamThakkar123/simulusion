@@ -446,9 +446,8 @@ from your own or LeRobot data.</p>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#checkpointing" id="id21">Checkpointing</a></p></li>
-<li><p><a class="reference internal" href="#distributed-training" id="id22">Distributed Training</a></p></li>
-<li><p><a class="reference internal" href="#best-practices" id="id23">Best Practices</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id24">See Also</a></p></li>
+<li><p><a class="reference internal" href="#best-practices" id="id22">Best Practices</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id23">See Also</a></p></li>
 </ul>
 </li>
 </ul>
@@ -705,16 +704,8 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </pre></div>
 </div>
 </section>
-<section id="distributed-training">
-<h2><a class="toc-backref" href="#id22" role="doc-backlink">Distributed Training</a><a class="headerlink" href="#distributed-training" title="Link to this heading">#</a></h2>
-<p>For multi-GPU training:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="o">.</span><span class="n">num_gpus</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="c1"># Simulusion handles distributed setup automatically</span>
-</pre></div>
-</div>
-</section>
 <section id="best-practices">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
 <li><p><strong>Start small</strong>: Use short episodes and few steps for debugging</p></li>
 <li><p><strong>Monitor metrics</strong>: Watch loss curves and environment rewards</p></li>
@@ -724,7 +715,7 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </ol>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id24" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="evaluation_guide.html"><span class="doc">Evaluation Guide</span></a> — how to evaluate trained agents</p></li>
 <li><p><a class="reference internal" href="memory_guide.html"><span class="doc">Memory &amp; Replay Buffers</span></a> — replay buffer setup for each agent</p></li>
@@ -807,7 +798,6 @@ simulusion<span class="w"> </span>train<span class="w"> </span>jepa<span class="
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checkpointing">Checkpointing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-training">Distributed Training</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
 </ul>

@@ -815,7 +815,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">preload</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">preload</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span> <span class="o">+</span> <span class="n">trainer</span><span class="o">.</span><span class="n">process_index</span><span class="p">)</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
     <span class="n">train</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
         <span class="n">windows</span><span class="p">(</span><span class="n">train_eps</span><span class="p">),</span>
         <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>

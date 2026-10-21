@@ -686,9 +686,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">A :class:`TrainingTask` is everything that differs between families: which</span>
 <span class="sd">networks and optimizers exist, where batches come from (a dataset, a replay</span>
 <span class="sd">buffer filled by an environment), and what one unit of training does. The</span>
-<span class="sd">trainer owns everything that does not differ: devices and data parallelism,</span>
-<span class="sd">precision, seeding, the step budget, logging, evaluation cadence, early</span>
-<span class="sd">stopping, checkpoints and resuming, and exporting the world model at the end.</span>
+<span class="sd">trainer owns everything that does not differ: the device, precision,</span>
+<span class="sd">seeding, the step budget, logging, evaluation cadence, early stopping,</span>
+<span class="sd">checkpoints and resuming, and exporting the world model at the end.</span>
 
 <span class="sd">.. code-block:: python</span>
 
@@ -750,16 +750,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        config_cls: The task's config dataclass.</span>
 <span class="sd">        progress_unit: What :meth:`progress` counts, for logs: ``"steps"``</span>
 <span class="sd">            (calls to :meth:`train_step`), ``"env_steps"`` or ``"epochs"``.</span>
-<span class="sd">        distributed: The task runs under data parallelism (several</span>
-<span class="sd">            processes). Tasks that collect from an environment into a local</span>
-<span class="sd">            replay buffer are single-process.</span>
 <span class="sd">        default_max_steps: Budget used when the trainer config gives none.</span>
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">config_cls</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span>
     <span class="n">progress_unit</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"steps"</span>
-    <span class="n">distributed</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">default_max_steps</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

@@ -886,17 +886,11 @@ config to infer the model shapes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/dreamer.html#Dreamer.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/dreamer.html#Dreamer.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Train at <code class="docutils literal notranslate"><span class="pre">precision</span></code> from now on (fresh loss scalers).</p>
-<p><code class="docutils literal notranslate"><span class="pre">all_reduce</span></code> averages the world model’s gradients across processes,
-for training it data-parallel (the RSSM is driven through
-<code class="docutils literal notranslate"><span class="pre">observe_rollout</span></code>, which a DDP wrapper would not see).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -1573,18 +1567,11 @@ Same computation, far fewer kernel launches; only used on CUDA.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/iris_agent.html#IRISAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/iris_agent.html#IRISAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Train at <code class="docutils literal notranslate"><span class="pre">precision</span></code> from now on (fresh loss scalers).</p>
-<p><code class="docutils literal notranslate"><span class="pre">all_reduce</span></code> averages gradients across processes before each step,
-for data-parallel training of the world model (the tokenizer is called
-through <code class="docutils literal notranslate"><span class="pre">encoder(...)</span></code> from several places, so it is not wrapped in
-DDP).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -12286,68 +12273,16 @@ so they never overwrite a family’s own <code class="docutils literal notransla
 </ul>
 </dd>
 </dl>
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_main_process</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">num_processes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">process_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">prepare_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.prepare_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Move <code class="docutils literal notranslate"><span class="pre">module</span></code> to the device, wrapped for data parallelism if needed.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">module</span></code> on the run’s device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>module</strong> (<em>Module</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Module</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">broadcast_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.broadcast_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Copy process 0’s weights and buffers to every process.</p>
-<p>DDP does this when it wraps a module. Modules trained unwrapped (with
-<code class="docutils literal notranslate"><span class="pre">gradient_update(...,</span> <span class="pre">all_reduce=True)</span></code>) must start identical too,
-and each process is seeded differently. A no-op in one process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>Module</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">broadcast_quantizers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.broadcast_quantizers"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Make every process’s vector-quantizer codebooks process 0’s.</p>
-<p>Codebooks change outside the optimizer: dead-code revival rewrites
-unused codes with features of the local batch, and EMA quantizers
-update from local statistics. Under data parallelism each process
-sees different data, so without this their codebooks (and with them
-the tokens) drift apart even though the trained weights stay equal.
-Call it after every update. A no-op in one process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>modules</strong> (<em>Module</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -12355,65 +12290,32 @@ Call it after every update. A no-op in one process.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">prepare_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.prepare_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Shard <code class="docutils literal notranslate"><span class="pre">loader</span></code> across processes and move its batches to the device.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">loader</span></code> with every batch’s tensors moved to the run’s device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>loader</strong> (<em>Any</em>)</p>
+<dd class="field-odd"><p><strong>loader</strong> (<em>Iterable</em><em>[</em><em>Any</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
+<dd class="field-even"><p><a class="reference internal" href="#simulusion.training.trainer.DeviceLoader" title="simulusion.training.trainer.DeviceLoader"><em>DeviceLoader</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">unwrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.unwrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>The module inside a data-parallel wrapper (for saving).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>module</strong> (<em>Module</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Module</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">gradient_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.gradient_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-name descname"><span class="pre">gradient_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.gradient_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">GradientUpdate</span></code> at this run’s precision and accumulation.</p>
-<p>Pass the DDP-wrapped <code class="docutils literal notranslate"><span class="pre">modules</span></code> the parameters belong to, or
-<code class="docutils literal notranslate"><span class="pre">all_reduce=True</span></code> for parameters of modules left unwrapped (see
-<code class="xref py py-class docutils literal notranslate"><span class="pre">GradientUpdate</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>optimizer</strong> (<em>Optimizer</em>)</p></li>
 <li><p><strong>parameters</strong> (<em>Iterable</em><em>[</em><em>Tensor</em><em>]</em>)</p></li>
 <li><p><strong>max_grad_norm</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>Module</em><em>]</em>)</p></li>
 <li><p><strong>accumulate</strong> (<em>bool</em>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#simulusion.training.precision.GradientUpdate" title="simulusion.training.precision.GradientUpdate"><em>GradientUpdate</em></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.reduce"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Average scalar metrics over processes (a no-op on one process).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metrics</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, float]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -12469,7 +12371,7 @@ Call it after every update. A no-op in one process.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.</span></span><span class="sig-name descname"><span class="pre">TrainerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fp32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_accumulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_world_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#TrainerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.</span></span><span class="sig-name descname"><span class="pre">TrainerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fp32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_accumulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_world_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#TrainerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">SerializableConfigMixin</span></code></p>
 <p>Settings shared by every training run, whatever the family.</p>
 <dl class="field-list simple">
@@ -12478,18 +12380,15 @@ Call it after every update. A no-op in one process.</p>
 <li><p><strong>max_steps</strong> (<em>int</em><em> | </em><em>None</em>) – Budget in the task’s progress unit (optimizer steps,
 environment steps or epochs; see the task). <code class="docutils literal notranslate"><span class="pre">None</span></code> uses the
 task’s default.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Seeds Python, NumPy and PyTorch (offset per process under data
-parallelism, so each shards differently).</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Seeds Python, NumPy and PyTorch.</p></li>
 <li><p><strong>deterministic</strong> (<em>bool</em>) – Ask PyTorch for deterministic kernels. Slower; some
 ops only warn.</p></li>
 <li><p><strong>precision</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code> or <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p></li>
-<li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">None</span></code> picks the accelerator Accelerate finds (CUDA, MPS,
-else CPU); <code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code> forces CPU.</p></li>
+<li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">None</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) picks CUDA, then MPS, else CPU;
+<code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cuda&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cuda:1&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;mps&quot;</span></code> choose one. A
+device that is not available falls back with a warning.</p></li>
 <li><p><strong>grad_accumulation</strong> (<em>int</em>) – Batches per optimizer step, for tasks whose
 updates support it (dataset-driven ones).</p></li>
-<li><p><strong>find_unused_parameters</strong> (<em>bool</em>) – Tell DDP some parameters may get no gradient
-in a step (models with optional heads). Only matters with several
-processes; it costs an extra pass over the graph.</p></li>
 <li><p><strong>log_every</strong> (<em>int</em>) – Log metrics every this many units of progress.</p></li>
 <li><p><strong>eval_every</strong> (<em>int</em>) – Evaluate every this many units; 0 only at the end.</p></li>
 <li><p><strong>checkpoint_every</strong> (<em>int</em>) – Checkpoint every this many units; 0 only at the end.</p></li>
@@ -12521,7 +12420,6 @@ stops improving; <code class="docutils literal notranslate"><span class="pre">No
 <li><p><strong>precision</strong> (<em>str</em>)</p></li>
 <li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>grad_accumulation</strong> (<em>int</em>)</p></li>
-<li><p><strong>find_unused_parameters</strong> (<em>bool</em>)</p></li>
 <li><p><strong>log_every</strong> (<em>int</em>)</p></li>
 <li><p><strong>eval_every</strong> (<em>int</em>)</p></li>
 <li><p><strong>checkpoint_every</strong> (<em>int</em>)</p></li>
@@ -12568,11 +12466,6 @@ stops improving; <code class="docutils literal notranslate"><span class="pre">No
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">grad_accumulation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">find_unused_parameters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -12740,9 +12633,6 @@ and <code class="xref py py-meth docutils literal notranslate"><span class="pre"
 <li><p><strong>config_cls</strong> (<em>ClassVar</em><em>[</em><em>type</em><em>]</em>) – The task’s config dataclass.</p></li>
 <li><p><strong>progress_unit</strong> (<em>ClassVar</em><em>[</em><em>str</em><em>]</em>) – What <code class="xref py py-meth docutils literal notranslate"><span class="pre">progress()</span></code> counts, for logs: <code class="docutils literal notranslate"><span class="pre">&quot;steps&quot;</span></code>
 (calls to <code class="xref py py-meth docutils literal notranslate"><span class="pre">train_step()</span></code>), <code class="docutils literal notranslate"><span class="pre">&quot;env_steps&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;epochs&quot;</span></code>.</p></li>
-<li><p><strong>distributed</strong> (<em>ClassVar</em><em>[</em><em>bool</em><em>]</em>) – The task runs under data parallelism (several
-processes). Tasks that collect from an environment into a local
-replay buffer are single-process.</p></li>
 <li><p><strong>default_max_steps</strong> (<em>ClassVar</em><em>[</em><em>int</em><em>]</em>) – Budget used when the trainer config gives none.</p></li>
 </ul>
 </dd>
@@ -12763,11 +12653,6 @@ replay buffer are single-process.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">progress_unit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'steps'</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">distributed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -13094,7 +12979,7 @@ one. Only fp16 scales the loss: bf16 has fp32’s dynamic range.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.</span></span><span class="sig-name descname"><span class="pre">GradientUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/precision.html#GradientUpdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.</span></span><span class="sig-name descname"><span class="pre">GradientUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/precision.html#GradientUpdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>One optimizer’s step: zero, backward, unscale, clip, step.</p>
 <dl class="field-list simple">
@@ -13110,15 +12995,6 @@ every precision.</p></li>
 <li><p><strong>accumulation_steps</strong> (<em>int</em>) – Optimizer steps happen every this many calls;
 the calls in between only add gradients. Each loss is divided by
 it, so the step sees the mean over the accumulated batches.</p></li>
-<li><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>nn.Module</em><em>]</em>) – Modules wrapped for data parallelism. Calls that only
-accumulate run under their <code class="docutils literal notranslate"><span class="pre">no_sync()</span></code>, so gradients are
-all-reduced once per step rather than once per call.</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>) – Average the gradients across processes before stepping.
-For models that cannot sit inside a DDP wrapper because they are
-driven through methods other than <code class="docutils literal notranslate"><span class="pre">forward()</span></code> (Dreamer’s
-<code class="docutils literal notranslate"><span class="pre">rssm.observe_rollout</span></code>, IRIS’s tokenizer): DDP only syncs
-gradients of calls that go through its own <code class="docutils literal notranslate"><span class="pre">forward</span></code>. A no-op
-in a single process.</p></li>
 </ul>
 </dd>
 </dl>
@@ -16351,12 +16227,10 @@ most likely mixture component.</p></li>
 <span class="n">result</span><span class="o">.</span><span class="n">world_model_path</span>  <span class="c1"># runs/&lt;name&gt;/world_model, loadable with load_world_model</span>
 </pre></div>
 </div>
-<p>The loop is built on <a class="reference external" href="https://huggingface.co/docs/accelerate">Hugging Face Accelerate</a>, so the same code runs on a
-CPU, one GPU, or several processes (any launcher that sets the standard
-<code class="docutils literal notranslate"><span class="pre">torch.distributed</span></code> environment: <code class="docutils literal notranslate"><span class="pre">RANK</span></code>, <code class="docutils literal notranslate"><span class="pre">WORLD_SIZE</span></code>, <code class="docutils literal notranslate"><span class="pre">MASTER_ADDR</span></code>,
-…) without changes. Precision is a run setting (<code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>,
-<code class="docutils literal notranslate"><span class="pre">fp16</span></code>, <code class="docutils literal notranslate"><span class="pre">auto</span></code>) applied through <code class="xref py py-class docutils literal notranslate">
-<span class="pre">MixedPrecision</span></code>, rather than a flag per model.</p>
+<p>A run uses one device: a CPU, one GPU, or Apple MPS. Precision is a run
+setting (<code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code>, <code class="docutils literal notranslate"><span class="pre">auto</span></code>) applied through
+<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><code class="xref py py-class docutils literal notranslate"><span class="pre">MixedPrecision</span></code></a>, rather than a flag per
+model.</p>
 <p>Every run gets a directory holding everything needed to reproduce it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runs</span><span class="o">/&lt;</span><span class="n">run_name</span><span class="o">&gt;/</span>
     <span class="n">config</span><span class="o">.</span><span class="n">yaml</span>          <span class="c1"># the fully resolved run config: re-run with --config</span>
@@ -16366,6 +16240,24 @@ CPU, one GPU, or several processes (any launcher that sets the standard
     <span class="n">world_model</span><span class="o">/</span>         <span class="c1"># the trained world model (WorldModel protocol)</span>
 </pre></div>
 </div>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulusion.training.trainer.DeviceLoader">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.trainer.</span></span><span class="sig-name descname"><span class="pre">DeviceLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#DeviceLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.DeviceLoader" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Iterate a loader, moving every tensor in each batch to <code class="docutils literal notranslate"><span class="pre">device</span></code>.</p>
+<p>Batches may be tensors or nested dicts, lists and tuples of them; other
+values pass through. <code class="docutils literal notranslate"><span class="pre">len()</span></code> and other attributes (<code class="docutils literal notranslate"><span class="pre">dataset</span></code>,
+<code class="docutils literal notranslate"><span class="pre">batch_size</span></code>, …) are the wrapped loader’s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>Iterable</em><em>[</em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="simulusion.training.trainer.TrainResult">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.trainer.</span></span><span class="sig-name descname"><span class="pre">TrainResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stopped_early</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#TrainResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.TrainResult" title="Link to this definition">#</a></dt>
@@ -16474,68 +16366,16 @@ so they never overwrite a family’s own <code class="docutils literal notransla
 <span class="sig-name descname"><span class="pre">task</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#simulusion.training.task.TrainingTask" title="simulusion.training.task.TrainingTask"><span class="pre">TrainingTask</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#simulusion.training.trainer.Trainer.task" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.is_main_process">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_main_process</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#simulusion.training.trainer.Trainer.is_main_process" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.num_processes">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">num_processes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#simulusion.training.trainer.Trainer.num_processes" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.process_index">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">process_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#simulusion.training.trainer.Trainer.process_index" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.prepare_module">
 <span class="sig-name descname"><span class="pre">prepare_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.prepare_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.prepare_module" title="Link to this definition">#</a></dt>
-<dd><p>Move <code class="docutils literal notranslate"><span class="pre">module</span></code> to the device, wrapped for data parallelism if needed.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">module</span></code> on the run’s device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>module</strong> (<em>Module</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>Module</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.broadcast_parameters">
-<span class="sig-name descname"><span class="pre">broadcast_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.broadcast_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.broadcast_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Copy process 0’s weights and buffers to every process.</p>
-<p>DDP does this when it wraps a module. Modules trained unwrapped (with
-<code class="docutils literal notranslate"><span class="pre">gradient_update(...,</span> <span class="pre">all_reduce=True)</span></code>) must start identical too,
-and each process is seeded differently. A no-op in one process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>Module</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.broadcast_quantizers">
-<span class="sig-name descname"><span class="pre">broadcast_quantizers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">modules</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.broadcast_quantizers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.broadcast_quantizers" title="Link to this definition">#</a></dt>
-<dd><p>Make every process’s vector-quantizer codebooks process 0’s.</p>
-<p>Codebooks change outside the optimizer: dead-code revival rewrites
-unused codes with features of the local batch, and EMA quantizers
-update from local statistics. Under data parallelism each process
-sees different data, so without this their codebooks (and with them
-the tokens) drift apart even though the trained weights stay equal.
-Call it after every update. A no-op in one process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>modules</strong> (<em>Module</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -16543,65 +16383,32 @@ Call it after every update. A no-op in one process.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.prepare_dataloader">
 <span class="sig-name descname"><span class="pre">prepare_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.prepare_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.prepare_dataloader" title="Link to this definition">#</a></dt>
-<dd><p>Shard <code class="docutils literal notranslate"><span class="pre">loader</span></code> across processes and move its batches to the device.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">loader</span></code> with every batch’s tensors moved to the run’s device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>loader</strong> (<em>Any</em>)</p>
+<dd class="field-odd"><p><strong>loader</strong> (<em>Iterable</em><em>[</em><em>Any</em><em>]</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Any</em></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.unwrap">
-<span class="sig-name descname"><span class="pre">unwrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.unwrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.unwrap" title="Link to this definition">#</a></dt>
-<dd><p>The module inside a data-parallel wrapper (for saving).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>module</strong> (<em>Module</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Module</em></p>
+<dd class="field-even"><p><a class="reference internal" href="#simulusion.training.trainer.DeviceLoader" title="simulusion.training.trainer.DeviceLoader"><em>DeviceLoader</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.gradient_update">
-<span class="sig-name descname"><span class="pre">gradient_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.gradient_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.gradient_update" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gradient_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.gradient_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.gradient_update" title="Link to this definition">#</a></dt>
 <dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">GradientUpdate</span></code> at this run’s precision and accumulation.</p>
-<p>Pass the DDP-wrapped <code class="docutils literal notranslate"><span class="pre">modules</span></code> the parameters belong to, or
-<code class="docutils literal notranslate"><span class="pre">all_reduce=True</span></code> for parameters of modules left unwrapped (see
-<code class="xref py py-class docutils literal notranslate"><span class="pre">GradientUpdate</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>optimizer</strong> (<em>Optimizer</em>)</p></li>
 <li><p><strong>parameters</strong> (<em>Iterable</em><em>[</em><em>Tensor</em><em>]</em>)</p></li>
 <li><p><strong>max_grad_norm</strong> (<em>float</em><em> | </em><em>None</em>)</p></li>
-<li><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>Module</em><em>]</em>)</p></li>
 <li><p><strong>accumulate</strong> (<em>bool</em>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#simulusion.training.precision.GradientUpdate" title="simulusion.training.precision.GradientUpdate"><em>GradientUpdate</em></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="simulusion.training.trainer.Trainer.reduce">
-<span class="sig-name descname"><span class="pre">reduce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#Trainer.reduce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.Trainer.reduce" title="Link to this definition">#</a></dt>
-<dd><p>Average scalar metrics over processes (a no-op on one process).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>metrics</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict[str, float]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -16657,7 +16464,7 @@ Call it after every update. A no-op in one process.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simulusion.training.trainer.TrainerConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.trainer.</span></span><span class="sig-name descname"><span class="pre">TrainerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fp32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_accumulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_world_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#TrainerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.TrainerConfig" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.trainer.</span></span><span class="sig-name descname"><span class="pre">TrainerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fp32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_accumulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_checkpoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_world_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stopping_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/trainer.html#TrainerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.trainer.TrainerConfig" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">SerializableConfigMixin</span></code></p>
 <p>Settings shared by every training run, whatever the family.</p>
 <dl class="field-list simple">
@@ -16666,18 +16473,15 @@ Call it after every update. A no-op in one process.</p>
 <li><p><strong>max_steps</strong> (<em>int</em><em> | </em><em>None</em>) – Budget in the task’s progress unit (optimizer steps,
 environment steps or epochs; see the task). <code class="docutils literal notranslate"><span class="pre">None</span></code> uses the
 task’s default.</p></li>
-<li><p><strong>seed</strong> (<em>int</em>) – Seeds Python, NumPy and PyTorch (offset per process under data
-parallelism, so each shards differently).</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Seeds Python, NumPy and PyTorch.</p></li>
 <li><p><strong>deterministic</strong> (<em>bool</em>) – Ask PyTorch for deterministic kernels. Slower; some
 ops only warn.</p></li>
 <li><p><strong>precision</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code> or <code class="docutils literal notranslate"><span class="pre">auto</span></code>.</p></li>
-<li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">None</span></code> picks the accelerator Accelerate finds (CUDA, MPS,
-else CPU); <code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code> forces CPU.</p></li>
+<li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">None</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>) picks CUDA, then MPS, else CPU;
+<code class="docutils literal notranslate"><span class="pre">&quot;cpu&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cuda&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cuda:1&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;mps&quot;</span></code> choose one. A
+device that is not available falls back with a warning.</p></li>
 <li><p><strong>grad_accumulation</strong> (<em>int</em>) – Batches per optimizer step, for tasks whose
 updates support it (dataset-driven ones).</p></li>
-<li><p><strong>find_unused_parameters</strong> (<em>bool</em>) – Tell DDP some parameters may get no gradient
-in a step (models with optional heads). Only matters with several
-processes; it costs an extra pass over the graph.</p></li>
 <li><p><strong>log_every</strong> (<em>int</em>) – Log metrics every this many units of progress.</p></li>
 <li><p><strong>eval_every</strong> (<em>int</em>) – Evaluate every this many units; 0 only at the end.</p></li>
 <li><p><strong>checkpoint_every</strong> (<em>int</em>) – Checkpoint every this many units; 0 only at the end.</p></li>
@@ -16709,7 +16513,6 @@ stops improving; <code class="docutils literal notranslate"><span class="pre">No
 <li><p><strong>precision</strong> (<em>str</em>)</p></li>
 <li><p><strong>device</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>grad_accumulation</strong> (<em>int</em>)</p></li>
-<li><p><strong>find_unused_parameters</strong> (<em>bool</em>)</p></li>
 <li><p><strong>log_every</strong> (<em>int</em>)</p></li>
 <li><p><strong>eval_every</strong> (<em>int</em>)</p></li>
 <li><p><strong>checkpoint_every</strong> (<em>int</em>)</p></li>
@@ -16756,11 +16559,6 @@ stops improving; <code class="docutils literal notranslate"><span class="pre">No
 <dl class="py attribute">
 <dt class="sig sig-object py" id="simulusion.training.trainer.TrainerConfig.grad_accumulation">
 <span class="sig-name descname"><span class="pre">grad_accumulation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#simulusion.training.trainer.TrainerConfig.grad_accumulation" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="simulusion.training.trainer.TrainerConfig.find_unused_parameters">
-<span class="sig-name descname"><span class="pre">find_unused_parameters</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#simulusion.training.trainer.TrainerConfig.find_unused_parameters" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -16858,9 +16656,9 @@ stops improving; <code class="docutils literal notranslate"><span class="pre">No
 <p>A <a class="reference internal" href="#simulusion.training.task.TrainingTask" title="simulusion.training.task.TrainingTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingTask</span></code></a> is everything that differs between families: which
 networks and optimizers exist, where batches come from (a dataset, a replay
 buffer filled by an environment), and what one unit of training does. The
-trainer owns everything that does not differ: devices and data parallelism,
-precision, seeding, the step budget, logging, evaluation cadence, early
-stopping, checkpoints and resuming, and exporting the world model at the end.</p>
+trainer owns everything that does not differ: the device, precision,
+seeding, the step budget, logging, evaluation cadence, early stopping,
+checkpoints and resuming, and exporting the world model at the end.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@register_task</span><span class="p">(</span><span class="s2">"my-model"</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="p">(</span><span class="n">TrainingTask</span><span class="p">):</span>
     <span class="n">config_cls</span> <span class="o">=</span> <span class="n">MyTaskConfig</span>        <span class="c1"># dataclass; its fields are YAML sections</span>
@@ -16898,9 +16696,6 @@ and <a class="reference internal" href="#simulusion.training.task.TrainingTask.t
 <li><p><strong>config_cls</strong> (<em>ClassVar</em><em>[</em><em>type</em><em>]</em>) – The task’s config dataclass.</p></li>
 <li><p><strong>progress_unit</strong> (<em>ClassVar</em><em>[</em><em>str</em><em>]</em>) – What <a class="reference internal" href="#simulusion.training.task.TrainingTask.progress" title="simulusion.training.task.TrainingTask.progress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">progress()</span></code></a> counts, for logs: <code class="docutils literal notranslate"><span class="pre">&quot;steps&quot;</span></code>
 (calls to <a class="reference internal" href="#simulusion.training.task.TrainingTask.train_step" title="simulusion.training.task.TrainingTask.train_step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">train_step()</span></code></a>), <code class="docutils literal notranslate"><span class="pre">&quot;env_steps&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;epochs&quot;</span></code>.</p></li>
-<li><p><strong>distributed</strong> (<em>ClassVar</em><em>[</em><em>bool</em><em>]</em>) – The task runs under data parallelism (several
-processes). Tasks that collect from an environment into a local
-replay buffer are single-process.</p></li>
 <li><p><strong>default_max_steps</strong> (<em>ClassVar</em><em>[</em><em>int</em><em>]</em>) – Budget used when the trainer config gives none.</p></li>
 </ul>
 </dd>
@@ -16921,11 +16716,6 @@ replay buffer are single-process.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="simulusion.training.task.TrainingTask.progress_unit">
 <span class="sig-name descname"><span class="pre">progress_unit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'steps'</span></span><a class="headerlink" href="#simulusion.training.task.TrainingTask.progress_unit" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="simulusion.training.task.TrainingTask.distributed">
-<span class="sig-name descname"><span class="pre">distributed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#simulusion.training.task.TrainingTask.distributed" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -17189,7 +16979,7 @@ optimizers (a world model, an actor and a critic) step them one after another,
 and a scaler shared between them would let an overflow in one skip the others.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="simulusion.training.precision.GradientUpdate">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.precision.</span></span><span class="sig-name descname"><span class="pre">GradientUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/precision.html#GradientUpdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.precision.GradientUpdate" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.training.precision.</span></span><span class="sig-name descname"><span class="pre">GradientUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/precision.html#GradientUpdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.precision.GradientUpdate" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>One optimizer’s step: zero, backward, unscale, clip, step.</p>
 <dl class="field-list simple">
@@ -17205,15 +16995,6 @@ every precision.</p></li>
 <li><p><strong>accumulation_steps</strong> (<em>int</em>) – Optimizer steps happen every this many calls;
 the calls in between only add gradients. Each loss is divided by
 it, so the step sees the mean over the accumulated batches.</p></li>
-<li><p><strong>modules</strong> (<em>Iterable</em><em>[</em><em>nn.Module</em><em>]</em>) – Modules wrapped for data parallelism. Calls that only
-accumulate run under their <code class="docutils literal notranslate"><span class="pre">no_sync()</span></code>, so gradients are
-all-reduced once per step rather than once per call.</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>) – Average the gradients across processes before stepping.
-For models that cannot sit inside a DDP wrapper because they are
-driven through methods other than <code class="docutils literal notranslate"><span class="pre">forward()</span></code> (Dreamer’s
-<code class="docutils literal notranslate"><span class="pre">rssm.observe_rollout</span></code>, IRIS’s tokenizer): DDP only syncs
-gradients of calls that go through its own <code class="docutils literal notranslate"><span class="pre">forward</span></code>. A no-op
-in a single process.</p></li>
 </ul>
 </dd>
 </dl>
@@ -18805,17 +18586,11 @@ config to infer the model shapes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.models.dreamer.Dreamer.set_precision">
-<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/dreamer.html#Dreamer.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.models.dreamer.Dreamer.set_precision" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/dreamer.html#Dreamer.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.models.dreamer.Dreamer.set_precision" title="Link to this definition">#</a></dt>
 <dd><p>Train at <code class="docutils literal notranslate"><span class="pre">precision</span></code> from now on (fresh loss scalers).</p>
-<p><code class="docutils literal notranslate"><span class="pre">all_reduce</span></code> averages the world model’s gradients across processes,
-for training it data-parallel (the RSSM is driven through
-<code class="docutils literal notranslate"><span class="pre">observe_rollout</span></code>, which a DDP wrapper would not see).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -21440,18 +21215,11 @@ Same computation, far fewer kernel launches; only used on CUDA.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.models.iris_agent.IRISAgent.set_precision">
-<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/iris_agent.html#IRISAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.models.iris_agent.IRISAgent.set_precision" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/models/iris_agent.html#IRISAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.models.iris_agent.IRISAgent.set_precision" title="Link to this definition">#</a></dt>
 <dd><p>Train at <code class="docutils literal notranslate"><span class="pre">precision</span></code> from now on (fresh loss scalers).</p>
-<p><code class="docutils literal notranslate"><span class="pre">all_reduce</span></code> averages gradients across processes before each step,
-for data-parallel training of the world model (the tokenizer is called
-through <code class="docutils literal notranslate"><span class="pre">encoder(...)</span></code> from several places, so it is not wrapped in
-DDP).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -29243,7 +29011,7 @@ on sequence data.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="simulusion.configs.wm_config.WMControllerConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.configs.wm_config.</span></span><span class="sig-name descname"><span class="pre">WMControllerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CarRacing-v2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'results'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_return</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">950.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/configs/wm_config.html#WMControllerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.configs.wm_config.WMControllerConfig" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.configs.wm_config.</span></span><span class="sig-name descname"><span class="pre">WMControllerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latent_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CarRacing-v3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'results'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pop_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_return</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">950.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/configs/wm_config.html#WMControllerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.configs.wm_config.WMControllerConfig" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configuration class for Controller training with CMA-ES.</p>
 <p>Manages hyperparameters for training a linear controller
@@ -29297,7 +29065,7 @@ using Covariance Matrix Adaptation Evolution Strategy (CMA-ES).</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="simulusion.configs.wm_config.WMControllerConfig.env_name">
-<span class="sig-name descname"><span class="pre">env_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CarRacing-v2'</span></span><a class="headerlink" href="#simulusion.configs.wm_config.WMControllerConfig.env_name" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">env_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CarRacing-v3'</span></span><a class="headerlink" href="#simulusion.configs.wm_config.WMControllerConfig.env_name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -32299,7 +32067,7 @@ existing scripts.</p>
 2. MDNRNN - Predicts future latent states given actions
 3. Controller - Linear controller trained with CMA-ES</p>
 <dl class="simple">
-<dt>Usage:</dt><dd><p>python train_world_model.py –env CarRacing-v2 –data_dir ./data –logdir ./results
+<dt>Usage:</dt><dd><p>python train_world_model.py –env CarRacing-v3 –data_dir ./data –logdir ./results
 python train_world_model.py –env BipedalWalker-v3 –action_size 4  # if env loading fails</p>
 </dd>
 </dl>
@@ -32329,6 +32097,22 @@ python train_world_model.py –env BipedalWalker-v3 –action_size 4  # if env l
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="simulusion.training.train_world_model.env_action_size">
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">env_action_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#env_action_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.env_action_size" title="Link to this definition">#</a></dt>
+<dd><p>The action size the models see in <code class="docutils literal notranslate"><span class="pre">env_name</span></code>.</p>
+<p>The size of a continuous action, or the number of choices of a discrete
+one (the controller emits a score per choice).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>env_name</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="simulusion.training.train_world_model.run_training_pipeline">
 <span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">run_training_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#run_training_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.run_training_pipeline" title="Link to this definition">#</a></dt>
 <dd><p>Execute the complete World Model training pipeline.</p>
@@ -32347,29 +32131,38 @@ python train_world_model.py –env BipedalWalker-v3 –action_size 4  # if env l
 
 <dl class="py function">
 <dt class="sig sig-object py" id="simulusion.training.train_world_model.test_trained_model">
-<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">test_trained_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#test_trained_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.test_trained_model" title="Link to this definition">#</a></dt>
-<dd><p>Test the trained world model with controller in the environment.</p>
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">test_trained_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#test_trained_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.test_trained_model" title="Link to this definition">#</a></dt>
+<dd><p>Run the trained V + M + C in the environment; the episode returns.</p>
+<p>Reads <code class="docutils literal notranslate"><span class="pre">&lt;logdir&gt;/{vae,mdrnn,ctrl}/best.tar</span></code>. The models’ sizes come
+from the checkpoints, so <code class="docutils literal notranslate"><span class="pre">action_size</span></code> is only checked against them.
+Returns an empty list (after saying which) when a checkpoint is missing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>logdir</strong> (<em>str</em>)</p></li>
-<li><p><strong>env_name</strong> (<em>str</em>)</p></li>
-<li><p><strong>action_size</strong> (<em>int</em>)</p></li>
-<li><p><strong>num_episodes</strong> (<em>int</em>)</p></li>
+<li><p><strong>logdir</strong> (<em>str</em>) – The pipeline’s <code class="docutils literal notranslate"><span class="pre">--logdir</span></code>.</p></li>
+<li><p><strong>env_name</strong> (<em>str</em>) – The environment to act in.</p></li>
+<li><p><strong>action_size</strong> (<em>int</em><em> | </em><em>None</em>) – The action size the models must have, if given.</p></li>
+<li><p><strong>num_episodes</strong> (<em>int</em>) – Episodes to run.</p></li>
+<li><p><strong>time_limit</strong> (<em>int</em>) – Steps per episode at most.</p></li>
+<li><p><strong>env</strong> (<em>Any</em>) – An environment to use instead of making <code class="docutils literal notranslate"><span class="pre">env_name</span></code> (it is
+closed afterwards).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>list[float]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="simulusion.training.train_world_model.main">
-<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.main" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_world_model.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_world_model.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_world_model.main" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>argv</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -32497,6 +32290,24 @@ and hidden states to actions for the learned world model.</p>
 <a class="reference external" href="https://arxiv.org/abs/1805.11111">https://arxiv.org/abs/1805.11111</a></p>
 </dd>
 </dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.training.train_controller.make_controller_env">
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_controller.</span></span><span class="sig-name descname"><span class="pre">make_controller_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_controller.html#make_controller_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_controller.make_controller_env" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">env_name</span></code> as the controller sees it: 64x64 image observations.</p>
+<p>Environments that take <code class="docutils literal notranslate"><span class="pre">continuous</span></code> (CarRacing) get the continuous
+action space the World Models controller outputs. Environments are made
+with <code class="docutils literal notranslate"><span class="pre">render_mode=&quot;rgb_array&quot;</span></code>, so those whose observations are vectors
+(Pendulum, BipedalWalker) are seen through their rendered frames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>env_name</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="simulusion.training.train_controller.train_controller">
 <span class="sig-prename descclassname"><span class="pre">simulusion.training.train_controller.</span></span><span class="sig-name descname"><span class="pre">train_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_controller.html#train_controller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_controller.train_controller" title="Link to this definition">#</a></dt>
@@ -33304,10 +33115,11 @@ no learning-rate schedule.</p>
 
 <dl class="py function" id="module-simulusion.training.train_rssm">
 <dt class="sig sig-object py" id="simulusion.training.train_rssm.train_rssm">
-<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_rssm.</span></span><span class="sig-name descname"><span class="pre">train_rssm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_grads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_rssm.html#train_rssm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_rssm.train_rssm" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_rssm.</span></span><span class="sig-name descname"><span class="pre">train_rssm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_grads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_rssm.html#train_rssm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_rssm.train_rssm" title="Link to this definition">#</a></dt>
 <dd><p>Train an RSSM on replayed trajectories for one optimization phase.</p>
-<p>Samples batches from memory, computes reconstruction and KL objectives
-across rollout steps, and returns aggregated loss metrics.</p>
+<p>Samples <code class="docutils literal notranslate"><span class="pre">iterations</span></code> batches of <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> sequences from memory,
+computes reconstruction and KL objectives across rollout steps, and
+returns the per-iteration losses.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -33315,6 +33127,8 @@ across rollout steps, and returns aggregated loss metrics.</p>
 <li><p><strong>model</strong> (<em>Any</em>)</p></li>
 <li><p><strong>optimizer</strong> (<em>Any</em>)</p></li>
 <li><p><strong>record_grads</strong> (<em>bool</em>)</p></li>
+<li><p><strong>iterations</strong> (<em>int</em>)</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -33346,13 +33160,16 @@ for qualitative inspection.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="simulusion.training.train_rssm.main">
-<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_rssm.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_rssm.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_rssm.main" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">simulusion.training.train_rssm.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">argv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_rssm.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_rssm.main" title="Link to this definition">#</a></dt>
 <dd><p>Standalone training loop for RSSM with generated replay fallback support.</p>
 <p>Initializes environment/policy/memory, trains over episodes, logs metrics,
 and periodically evaluates and checkpoints the model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>argv</strong> (<em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -33435,16 +33252,11 @@ and periodically evaluates and checkpoints the model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulusion.training.train_diamond.DiamondAgent.set_precision">
-<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_reduce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_diamond.html#DiamondAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_diamond.DiamondAgent.set_precision" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/training/train_diamond.html#DiamondAgent.set_precision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.training.train_diamond.DiamondAgent.set_precision" title="Link to this definition">#</a></dt>
 <dd><p>Train at <code class="docutils literal notranslate"><span class="pre">precision</span></code> from now on (fresh loss scalers).</p>
-<p><code class="docutils literal notranslate"><span class="pre">all_reduce</span></code> averages the world model’s gradients across processes,
-for data-parallel training of the denoiser and reward model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p></li>
-<li><p><strong>all_reduce</strong> (<em>bool</em>)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>precision</strong> (<a class="reference internal" href="#simulusion.training.precision.MixedPrecision" title="simulusion.training.precision.MixedPrecision"><em>MixedPrecision</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -40597,6 +40409,7 @@ along the batch dimension.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simulusion.training.trainer">Training</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.DeviceLoader"><code class="docutils literal notranslate"><span class="pre">DeviceLoader</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainResult"><code class="docutils literal notranslate"><span class="pre">TrainResult</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainResult.run_dir"><code class="docutils literal notranslate"><span class="pre">TrainResult.run_dir</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainResult.progress"><code class="docutils literal notranslate"><span class="pre">TrainResult.progress</span></code></a></li>
@@ -40614,16 +40427,9 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.device"><code class="docutils literal notranslate"><span class="pre">Trainer.device</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.run_dir"><code class="docutils literal notranslate"><span class="pre">Trainer.run_dir</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.task"><code class="docutils literal notranslate"><span class="pre">Trainer.task</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.is_main_process"><code class="docutils literal notranslate"><span class="pre">Trainer.is_main_process</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.num_processes"><code class="docutils literal notranslate"><span class="pre">Trainer.num_processes</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.process_index"><code class="docutils literal notranslate"><span class="pre">Trainer.process_index</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.prepare_module"><code class="docutils literal notranslate"><span class="pre">Trainer.prepare_module()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.broadcast_parameters"><code class="docutils literal notranslate"><span class="pre">Trainer.broadcast_parameters()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.broadcast_quantizers"><code class="docutils literal notranslate"><span class="pre">Trainer.broadcast_quantizers()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.prepare_dataloader"><code class="docutils literal notranslate"><span class="pre">Trainer.prepare_dataloader()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.unwrap"><code class="docutils literal notranslate"><span class="pre">Trainer.unwrap()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.gradient_update"><code class="docutils literal notranslate"><span class="pre">Trainer.gradient_update()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.reduce"><code class="docutils literal notranslate"><span class="pre">Trainer.reduce()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.infinite"><code class="docutils literal notranslate"><span class="pre">Trainer.infinite()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.fit"><code class="docutils literal notranslate"><span class="pre">Trainer.fit()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.Trainer.save_checkpoint"><code class="docutils literal notranslate"><span class="pre">Trainer.save_checkpoint()</span></code></a></li>
@@ -40636,7 +40442,6 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.precision"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.precision</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.device"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.device</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.grad_accumulation"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.grad_accumulation</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.find_unused_parameters"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.find_unused_parameters</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.log_every"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.log_every</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.eval_every"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.eval_every</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.trainer.TrainerConfig.checkpoint_every"><code class="docutils literal notranslate"><span class="pre">TrainerConfig.checkpoint_every</span></code></a></li>
@@ -40659,7 +40464,6 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.name"><code class="docutils literal notranslate"><span class="pre">TrainingTask.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.config_cls"><code class="docutils literal notranslate"><span class="pre">TrainingTask.config_cls</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.progress_unit"><code class="docutils literal notranslate"><span class="pre">TrainingTask.progress_unit</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.distributed"><code class="docutils literal notranslate"><span class="pre">TrainingTask.distributed</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.default_max_steps"><code class="docutils literal notranslate"><span class="pre">TrainingTask.default_max_steps</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.trainer"><code class="docutils literal notranslate"><span class="pre">TrainingTask.trainer</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.task.TrainingTask.attach"><code class="docutils literal notranslate"><span class="pre">TrainingTask.attach()</span></code></a></li>
@@ -41942,12 +41746,14 @@ along the batch dimension.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-entry-points">Training entry points</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_world_model.generate_rollouts"><code class="docutils literal notranslate"><span class="pre">generate_rollouts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_world_model.env_action_size"><code class="docutils literal notranslate"><span class="pre">env_action_size()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_world_model.run_training_pipeline"><code class="docutils literal notranslate"><span class="pre">run_training_pipeline()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_world_model.test_trained_model"><code class="docutils literal notranslate"><span class="pre">test_trained_model()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_world_model.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_convvae.train_convae"><code class="docutils literal notranslate"><span class="pre">train_convae()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_mdn_rnn.get_loss"><code class="docutils literal notranslate"><span class="pre">get_loss()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_mdn_rnn.train_mdn_rnn"><code class="docutils literal notranslate"><span class="pre">train_mdn_rnn()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_controller.make_controller_env"><code class="docutils literal notranslate"><span class="pre">make_controller_env()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_controller.train_controller"><code class="docutils literal notranslate"><span class="pre">train_controller()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_jepa.build_loss_fn"><code class="docutils literal notranslate"><span class="pre">build_loss_fn()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.training.train_jepa.make_jepa_loaders"><code class="docutils literal notranslate"><span class="pre">make_jepa_loaders()</span></code></a></li>

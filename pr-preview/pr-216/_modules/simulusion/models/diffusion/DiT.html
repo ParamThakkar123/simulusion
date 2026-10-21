@@ -1549,7 +1549,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span>
             <span class="n">min_delta</span><span class="o">=</span><span class="n">min_delta</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">model</span>
         <span class="n">ema_model</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">ema</span>
         <span class="n">ddpm</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">ddpm</span>
         <span class="n">best_state</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1563,7 +1563,8 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">best_state</span> <span class="o">=</span> <span class="n">saved</span><span class="p">[</span><span class="s2">"ema"</span><span class="p">]</span> <span class="k">if</span> <span class="n">ema_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">saved</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span>
-            <span class="n">best_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">best_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">best_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">best_value</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">"Training Complete."</span><span class="p">)</span>
 
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

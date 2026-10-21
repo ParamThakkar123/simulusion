@@ -701,6 +701,24 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.gym_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymImageEnv</span>
 
 
+<div class="viewcode-block" id="make_controller_env">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.make_controller_env">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_controller_env</span><span class="p">(</span><span class="n">env_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``env_name`` as the controller sees it: 64x64 image observations.</span>
+
+<span class="sd">    Environments that take ``continuous`` (CarRacing) get the continuous</span>
+<span class="sd">    action space the World Models controller outputs. Environments are made</span>
+<span class="sd">    with ``render_mode="rgb_array"``, so those whose observations are vectors</span>
+<span class="sd">    (Pendulum, BipedalWalker) are seen through their rendered frames.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">"rgb_array"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">env_name</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">"rgb_array"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span></div>
+
+
+
 <div class="viewcode-block" id="train_controller">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_controller.train_controller">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">train_controller</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">WMControllerConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -737,19 +755,11 @@ window.runMermaid = runMermaid;</script>
         <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="c1"># As the rollout workers did: CarRacing needs continuous=True.</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">env</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_name</span><span class="p">,</span> <span class="n">continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="n">env</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">GymImageEnv</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
-
     <span class="n">ctrl_dir</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span> <span class="s2">"ctrl"</span><span class="p">)</span>
     <span class="n">fit_legacy</span><span class="p">(</span>
         <span class="n">ControllerTask</span><span class="p">(</span>
             <span class="n">ControllerTaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">config</span><span class="p">),</span>
-            <span class="n">env_factory</span><span class="o">=</span><span class="n">make_env</span><span class="p">,</span>
+            <span class="n">env_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">make_controller_env</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">env_name</span><span class="p">),</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
             <span class="n">legacy_dir</span><span class="o">=</span><span class="n">ctrl_dir</span><span class="p">,</span>
         <span class="p">),</span>

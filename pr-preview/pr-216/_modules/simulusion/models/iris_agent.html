@@ -849,7 +849,6 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The</span>
         <span class="c1"># shared Trainer replaces it with the run's precision (set_precision).</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">MixedPrecision</span><span class="o">.</span><span class="n">from_use_amp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span>
 
         <span class="c1"># === Training state ===</span>
@@ -1064,14 +1063,12 @@ window.runMermaid = runMermaid;</script>
             <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
-            <span class="n">all_reduce</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transformer_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
-            <span class="n">all_reduce</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ac_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="p">,</span>
@@ -1081,24 +1078,14 @@ window.runMermaid = runMermaid;</script>
             <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
-            <span class="n">all_reduce</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="IRISAgent.set_precision">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.set_precision">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">all_reduce</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers).</span>
-
-<span class="sd">        ``all_reduce`` averages gradients across processes before each step,</span>
-<span class="sd">        for data-parallel training of the world model (the tokenizer is called</span>
-<span class="sd">        through ``encoder(...)`` from several places, so it is not wrapped in</span>
-<span class="sd">        DDP).</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers)."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="n">precision</span><span class="o">.</span><span class="n">enabled</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span> <span class="o">=</span> <span class="n">all_reduce</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span></div>
 
 

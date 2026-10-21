@@ -1112,7 +1112,6 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># Latest per-component loss values, refreshed by `train_one_batch`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model_components</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">(</span><span class="n">restore</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">restore</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">restore</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1391,7 +1390,6 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">world_model_params</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
-            <span class="n">all_reduce</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actor_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">actor_opt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span>
@@ -1405,18 +1403,10 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="Dreamer.set_precision">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.Dreamer.set_precision">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">all_reduce</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers).</span>
-
-<span class="sd">        ``all_reduce`` averages the world model's gradients across processes,</span>
-<span class="sd">        for training it data-parallel (the RSSM is driven through</span>
-<span class="sd">        ``observe_rollout``, which a DDP wrapper would not see).</span>
-<span class="sd">        """</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers)."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="n">precision</span><span class="o">.</span><span class="n">enabled</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_all_reduce</span> <span class="o">=</span> <span class="n">all_reduce</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span></div>
 
 

@@ -323,7 +323,7 @@ ctrl_config = WMControllerConfig(
         "latent_size": 32,
         "hidden_size": 256,
         "action_size": 3,
-        "env_name": "CarRacing-v2",
+        "env_name": "CarRacing-v3",
         "logdir": "./results/carracing",
         "pop_size": 10,
         "n_samples": 4,
@@ -340,7 +340,7 @@ from simulusion.training.train_world_model import test_trained_model
 
 test_trained_model(
     logdir="./results/carracing",
-    env_name="CarRacing-v2",
+    env_name="CarRacing-v3",
     action_size=3,
     num_episodes=5,
 )
