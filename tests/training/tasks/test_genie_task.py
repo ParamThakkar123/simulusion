@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 from simulusion.training.run import run
@@ -65,3 +66,54 @@ def test_genie_trains_validates_resumes_and_exports(
     state = model.encode(torch.rand(2, 3, 3, 16, 16))
     out = model.rollout(state, torch.zeros(2, 2, dtype=torch.long))
     assert out.frames.shape == (2, 2, 3, 16, 16)
+
+
+def test_genie_trains_in_place_on_a_lerobot_dataset(
+    tmp_path: Path, trainer_overrides
+) -> None:
+    pytest.importorskip("av")
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+    from tests.datasets.test_episodes import _make_v21
+
+    _make_v21(tmp_path / "ds", [6, 6, 6], (pa, pq))
+    result = run(
+        overrides=[
+            *trainer_overrides,
+            *TINY,
+            "data.source=lerobot",
+            f"data.path={(tmp_path / 'ds').as_posix()}",
+            "data.camera=top",
+            "data.preload=true",
+            "trainer.max_steps=2",
+        ],
+        task="genie",
+    )
+    assert result.progress == 2 and result.world_model_path is not None
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA GPU")
+@pytest.mark.parametrize("precision", ["fp16", "bf16"])
+def test_genie_trains_on_cuda(
+    tmp_path: Path, trainer_overrides, precision: str
+) -> None:
+    if precision == "bf16" and not torch.cuda.is_bf16_supported():
+        pytest.skip("this GPU has no bf16")
+    data = write_episodes(tmp_path / "clips", count=3, length=6)
+    overrides = [o for o in trainer_overrides if o != "trainer.device=cpu"]
+    result = run(
+        overrides=[
+            *overrides,
+            *TINY,
+            "trainer.device=cuda",
+            f"trainer.precision={precision}",
+            f"data.path={data.as_posix()}",
+            "trainer.max_steps=2",
+        ],
+        task="genie",
+    )
+    assert np.isfinite(result.progress)
+    model = load_world_model(result.world_model_path, device="cuda")
+    state = model.encode(torch.rand(1, 2, 3, 16, 16, device="cuda"))
+    assert model.rollout(state, torch.zeros(1, 1, dtype=torch.long)).frames.is_cuda

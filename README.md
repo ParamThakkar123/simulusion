@@ -121,7 +121,7 @@ plot.
 ### One trainer, one config file
 
 Every family also trains on one shared `Trainer` (built on Hugging Face
-Accelerate) from a YAML run config. Precision, multi-GPU, resuming,
+Accelerate) from a YAML run config. Precision, data parallelism, resuming,
 evaluation and checkpoints work the same for all of them, and every run
 writes its resolved `config.yaml` and `run.json` (git commit, package
 versions) so it can be repeated:
@@ -129,16 +129,16 @@ versions) so it can be repeated:
 ```bash
 simulusion train --config dreamer model.env=cheetah-run trainer.precision=bf16
 simulusion train --config iris game=ALE/Breakout-v5
-accelerate launch --num_processes 4 -m simulusion.training.run --config genie data.path=data/clips
+simulusion train genie data.path=data/clips trainer.max_steps=20000
 simulusion train --config runs/<a previous run>/config.yaml     # repeat it
 ```
 
 World models also train **without their agent**, from recorded episodes,
-including robot data converted from LeRobot or Open X-Embodiment, and any
+including robot data converted from LeRobot, and any
 agent that speaks the `WorldModel` protocol can then plan with them:
 
 ```bash
-simulusion datasets import lerobot lerobot/pusht data/pusht
+simulusion datasets import lerobot datasets/pusht data/pusht
 simulusion train --config dreamer-wm data.path=data/pusht
 ```
 
@@ -149,8 +149,7 @@ and the [data guide](https://paramthakkar123.github.io/simulusion/episodes_guide
 
 - Unified interfaces across world-model algorithms: one `WorldModel` protocol,
   one `Trainer`, one YAML run config per experiment
-- One episode format for video, RL and robot data, with LeRobot and Open
-  X-Embodiment readers
+- One episode format for video, RL and robot data, with a LeRobot reader
 - Modular encoders, decoders, dynamics models, and backbones
 - Training and inference utilities for model-based reinforcement learning
 - Environment integrations for Gym/Gymnasium, Unity ML-Agents, MuJoCo, Brax, and robotics extras

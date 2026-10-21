@@ -76,8 +76,8 @@ from and what one unit of progress is. The trainer's budget
 | `jepa` | I-JEPA image representations | image dataset | optimizer steps | yes |
 
 The `-wm` tasks train a world model **without its agent**: no environment and
-no policy, only recorded episodes (your own, or converted from LeRobot or Open
-X-Embodiment; see {doc}`episodes_guide`). What comes out is a
+no policy, only recorded episodes (your own, or converted from LeRobot; see
+{doc}`episodes_guide`). What comes out is a
 {py:class}`~simulusion.world_model.WorldModel`, usable by any agent that
 speaks the protocol, such as {py:class}`simulusion.agents.PlanningAgent`:
 
@@ -125,7 +125,7 @@ Shipped configs for every task live in `simulusion/configs/runs/`;
 | `out_dir`, `run_name` | Run directory: `out_dir/run_name`, timestamped when `run_name` is unset. |
 | `resume` | A checkpoint, a run directory, or `auto` (the newest checkpoint of `out_dir/run_name`). |
 | `early_stopping_metric`, `early_stopping_mode`, `patience`, `min_delta` | Stop when an evaluation metric stops improving. |
-| `tensorboard`, `wandb`, `console` | Where metrics go besides `metrics.jsonl`. |
+| `console` | Also print metrics to the console (they always go to `metrics.jsonl`). |
 | `export_world_model` | Write the world model to `<run>/world_model` at the end. |
 
 ## What a run leaves behind
@@ -148,26 +148,24 @@ weights, optimizer and loss-scaler states, the loop position and RNG states
 buffer, so a resumed run trains on the same data. Ctrl+C writes one before
 exiting.
 
-## Several GPUs
+## Several processes
 
-Data-parallel tasks run unchanged on several processes:
-
-```bash
-accelerate launch --num_processes 4 -m simulusion.training.run --config genie data.path=data/clips
-torchrun --nproc_per_node 4 -m simulusion.training.run --config dreamer-wm data.path=data/pusht
-```
-
-Batches are sharded across processes and metrics averaged over them. Modules
-called through `forward()` are wrapped in DDP; world models driven through
-other methods (Dreamer's `rssm.observe_rollout`, IRIS's tokenizer) start
-from process 0's weights and average their gradients before every step
+Data-parallel tasks run unchanged on several processes, under any launcher
+that sets the standard `torch.distributed` environment (`RANK`,
+`WORLD_SIZE`, `LOCAL_RANK`, `MASTER_ADDR`, `MASTER_PORT`); Accelerate picks it
+up. Batches are sharded across processes and metrics averaged over them.
+Modules called through `forward()` are wrapped in DDP; world models driven
+through other methods (Dreamer's `rssm.observe_rollout`, IRIS's tokenizer)
+start from process 0's weights and average their gradients before every step
 instead. Vector-quantizer codebooks, which change outside the optimizer, are
 re-broadcast from process 0 after each step. Tasks that collect from an
 environment into a replay buffer are single-process and refuse to start
 under data parallelism.
 
-Sharded training (FSDP, DeepSpeed) is not supported yet: gradient clipping
-and checkpoints assume every process holds the whole model.
+This is tested with two CPU processes (gloo): every rank ends with identical
+weights. Multi-GPU runs use the same code path but have not been tested yet.
+Sharded training (FSDP, DeepSpeed) is refused: gradient clipping and
+checkpoints assume every process holds the whole model.
 
 ## Writing a task
 

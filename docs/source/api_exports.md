@@ -240,8 +240,7 @@ See {doc}`episodes_guide`.
 |---|---|---|
 | `EpisodeFolder` | `simulusion.data` | A folder of episodes (`.npz`, videos, `.npy`), the dataset every task reads. |
 | `EpisodeWriter` | `simulusion.data` | Append episodes to a folder and record its `meta.json`. |
-| `LeRobotEpisodes` | `simulusion.data` | LeRobot datasets (v2.x and v3.0), local or from the Hub, as episodes. |
-| `load_oxe` | `simulusion.data` | Open X-Embodiment / RLDS datasets as episodes (needs TensorFlow Datasets). |
+| `LeRobotEpisodes` | `simulusion.data` | Local LeRobot datasets (v2.x and v3.0) as episodes. |
 
 ## Agents
 

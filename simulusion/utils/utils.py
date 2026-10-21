@@ -13,7 +13,6 @@ try:
     from plotly.graph_objs import Scatter, Line
 
     from sklearn.manifold import TSNE
-    import umap
 
     HAS_VIZ = True
 except ImportError:
@@ -1042,6 +1041,11 @@ def visualize_latent_umap(
     """
     if isinstance(latents, torch.Tensor):
         latents = latents.detach().cpu().numpy()
+
+    # Imported here, not with the other plotting libraries: importing umap
+    # JIT-compiles numba kernels, which made every import of this module slow
+    # and could crash a busy Windows process inside llvmlite.
+    import umap
 
     reducer = umap.UMAP(n_neighbors=n_neighbors, random_state=42)
     latents_2d = reducer.fit_transform(latents)

@@ -1,8 +1,8 @@
 """Read LeRobot datasets as Simulusion episodes.
 
 `LeRobot`_ is the Hugging Face format most open robot datasets now ship in.
-:class:`LeRobotEpisodes` reads one, from a local folder or the Hub, without
-the ``lerobot`` package: the format is Parquet for the low-dimensional signals
+:class:`LeRobotEpisodes` reads one from a local folder, without the
+``lerobot`` package: the format is Parquet for the low-dimensional signals
 plus MP4 per camera, described by ``meta/info.json``. Both layouts are
 supported:
 
@@ -15,13 +15,13 @@ supported:
 
     from simulusion.data import LeRobotEpisodes, SequenceDataset
 
-    episodes = LeRobotEpisodes("lerobot/pusht")           # downloads on first use
+    episodes = LeRobotEpisodes("datasets/pusht")         # a local dataset folder
     episodes[0].frames.shape                               # (T, 96, 96, 3)
     episodes[0].actions.shape                              # (T - 1, 2)
     windows = SequenceDataset(episodes, sequence_length=16)
 
 or convert once to an episode folder: ``simulusion datasets import lerobot
-lerobot/pusht data/pusht``. Needs ``pip install simulusion[lerobot]``
+datasets/pusht data/pusht``. Needs ``pip install simulusion[lerobot]``
 (PyArrow and PyAV).
 
 How LeRobot maps onto :class:`~simulusion.data.episode.Episode`: the chosen
@@ -58,16 +58,13 @@ class LeRobotEpisodes(Sequence[Episode]):
     """The episodes of a LeRobot dataset; ``dataset[i]`` decodes episode ``i``.
 
     Args:
-        source: A local dataset folder (holding ``meta/info.json``) or a Hub
-            repo id such as ``"lerobot/pusht"``.
+        source: A local dataset folder, the one holding ``meta/info.json``.
         camera: Feature key of the view to use as ``frames``
             (``"observation.images.top"``, or just ``"top"``). Defaults to the
             first camera in name order.
         extra_cameras: Further views to keep as ``cameras``: ``"all"``, or a
             list of keys. ``()`` keeps none (less decoding).
         episodes: Episode indices to read; all when ``None``.
-        revision: Hub revision (branch, tag or commit).
-        cache_dir: Where Hub downloads go (the Hugging Face cache by default).
     """
 
     def __init__(
@@ -77,20 +74,14 @@ class LeRobotEpisodes(Sequence[Episode]):
         camera: Optional[str] = None,
         extra_cameras: str | Sequence[str] = (),
         episodes: Optional[Iterable[int]] = None,
-        revision: Optional[str] = None,
-        cache_dir: Optional[str | Path] = None,
     ) -> None:
         _require_pyarrow()
         self.source = str(source)
-        local = Path(source)
-        self._repo_id: Optional[str] = None
-        if (local / "meta" / "info.json").exists():
-            self.root = local
-        else:
-            self._repo_id = self.source
-            self.root = _download(self.source, ["meta/*"], revision, cache_dir)
-        self._revision = revision
-        self._cache_dir = cache_dir
+        self.root = Path(source)
+        if not (self.root / "meta" / "info.json").exists():
+            raise FileNotFoundError(
+                f"{source} is not a LeRobot dataset folder (no meta/info.json)."
+            )
         self.info: Dict[str, Any] = json.loads(
             (self.root / "meta" / "info.json").read_text(encoding="utf-8")
         )
@@ -128,8 +119,6 @@ class LeRobotEpisodes(Sequence[Episode]):
             if key.startswith("observation.")
             and spec.get("dtype") not in ("video", "image", "string")
         )
-        if self._repo_id is not None:
-            self._fetch_files()
 
     # ------------------------------------------------------------------ API
 
@@ -338,21 +327,6 @@ class LeRobotEpisodes(Sequence[Episode]):
             return tasks
         return {}
 
-    def _fetch_files(self) -> None:
-        """Download only the data and video files the selected episodes need."""
-        patterns = set()
-        for record in self._episodes:
-            patterns.add(
-                str(self._data_path(record).relative_to(self.root)).replace("\\", "/")
-            )
-            for key in (self.camera, *self.extra_cameras):
-                if self.features[key].get("dtype") == "video":
-                    patterns.add(self._video_path(key, record))
-        assert self._repo_id is not None
-        self.root = _download(
-            self._repo_id, sorted(patterns), self._revision, self._cache_dir
-        )
-
     @staticmethod
     def _read_table(path: Path) -> Any:
         import pyarrow.parquet as pq
@@ -367,7 +341,6 @@ def import_lerobot(
     camera: Optional[str] = None,
     extra_cameras: str | Sequence[str] = (),
     episodes: Optional[Iterable[int]] = None,
-    revision: Optional[str] = None,
 ) -> Path:
     """Convert a LeRobot dataset into an episode folder; returns ``out_dir``."""
     dataset = LeRobotEpisodes(
@@ -375,7 +348,6 @@ def import_lerobot(
         camera=camera,
         extra_cameras=extra_cameras,
         episodes=episodes,
-        revision=revision,
     )
     with EpisodeWriter(out_dir, meta=dataset.meta) as writer:
         for i in range(len(dataset)):
@@ -403,28 +375,6 @@ def _match_key(name: str, keys: Sequence[str]) -> str:
 
 def _short(key: str) -> str:
     return key[len(IMAGE_PREFIX) :] if key.startswith(IMAGE_PREFIX) else key
-
-
-def _download(
-    repo_id: str,
-    patterns: List[str],
-    revision: Optional[str],
-    cache_dir: Optional[str | Path],
-) -> Path:
-    try:
-        from huggingface_hub import snapshot_download
-    except ImportError as exc:  # pragma: no cover - accelerate depends on it
-        raise ImportError(
-            "Reading LeRobot datasets from the Hub needs huggingface_hub."
-        ) from exc
-    path = snapshot_download(
-        repo_id,
-        repo_type="dataset",
-        revision=revision,
-        allow_patterns=patterns,
-        cache_dir=str(cache_dir) if cache_dir else None,
-    )
-    return Path(path)
 
 
 def _require_pyarrow() -> None:

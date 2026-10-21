@@ -41,7 +41,7 @@ class DatasetMeta:
         fps: Frame rate of the recording, if known.
         cameras: Names of the extra cameras (``frames.<name>`` arrays).
         observation_keys: Names of the low-dimensional observations.
-        source: Where the data came from (``"lerobot:lerobot/pusht"``).
+        source: Where the data came from (``"lerobot:datasets/pusht"``).
         info: Anything else worth keeping.
     """
 

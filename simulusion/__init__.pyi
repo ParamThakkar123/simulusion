@@ -54,7 +54,6 @@ from simulusion.controller.rssm_policy import RSSMPolicy as RSSMPolicy
 from simulusion.data.folder import EpisodeFolder as EpisodeFolder
 from simulusion.data.folder import EpisodeWriter as EpisodeWriter
 from simulusion.data.lerobot import LeRobotEpisodes as LeRobotEpisodes
-from simulusion.data.rlds import load_oxe as load_oxe
 from simulusion.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
 from simulusion.envs.ale_atari_env import make_atari_env as make_atari_env
 from simulusion.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
@@ -375,7 +374,6 @@ __all__ = [
     "load_bundle",
     "load_exported",
     "load_jepa_encoder",
-    "load_oxe",
     "load_world_model",
     "make_atari_env",
     "make_atari_vector_env",

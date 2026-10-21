@@ -321,8 +321,8 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
 
 
 @datasets_app.command("import")
-@click.argument("source_format", type=click.Choice(["lerobot", "oxe", "rlds"]))
-@click.argument("source")
+@click.argument("source_format", type=click.Choice(["lerobot"]))
+@click.argument("source", type=click.Path(exists=True, file_okay=False, path_type=Path))
 @click.argument("out_dir", type=click.Path(path_type=Path))
 @click.option("--camera", default=None, help="View to keep as the main frames.")
 @click.option(
@@ -331,83 +331,36 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
 @click.option(
     "--episodes",
     default=None,
-    help="LeRobot episode indices to import, e.g. '0-9' or '0,3,7'.",
+    help="Episode indices to import, e.g. '0-9' or '0,3,7'.",
 )
-@click.option("--revision", default=None, help="Hub revision (LeRobot).")
-@click.option(
-    "--split", default="train", show_default=True, help="TFDS split (OXE / RLDS)."
-)
-@click.option(
-    "--data-dir",
-    default=None,
-    help="Where the RLDS dataset lives (OXE: the public bucket by default).",
-)
-@click.option("--version", default=None, help="RLDS dataset version.")
 def datasets_import(
     source_format: str,
-    source: str,
+    source: Path,
     out_dir: Path,
     camera: str | None,
     all_cameras: bool,
     episodes: str | None,
-    revision: str | None,
-    split: str,
-    data_dir: str | None,
-    version: str | None,
 ) -> None:
-    """Convert a LeRobot or RLDS / Open X-Embodiment dataset into an episode folder.
+    """Convert a local LeRobot dataset folder into an episode folder.
 
     The folder is what every training task reads (`data.path=OUT_DIR`).
 
     
     Examples:
-        simulusion datasets import lerobot lerobot/pusht data/pusht
+        simulusion datasets import lerobot datasets/pusht data/pusht
         simulusion datasets import lerobot ./my_lerobot_dataset data/mine --all-cameras
-        simulusion datasets import oxe fractal20220817_data data/fractal --split 'train[:50]'
     """
-    from simulusion.data import EpisodeWriter
+    del source_format  # only "lerobot" for now
+    from simulusion.data.lerobot import import_lerobot
 
     try:
-        if source_format == "lerobot":
-            from simulusion.data.lerobot import import_lerobot
-
-            out = import_lerobot(
-                source,
-                out_dir,
-                camera=camera,
-                extra_cameras="all" if all_cameras else (),
-                episodes=_parse_index_list(episodes) if episodes else None,
-                revision=revision,
-            )
-        else:
-            from simulusion.data.rlds import (
-                OXE_GCS_ROOT,
-                OXE_PRESETS,
-                RLDSKeys,
-                load_oxe,
-            )
-
-            keys = OXE_PRESETS.get(source, RLDSKeys())
-            if camera:
-                keys = RLDSKeys(
-                    image=camera,
-                    cameras=keys.cameras,
-                    state=keys.state,
-                    action=keys.action,
-                    language=keys.language,
-                )
-            with EpisodeWriter(out_dir) as writer:
-                for episode in load_oxe(
-                    source,
-                    split=split,
-                    data_dir=data_dir or OXE_GCS_ROOT,
-                    version=version,
-                    keys=keys,
-                ):
-                    writer.write(episode)
-                    if writer.meta is not None:
-                        writer.meta.source = f"{source_format}:{source}"
-            out = out_dir
+        out = import_lerobot(
+            source,
+            out_dir,
+            camera=camera,
+            extra_cameras="all" if all_cameras else (),
+            episodes=_parse_index_list(episodes) if episodes else None,
+        )
     except (ImportError, FileNotFoundError, KeyError, ValueError) as exc:
         _echo_error(str(exc))
         raise click.exceptions.Exit(1)

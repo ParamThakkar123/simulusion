@@ -36,8 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **One trainer for every family** (`simulusion.training.Trainer`), built on
   Hugging Face Accelerate (now a core dependency). Any training task runs to a
   step budget with one precision setting (`fp32` / `bf16` / `fp16` / `auto`),
-  data parallelism (`accelerate launch` / `torchrun`), gradient accumulation,
-  logging to `metrics.jsonl` / TensorBoard / W&B, periodic evaluation, early
+  data parallelism (tested on two CPU processes), gradient accumulation,
+  logging to `metrics.jsonl`, periodic evaluation, early
   stopping, atomic checkpoints with resume (bit-exact in one process; replay
   buffers included for online agents) and export of the trained world model.
   Tasks: `dreamer`, `dreamer-v1`, `dreamer-v2`, `planet`, `iris`, `diamond`
@@ -61,10 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `.npz` per episode with frames, optional actions / rewards / episode ends
   between them, extra cameras, proprioception and a language instruction;
   `EpisodeFolder` / `EpisodeWriter`, and `SequenceDataset` windows that never
-  cross an episode boundary. Readers for LeRobot datasets (v2.x and v3.0,
-  local or from the Hub; `pip install simulusion[lerobot]`) and RLDS / Open
-  X-Embodiment (with TensorFlow Datasets), plus `simulusion datasets import`
-  and `simulusion datasets info`.
+  cross an episode boundary. A reader for local LeRobot datasets (v2.x and
+  v3.0; `pip install simulusion[lerobot]`), a converter for RLDS episodes,
+  `simulusion datasets import lerobot` and `simulusion datasets info`.
 - `MixedPrecision` and `GradientUpdate` replace the hand-written GradScaler
   blocks in Dreamer, IRIS, DIAMOND, Genie, PlaNet, ConvVAE and MDN-RNN.
   `use_amp` still selects what it did, so results are unchanged.

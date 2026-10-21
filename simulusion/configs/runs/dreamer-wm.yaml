@@ -1,8 +1,7 @@
 # Dreamer's world model alone, trained from recorded episodes: no environment,
 # no policy. Works on any episode folder, including converted LeRobot data:
-#   simulusion datasets import lerobot lerobot/pusht data/pusht
+#   simulusion datasets import lerobot datasets/pusht data/pusht
 #   simulusion train --config dreamer-wm data.path=data/pusht
-# Data-parallel: accelerate launch -m simulusion.training.run --config dreamer-wm ...
 task: dreamer-wm
 trainer:
   max_steps: 100000

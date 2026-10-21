@@ -375,3 +375,90 @@ def test_dataset_meta_round_trips(tmp_path: Path) -> None:
     meta = DatasetMeta(action_kind="continuous", action_dim=7, fps=5.0, source="x")
     write_meta(tmp_path, meta)
     assert read_meta(tmp_path) == meta
+
+
+def test_lerobot_image_features_stored_in_parquet(tmp_path: Path, arrow) -> None:
+    """Cameras with dtype "image" live in the tables as PNG bytes, not in videos."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    from simulusion.data import LeRobotEpisodes
+
+    pa, pq = arrow
+    root = tmp_path / "ds"
+    (root / "meta").mkdir(parents=True)
+    info = {
+        "codebase_version": "v2.1",
+        "fps": FPS,
+        "chunks_size": 1000,
+        "features": {
+            "observation.image": {"dtype": "image", "shape": [8, 8, 3]},
+            "action": {"dtype": "float32", "shape": [1]},
+            "episode_index": {"dtype": "int64", "shape": [1]},
+            "frame_index": {"dtype": "int64", "shape": [1]},
+        },
+    }
+    (root / "meta" / "info.json").write_text(json.dumps(info))
+    (root / "meta" / "episodes.jsonl").write_text(
+        json.dumps({"episode_index": 0, "tasks": ["push"], "length": 3})
+    )
+
+    def png(value: int) -> bytes:
+        buf = BytesIO()
+        Image.fromarray(np.full((8, 8, 3), value, np.uint8)).save(buf, format="PNG")
+        return buf.getvalue()
+
+    table = pa.table(
+        {
+            "observation.image": [
+                {"bytes": png(v), "path": None} for v in (10, 20, 30)
+            ],
+            "action": [[0.0], [1.0], [2.0]],
+            "episode_index": [0, 0, 0],
+            "frame_index": [0, 1, 2],
+        }
+    )
+    path = root / "data" / "chunk-000" / "episode_000000.parquet"
+    path.parent.mkdir(parents=True)
+    pq.write_table(table, path)
+
+    ep = LeRobotEpisodes(root)[0]
+    assert ep.frames[:, 0, 0, 0].tolist() == [10, 20, 30]  # PNG is lossless
+    np.testing.assert_array_equal(ep.actions, [[0.0], [1.0]])
+
+
+def test_lerobot_rejects_a_folder_that_is_not_a_dataset(tmp_path: Path, arrow) -> None:
+    from simulusion.data import LeRobotEpisodes
+
+    with pytest.raises(FileNotFoundError, match="meta/info.json"):
+        LeRobotEpisodes(tmp_path)
+
+
+def test_folder_reads_loose_video_files(tmp_path: Path) -> None:
+    pytest.importorskip("av")
+    from simulusion.data.video_io import write_video
+
+    write_video(tmp_path / "clip.mp4", _gray_frames([0, 50, 100, 150]), fps=FPS)
+    folder = EpisodeFolder(tmp_path)
+    assert folder.lengths == [4]
+    np.testing.assert_allclose(folder[0].frames[:, 0, 0, 0], [0, 50, 100, 150], atol=3)
+
+
+def test_sequence_preload_reads_every_episode_once(tmp_path: Path, monkeypatch) -> None:
+    writer = EpisodeWriter(tmp_path)
+    for i in range(3):
+        writer.write(_episode(offset=10 * i))
+    folder = EpisodeFolder(tmp_path)
+    loads = []
+    original = EpisodeFolder.__getitem__
+    monkeypatch.setattr(
+        EpisodeFolder,
+        "__getitem__",
+        lambda self, i: loads.append(i) or original(self, i),
+    )
+    data = SequenceDataset(folder, sequence_length=2, preload=True)
+    assert sorted(loads) == [0, 1, 2]
+    for i in range(len(data)):
+        data[i]
+    assert sorted(loads) == [0, 1, 2]

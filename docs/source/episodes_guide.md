@@ -1,4 +1,4 @@
-# Your Own Data: Episodes, LeRobot and Open X-Embodiment
+# Your Own Data: Episodes and LeRobot
 
 Every dataset-driven task reads one format: a folder of **episodes**. Video,
 reinforcement-learning trajectories and robot demonstrations all fit it, so
@@ -68,25 +68,24 @@ data:
 
 ## LeRobot
 
-[LeRobot](https://github.com/huggingface/lerobot) datasets (v2.x and v3.0)
-are read directly, from a local folder or the Hugging Face Hub, without the
-`lerobot` package (`pip install "simulusion[lerobot]"` adds PyArrow and
-PyAV). Convert once:
+Local [LeRobot](https://github.com/huggingface/lerobot) dataset folders (v2.x
+and v3.0) are read directly, without the `lerobot` package
+(`pip install "simulusion[lerobot]"` adds PyArrow and PyAV). Convert once:
 
 ```bash
-simulusion datasets import lerobot lerobot/pusht data/pusht
+simulusion datasets import lerobot datasets/pusht data/pusht
 simulusion datasets import lerobot ./my_dataset data/mine --camera top --all-cameras
 simulusion datasets info data/pusht
 simulusion train --config dreamer-wm data.path=data/pusht
 ```
 
-or train on it in place with `data.source=lerobot data.path=lerobot/pusht`,
+or train on it in place with `data.source=lerobot data.path=datasets/pusht`,
 or read it from Python:
 
 ```python
 from simulusion.data import LeRobotEpisodes
 
-episodes = LeRobotEpisodes("lerobot/pusht", camera="observation.image")
+episodes = LeRobotEpisodes("datasets/pusht", camera="observation.image")
 episodes[0].actions.shape  # (T - 1, 2)
 ```
 
@@ -94,32 +93,28 @@ The chosen camera becomes `frames` and the others `cameras`; `action`
 becomes `actions` without its last row (it leads past the final frame);
 `next.reward` and `next.done` become `rewards` and `terminated`; numeric
 `observation.*` features become `observations` (`observation.state` is
-`observations["state"]`); the episode's task is `language`. Only the files
-of the selected episodes are downloaded.
+`observations["state"]`); the episode's task is `language`. Cameras stored as
+videos or as images in the Parquet tables both work.
 
-## Open X-Embodiment and RLDS
+## RLDS episodes
 
-[Open X-Embodiment](https://robotics-transformer-x.github.io/) publishes its
-datasets in RLDS. Reading them needs TensorFlow Datasets, which Simulusion
-does not depend on (`pip install tensorflow tensorflow-datasets`):
-
-```bash
-simulusion datasets import oxe fractal20220817_data data/fractal --split 'train[:100]'
-```
+RLDS, the format of Open X-Embodiment and many other robot datasets, stores
+an episode as a list of steps. {py:func}`~simulusion.data.episode_from_rlds`
+converts one, given as plain Python and NumPy values (reading the dataset
+files is left to whatever produced the steps), and
+{py:class}`~simulusion.data.RLDSKeys` says where the main camera, extra
+cameras, state, actions and instruction live in a step:
 
 ```python
-from simulusion.data import load_oxe
+from simulusion.data import EpisodeWriter, RLDSKeys, episode_from_rlds
 
-for episode in load_oxe("bridge", split="train[:10]"):
-    ...
+keys = RLDSKeys(image="image", state=("state",), language="language_instruction")
+with EpisodeWriter("data/robot") as writer:
+    for episode in my_rlds_episodes:  # each {"steps": [...]}
+        writer.write(episode_from_rlds(episode, keys))
 ```
 
-Common datasets have presets ({py:data}`simulusion.data.rlds.OXE_PRESETS`)
-that say where the main camera, state, actions and instruction live; for
-others pass an {py:class}`~simulusion.data.RLDSKeys`. Dictionary actions (the
-RT-1 format) are flattened in the preset's key order. RLDS stores an action in
-every step, so the last one (past the final observation) is dropped;
-`is_terminal` on the final step marks the last transition terminated, and an
-episode that ends without it is truncated.
-{py:func}`~simulusion.data.episode_from_rlds` converts any RLDS episode
-given as plain Python and NumPy values, whatever produced it.
+Dictionary actions (the RT-1 format) are flattened in `RLDSKeys.action`
+order. RLDS stores an action in every step, so the last one (past the final
+observation) is dropped; `is_terminal` on the final step marks the last
+transition terminated, and an episode that ends without it is truncated.

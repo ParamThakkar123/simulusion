@@ -20,8 +20,8 @@ class SequenceDataConfig:
     """Where an offline task reads its episodes, and how it cuts them.
 
     Attributes:
-        path: An episode folder, or for ``source: lerobot`` a LeRobot dataset
-            folder or Hub repo id.
+        path: An episode folder, or for ``source: lerobot`` a local LeRobot
+            dataset folder.
         source: ``"folder"`` (Simulusion episodes, videos, ``.npy``) or
             ``"lerobot"``.
         camera: The view to train on, for datasets with several.
@@ -36,7 +36,6 @@ class SequenceDataConfig:
         val_batches: Batches scored per evaluation.
         episodes: Use only these episode indices.
         preload: Decode every episode into memory up front.
-        revision: Hub revision, for ``source: lerobot``.
         seed: Seed for the train / validation split.
     """
 
@@ -52,7 +51,6 @@ class SequenceDataConfig:
     val_batches: int = 8
     episodes: Optional[List[int]] = None
     preload: bool = False
-    revision: Optional[str] = None
     seed: int = 0
 
 
@@ -85,7 +83,6 @@ def open_episodes(config: SequenceDataConfig) -> Tuple[Any, Optional[DatasetMeta
             config.path,
             camera=config.camera,
             episodes=config.episodes,
-            revision=config.revision,
         )
         return dataset, dataset.meta
     raise ValueError(

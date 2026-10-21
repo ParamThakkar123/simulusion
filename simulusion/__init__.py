@@ -245,7 +245,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "EpisodeFolder": "simulusion.data",
     "EpisodeWriter": "simulusion.data",
     "LeRobotEpisodes": "simulusion.data",
-    "load_oxe": "simulusion.data",
     # Agents that act through any world model.
     "CEMPlanner": "simulusion.agents",
     "PlanningAgent": "simulusion.agents",

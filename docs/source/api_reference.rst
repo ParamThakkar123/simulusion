@@ -125,7 +125,7 @@ Data
    :members: LeRobotEpisodes, import_lerobot
 
 .. automodule:: simulusion.data.rlds
-   :members: RLDSKeys, episode_from_rlds, load_oxe
+   :members: RLDSKeys, episode_from_rlds
 
 Agents
 ------

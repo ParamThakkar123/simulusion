@@ -255,3 +255,107 @@ def test_mixed_precision_from_use_amp() -> None:
     assert out.dtype == torch.bfloat16
     with pytest.raises(ValueError):
         MixedPrecision("fp16", "cpu")
+
+
+def test_interrupt_writes_a_checkpoint_before_exiting(tmp_path: Path) -> None:
+    class Interrupted(_ToyTask):
+        def train_step(self) -> dict:
+            if self.units >= 2:
+                raise KeyboardInterrupt
+            return super().train_step()
+
+    with pytest.raises(KeyboardInterrupt):
+        Trainer(_config(tmp_path, max_steps=10)).fit(Interrupted())
+    assert latest_checkpoint(tmp_path / "run").name == "step_00000002"
+
+
+def test_resume_from_a_checkpoint_or_run_directory(tmp_path: Path) -> None:
+    first = Trainer(_config(tmp_path, max_steps=2)).fit(_ToyTask())
+    for target in (first.checkpoint, first.run_dir):
+        result = Trainer(_config(tmp_path, max_steps=3, resume=str(target))).fit(
+            _ToyTask()
+        )
+        assert result.iterations == 3
+    with pytest.raises(FileNotFoundError):
+        Trainer(_config(tmp_path, max_steps=3, resume=str(tmp_path / "nope"))).fit(
+            _ToyTask()
+        )
+
+
+def test_requested_device_must_be_the_one_accelerate_found(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    with pytest.raises(ValueError, match="device='cuda'"):
+        Trainer(_config(tmp_path, device="cuda"))
+
+
+def test_sharded_launches_are_refused(tmp_path: Path, monkeypatch) -> None:
+    from accelerate import Accelerator
+    from accelerate.utils import DistributedType
+
+    monkeypatch.setattr(
+        Accelerator, "distributed_type", property(lambda self: DistributedType.FSDP)
+    )
+    with pytest.raises(NotImplementedError, match="FSDP"):
+        Trainer(_config(tmp_path))
+
+
+@pytest.mark.parametrize("precision", ["bf16", "auto"])
+def test_trains_at_reduced_precision_on_cpu(tmp_path: Path, precision: str) -> None:
+    trainer = Trainer(_config(tmp_path, max_steps=3, precision=precision))
+    result = trainer.fit(_ToyTask())
+    assert result.progress == 3
+    assert trainer.precision.name == ("bf16" if precision == "bf16" else "fp32")
+    info = json.loads((result.run_dir / "run.json").read_text())
+    assert info["precision"] == trainer.precision.name
+
+
+def test_deterministic_mode_runs(tmp_path: Path) -> None:
+    try:
+        result = Trainer(_config(tmp_path, max_steps=2, deterministic=True)).fit(
+            _ToyTask()
+        )
+    finally:
+        torch.use_deterministic_algorithms(False)
+    assert result.progress == 2
+
+
+def test_gradient_accumulation_steps_once_per_window(tmp_path: Path) -> None:
+    class Counting(_ToyTask):
+        def setup(self, trainer: Trainer) -> None:
+            super().setup(trainer)
+            self.steps_taken = 0
+            step = self.update.optimizer.step
+
+            def counted(*args: Any, **kwargs: Any) -> Any:
+                self.steps_taken += 1
+                return step(*args, **kwargs)
+
+            self.update.optimizer.step = counted  # type: ignore[method-assign]
+
+    task = Counting()
+    Trainer(_config(tmp_path, max_steps=6, grad_accumulation=3)).fit(task)
+    assert task.steps_taken == 2
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA GPU")
+@pytest.mark.parametrize("precision", ["fp16", "bf16"])
+def test_trains_on_cuda_with_mixed_precision(tmp_path: Path, precision: str) -> None:
+    if precision == "bf16" and not torch.cuda.is_bf16_supported():
+        pytest.skip("this GPU has no bf16")
+    trainer = Trainer(
+        _config(tmp_path, device="cuda", max_steps=4, precision=precision)
+    )
+    task = _ToyTask()
+    result = trainer.fit(task)
+    assert trainer.device.type == "cuda" and result.progress == 4
+    assert task.update.scaler.is_enabled() == (precision == "fp16")
+    assert next(task.model.parameters()).is_cuda
+    resumed = Trainer(
+        _config(
+            tmp_path, device="cuda", max_steps=6, precision=precision, resume="auto"
+        )
+    ).fit(_ToyTask())
+    assert resumed.iterations == 6

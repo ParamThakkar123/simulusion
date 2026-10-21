@@ -34,11 +34,10 @@ Commands
   a compressed `.npz` with keys `observations`, `actions`, `rewards`,
   `dones`.
 
-- `datasets import <lerobot|oxe|rlds> <source> <out_dir>` - Convert a LeRobot
-  dataset (local folder or Hub repo id) or an RLDS / Open X-Embodiment dataset
-  into an episode folder, the format every training task reads. Options:
-  `--camera`, `--all-cameras`, `--episodes 0-9`, `--revision` (LeRobot);
-  `--split`, `--data-dir`, `--version` (RLDS). See {doc}`episodes_guide`.
+- `datasets import lerobot <source> <out_dir>` - Convert a local LeRobot
+  dataset folder into an episode folder, the format every training task reads.
+  Options: `--camera`, `--all-cameras`, `--episodes 0-9`. See
+  {doc}`episodes_guide`.
 
 - `datasets info <path>` - Summarise an episode folder: episodes, frames,
   action space, cameras, observations, source.
@@ -149,7 +148,7 @@ simulusion train --config runs/genie_20261020-120000/config.yaml
 - Example: import a LeRobot dataset and train Dreamer's world model on it
 
 ```bash
-simulusion datasets import lerobot lerobot/pusht data/pusht
+simulusion datasets import lerobot datasets/pusht data/pusht
 simulusion train --config dreamer-wm data.path=data/pusht
 ```
 

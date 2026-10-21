@@ -131,3 +131,24 @@ def test_run_config_style_commands_use_the_trainer(monkeypatch) -> None:
     )
     assert result.exit_code == 0, result.output
     assert calls == [["iris", "model.total_epochs=3", "game=ALE/Pong-v5"]]
+
+
+def test_train_help_tasks_lists_every_task() -> None:
+    result = CliRunner().invoke(cli.app, ["train", "--help-tasks"])
+    assert result.exit_code == 0
+    for name in ("genie", "dreamer-wm", "iris", "diamond-wm", "controller", "jepa"):
+        assert name in result.output
+
+
+def test_datasets_import_rejects_a_missing_folder(tmp_path: Path) -> None:
+    result = CliRunner().invoke(
+        cli.app,
+        [
+            "datasets",
+            "import",
+            "lerobot",
+            str(tmp_path / "nope"),
+            str(tmp_path / "out"),
+        ],
+    )
+    assert result.exit_code != 0

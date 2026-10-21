@@ -18,7 +18,6 @@ Train it from the command line, with ``key=value`` overrides for any field
 
     simulusion train --config genie.yaml trainer.max_steps=500 model.dynamics_depth=4
     simulusion train genie data.path=data/clips          # defaults for the rest
-    accelerate launch -m simulusion.training.run --config genie.yaml   # multi-GPU
 
 or from Python with :func:`run`. Every run writes its fully resolved config to
 ``<run_dir>/config.yaml``; passing that file back with ``--config`` repeats

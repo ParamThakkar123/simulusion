@@ -7,10 +7,9 @@
   the on-disk dataset every training task reads.
 * :class:`SequenceDataset` - fixed-length windows over episodes for a
   ``DataLoader``.
-* :class:`LeRobotEpisodes` - LeRobot datasets (v2.x and v3.0), local or from
-  the Hugging Face Hub.
-* :func:`load_oxe` / :func:`episode_from_rlds` - RLDS datasets such as Open
-  X-Embodiment.
+* :class:`LeRobotEpisodes` - local LeRobot datasets (v2.x and v3.0).
+* :func:`episode_from_rlds` - RLDS episodes (the Open X-Embodiment format)
+  given as Python / NumPy values.
 """
 
 from typing import Any
@@ -35,9 +34,7 @@ _LAZY = {
     "LeRobotEpisodes": "simulusion.data.lerobot",
     "import_lerobot": "simulusion.data.lerobot",
     "RLDSKeys": "simulusion.data.rlds",
-    "OXE_PRESETS": "simulusion.data.rlds",
     "episode_from_rlds": "simulusion.data.rlds",
-    "load_oxe": "simulusion.data.rlds",
     "read_video": "simulusion.data.video_io",
     "write_video": "simulusion.data.video_io",
 }
@@ -57,7 +54,6 @@ __all__ = [
     "EpisodeFolder",
     "EpisodeWriter",
     "LeRobotEpisodes",
-    "OXE_PRESETS",
     "RLDSKeys",
     "SequenceDataset",
     "as_uint8_frames",
@@ -66,7 +62,6 @@ __all__ = [
     "frames_to_float",
     "import_lerobot",
     "load_episode",
-    "load_oxe",
     "one_hot_actions",
     "read_meta",
     "read_video",

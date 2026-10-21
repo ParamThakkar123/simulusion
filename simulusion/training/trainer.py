@@ -11,8 +11,9 @@
     result.world_model_path  # runs/<name>/world_model, loadable with load_world_model
 
 The loop is built on `Hugging Face Accelerate`_, so the same code runs on a
-CPU, one GPU, or several (``accelerate launch -m simulusion.training.run
-...``) without changes. Precision is a run setting (``fp32``, ``bf16``,
+CPU, one GPU, or several processes (any launcher that sets the standard
+``torch.distributed`` environment: ``RANK``, ``WORLD_SIZE``, ``MASTER_ADDR``,
+...) without changes. Precision is a run setting (``fp32``, ``bf16``,
 ``fp16``, ``auto``) applied through :class:`~simulusion.training.precision.
 MixedPrecision`, rather than a flag per model.
 
@@ -92,9 +93,6 @@ class TrainerConfig(SerializableConfigMixin):
         early_stopping_mode: ``"min"`` or ``"max"``.
         patience: Evaluations without improvement before stopping.
         min_delta: Relative improvement that counts.
-        tensorboard: Also log to TensorBoard (``simulusion[ml]``).
-        wandb: Also log to Weights & Biases (``simulusion[ml]``).
-        wandb_project: W&B project.
         console: Print metrics to the console.
     """
 
@@ -117,9 +115,6 @@ class TrainerConfig(SerializableConfigMixin):
     early_stopping_mode: str = "min"
     patience: int = 10
     min_delta: float = 1e-4
-    tensorboard: bool = False
-    wandb: bool = False
-    wandb_project: str = "simulusion"
     console: bool = True
 
 
@@ -184,7 +179,7 @@ class Trainer:
             raise NotImplementedError(
                 "Sharded training (FSDP / DeepSpeed) is not supported: gradient "
                 "clipping and checkpoints assume each process holds the whole "
-                "model. Launch with plain data parallelism (multi-GPU DDP)."
+                "model. Launch with plain data parallelism (DDP)."
             )
         self.device: torch.device = self.accelerator.device
         self.precision = MixedPrecision(self.config.precision, self.device)
@@ -342,9 +337,6 @@ class Trainer:
             self._metrics_logger = MetricsLogger(
                 str(self.run_dir),
                 enable_console=cfg.console,
-                enable_tensorboard=cfg.tensorboard,
-                enable_wandb=cfg.wandb,
-                wandb_project=cfg.wandb_project,
                 run_name=self.run_dir.name,
             )
         self.accelerator.wait_for_everyone()
