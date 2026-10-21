@@ -91,6 +91,48 @@ Use ``simulusion`` for common workflows::
    :members:
    :show-inheritance:
 
+Training
+--------
+
+.. automodule:: simulusion.training.trainer
+   :members: Trainer, TrainerConfig, TrainResult, latest_checkpoint
+
+.. automodule:: simulusion.training.task
+   :members: TrainingTask, register_task, get_task, list_tasks
+
+.. automodule:: simulusion.training.precision
+   :members: MixedPrecision, GradientUpdate
+
+.. automodule:: simulusion.training.run
+   :members: run, resolve_run_config, run_config_dict
+
+.. automodule:: simulusion.training.tasks.common
+   :members: SequenceDataConfig
+
+Data
+----
+
+.. automodule:: simulusion.data.episode
+   :members: Episode
+
+.. automodule:: simulusion.data.folder
+   :members: DatasetMeta, EpisodeFolder, EpisodeWriter, load_episode
+
+.. automodule:: simulusion.data.sequence
+   :members: SequenceDataset, frames_to_float, one_hot_actions
+
+.. automodule:: simulusion.data.lerobot
+   :members: LeRobotEpisodes, import_lerobot
+
+.. automodule:: simulusion.data.rlds
+   :members: RLDSKeys, episode_from_rlds
+
+Agents
+------
+
+.. automodule:: simulusion.agents.planning
+   :members: CEMPlanner, PlanningAgent, run_episode
+
 .. automodule:: simulusion.models
    :no-index:
 

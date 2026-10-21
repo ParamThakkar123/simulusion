@@ -10,6 +10,8 @@ from typing import Any
 
 from simulusion import api as api
 
+from simulusion.agents.planning import CEMPlanner as CEMPlanner
+from simulusion.agents.planning import PlanningAgent as PlanningAgent
 from simulusion.api import ENV_BACKEND_SPECS as ENV_BACKEND_SPECS
 from simulusion.api import EnvBackendSpec as EnvBackendSpec
 from simulusion.api import MODEL_SPECS as MODEL_SPECS
@@ -49,6 +51,9 @@ from simulusion.controller.iris_policy import IRISCritic as IRISCritic
 from simulusion.controller.iris_policy import IRISPolicy as IRISPolicy
 from simulusion.controller.rollout_generator import RolloutGenerator as RolloutGenerator
 from simulusion.controller.rssm_policy import RSSMPolicy as RSSMPolicy
+from simulusion.data.folder import EpisodeFolder as EpisodeFolder
+from simulusion.data.folder import EpisodeWriter as EpisodeWriter
+from simulusion.data.lerobot import LeRobotEpisodes as LeRobotEpisodes
 from simulusion.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
 from simulusion.envs.ale_atari_env import make_atari_env as make_atari_env
 from simulusion.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
@@ -156,6 +161,15 @@ from simulusion.reward.dreamer_v1_value import ValueModel as DreamerValueModel
 from simulusion.reward.dreamer_v1_value import ValueModel as ValueModel
 from simulusion.training.eval_jepa import jepa_linear_probe as jepa_linear_probe
 from simulusion.training.eval_jepa import load_jepa_encoder as load_jepa_encoder
+from simulusion.training.precision import GradientUpdate as GradientUpdate
+from simulusion.training.precision import MixedPrecision as MixedPrecision
+from simulusion.training.run import run as run_training
+from simulusion.training.task import TrainingTask as TrainingTask
+from simulusion.training.task import list_tasks as list_tasks
+from simulusion.training.task import register_task as register_task
+from simulusion.training.trainer import TrainResult as TrainResult
+from simulusion.training.trainer import Trainer as Trainer
+from simulusion.training.trainer import TrainerConfig as TrainerConfig
 from simulusion.utils.deprecation import deprecated as deprecated
 from simulusion.utils.deprecation import deprecated_class as deprecated_class
 from simulusion.utils.deprecation import deprecated_function as deprecated_function
@@ -203,6 +217,7 @@ __all__ = [
     "AdaLNNormalization",
     "BSuiteImageEnv",
     "BraxImageEnv",
+    "CEMPlanner",
     "CNNDecoder",
     "CNNEncoder",
     "CNNFeatureExtractor",
@@ -233,11 +248,14 @@ __all__ = [
     "ENV_BACKEND_SPECS",
     "EnvBackendSpec",
     "Episode",
+    "EpisodeFolder",
+    "EpisodeWriter",
     "ExportableAgentMixin",
     "FreezeParameters",
     "Genie",
     "GenieConfig",
     "GenieSmallConfig",
+    "GradientUpdate",
     "GymImageEnv",
     "HUMAN_SCORES",
     "IRISActor",
@@ -258,9 +276,11 @@ __all__ = [
     "LPIPSPerceptualLoss",
     "LatentActionModel",
     "LatentActionModelConfig",
+    "LeRobotEpisodes",
     "Logger",
     "MODEL_SPECS",
     "Memory",
+    "MixedPrecision",
     "ModelSpec",
     "ModularRSSM",
     "MuJoCoImageEnv",
@@ -273,6 +293,7 @@ __all__ = [
     "PatchEmbed",
     "PatchUnEmbed",
     "Planet",
+    "PlanningAgent",
     "RANDOM_SCORES",
     "RMSNorm",
     "RSSM",
@@ -293,6 +314,10 @@ __all__ = [
     "TanhBijector",
     "ThroughputMeter",
     "TimeLimit",
+    "TrainResult",
+    "Trainer",
+    "TrainerConfig",
+    "TrainingTask",
     "UnityMLAgentsEnv",
     "ValueModel",
     "VectorQuantizer",
@@ -344,6 +369,7 @@ __all__ = [
     "list_models",
     "list_registered_env_backends",
     "list_registered_models",
+    "list_tasks",
     "list_world_model_families",
     "load_bundle",
     "load_exported",
@@ -370,8 +396,10 @@ __all__ = [
     "quantize_weights",
     "register_env_backend",
     "register_gymnasium_robotics_envs",
+    "register_task",
     "register_world_model",
     "rollout_drift",
+    "run_training",
     "save_bundle",
     "sinusoidal_time_embedding",
     "tensor_nbytes",

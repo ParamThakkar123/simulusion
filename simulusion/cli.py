@@ -320,6 +320,100 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
         click.echo(f"Wrote: {out_name}.mp4")
 
 
+@datasets_app.command("import")
+@click.argument("source_format", type=click.Choice(["lerobot"]))
+@click.argument("source", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.argument("out_dir", type=click.Path(path_type=Path))
+@click.option("--camera", default=None, help="View to keep as the main frames.")
+@click.option(
+    "--all-cameras", is_flag=True, help="Keep every other view as an extra camera."
+)
+@click.option(
+    "--episodes",
+    default=None,
+    help="Episode indices to import, e.g. '0-9' or '0,3,7'.",
+)
+def datasets_import(
+    source_format: str,
+    source: Path,
+    out_dir: Path,
+    camera: str | None,
+    all_cameras: bool,
+    episodes: str | None,
+) -> None:
+    """Convert a local LeRobot dataset folder into an episode folder.
+
+    The folder is what every training task reads (`data.path=OUT_DIR`).
+
+    
+    Examples:
+        simulusion datasets import lerobot datasets/pusht data/pusht
+        simulusion datasets import lerobot ./my_lerobot_dataset data/mine --all-cameras
+    """
+    del source_format  # only "lerobot" for now
+    from simulusion.data.lerobot import import_lerobot
+
+    try:
+        out = import_lerobot(
+            source,
+            out_dir,
+            camera=camera,
+            extra_cameras="all" if all_cameras else (),
+            episodes=_parse_index_list(episodes) if episodes else None,
+        )
+    except (ImportError, FileNotFoundError, KeyError, ValueError) as exc:
+        _echo_error(str(exc))
+        raise click.exceptions.Exit(1)
+    _echo_dataset_info(out)
+
+
+@datasets_app.command("info")
+@click.argument("path", type=click.Path(exists=True, path_type=Path))
+def datasets_info(path: Path) -> None:
+    """Summarise an episode folder: episodes, frames, actions, cameras."""
+    _echo_dataset_info(path)
+
+
+def _echo_dataset_info(path: Path) -> None:
+    from simulusion.data import EpisodeFolder
+
+    folder = EpisodeFolder(path)
+    lengths = folder.lengths
+    click.echo(f"{path}: {len(folder)} episodes, {sum(lengths)} frames")
+    click.echo(
+        f"  length min/mean/max: {min(lengths)} / {sum(lengths) / len(lengths):.1f} / {max(lengths)}"
+    )
+    meta = folder.meta
+    if meta is not None:
+        actions = (
+            f"{meta.action_kind} ({meta.action_dim})"
+            if meta.action_kind
+            else "none (video)"
+        )
+        click.echo(f"  actions: {actions}")
+        if meta.cameras:
+            click.echo(f"  extra cameras: {', '.join(meta.cameras)}")
+        if meta.observation_keys:
+            click.echo(f"  observations: {', '.join(meta.observation_keys)}")
+        if meta.fps:
+            click.echo(f"  fps: {meta.fps:g}")
+        if meta.source:
+            click.echo(f"  source: {meta.source}")
+
+
+def _parse_index_list(text: str) -> list[int]:
+    """'0-3,7' -> [0, 1, 2, 3, 7]."""
+    out: list[int] = []
+    for part in text.split(","):
+        part = part.strip()
+        if "-" in part:
+            lo, hi = part.split("-", 1)
+            out.extend(range(int(lo), int(hi) + 1))
+        elif part:
+            out.append(int(part))
+    return out
+
+
 @app.group("models")
 def models_app() -> None:
     """Model discovery commands."""
@@ -909,28 +1003,124 @@ def play_command(
     "train",
     context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
 )
-@click.argument("model")
+@click.argument("model", required=False)
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
+@click.option(
+    "--legacy",
+    is_flag=True,
+    help="Run the family's own pre-Trainer entrypoint instead of the shared Trainer.",
+)
 @click.option(
     "--inproc",
     is_flag=True,
-    help="Run training in-process instead of spawning subprocess.",
+    help="With --legacy: run in-process instead of spawning a subprocess.",
 )
-def train(model: str, extra_args: tuple[str, ...], inproc: bool) -> None:
-    """Launch a training entrypoint with optional YAML/OmegaConf overrides.
+def train(
+    model: str | None, extra_args: tuple[str, ...], legacy: bool, inproc: bool
+) -> None:
+    """Train a model on the shared Trainer from a run config and overrides.
+
+    MODEL is a training task (see `simulusion train --help-tasks` or the
+    list below); it may be omitted when the config names its task.
 
     Examples:
-        simulusion train iris --config simulusion/configs/experiments/iris.yaml total_epochs=100
-        simulusion train jepa optimization.epochs=50 data.batch_size=128
+        simulusion train genie data.path=data/clips trainer.max_steps=2000
+        simulusion train --config simulusion/configs/runs/dreamer.yaml trainer.precision=bf16
+        simulusion train --config runs/genie_20261020/config.yaml   # repeat a run
+        simulusion train iris --legacy --config simulusion/configs/experiments/iris.yaml
     """
-    key = model.strip().lower()
-    if key not in TRAINING_MODULES:
-        _echo_error(
-            f"Unknown model '{model}'. Known: {', '.join(TRAINING_MODULES.keys())}"
+    from simulusion.training.task import list_tasks
+
+    args = list(extra_args)
+    if model is not None and (model.startswith("-") or "=" in model):
+        args.insert(0, model)
+        model = None
+    if "--help-tasks" in args:
+        click.echo("Training tasks: " + ", ".join(list_tasks()))
+        return
+    key = model.strip().lower() if model else None
+    tasks = list_tasks()
+
+    if (
+        key is not None
+        and not legacy
+        and key in tasks
+        and key in TRAINING_MODULES
+        and _legacy_style_args(key, args)
+    ):
+        click.echo(
+            f"Running the legacy '{key}' entrypoint: the arguments use its own "
+            "config format (no `task:` in the config file, or keys outside the "
+            "run config's sections). Pass --legacy to choose it explicitly; see "
+            "the trainer guide for run configs."
         )
+        legacy = True
+
+    if key is not None and (legacy or key not in tasks):
+        if key not in TRAINING_MODULES:
+            _echo_error(
+                f"Unknown model '{model}'. Training tasks: {', '.join(tasks)}. "
+                f"Legacy entrypoints (--legacy): {', '.join(TRAINING_MODULES)}"
+            )
+            raise click.exceptions.Exit(1)
+        _run_legacy_training(TRAINING_MODULES[key], args, inproc)
+        return
+
+    from simulusion.configs.structured import ConfigError
+    from simulusion.training import run as run_module
+
+    try:
+        run_module.main(([key] if key else []) + args)
+    except ConfigError as exc:
+        _echo_error(str(exc))
+        raise click.exceptions.Exit(1)
+    except KeyboardInterrupt:
+        _echo_error("Training interrupted by user")
         raise click.exceptions.Exit(1)
 
-    module = TRAINING_MODULES[key]
+
+def _legacy_style_args(task: str, args: list[str]) -> bool:
+    """Whether ``args`` were written for a family's pre-Trainer entrypoint.
+
+    Run configs name their task and nest every field under a section
+    (``trainer.``, ``model.``, ``data.`` ...). The older entrypoints take a
+    flat config file and flat ``key=value`` overrides, so a ``--config``
+    without ``task:``, or an override outside the task's sections, means the
+    command predates the Trainer.
+    """
+    import dataclasses
+
+    import yaml
+
+    from simulusion.training.task import get_task
+
+    sections = {"task", "trainer"} | {
+        f.name for f in dataclasses.fields(get_task(task).config_cls)
+    }
+    config: str | None = None
+    overrides = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("--config", "-c") and i + 1 < len(args):
+            config = args[i + 1]
+            i += 2
+            continue
+        if arg.startswith("--config="):
+            config = arg.split("=", 1)[1]
+        elif "=" in arg and not arg.startswith("-"):
+            overrides.append(arg.split("=", 1)[0].strip())
+        i += 1
+    if any(key.split(".", 1)[0] not in sections for key in overrides):
+        return True
+    if config is not None and Path(config).is_file():
+        loaded = yaml.safe_load(Path(config).read_text(encoding="utf-8")) or {}
+        return not (isinstance(loaded, dict) and "task" in loaded)
+    return False
+
+
+def _run_legacy_training(module: str, extra_args: list[str], inproc: bool) -> None:
+    """Launch a family's own training entrypoint (the pre-Trainer path)."""
     if inproc:
         # Failures inside training propagate as a non-zero exit. The previous
         # version retried `main()` without the user's arguments on any
@@ -1008,9 +1198,9 @@ def run() -> None:
 def run_train() -> None:
     """Console-script entrypoint used by the installed ``simulusion-train`` command.
 
-    This is equivalent to ``simulusion train MODEL [ARGS...]`` and dispatches via
-    ``TRAINING_MODULES`` so new training modules only need to be added to that
-    mapping instead of registering another packaging entry point.
+    This is equivalent to ``simulusion train [MODEL] [ARGS...]``: registered
+    training tasks run on the shared Trainer, and ``--legacy`` reaches the
+    entrypoints in ``TRAINING_MODULES``.
     """
     train.main(prog_name="simulusion-train")
 

@@ -13,8 +13,8 @@ from pathlib import Path
 from simulusion.configs.serialization import SerializableConfigMixin
 from simulusion.models.genie import Genie
 from simulusion.models.model_io import save_config_next_to_checkpoint
+from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.memory_utils import enable_performance_defaults
-from simulusion.utils.train_utils import EarlyStopping
 
 
 @dataclass
@@ -196,7 +196,18 @@ class GenieTrainer:
         model: nn.Module,
         config: GenieConfig,
         device: Optional[torch.device] = None,
+        *,
+        precision: Optional[MixedPrecision] = None,
     ) -> None:
+        """Args:
+        model: The Genie model.
+        config: Training hyperparameters.
+        device: Defaults to the best available device.
+        precision: Autocast and loss scaling. Defaults to what the config's
+            ``use_amp`` flag selects: bf16 where CUDA supports it, else fp16
+            on CUDA, bf16 on CPU, and fp32 without ``use_amp``. The shared
+            :class:`~simulusion.training.Trainer` passes the run's precision.
+        """
         self.model = model
         self.config = config
 
@@ -218,18 +229,17 @@ class GenieTrainer:
         if getattr(config, "perf_defaults", True):
             enable_performance_defaults(tf32=bool(getattr(config, "tf32", True)))
 
-        self.use_amp = bool(getattr(config, "use_amp", False))
-        self._amp_device = getattr(self.device, "type", str(self.device))
-        # bf16 carries fp32's dynamic range, so it needs no loss scaling; fp16
-        # does. Only build a scaler for the case that actually requires one.
-        self._amp_dtype = (
-            torch.bfloat16
-            if self._amp_device == "cuda" and torch.cuda.is_bf16_supported()
-            else torch.float16
-        )
-        self.scaler = torch.amp.GradScaler(
-            self._amp_device,
-            enabled=self.use_amp and self._amp_dtype is torch.float16,
+        if precision is None:
+            use_amp = bool(getattr(config, "use_amp", False))
+            precision = MixedPrecision(
+                ("auto" if self.device.type == "cuda" else "bf16")
+                if use_amp
+                else "fp32",
+                self.device,
+            )
+        self.precision = precision
+        self.update = GradientUpdate(
+            self.optimizer, self.model.parameters(), self.precision, max_grad_norm=1.0
         )
 
         self.global_step = 0
@@ -270,11 +280,7 @@ class GenieTrainer:
             + self.config.mask_prob_min
         )
 
-        with torch.amp.autocast(
-            device_type=self._amp_device,
-            dtype=self._amp_dtype,
-            enabled=self.use_amp,
-        ):
+        with self.precision.autocast():
             outputs = self.model(batch, mask_prob=mask_prob)
 
         recon_loss = outputs.get("recon_loss", 0.0)
@@ -293,15 +299,9 @@ class GenieTrainer:
 
         total_loss = outputs["total_loss"]
 
-        self.optimizer.zero_grad(set_to_none=True)
-        self.scaler.scale(total_loss).backward()
-        # Gradients must be unscaled before clipping, or the norm is measured on
-        # scaled values and the clip threshold means nothing.
-        self.scaler.unscale_(self.optimizer)
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.scheduler.step()
+        grad_norm = self.update(total_loss)
+        if grad_norm is not None:
+            self.scheduler.step()
 
         self.global_step += 1
 
@@ -321,6 +321,9 @@ class GenieTrainer:
             "dynamics_loss": as_tensor(dynamics_loss),
             "learning_rate": torch.tensor(float(self.scheduler.get_last_lr()[0])),
             "z_q_for_dynamics_mean": as_tensor(z_q_for_dynamics_mean),
+            "grad_norm": as_tensor(
+                grad_norm if grad_norm is not None else float("nan")
+            ),
         }
 
     def validate(self, val_batch: torch.Tensor) -> Dict[str, torch.Tensor]:
@@ -369,97 +372,61 @@ class GenieTrainer:
         checkpoint_dir: Optional[str] = None,
         checkpoint_interval: int = 0,
     ) -> None:
-        """Full training loop.
+        """Train until ``global_step`` reaches ``num_steps`` (``config.max_steps``).
+
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``genie`` task, with this trainer's model, optimizer and schedule.
 
         Args:
-            train_dataloader: Training data loader
-            val_dataloader: Validation data loader (optional)
+            train_dataloader: Training data loader of ``(B, C, T, H, W)`` clips.
+            val_dataloader: Held-out loader, scored over its whole length every
+                ``val_interval`` steps (required by ``early_stopping``).
             num_steps: Number of training steps (uses config.max_steps if None)
             log_interval: Logging frequency
             val_interval: Validation frequency
-            checkpoint_dir: Where periodic checkpoints go. Without it nothing is
-                written until the caller saves, so a run killed by a timeout, an
-                OOM or Ctrl+C leaves nothing behind.
-            checkpoint_interval: Steps between checkpoints. 0 disables them,
-                which is the previous behaviour.
+            checkpoint_dir: Where ``genie_step_<N>.pt`` checkpoints go, and the
+                run directory for the trainer's own files (``checkpoints/``,
+                ``run.json``, ``train_metrics.jsonl``). Without it the run
+                directory is ``runs/genie_<time>`` and no ``genie_step`` files
+                are written.
+            checkpoint_interval: Steps between checkpoints. 0 writes one only
+                at the end (with ``checkpoint_dir``).
         """
+        import time
+
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.genie import GenieTask, GenieTaskConfig
+
         if num_steps is None:
             num_steps = self.config.max_steps
-
-        periodic = checkpoint_dir is not None and checkpoint_interval > 0
-        if periodic:
-            assert checkpoint_dir is not None  # narrowed for the type checker
-            os.makedirs(checkpoint_dir, exist_ok=True)
-
-        stopper = None
-        best_val = float("inf")
-        if getattr(self.config, "early_stopping", False):
-            if val_dataloader is None:
-                raise ValueError(
-                    "early_stopping needs a val_dataloader; build one with "
-                    "create_tinyworlds_dataloader(val_split=..., split='val')"
-                )
-            stopper = EarlyStopping(
-                mode="min",
-                patience=self.config.patience,
-                threshold=self.config.min_delta,
+        early = bool(getattr(self.config, "early_stopping", False))
+        if early and val_dataloader is None:
+            raise ValueError(
+                "early_stopping needs a val_dataloader; build one with "
+                "create_tinyworlds_dataloader(val_split=..., split='val')"
             )
-
-        train_iter = iter(train_dataloader)
-
-        while self.global_step < num_steps:
-            try:
-                batch = next(train_iter)
-            except StopIteration:
-                train_iter = iter(train_dataloader)
-                batch = next(train_iter)
-
-            batch = batch.to(self.device)
-
-            losses = self.train_step(batch)
-
-            if self.global_step % log_interval == 0:
-                print(
-                    f"Step {self.global_step}/{num_steps} | "
-                    f"Loss: {losses['total_loss']:.4f} | "
-                    f"Recon: {losses['recon_loss']:.4f} | "
-                    f"VQ: {losses['vq_loss']:.4f} | "
-                    f"Dynamics: {losses['dynamics_loss']:.4f} | "
-                    f"LR: {losses['learning_rate']:.6f}"
-                )
-
-            if periodic and self.global_step % checkpoint_interval == 0:
-                self.save_checkpoint(
-                    os.path.join(
-                        str(checkpoint_dir), f"genie_step_{self.global_step}.pt"
-                    )
-                )
-
-            if val_dataloader is not None and self.global_step % val_interval == 0:
-                val_loss = self.validate_epoch(val_dataloader)
-                message = f"Validation: val_recon_loss={val_loss:.4f}"
-                if stopper is not None:
-                    stopper.step(val_loss)
-                    if val_loss < best_val:
-                        best_val = val_loss
-                        message += " (best)"
-                    print(message)
-                    if stopper.stop:
-                        print(
-                            f"Early stopping at step {self.global_step}: held-out "
-                            f"reconstruction loss has not improved by "
-                            f"{self.config.min_delta} for {self.config.patience} "
-                            f"validations."
-                        )
-                        break
-                else:
-                    print(message)
-
-        if periodic:
-            self.save_checkpoint(
-                os.path.join(str(checkpoint_dir), f"genie_step_{self.global_step}.pt")
-            )
-
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        run_dir = checkpoint_dir or os.path.join("runs", f"genie_{stamp}")
+        task = GenieTask(
+            GenieTaskConfig(model=self.config),
+            genie=self,
+            train_loader=train_dataloader,
+            val_loader=val_dataloader,
+            checkpoint_dir=checkpoint_dir,
+        )
+        fit_legacy(
+            task,
+            run_dir,
+            max_steps=num_steps,
+            device=self.device,
+            log_every=log_interval,
+            eval_every=val_interval if val_dataloader is not None else 0,
+            checkpoint_every=checkpoint_interval,
+            early_stopping_metric="val_recon_loss" if early else None,
+            early_stopping_mode="min",
+            patience=getattr(self.config, "patience", 10),
+            min_delta=getattr(self.config, "min_delta", 1e-4),
+        )
         print("Training complete!")
 
     def save_checkpoint(self, path: str) -> None:
@@ -471,6 +438,7 @@ class GenieTrainer:
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler_state_dict": self.scheduler.state_dict(),
+                "scaler_state_dict": self.update.scaler.state_dict(),
                 "global_step": self.global_step,
             },
             path,
@@ -486,14 +454,13 @@ class GenieTrainer:
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        if checkpoint.get("scaler_state_dict"):
+            self.update.scaler.load_state_dict(checkpoint["scaler_state_dict"])
         self.global_step = checkpoint["global_step"]
 
 
-def create_genie_trainer(
-    config: Optional[GenieConfig] = None,
-    device: Optional[torch.device] = None,
-) -> Tuple[GenieTrainer, nn.Module]:
-    """Factory function to create Genie trainer and model."""
+def build_genie(config: Optional[GenieConfig] = None) -> "Genie":
+    """The Genie model a training config describes."""
     if config is None:
         config = GenieConfig()
 
@@ -502,7 +469,7 @@ def create_genie_trainer(
     # defaults (512/1024/1024) and those three config fields did nothing at all
     # -- a config that said 256 built a 512-wide tokenizer, and the checkpoint
     # then recorded the width it did not have.
-    model = Genie(
+    return Genie(
         num_frames=config.num_frames,
         image_size=config.image_size,
         in_channels=config.in_channels,
@@ -529,6 +496,15 @@ def create_genie_trainer(
         action_num_heads=getattr(config, "action_num_heads", 16),
     )
 
+
+def create_genie_trainer(
+    config: Optional[GenieConfig] = None,
+    device: Optional[torch.device] = None,
+) -> Tuple[GenieTrainer, nn.Module]:
+    """Factory function to create Genie trainer and model."""
+    if config is None:
+        config = GenieConfig()
+    model = build_genie(config)
     trainer = GenieTrainer(model, config, device)
 
     return trainer, model

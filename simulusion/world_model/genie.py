@@ -70,7 +70,12 @@ class GenieWorldModel(WorldModelBase):
         if actions is not None:
             acts = actions[:, actions.shape[1] - (T - 1) :]
         elif T > 1:
-            acts = self.model.infer_actions(video)[:, : T - 1].long()
+            inferred = self.model.infer_actions(video).long()
+            if inferred.dim() == 1:
+                # Mean pooling infers one action for the whole clip (the last
+                # transition's); every context transition gets it.
+                inferred = inferred.unsqueeze(1).expand(B, T - 1)
+            acts = inferred[:, : T - 1]
         else:
             acts = torch.zeros(B, 0, dtype=torch.long, device=self.device)
         return {"tokens": tokens, "actions": acts}

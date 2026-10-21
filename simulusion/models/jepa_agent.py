@@ -109,6 +109,40 @@ class JEPAAgent(ExportableAgentMixin):
         }
 
     def train(self) -> None:
-        from simulusion.training.train_jepa import main as train_jepa_main
+        """Train for ``cfg.epochs`` epochs.
 
-        train_jepa_main(self.cfg)
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``jepa`` task, in ``cfg.folder``: per-epoch checkpoints in
+        ``train_jepa``'s format (``<write_tag>-latest.pth.tar``, and
+        ``<write_tag>-ep<N>.pth.tar`` every 50 epochs), resuming from
+        ``read_checkpoint`` when ``load_checkpoint`` is set, bf16 with
+        ``use_bfloat16``, and per-epoch held-out early stopping with
+        ``early_stopping``. W&B sweeps (``enable_sweep``) still run through
+        ``train_jepa``.
+        """
+        if self.cfg.enable_sweep:
+            from simulusion.training.train_jepa import main as train_jepa_main
+
+            train_jepa_main(self.cfg)
+            return
+
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.jepa import JEPATask, JEPATaskConfig
+
+        cfg = self.cfg
+        early = bool(cfg.early_stopping)
+        fit_legacy(
+            JEPATask(
+                JEPATaskConfig(model=cfg, val_batches=1 if early else 0),
+                legacy_folder=cfg.folder,
+            ),
+            cfg.folder,
+            precision="bf16" if cfg.use_bfloat16 else "fp32",
+            log_every=1,
+            eval_every=1 if early else 0,
+            checkpoint_every=1,
+            early_stopping_metric="val_loss" if early else None,
+            early_stopping_mode="min",
+            patience=cfg.patience,
+            min_delta=cfg.min_delta,
+        )

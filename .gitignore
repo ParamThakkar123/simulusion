@@ -18,8 +18,12 @@ simulusion_ui/test-results/
 data/
 # Test fixtures live under tests/data/ and must be committed.
 !tests/data/
+# The simulusion.data package is source code, not a dataset.
+!simulusion/data/
 checkpoints/
 runs/
+# Shipped run configs, not training output.
+!simulusion/configs/runs/
 server.log
 .mypy_cache/
 mypy_out.txt

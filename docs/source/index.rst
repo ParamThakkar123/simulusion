@@ -82,6 +82,8 @@ model under *Algorithms* in the sidebar.
    :caption: User Guides
 
    public_api
+   trainer_guide
+   episodes_guide
    training_guide
    inference_guide
    world_model_protocol

@@ -116,14 +116,40 @@ for algo in ["dreamer-v1", "dreamer-v2"]:
 ```
 
 `examples/algorithm_comparison.py` runs exactly this and writes a comparison
-plot. Construction is unified across all registered models. A shared
-step-budget `train()` currently covers the Dreamer family — other agents use
-their own trainers (`simulusion train …` / `JEPAAgent.train()` / `DiamondAgent.train()`).
-The example reports which is which rather than assuming.
+plot.
+
+### One trainer, one config file
+
+Every family also trains on one shared `Trainer` from a YAML run config.
+Device, precision, resuming, evaluation and checkpoints work the same for all
+of them, and every run
+writes its resolved `config.yaml` and `run.json` (git commit, package
+versions) so it can be repeated:
+
+```bash
+simulusion train --config dreamer model.env=cheetah-run trainer.precision=bf16
+simulusion train --config iris game=ALE/Breakout-v5
+simulusion train genie data.path=data/clips trainer.max_steps=20000
+simulusion train --config runs/<a previous run>/config.yaml     # repeat it
+```
+
+World models also train **without their agent**, from recorded episodes,
+including robot data converted from LeRobot, and any
+agent that speaks the `WorldModel` protocol can then plan with them:
+
+```bash
+simulusion datasets import lerobot datasets/pusht data/pusht
+simulusion train --config dreamer-wm data.path=data/pusht
+```
+
+See the [trainer guide](https://paramthakkar123.github.io/simulusion/trainer_guide.html)
+and the [data guide](https://paramthakkar123.github.io/simulusion/episodes_guide.html).
 
 ## Features
 
-- Unified interfaces across world-model algorithms
+- Unified interfaces across world-model algorithms: one `WorldModel` protocol,
+  one `Trainer`, one YAML run config per experiment
+- One episode format for video, RL and robot data, with a LeRobot reader
 - Modular encoders, decoders, dynamics models, and backbones
 - Training and inference utilities for model-based reinforcement learning
 - Environment integrations for Gym/Gymnasium, Unity ML-Agents, MuJoCo, Brax, and robotics extras

@@ -111,6 +111,117 @@ def _require_wandb() -> Any:
     return _wandb
 
 
+def make_jepa_loaders(
+    args: Any,
+    *,
+    transform: Any,
+    mask_collator: Any,
+    world_size: int = 1,
+    rank: int = 0,
+    with_val: bool = False,
+) -> tuple:
+    """I-JEPA's ``(train_loader, train_sampler, val_loader)`` for a nested config.
+
+    The loaders shard across ``world_size`` processes themselves (a
+    ``DistributedSampler`` per rank). ``val_loader`` is built only with
+    ``with_val``, from CIFAR-10's test split or ``data.val_split`` of an image
+    folder, with the same mask collator, so its loss is the training objective.
+    """
+    batch_size = args["data"]["batch_size"]
+    pin_mem = args["data"]["pin_mem"]
+    num_workers = args["data"]["num_workers"]
+    root_path = args["data"]["root_path"]
+    image_folder = args["data"]["image_folder"]
+    copy_data = args["meta"]["copy_data"]
+    dataset_type = args["data"]["dataset"]
+    val_split = args["data"]["val_split"]
+    download = args["data"].get("download", False)
+    if dataset_type.lower() == "imagenet":
+        _, unsupervised_loader, unsupervised_sampler = make_imagenet1k(
+            transform=transform,
+            batch_size=batch_size,
+            collator=mask_collator,
+            pin_mem=pin_mem,
+            training=True,
+            num_workers=num_workers,
+            world_size=world_size,
+            rank=rank,
+            root_path=root_path,
+            image_folder=image_folder,
+            copy_data=copy_data,
+            drop_last=True,
+        )
+    elif dataset_type.lower() == "cifar10":
+        _, unsupervised_loader, unsupervised_sampler = make_cifar10(
+            transform=transform,
+            batch_size=batch_size,
+            collator=mask_collator,
+            pin_mem=pin_mem,
+            num_workers=num_workers,
+            world_size=world_size,
+            rank=rank,
+            root_path=root_path,
+            drop_last=True,
+            train=True,
+            download=download,  # pass through
+        )
+    else:
+        _, unsupervised_loader, unsupervised_sampler = make_imagefolder(
+            transform=transform,
+            batch_size=batch_size,
+            collator=mask_collator,
+            pin_mem=pin_mem,
+            num_workers=num_workers,
+            world_size=world_size,
+            rank=rank,
+            root_path=root_path,
+            image_folder=image_folder,
+            drop_last=True,
+            val_split=val_split,
+        )
+    # Held-out loader for early stopping. Built with the same mask collator, so
+    # the validation loss is the exact objective being trained, just on data the
+    # encoder never sees.
+    val_loader = None
+    if with_val:
+        if dataset_type.lower() == "cifar10":
+            _, val_loader, _ = make_cifar10(
+                transform=transform,
+                batch_size=batch_size,
+                collator=mask_collator,
+                pin_mem=pin_mem,
+                num_workers=num_workers,
+                world_size=world_size,
+                rank=rank,
+                root_path=root_path,
+                drop_last=True,
+                train=False,
+                download=download,
+            )
+        else:
+            if not val_split:
+                raise ValueError(
+                    "optimization.early_stopping needs data.val_split > 0 so "
+                    "there is held-out data to measure; pass e.g. "
+                    "data.val_split=0.05"
+                )
+            _, val_loader, _ = make_imagefolder(
+                transform=transform,
+                batch_size=batch_size,
+                collator=mask_collator,
+                pin_mem=pin_mem,
+                num_workers=num_workers,
+                world_size=world_size,
+                rank=rank,
+                root_path=root_path,
+                image_folder=image_folder,
+                drop_last=True,
+                val_split=val_split,
+                split="val",
+            )
+    return unsupervised_loader, unsupervised_sampler, val_loader
+
+
 def main(args: Any = None, resume_preempt: bool = False) -> Any:
     """Run JEPA training using a CLI argv, nested dict, or `JEPAConfig` instance.
 
@@ -142,7 +253,6 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
     model_name = args["meta"]["model_name"]
     load_model = args["meta"]["load_checkpoint"] or resume_preempt
     r_file = args["meta"]["read_checkpoint"]
-    copy_data = args["meta"]["copy_data"]
     pred_depth = args["meta"]["pred_depth"]
     pred_emb_dim = args["meta"]["pred_emb_dim"]
     loss_fn = build_loss_fn(args["meta"].get("loss_type", "l2"))
@@ -162,10 +272,6 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
     color_jitter = args["data"]["color_jitter_strength"]
     # --
     batch_size = args["data"]["batch_size"]
-    pin_mem = args["data"]["pin_mem"]
-    num_workers = args["data"]["num_workers"]
-    root_path = args["data"]["root_path"]
-    image_folder = args["data"]["image_folder"]
     crop_size = args["data"]["crop_size"]
     crop_scale = args["data"]["crop_scale"]
     # --
@@ -292,93 +398,15 @@ def main(args: Any = None, resume_preempt: bool = False) -> Any:
     )
 
     # -- init data-loaders/samplers
-    dataset_type = args["data"]["dataset"]
-    val_split = args["data"]["val_split"]
-    download = args["data"].get("download", False)
-    if dataset_type.lower() == "imagenet":
-        _, unsupervised_loader, unsupervised_sampler = make_imagenet1k(
-            transform=transform,
-            batch_size=batch_size,
-            collator=mask_collator,
-            pin_mem=pin_mem,
-            training=True,
-            num_workers=num_workers,
-            world_size=world_size,
-            rank=rank,
-            root_path=root_path,
-            image_folder=image_folder,
-            copy_data=copy_data,
-            drop_last=True,
-        )
-    elif dataset_type.lower() == "cifar10":
-        _, unsupervised_loader, unsupervised_sampler = make_cifar10(
-            transform=transform,
-            batch_size=batch_size,
-            collator=mask_collator,
-            pin_mem=pin_mem,
-            num_workers=num_workers,
-            world_size=world_size,
-            rank=rank,
-            root_path=root_path,
-            drop_last=True,
-            train=True,
-            download=download,  # pass through
-        )
-    else:
-        _, unsupervised_loader, unsupervised_sampler = make_imagefolder(
-            transform=transform,
-            batch_size=batch_size,
-            collator=mask_collator,
-            pin_mem=pin_mem,
-            num_workers=num_workers,
-            world_size=world_size,
-            rank=rank,
-            root_path=root_path,
-            image_folder=image_folder,
-            drop_last=True,
-            val_split=val_split,
-        )
-    # Held-out loader for early stopping. Built with the same mask collator, so
-    # the validation loss is the exact objective being trained, just on data the
-    # encoder never sees.
     early_stopping = args["optimization"].get("early_stopping", False)
-    val_loader = None
-    if early_stopping:
-        if dataset_type.lower() == "cifar10":
-            _, val_loader, _ = make_cifar10(
-                transform=transform,
-                batch_size=batch_size,
-                collator=mask_collator,
-                pin_mem=pin_mem,
-                num_workers=num_workers,
-                world_size=world_size,
-                rank=rank,
-                root_path=root_path,
-                drop_last=True,
-                train=False,
-                download=download,
-            )
-        else:
-            if not val_split:
-                raise ValueError(
-                    "optimization.early_stopping needs data.val_split > 0 so "
-                    "there is held-out data to measure; pass e.g. "
-                    "data.val_split=0.05"
-                )
-            _, val_loader, _ = make_imagefolder(
-                transform=transform,
-                batch_size=batch_size,
-                collator=mask_collator,
-                pin_mem=pin_mem,
-                num_workers=num_workers,
-                world_size=world_size,
-                rank=rank,
-                root_path=root_path,
-                image_folder=image_folder,
-                drop_last=True,
-                val_split=val_split,
-                split="val",
-            )
+    unsupervised_loader, unsupervised_sampler, val_loader = make_jepa_loaders(
+        args,
+        transform=transform,
+        mask_collator=mask_collator,
+        world_size=world_size,
+        rank=rank,
+        with_val=early_stopping,
+    )
 
     ipe = len(unsupervised_loader)
 
@@ -685,7 +713,7 @@ def main_from_cli(argv: list[str] | None = None) -> Any:
         sweep_id = wandb.sweep(
             logging_cfg.get("sweep_config", {}),
             project=logging_cfg.get("wandb_project", "simulusion"),
-            entity=logging_cfg.get("wandb_entity", ""),
+            entity=logging_cfg.get("wandb_entity") or None,
         )
         wandb.agent(sweep_id, function=sweep_train)
     else:

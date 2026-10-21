@@ -6,7 +6,7 @@ This script trains a complete World Model pipeline consisting of:
 3. Controller - Linear controller trained with CMA-ES
 
 Usage:
-    python train_world_model.py --env CarRacing-v2 --data_dir ./data --logdir ./results
+    python train_world_model.py --env CarRacing-v3 --data_dir ./data --logdir ./results
     python train_world_model.py --env BipedalWalker-v3 --action_size 4  # if env loading fails
 
 The script will:
@@ -18,7 +18,7 @@ The script will:
 
 import os
 import argparse
-from typing import Any
+from typing import Any, Optional, Sequence
 import numpy as np
 import multiprocessing as mp
 from glob import glob
@@ -26,7 +26,6 @@ from tqdm import tqdm
 
 import uuid
 
-import gymnasium as gym
 import torch
 from simulusion.utils.device import default_device_name
 
@@ -38,10 +37,7 @@ from simulusion.configs.wm_config import (
 from simulusion.training.train_convvae import train_convae
 from simulusion.training.train_mdn_rnn import train_mdn_rnn
 from simulusion.training.train_controller import train_controller
-from simulusion.envs.gym_env import GymImageEnv
 from simulusion.models.controller import Controller
-from simulusion.models.mdrnn import MDRNN, MDRNNCell
-from simulusion.vision.VAE.ConvVAE import ConvVAE
 
 
 def generate_rollouts(
@@ -67,17 +63,23 @@ def generate_rollouts(
         print(f"Found {existing} existing rollouts, skipping generation.")
         return
 
-    print(f"Generating {num_rollouts} rollouts with {num_workers} workers...")
+    missing = num_rollouts - existing
+    num_workers = max(1, min(num_workers, missing))
+    print(f"Generating {missing} rollouts with {num_workers} workers...")
 
     try:
-        rollouts_per_worker = num_rollouts // num_workers
+        # Spread the remainder too, so exactly `missing` rollouts are attempted.
+        share, extra = divmod(missing, num_workers)
         args = [
-            (data_dir, env_name, seq_len, rollouts_per_worker)
-            for _ in range(num_workers)
+            (data_dir, env_name, seq_len, share + (1 if i < extra else 0))
+            for i in range(num_workers)
         ]
 
-        with mp.Pool(num_workers) as pool:
-            list(tqdm(pool.imap(_generate_worker, args), total=num_workers))
+        if num_workers == 1:
+            _generate_worker(args[0])
+        else:
+            with mp.Pool(num_workers) as pool:
+                list(tqdm(pool.imap(_generate_worker, args), total=num_workers))
 
         print(f"Generated rollouts in {data_dir}")
 
@@ -88,35 +90,36 @@ def generate_rollouts(
 
 
 def _generate_worker(args: tuple) -> None:
-    """Worker function for parallel rollout generation."""
-    data_dir, env_name, seq_len, num_rollouts = args
+    """Worker function for parallel rollout generation.
 
-    try:
-        env = gym.make(env_name, continuous=True)
-    except Exception:
-        env = gym.make(env_name)
+    Rollouts are recorded through the environment the controller later acts
+    in (:func:`~simulusion.training.train_controller.make_controller_env`):
+    64x64 RGB frames, rendered for environments whose observations are
+    vectors, and actions as the controller emits them (for a discrete action
+    space, +1 for the action taken and -1 for the others).
+    """
+    from simulusion.training.train_controller import make_controller_env
+
+    data_dir, env_name, seq_len, num_rollouts = args
+    env = make_controller_env(env_name)
 
     for i in range(num_rollouts):
         try:
-            obs, _ = env.reset()
-            observations = [obs]
+            obs = env.reset()
+            observations = []
             actions = []
             rewards = []
             terminals = []
 
             for _ in range(seq_len):
-                action = env.action_space.sample()
-                actions.append(action)
-
-                obs, reward, terminated, truncated, _ = env.step(action)
-                observations.append(obs)
+                observations.append(obs["image"].transpose(1, 2, 0))
+                obs, reward, done, info = env.step(env.action_space.sample())
+                actions.append(info["action"])
                 rewards.append(reward)
-                terminals.append(terminated)
-
-                if terminated or truncated:
+                terminals.append(info.get("terminated", done))
+                if done:
                     break
 
-            observations = observations[:-1]
             if len(observations) < 10:
                 continue
 
@@ -133,6 +136,21 @@ def _generate_worker(args: tuple) -> None:
             continue
 
     env.close()
+
+
+def env_action_size(env_name: str) -> int:
+    """The action size the models see in ``env_name``.
+
+    The size of a continuous action, or the number of choices of a discrete
+    one (the controller emits a score per choice).
+    """
+    from simulusion.training.train_controller import make_controller_env
+
+    env = make_controller_env(env_name)
+    try:
+        return int(env.action_space.shape[0])
+    finally:
+        env.close()
 
 
 def run_training_pipeline(args: Any, action_size: int) -> None:
@@ -222,11 +240,33 @@ def run_training_pipeline(args: Any, action_size: int) -> None:
 
 
 def test_trained_model(
-    logdir: str, env_name: str, action_size: int, num_episodes: int = 5
-) -> None:
-    """Test the trained world model with controller in the environment."""
+    logdir: str,
+    env_name: str,
+    action_size: Optional[int] = None,
+    num_episodes: int = 5,
+    *,
+    time_limit: int = 1000,
+    env: Any = None,
+) -> list[float]:
+    """Run the trained V + M + C in the environment; the episode returns.
 
+    Reads ``<logdir>/{vae,mdrnn,ctrl}/best.tar``. The models' sizes come
+    from the checkpoints, so ``action_size`` is only checked against them.
+    Returns an empty list (after saying which) when a checkpoint is missing.
+
+    Args:
+        logdir: The pipeline's ``--logdir``.
+        env_name: The environment to act in.
+        action_size: The action size the models must have, if given.
+        num_episodes: Episodes to run.
+        time_limit: Steps per episode at most.
+        env: An environment to use instead of making ``env_name`` (it is
+            closed afterwards).
+    """
+    from simulusion.training.tasks.world_models import controller_episode
+    from simulusion.training.train_controller import make_controller_env
     from simulusion.utils.device import get_default_device
+    from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
 
     device = get_default_device()
     if device.type == "cpu":
@@ -239,83 +279,38 @@ def test_trained_model(
     for f in [vae_file, rnn_file, ctrl_file]:
         if not os.path.exists(f):
             print(f"Missing: {f}")
-            return
+            return []
 
     print("\nLoading trained models...")
-
-    vae_state = torch.load(vae_file, map_location=device, weights_only=True)
-    vae = ConvVAE(img_channels=3, latent_size=32).to(device)
-    vae.load_state_dict(vae_state["state_dict"])
-    vae.eval()
-
-    rnn_state = torch.load(rnn_file, map_location=device, weights_only=True)
-    batch_rnn = MDRNN(latents=32, actions=action_size, hiddens=256, gaussians=5)
-    batch_rnn.load_state_dict(rnn_state["state_dict"])
-
-    cell_rnn = MDRNNCell(latents=32, actions=action_size, hiddens=256, gaussians=5).to(
-        device
-    )
-    cell_rnn.rnn.weight_ih.data.copy_(batch_rnn.rnn.weight_ih_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.weight_hh.data.copy_(batch_rnn.rnn.weight_hh_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.bias_ih.data.copy_(batch_rnn.rnn.bias_ih_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.bias_hh.data.copy_(batch_rnn.rnn.bias_hh_l0.data)  # type: ignore[arg-type]
-    cell_rnn.gmm_linear.load_state_dict(batch_rnn.gmm_linear.state_dict())
-    cell_rnn.eval()
-    del batch_rnn
-
+    wm = MDRNNWorldModel.from_checkpoints(vae_file, rnn_file, device=device)
+    cell: Any = getattr(wm, "cell")
+    if action_size is not None and action_size != cell.actions:
+        raise ValueError(
+            f"The trained models act with {cell.actions} actions, not {action_size}."
+        )
+    ctrl = Controller(cell.latents, cell.hiddens, cell.actions).to(device)
     ctrl_state = torch.load(ctrl_file, map_location=device, weights_only=True)
-    ctrl = Controller(latent_size=32, hidden_size=256, action_size=action_size)
     ctrl.load_state_dict(ctrl_state["state_dict"])
     ctrl.eval()
 
-    try:
-        env: Any = gym.make(env_name, continuous=True)
-    except Exception:
-        env = gym.make(env_name)
-    env = GymImageEnv(env=env, size=(64, 64))
+    if env is None:
+        env = make_controller_env(env_name)
 
     print(f"\nRunning {num_episodes} episodes...")
-
+    returns: list[float] = []
     try:
         for episode in range(num_episodes):
-            obs, _ = env.reset()
-            total_reward = 0.0
-            h, c = cell_rnn.get_init_hidden(1)
-            h, c = h.to(device), c.to(device)
-
-            for step in range(1000):
-                with torch.no_grad():
-                    obs_tensor = (
-                        torch.tensor(obs["image"]).float().unsqueeze(0).to(device)
-                    )
-                    obs_tensor = torch.nn.functional.interpolate(
-                        obs_tensor, size=64, mode="bilinear", align_corners=True
-                    )
-                    obs_tensor = obs_tensor / 255.0
-
-                    mu, logsigma = vae.encoder(obs_tensor)
-                    z = mu + logsigma.exp() * torch.randn_like(logsigma)
-
-                    action = ctrl(h, z).cpu().numpy().flatten()
-
-                    action_t = torch.tensor(action).float().to(device)
-                    _, _, _, _, _, (h, c) = cell_rnn(action_t, z, (h, c))
-
-                    next_obs, reward, terminated, truncated, _ = env.step(action)
-                    total_reward += float(reward)
-                    obs = next_obs
-
-                    if terminated or truncated:
-                        break
-
+            total_reward = controller_episode(wm, ctrl, env, time_limit=time_limit)
+            returns.append(total_reward)
             print(f"Episode {episode + 1}: Total Reward = {total_reward:.2f}")
     except KeyboardInterrupt:
         print("\nTesting interrupted by user (Ctrl+C)")
     finally:
         env.close()
+    return returns
 
 
-def main() -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
     parser = argparse.ArgumentParser(
         description="Train World Model on any Gym environment"
     )
@@ -324,7 +319,7 @@ def main() -> None:
         "--env",
         type=str,
         required=True,
-        help="Gym environment name (e.g., CarRacing-v2, Pendulum-v1)",
+        help="Gym environment name (e.g., CarRacing-v3, Pendulum-v1)",
     )
 
     parser.add_argument(
@@ -443,7 +438,7 @@ def main() -> None:
         help="Disable mixed precision training",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Set default directories based on environment
     if args.data_dir is None:
@@ -456,16 +451,7 @@ def main() -> None:
         action_size = args.action_size
     else:
         try:
-            try:
-                temp_env = gym.make(args.env, continuous=True)
-            except Exception:
-                temp_env = gym.make(args.env)
-
-            if hasattr(temp_env.action_space, "shape"):
-                action_size = (temp_env.action_space.shape or (0,))[0]
-            else:
-                action_size = getattr(temp_env.action_space, "n", 0)
-            temp_env.close()
+            action_size = env_action_size(args.env)
         except Exception as e:
             print(
                 f"Failed to load environment '{args.env}' to determine action size: {e}"

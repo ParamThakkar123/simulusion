@@ -196,7 +196,7 @@ dev = [
     "ruff==0.16.8",
 ]
 all = [
-    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,dev,docs]",
+    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,lerobot,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -214,6 +214,12 @@ docs = [
     "mistune>=3.3.0",
     "nbconvert>=7.17.1",
 ]
+# Reading LeRobot datasets (simulusion.data.LeRobotEpisodes): Parquet tables
+# and AV1/H.264 camera streams.
+lerobot = [
+    "av>=12.0.0",
+    "pyarrow>=17.0.0",
+]
 
 [tool.setuptools.packages.find]
 # `tools/` is repository tooling (stub generation, docs checks). Shipping it
@@ -222,7 +228,13 @@ include = ["simulusion", "simulusion.*"]
 
 [tool.setuptools.package-data]
 # PEP 561: ship the marker and the explicit stub for the lazy public surface.
-simulusion = ["py.typed", "__init__.pyi"]
+# The run configs `simulusion train --config <name>` resolves by name.
+simulusion = [
+    "py.typed",
+    "__init__.pyi",
+    "configs/runs/*.yaml",
+    "configs/experiments/*.yaml",
+]
 
 # Simulusion resolves from PyPI, whose torch wheels work on every supported
 # platform. Making a CUDA-specific PyTorch index the default (as this used to)

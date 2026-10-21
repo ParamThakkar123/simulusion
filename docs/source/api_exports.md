@@ -217,6 +217,38 @@ See {doc}`deployment_guide`.
 
 See {doc}`world_model_protocol`.
 
+## Training
+
+See {doc}`trainer_guide`.
+
+| Name | Source | Description |
+|---|---|---|
+| `Trainer` | `simulusion.training.trainer` | Runs any training task to its budget on one device: precision, logging, evaluation, early stopping, checkpoints and resume, world model export. |
+| `TrainerConfig` | `simulusion.training.trainer` | Settings shared by every run (the `trainer:` section of a run config). |
+| `TrainResult` | `simulusion.training.trainer` | What `Trainer.fit` returns: run directory, progress, final metrics, checkpoint and export paths. |
+| `TrainingTask` | `simulusion.training.task` | Base class of a family's training (networks, optimizers, data, one step). |
+| `register_task` / `list_tasks` | `simulusion.training.task` | Register a task under a name / list the registered ones. |
+| `run_training(config, overrides)` | `simulusion.training.run` | Train from a YAML run config (or mapping) plus `key=value` overrides. |
+| `MixedPrecision` | `simulusion.training.precision` | Autocast dtype and loss scaling for one precision setting. |
+| `GradientUpdate` | `simulusion.training.precision` | One optimizer's step: backward, unscale, clip, step, with accumulation and gradient all-reduce. |
+
+## Data
+
+See {doc}`episodes_guide`.
+
+| Name | Source | Description |
+|---|---|---|
+| `EpisodeFolder` | `simulusion.data` | A folder of episodes (`.npz`, videos, `.npy`), the dataset every task reads. |
+| `EpisodeWriter` | `simulusion.data` | Append episodes to a folder and record its `meta.json`. |
+| `LeRobotEpisodes` | `simulusion.data` | Local LeRobot datasets (v2.x and v3.0) as episodes. |
+
+## Agents
+
+| Name | Source | Description |
+|---|---|---|
+| `CEMPlanner` | `simulusion.agents` | Cross-entropy-method planning over any world model's predicted returns. |
+| `PlanningAgent` | `simulusion.agents` | Acts in a real environment by planning in a world model each step. |
+
 | Name | Source | Description |
 |---|---|---|
 | `as_world_model(model)` | `simulusion.world_model` | Wrap a trained Dreamer, PlaNet, IRIS, DIAMOND, Genie or (ConvVAE, MDN-RNN) model in the common protocol. |

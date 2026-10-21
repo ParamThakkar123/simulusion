@@ -101,7 +101,7 @@ from simulusion.training.train_world_model import generate_rollouts
 
 generate_rollouts(
     data_dir="./data/carracing",
-    env_name="CarRacing-v2",
+    env_name="CarRacing-v3",
     num_rollouts=1000,
     seq_len=1000,
     num_workers=8,
@@ -351,42 +351,40 @@ from stochastic environment dynamics and the VAE's random sampling (`z = μ +
 
 ## Inference Pipeline
 
-The complete inference loop (from `test_trained_model()` in
-`train_world_model.py`):
+The complete inference loop. `test_trained_model()` in
+`train_world_model.py` runs it through `controller_episode()`
+(`simulusion.training.tasks.world_models`), the same loop the controller is
+trained with:
 
 ```python
-# 1. Load models
-vae = ConvVAE(img_channels=3, latent_size=32)
-vae.load_state_dict(torch.load("vae/best.tar")["state_dict"])
+import numpy as np
+import torch
 
-cell_rnn = MDRNNCell(latents=32, actions=3, hiddens=256, gaussians=5)
-# Transfer weights from trained MDRNN (see weight transfer section above)
+from simulusion.models.controller import Controller
+from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
 
-ctrl = Controller(latent_size=32, hidden_size=256, action_size=3)
+# 1. Load V + M (sizes are read from the checkpoints), then C
+wm = MDRNNWorldModel.from_checkpoints("vae/best.tar", "mdrnn/best.tar")
+cell = wm.cell
+ctrl = Controller(cell.latents, cell.hiddens, cell.actions)
 ctrl.load_state_dict(torch.load("ctrl/best.tar")["state_dict"])
 
-# 2. Reset environment and hidden state
-obs, _ = env.reset()
-h, c = cell_rnn.get_init_hidden(1)  # fresh hidden state per episode
+# 2. Encode the first frame: z from V, a fresh (h, c) for M
+obs = env.reset()  # GymImageEnv: {"image": (3, 64, 64) uint8}
+state = wm.encode(torch.as_tensor(obs["image"]).unsqueeze(0))
 
 # 3. Rollout loop
-for step in range(1000):
-    # Encode observation → latent
-    mu, logsigma = vae.encoder(preprocess(obs))
-    z = mu + logsigma.exp() * torch.randn_like(logsigma)
-
-    # Controller computes action from (hidden, latent)
-    action = ctrl(h, z).cpu().numpy().flatten()
-
-    # Step environment
-    next_obs, reward, done, _ = env.step(action)
-
-    # Update RNN hidden state with (action, latent)
-    _, _, _, _, _, (h, c) = cell_rnn(tensor(action), z, (h, c))
-
-    obs = next_obs
-    if done:
-        break
+with torch.no_grad():
+    for step in range(1000):
+        # C acts on [z, h]
+        action = ctrl(torch.cat([state["z"], state["h"]], dim=-1))
+        next_obs, reward, done, _ = env.step(action[0].numpy())
+        if done:
+            break
+        # M advances h with the action taken; V encodes the new frame
+        h_next = wm.step(state, action).state
+        z = wm.encode(torch.as_tensor(next_obs["image"]).unsqueeze(0))["z"]
+        state = {"z": z, "h": h_next["h"], "c": h_next["c"]}
 ```
 
 ### Critical: hidden state management
@@ -396,14 +394,14 @@ The RNN hidden state `(h, c)` **must** be thread-tight through the loop:
 ```python
 # ✅ CORRECT — h, c updated every step
 for _ in range(steps):
-    action = ctrl(h, z)
+    action = ctrl(torch.cat([z, h], dim=-1))
     _, _, _, _, _, (h, c) = cell_rnn(action, z, (h, c))
 ```
 
 ```python
 # ❌ WRONG — h, c are never updated, model resets every step
 for _ in range(steps):
-    action = ctrl(h, z)
+    action = ctrl(torch.cat([z, h], dim=-1))
     cell_rnn(action, z, (h, c))  # return value discarded!
 ```
 
@@ -476,7 +474,7 @@ Fields marked with ✓ have defaults, fields marked with · are required.
 | `latent_size` | `int` | `32` | Latent space dimensionality |
 | `hidden_size` | `int` | `200` | RNN hidden dimensionality |
 | `action_size` | `int` | `3` | Action space dimensionality |
-| `env_name` | `str` | `"CarRacing-v2"` | Environment for evaluation |
+| `env_name` | `str` | `"CarRacing-v3"` | Environment for evaluation |
 | `logdir` | `str` | `"results"` | Checkpoint directory |
 | `n_samples` | `int` | `4` | Rollout samples per candidate |
 | `pop_size` | `int` | `10` | CMA-ES population size |
@@ -615,22 +613,22 @@ complete CLI:
 
 ```bash
 # Generate data + train all 3 stages
-python -m simulusion.training.train_world_model --env CarRacing-v2
+python -m simulusion.training.train_world_model --env CarRacing-v3
 
 # Train only specific stages
-python -m simulusion.training.train_world_model --env CarRacing-v2 --stage vae
-python -m simulusion.training.train_world_model --env CarRacing-v2 --stage rnn
-python -m simulusion.training.train_world_model --env CarRacing-v2 --stage ctrl
+python -m simulusion.training.train_world_model --env CarRacing-v3 --stage vae
+python -m simulusion.training.train_world_model --env CarRacing-v3 --stage rnn
+python -m simulusion.training.train_world_model --env CarRacing-v3 --stage ctrl
 
 # Generate rollouts only
-python -m simulusion.training.train_world_model --env CarRacing-v2 --generate_only
+python -m simulusion.training.train_world_model --env CarRacing-v3 --generate_only
 
 # Test a trained model
-python -m simulusion.training.train_world_model --env CarRacing-v2 --test
+python -m simulusion.training.train_world_model --env CarRacing-v3 --test
 
 # With custom directories
 python -m simulusion.training.train_world_model \
-    --env CarRacing-v2 \
+    --env CarRacing-v3 \
     --data_dir ./data/carracing \
     --logdir ./results/carracing \
     --latent_size 32 \

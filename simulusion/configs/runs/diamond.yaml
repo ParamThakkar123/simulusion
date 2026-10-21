@@ -1,0 +1,15 @@
+# DIAMOND on Atari 100k (Breakout by default). Progress is epochs of
+# collection + diffusion, reward and actor-critic updates (Algorithm 1).
+#   simulusion train --config diamond model.game=Pong-v5
+task: diamond
+trainer:
+  max_steps: 1000
+  precision: auto
+  log_every: 10
+  eval_every: 50
+  checkpoint_every: 100
+  keep_checkpoints: 1
+eval_episodes: 5
+model:                     # DiamondConfig; device and seed come from the trainer
+  game: Breakout-v5
+  preset: null

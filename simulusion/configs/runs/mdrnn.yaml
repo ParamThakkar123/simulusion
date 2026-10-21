@@ -1,0 +1,18 @@
+# World Models, stage 2 (M): an MDN-RNN on the VAE's latents of the same
+# episodes. Exports the V + M world model.
+#   simulusion train --config mdrnn data.path=data/car vae=runs/<vae run>/model/vae.tar
+task: mdrnn
+trainer:
+  max_steps: 20000
+  log_every: 100
+  eval_every: 1000
+model:
+  hidden_size: 256
+  gmm_components: 5
+  seq_len: 32
+  learning_rate: 1.0e-3
+vae: null                  # required
+data:
+  path: null               # required
+  batch_size: 16
+  val_fraction: 0.05

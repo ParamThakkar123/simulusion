@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- `simulusion train MODEL` runs registered tasks on the shared Trainer.
+  Commands written for the older per-family entrypoints (a `--config` without
+  `task:`, or flat overrides such as `total_epochs=100`) still reach them, as
+  does `--legacy`.
+- **The per-family training entrypoints run on the shared Trainer.**
+  `DreamerAgent.train()`, `IRISTrainer.train()`, `DiamondAgent.train()`,
+  `Planet.train()` / `train_planet.main`, `GenieTrainer.train()`,
+  `DiT.fit()` / `train_dit`, `JEPAAgent.train()`, `train_convae`,
+  `train_mdn_rnn` and `train_controller` keep their signatures, return values
+  and the files they always wrote, through one helper
+  (`simulusion.training.legacy.fit_legacy`). Their own loops are gone. They
+  now also write resumable checkpoints and `run.json` / `run_config.yaml` /
+  `train_metrics.jsonl` into the same folder. Small differences (checkpoint
+  step names, IRIS/DIAMOND not evaluating after epoch 0, MDN-RNN latents
+  sampled per batch, the controller scored in one process) are listed in the
+  trainer guide. W&B sweeps of `JEPAAgent.train` still use `train_jepa`.
+- The Trainer keeps the best evaluation's checkpoint (`best_metric`,
+  `best_mode`), lets a task end training early (`TrainingTask.should_stop`),
+  and writes the last checkpoint after the final evaluation.
+- Episode folders read World Models rollout files (per-step `observations` /
+  `actions` / `rewards` / `terminals`) directly.
+
+### Fixed
+- `ReduceLROnPlateau.state_dict()` included the live optimizer, so any
+  checkpoint holding it (`train_convae`'s and `train_mdn_rnn`'s `best.tar`)
+  could not be loaded with `weights_only=True`, as the repo loads everything.
+- The World Models controller's real-environment rollouts unpacked
+  `GymImageEnv.reset()` as a Gymnasium `(obs, info)` pair; it returns the
+  observation alone, so every rollout failed.
+- A resumed DIAMOND run kept a replay buffer only as large as it was at the
+  checkpoint: `save_checkpoint` recorded the trimmed length as the capacity.
+  Its replay and observation side files are now found next to the
+  checkpoint even after the directory moves.
+- The World Models CMA-ES controller search minimised the episode return
+  instead of maximising it, and its rollouts called `Controller` with two
+  arguments where `forward` takes one, so every rollout raised.
+- `GenieWorldModel.encode` without actions failed for Genie's default mean-
+  pooled latent actions, which infer one action per clip.
+- `train_world_model`'s rollouts saved each environment's raw observations,
+  so for vector-observation environments (Pendulum, BipedalWalker) the VAE
+  trained on three-number "frames". Rollouts are now recorded as the 64x64
+  frames the controller later acts on, rendered where needed, with actions
+  as the controller emits them. The controller's environment is made with
+  `render_mode="rgb_array"`, so such environments are no longer seen as grey
+  bands. `generate_rollouts` generates only the missing rollouts, no longer
+  drops the remainder when splitting work across workers, and runs in-process
+  with one worker. The action size of a discrete environment was read as 0.
+- `train_world_model.test_trained_model` failed on its first step (it
+  unpacked `GymImageEnv.reset()` as a pair and called `Controller` with two
+  arguments) and assumed the default model sizes. It now plays the trained
+  models through the controller's own rollout code, with sizes read from
+  the checkpoints, and returns the episode returns.
+  `train_world_model_carracing` was an older copy of the same script; it is
+  now `train_world_model` with `--env CarRacing-v3` by default.
+- `CarRacing-v2`, the default environment of `WMControllerConfig` and the
+  name in the docs, does not exist in the supported Gymnasium versions;
+  it is `CarRacing-v3`.
+- The Atari 100k runner reported the mean of the two quartiles as the IQM,
+  always reported a standard deviation of 0 (it read a key IRIS's evaluation
+  does not return), trained every game into one folder so their runs wrote
+  over each other, and dropped failed games silently. The IQM is now the
+  interquartile mean, each game trains in its own folder, failures are listed
+  under `errors` in the results file, and unknown games raise instead of
+  scoring against a made-up baseline. `main` takes `games=[...]`,
+  `save_dir` and `eval_episodes`.
+- The PlaNet encoder `view`ed a convolution output that can be
+  non-contiguous, so `train_rssm` failed on the replay buffer's batches.
+  `train_rssm.main` takes its sizes and paths as flags instead of writing to
+  the working directory, and no longer stops in `pdb`.
+
 ### Renamed
 - **Synora is now Simulusion.** The distribution is `simulusion` on PyPI
   (`pip install simulusion`, extras as `simulusion[gym]`), the package is
@@ -16,6 +87,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **One trainer for every family** (`simulusion.training.Trainer`). Any
+  training task runs to a step budget on one device (CPU, a GPU or MPS) with
+  one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient
+  accumulation, logging to `metrics.jsonl`, periodic evaluation, early
+  stopping, atomic checkpoints with resume (bit-exact; replay buffers
+  included for online agents) and export of the trained world model.
+  Training runs in one process; there is no data-parallel or multi-GPU
+  training.
+  Tasks: `dreamer`, `dreamer-v1`, `dreamer-v2`, `planet`, `iris`, `diamond`
+  (agents, collecting online), `dreamer-wm`, `iris-wm`, `diamond-wm`, `genie`,
+  `vae`, `mdrnn` (world models from data), `controller` (World Models' C by
+  CMA-ES, in the real environment or inside the dream), `dit` and `jepa`.
+  Write your own with `TrainingTask` and `register_task`. See the new "One
+  Trainer for Every Model" guide.
+- **Declarative run configs.** One YAML names a task and fills `trainer:` and
+  the task's sections; `key=value` overrides reach any nested field and
+  unknown keys fail with their dotted path. Every run writes its resolved
+  `config.yaml` (pass it back with `--config` to repeat the run) and
+  `run.json` (git commit and dirty flag, package versions, GPUs, command
+  line). Shipped configs for every task are in `simulusion/configs/runs/`.
+  `simulusion train` runs them; `simulusion.run_training()` from Python.
+- **World models train without their agent.** The `-wm` tasks fit Dreamer's,
+  IRIS's or DIAMOND's world model to recorded episodes with no environment
+  and no policy, and `simulusion.agents.PlanningAgent` / `CEMPlanner` act
+  through any world model with a reward head by planning in it.
+- **One episode format for video, RL and robot data** (`simulusion.data`): an
+  `.npz` per episode with frames, optional actions / rewards / episode ends
+  between them, extra cameras, proprioception and a language instruction;
+  `EpisodeFolder` / `EpisodeWriter`, and `SequenceDataset` windows that never
+  cross an episode boundary. A reader for local LeRobot datasets (v2.x and
+  v3.0; `pip install simulusion[lerobot]`), a converter for RLDS episodes,
+  `simulusion datasets import lerobot` and `simulusion datasets info`.
+- `MixedPrecision` and `GradientUpdate` replace the hand-written GradScaler
+  blocks in Dreamer, IRIS, DIAMOND, Genie, PlaNet, ConvVAE and MDN-RNN.
+  `use_amp` still selects what it did, so results are unchanged.
 - **One `WorldModel` protocol for every family** (`simulusion.world_model`):
   `encode` / `step` / `rollout` / `decode` / `save`, with the same frame,
   action and state conventions everywhere. `as_world_model(model)` wraps a
