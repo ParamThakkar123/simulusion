@@ -4,8 +4,6 @@ import pdb
 import torch
 import numpy as np
 import torch.nn.functional as F
-from tqdm import trange
-from functools import partial
 import os
 
 from torch.distributions import Normal
@@ -14,17 +12,8 @@ from torch.distributions.kl import kl_divergence
 from simulusion.utils.utils import (
     preprocess_img,
     bottle,
-    TensorBoardMetrics,
-    save_video,
-    flatten_dict,
-    postprocess_img,
-    normalize_frames_for_saving,
 )
-from simulusion.memory.planet_memory import Memory, Episode
 from simulusion.training.precision import GradientUpdate, MixedPrecision
-from simulusion.models.rssm import RecurrentStateSpaceModel
-from simulusion.controller.rssm_policy import RSSMPolicy
-from simulusion.controller.rollout_generator import RolloutGenerator
 
 
 def train(
@@ -179,73 +168,39 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Example PlaNet/RSSM training script with rollout collection and evaluation.
+    """PlaNet/RSSM training from the command line.
 
-    Builds environment/model/policy objects, iteratively trains on replayed
-    episodes, and periodically saves videos and checkpoints.
+    Builds a :class:`~simulusion.models.planet.Planet` on ``--env`` and runs
+    :meth:`Planet.train` (so the shared Trainer): ``--iters`` gradient steps
+    per epoch, one exploration and one evaluation episode per epoch, videos
+    and ``ckpt_<epoch>.pth`` checkpoints in ``--outdir``. The optimizer is the
+    one this script always used: Adam at 1e-3, eps 1e-4, no weight decay,
+    no learning-rate schedule.
     """
     args = build_parser().parse_args(argv)
 
-    from simulusion.utils.utils import TorchImageEnvWrapper
-
-    env = TorchImageEnvWrapper(args.env, bit_depth=args.bit_depth)
+    from simulusion.models.planet import Planet
     from simulusion.utils.device import resolve_device
 
     device = resolve_device(args.device or None)
     if device.type == "cpu":
         print("WARNING: no GPU (CUDA or MPS) available, using CPU")
-    rssm_model = RecurrentStateSpaceModel(env.action_size).to(device)
-    optimizer = torch.optim.Adam(rssm_model.parameters(), lr=1e-3, eps=1e-4)
-
-    policy = RSSMPolicy(
-        model=rssm_model,
-        planning_horizon=20,
-        num_candidates=1000,
-        num_iterations=10,
-        top_candidates=100,
+    planet = Planet(
+        args.env,
+        bit_depth=args.bit_depth,
         device=device,
-    )
-
-    rollout_gen = RolloutGenerator(
-        env,
-        device,
-        policy=policy,
-        episode_gen=lambda: Episode(partial(postprocess_img, depth=args.bit_depth)),
+        memory_size=100,
         max_episode_steps=args.max_episode_steps,
+        results_dir=args.outdir,
     )
-
-    mem = Memory(100)
-    mem.append(rollout_gen.rollout_n(1, random_policy=True))
-    res_dir = args.outdir
-    os.makedirs(res_dir, exist_ok=True)
-    summary = TensorBoardMetrics(f"{res_dir}/")
-
-    for i in trange(args.epochs, desc="Epoch", leave=False):
-        metrics: dict[str, Any] = {}
-        for _ in trange(args.iters, desc="Iter ", leave=False):
-            train_metrics = train(mem, rssm_model.train(), optimizer, device)
-            for k, v in flatten_dict(train_metrics).items():
-                if k not in metrics:
-                    metrics[k] = []
-                metrics[k].append(v)
-                metrics[f"{k}_mean"] = np.array(metrics[k]).mean()
-
-        summary.update(metrics)
-        mem.append([rollout_gen.rollout_once(explore=True)])
-        # rollout_eval returns (episode, frames, metrics, latents); unpacking
-        # three raised ValueError at the end of the first epoch, so this loop
-        # had never run to completion.
-        eval_episode, eval_frames, eval_metrics, _ = rollout_gen.rollout_eval()
-        mem.append([eval_episode])
-        # normalize frames to (T,H,W,3) float in [0,1] before saving
-        safe_frames = normalize_frames_for_saving(eval_frames)
-        save_video(safe_frames, res_dir, f"vid_{i + 1}")
-        summary.update(eval_metrics)
-
-        if args.checkpoint_interval > 0 and (i + 1) % args.checkpoint_interval == 0:
-            path = os.path.join(res_dir, f"ckpt_{i + 1}.pth")
-            torch.save(rssm_model.state_dict(), path)
-            print(f"Wrote {path}")
+    planet.optimizer = torch.optim.Adam(planet.rssm.parameters(), lr=1e-3, eps=1e-4)
+    planet.train(
+        epochs=args.epochs,
+        steps_per_epoch=args.iters,
+        save_every=args.checkpoint_interval,
+        results_dir=args.outdir,
+        scheduler_type="none",
+    )
 
     if os.getenv("TRAIN_RSSM_DEBUG", "0") == "1":
         pdb.set_trace()

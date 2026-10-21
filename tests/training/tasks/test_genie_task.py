@@ -14,6 +14,11 @@ from simulusion.world_model import load_world_model
 
 from .conftest import write_episodes
 
+# End-to-end training runs: each builds a model, trains it for a few steps,
+# checkpoints, resumes and exports. On a CPU runner that takes longer than the
+# suite-wide --timeout=30 allows unit tests.
+pytestmark = pytest.mark.timeout(180)
+
 TINY = [
     "model.num_frames=4",
     "model.image_size=16",

@@ -54,6 +54,7 @@ from simulusion.utils.train_utils import EarlyStopping
 logger = logging.getLogger("simulusion.trainer")
 
 CHECKPOINT_DIR = "checkpoints"
+BEST_CHECKPOINT = "best"
 _COMPLETE = "checkpoint.json"
 
 
@@ -88,6 +89,10 @@ class TrainerConfig(SerializableConfigMixin):
             newest complete checkpoint of ``out_dir/run_name``.
         export_world_model: Write the task's world model to
             ``<run>/world_model`` when training ends.
+        best_metric: Evaluation metric whose best value so far is kept as a
+            checkpoint in ``checkpoints/best`` (rewritten on every
+            improvement, never pruned); ``None`` keeps none.
+        best_mode: ``"max"`` or ``"min"``: which direction is better.
         early_stopping_metric: Evaluation metric that stops the run once it
             stops improving; ``None`` disables early stopping.
         early_stopping_mode: ``"min"`` or ``"max"``.
@@ -111,6 +116,8 @@ class TrainerConfig(SerializableConfigMixin):
     run_name: Optional[str] = None
     resume: Optional[str] = None
     export_world_model: bool = True
+    best_metric: Optional[str] = None
+    best_mode: str = "max"
     early_stopping_metric: Optional[str] = None
     early_stopping_mode: str = "min"
     patience: int = 10
@@ -129,6 +136,8 @@ class TrainResult:
     checkpoint: Optional[Path] = None
     world_model_path: Optional[Path] = None
     model_path: Optional[Path] = None
+    best_checkpoint: Optional[Path] = None
+    best_value: Optional[float] = None
     stopped_early: bool = False
 
 
@@ -140,6 +149,11 @@ class Trainer:
         run_config: The full run config (all sections) to write as
             ``config.yaml``. :func:`simulusion.training.run.run` passes it;
             without it only the trainer and task sections are written.
+        config_filename: Name of the resolved run config in the run directory.
+        metrics_filename: Name of the metrics log in the run directory. The
+            older entrypoints (:mod:`simulusion.training.legacy`) rename both
+            so they never overwrite a family's own ``config.yaml`` or
+            ``metrics.jsonl`` in the folder it has always written to.
     """
 
     def __init__(
@@ -147,6 +161,8 @@ class Trainer:
         config: Optional[TrainerConfig] = None,
         *,
         run_config: Optional[Mapping[str, Any]] = None,
+        config_filename: str = "config.yaml",
+        metrics_filename: str = "metrics.jsonl",
     ) -> None:
         from accelerate import Accelerator
         from accelerate.utils import DistributedDataParallelKwargs
@@ -184,6 +200,8 @@ class Trainer:
         self.device: torch.device = self.accelerator.device
         self.precision = MixedPrecision(self.config.precision, self.device)
         self.run_config = dict(run_config) if run_config is not None else None
+        self.config_filename = config_filename
+        self.metrics_filename = metrics_filename
         self.iteration = 0
         self.run_dir: Path = Path(self.config.out_dir)
         self.task: Optional[TrainingTask] = None
@@ -337,6 +355,7 @@ class Trainer:
             self._metrics_logger = MetricsLogger(
                 str(self.run_dir),
                 enable_console=cfg.console,
+                jsonl_filename=self.metrics_filename,
                 run_name=self.run_dir.name,
             )
         self.accelerator.wait_for_everyone()
@@ -396,10 +415,19 @@ class Trainer:
                         stopped_early = True
                         break
 
-                if cfg.checkpoint_every and _crossed(
-                    before, progress, cfg.checkpoint_every
+                # Likewise the last step's checkpoint, written after the final
+                # evaluation so it records that evaluation's outcome.
+                if (
+                    cfg.checkpoint_every
+                    and progress < budget
+                    and _crossed(before, progress, cfg.checkpoint_every)
                 ):
                     last_checkpoint = self.save_checkpoint()
+
+                if task.should_stop():
+                    logger.info("The task finished early at %s.", self._progress_text())
+                    stopped_early = True
+                    break
         except KeyboardInterrupt:
             logger.warning("Interrupted; writing a checkpoint before exiting.")
             self.save_checkpoint()
@@ -410,6 +438,7 @@ class Trainer:
         final = self.reduce(task.final_evaluation())
         if final:
             self._log(final, progress, prefix="eval")
+            self._keep_best(final, required=False)
         if (
             last_checkpoint is None
             or self._checkpoint_progress(last_checkpoint) != progress
@@ -430,20 +459,28 @@ class Trainer:
             checkpoint=last_checkpoint,
             world_model_path=world_model_path,
             model_path=model_path,
+            best_checkpoint=self._best_checkpoint(),
+            best_value=self._best,
             stopped_early=stopped_early,
         )
 
     # ------------------------------------------------------- checkpointing
 
-    def save_checkpoint(self, *, final: bool = False) -> Path:
-        """Write a resumable checkpoint of the task and the loop; returns its dir."""
+    def save_checkpoint(
+        self, *, final: bool = False, name: Optional[str] = None
+    ) -> Path:
+        """Write a resumable checkpoint of the task and the loop; returns its dir.
+
+        ``name`` writes it to ``checkpoints/<name>`` instead of
+        ``checkpoints/step_<progress>``, outside the pruned periodic ones.
+        """
         task = self._require_task()
         progress = task.progress()
         root = self.run_dir / CHECKPOINT_DIR
-        target = root / f"step_{progress:08d}"
+        target = root / (name or f"step_{progress:08d}")
         self.accelerator.wait_for_everyone()
         if self.is_main_process:
-            staging = root / f".tmp_step_{progress:08d}"
+            staging = root / f".tmp_{target.name}"
             if staging.exists():
                 shutil.rmtree(staging)
             (staging / "task").mkdir(parents=True)
@@ -465,7 +502,7 @@ class Trainer:
             if target.exists():
                 shutil.rmtree(target)
             staging.rename(target)
-            if not final:
+            if not final and name is None:
                 self._checkpoints.append(target)
                 self._prune_checkpoints()
         self.accelerator.wait_for_everyone()
@@ -532,16 +569,11 @@ class Trainer:
         if not metrics:
             return False
         self._log(metrics, progress, prefix="eval")
+        self._keep_best(metrics)
         name = self.config.early_stopping_metric
         if self._stopper is None or not name:
             return False
-        if name not in metrics and name.startswith("eval/"):
-            name = name[len("eval/") :]  # the logged name, as seen in metrics.jsonl
-        if name not in metrics:
-            raise KeyError(
-                f"early_stopping_metric '{name}' is not among the evaluation "
-                f"metrics: {', '.join(sorted(metrics))}"
-            )
+        name = _metric_name(name, metrics)
         self._stopper.step(metrics[name])
         if self._stopper.stop:
             logger.info(
@@ -552,6 +584,34 @@ class Trainer:
             )
             return True
         return False
+
+    def _keep_best(
+        self, metrics: Mapping[str, float], *, required: bool = True
+    ) -> None:
+        name = self.config.best_metric
+        if not name:
+            return
+        if (
+            not required
+            and name not in metrics
+            and name.removeprefix("eval/") not in metrics
+        ):
+            return  # a final evaluation that does not report it
+        name = _metric_name(name, metrics)
+        value = float(metrics[name])
+        better = (
+            self._best is None
+            or (self.config.best_mode == "max" and value > self._best)
+            or (self.config.best_mode == "min" and value < self._best)
+        )
+        if better:
+            self._best = value
+            self.save_checkpoint(name=BEST_CHECKPOINT)
+            logger.info("New best %s=%.4g at %s", name, value, self._progress_text())
+
+    def _best_checkpoint(self) -> Optional[Path]:
+        path = self.run_dir / CHECKPOINT_DIR / BEST_CHECKPOINT
+        return path if (path / _COMPLETE).exists() else None
 
     def _export_world_model(self, task: TrainingTask) -> Optional[Path]:
         model = task.world_model()
@@ -592,7 +652,7 @@ class Trainer:
         from simulusion.training.run import dump_run_config, run_config_dict
 
         config = self.run_config or run_config_dict(task.name, self.config, task.config)
-        (self.run_dir / "config.yaml").write_text(
+        (self.run_dir / self.config_filename).write_text(
             dump_run_config(config), encoding="utf-8"
         )
         info = collect_provenance()
@@ -632,6 +692,18 @@ def latest_checkpoint(run_dir: str | Path) -> Optional[Path]:
         return None
     complete = [p for p in root.glob("step_*") if (p / _COMPLETE).exists()]
     return max(complete, key=lambda p: p.name) if complete else None
+
+
+def _metric_name(name: str, metrics: Mapping[str, float]) -> str:
+    """``name`` as a key of ``metrics``, accepting the logged ``eval/`` prefix."""
+    if name not in metrics and name.startswith("eval/"):
+        name = name[len("eval/") :]  # the logged name, as seen in metrics.jsonl
+    if name not in metrics:
+        raise KeyError(
+            f"Metric '{name}' is not among the evaluation metrics: "
+            f"{', '.join(sorted(metrics))}"
+        )
+    return name
 
 
 def _crossed(before: int, after: int, every: int) -> bool:

@@ -25,6 +25,7 @@ from typing import Any, Optional
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
 from simulusion.configs.wm_config import (
     WMControllerConfig,
@@ -45,8 +46,100 @@ logger = logging.getLogger(__name__)
 VAE_SIZE = 64
 
 
+#: train_convae / train_mdn_rnn hold out this many rollout files for testing.
+LEGACY_TEST_FILES = 600
+
+
 def _vae_config() -> WMVAEConfig:
     return WMVAEConfig(height=VAE_SIZE, width=VAE_SIZE)
+
+
+class _LegacyEpochs:
+    """The older World Models entrypoints' way of running: whole epochs.
+
+    One step is a pass over the training rollouts, evaluation is the loss over
+    the held-out ones (the last ``LEGACY_TEST_FILES`` files, or the training
+    rollouts when there are too few), and each checkpoint also writes their
+    ``checkpoint.tar`` and, after an evaluation that improved, ``best.tar``.
+    """
+
+    def _legacy_loaders(
+        self, trainer: Any, path: str, sequence_length: int, batch_size: int
+    ) -> None:
+        from simulusion.data.folder import EpisodeFolder
+        from simulusion.data.sequence import SequenceDataset, collate_sequences
+
+        folder = EpisodeFolder(path)
+        n = len(folder)
+        test = list(range(n - LEGACY_TEST_FILES, n)) if n > LEGACY_TEST_FILES else []
+        train = list(range(n - len(test)))
+
+        def loader(indices: list, shuffle: bool) -> Any:
+            windows = SequenceDataset(
+                EpisodeFolder(path, episodes=indices),
+                sequence_length,
+                image_size=VAE_SIZE,
+            )
+            return trainer.prepare_dataloader(
+                DataLoader(
+                    windows,
+                    batch_size=batch_size,
+                    shuffle=shuffle,
+                    collate_fn=collate_sequences,
+                )
+            )
+
+        self.train_loader = loader(train, True)
+        if not test:
+            logger.warning(
+                "%d rollouts are too few to hold %d out; validating on the training data.",
+                n,
+                LEGACY_TEST_FILES,
+            )
+        self.val = loader(test, False) if test else self.train_loader
+        self._epochs_done = 0
+        self._last_val: Optional[float] = None
+        self._best_val: Optional[float] = None
+        self._improved = False
+
+    def _record_val(self, value: float) -> None:
+        self._last_val = value
+        self._improved = self._best_val is None or value < self._best_val
+        if self._improved:
+            self._best_val = value
+
+    def _save_legacy(
+        self, directory: Path, module: torch.nn.Module, optimizer: Any, scheduler: Any
+    ) -> None:
+        directory.mkdir(parents=True, exist_ok=True)
+        state = {
+            "epoch": self._epochs_done,
+            "state_dict": module.state_dict(),
+            "precision": self._last_val,
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+        }
+        torch.save(state, directory / "checkpoint.tar")
+        if self._improved:
+            torch.save(state, directory / "best.tar")
+
+    @staticmethod
+    def _reload(
+        directory: Path, module: torch.nn.Module, optimizer: Any, scheduler: Any
+    ) -> None:
+        best = directory / "best.tar"
+        if not best.exists():
+            return
+        state = torch.load(best, map_location="cpu", weights_only=True)
+        logger.info(
+            "Reloading %s at epoch %s, with test error %s",
+            best,
+            state["epoch"],
+            state["precision"],
+        )
+        module.load_state_dict(state["state_dict"])
+        optimizer.load_state_dict(state["optimizer"])
+        scheduler.load_state_dict(state["scheduler"])
 
 
 @dataclass
@@ -65,23 +158,50 @@ class VAETaskConfig:
 
 
 @register_task("vae")
-class VAETask(TrainingTask):
-    """World Models' V: a ConvVAE on single frames. Exports ``model/vae.tar``."""
+class VAETask(_LegacyEpochs, TrainingTask):
+    """World Models' V: a ConvVAE on single frames. Exports ``model/vae.tar``.
+
+    Args:
+        config: The task config.
+        legacy_dir: Run as ``train_convae`` does, writing its files here
+            (``<logdir>/vae``): whole epochs over ``model.data_dir``, the
+            ``checkpoint.tar`` / ``best.tar`` checkpoints, resuming from
+            ``best.tar`` unless ``model.noreload``, and a grid of decoded
+            samples every ``model.sample_interval`` epochs unless
+            ``model.nosamples``.
+    """
 
     config_cls = VAETaskConfig
     distributed = True
+    progress_unit = "steps"
+
+    def __init__(self, config: Any = None, *, legacy_dir: Optional[str] = None) -> None:
+        super().__init__(config)
+        self._legacy_dir = Path(legacy_dir) if legacy_dir is not None else None
+        if self._legacy_dir is not None:
+            self.progress_unit = "epochs"  # type: ignore[misc]
 
     def max_steps(self) -> int:
+        if self._legacy_dir is not None:
+            return int(self.config.model.num_epochs)
         return 20_000
+
+    def progress(self) -> int:
+        if self._legacy_dir is not None:
+            return self._epochs_done
+        return super().progress()
 
     def setup(self, trainer: Any) -> None:
         from simulusion.utils.train_utils import ReduceLROnPlateau
         from simulusion.vision.VAE.ConvVAE import ConvVAE
 
         cfg = self.config.model
-        self.batches, self.val, _ = sequence_loaders(
-            self.config.data, trainer, sequence_length=1, image_size=VAE_SIZE
-        )
+        if self._legacy_dir is not None:
+            self._legacy_loaders(trainer, cfg.data_dir, 1, cfg.train_batch_size)
+        else:
+            self.batches, self.val, _ = sequence_loaders(
+                self.config.data, trainer, sequence_length=1, image_size=VAE_SIZE
+            )
         self.vae = trainer.prepare_module(
             ConvVAE(img_channels=3, latent_size=cfg.latent_size)
         )
@@ -95,6 +215,13 @@ class VAETask(TrainingTask):
             factor=cfg.scheduler_factor,
             patience=cfg.scheduler_patience,
         )
+        if self._legacy_dir is not None and not cfg.noreload:
+            self._reload(
+                self._legacy_dir,
+                self.trainer.unwrap(self.vae),
+                optimizer,
+                self.scheduler,
+            )
 
     def _loss(self, frames: torch.Tensor) -> torch.Tensor:
         from simulusion.losses.convae_loss import conv_vae_loss_fn
@@ -105,7 +232,30 @@ class VAETask(TrainingTask):
         return conv_vae_loss_fn(recon, frames, mu, logvar) / frames.shape[0]
 
     def train_step(self) -> Metrics:
-        frames = frames_to_float(next(self.batches)["frames"][:, 0])
+        if self._legacy_dir is None:
+            return self._step(next(self.batches))
+        rows = [self._step(batch) for batch in self.train_loader]
+        self._epochs_done += 1
+        cfg = self.config.model
+        if not cfg.nosamples and self._epochs_done % cfg.sample_interval == 0:
+            self._save_samples()
+        return mean_metrics(rows)
+
+    def _save_samples(self) -> None:
+        from torchvision.utils import save_image
+
+        cfg = self.config.model
+        assert self._legacy_dir is not None
+        samples = self._legacy_dir / "samples"
+        samples.mkdir(parents=True, exist_ok=True)
+        vae: Any = self.trainer.unwrap(self.vae)
+        with torch.no_grad():
+            z = torch.randn(16, cfg.latent_size, device=self.trainer.device)
+            images = vae.decoder(z).cpu()
+        save_image(images, samples / f"sample_epoch_{self._epochs_done}.png")
+
+    def _step(self, batch: dict) -> dict[str, float]:
+        frames = frames_to_float(batch["frames"][:, 0])
         if self.config.flip:
             flip = torch.rand(frames.shape[0], device=frames.device) < 0.5
             frames = torch.where(flip[:, None, None, None], frames.flip(-1), frames)
@@ -122,7 +272,7 @@ class VAETask(TrainingTask):
         self.vae.eval()
         rows = []
         for i, batch in enumerate(self.val):
-            if i >= self.config.data.val_batches:
+            if self._legacy_dir is None and i >= self.config.data.val_batches:
                 break
             rows.append(
                 {"val_loss": float(self._loss(frames_to_float(batch["frames"][:, 0])))}
@@ -130,7 +280,19 @@ class VAETask(TrainingTask):
         metrics = mean_metrics(rows)
         if metrics:
             self.scheduler.step(metrics["val_loss"])
+            if self._legacy_dir is not None:
+                self._record_val(metrics["val_loss"])
         return metrics
+
+    def save_checkpoint(self, directory: Path) -> None:
+        super().save_checkpoint(directory)
+        if self._legacy_dir is not None:
+            self._save_legacy(
+                self._legacy_dir,
+                self.trainer.unwrap(self.vae),
+                self.update.optimizer,
+                self.scheduler,
+            )
 
     def export(self, directory: Path) -> Optional[Path]:
         directory.mkdir(parents=True, exist_ok=True)
@@ -175,14 +337,36 @@ class MDRNNTaskConfig:
 
 
 @register_task("mdrnn")
-class MDRNNTask(TrainingTask):
-    """World Models' M. Exports the V + M world model and ``model/mdrnn.tar``."""
+class MDRNNTask(_LegacyEpochs, TrainingTask):
+    """World Models' M. Exports the V + M world model and ``model/mdrnn.tar``.
+
+    Args:
+        config: The task config.
+        legacy_dir: Run as ``train_mdn_rnn`` does, writing its files here
+            (``<logdir>/mdrnn``): whole epochs over ``model.data_dir``, the
+            ``checkpoint.tar`` / ``best.tar`` checkpoints, and resuming from
+            ``best.tar`` unless ``model.noreload``.
+    """
 
     config_cls = MDRNNTaskConfig
     distributed = True
+    progress_unit = "steps"
+
+    def __init__(self, config: Any = None, *, legacy_dir: Optional[str] = None) -> None:
+        super().__init__(config)
+        self._legacy_dir = Path(legacy_dir) if legacy_dir is not None else None
+        if self._legacy_dir is not None:
+            self.progress_unit = "epochs"  # type: ignore[misc]
 
     def max_steps(self) -> int:
+        if self._legacy_dir is not None:
+            return int(self.config.model.num_epochs)
         return 20_000
+
+    def progress(self) -> int:
+        if self._legacy_dir is not None:
+            return self._epochs_done
+        return super().progress()
 
     def setup(self, trainer: Any) -> None:
         from simulusion.models.mdrnn import MDRNN
@@ -204,13 +388,17 @@ class MDRNNTask(TrainingTask):
         for p in self.vae.parameters():
             p.requires_grad = False
 
-        self.batches, self.val, meta = sequence_loaders(
-            self.config.data,
-            trainer,
-            sequence_length=cfg.seq_len + 1,
-            image_size=VAE_SIZE,
-            require_actions=True,
-        )
+        meta = None
+        if self._legacy_dir is not None:
+            self._legacy_loaders(trainer, cfg.data_dir, cfg.seq_len + 1, cfg.batch_size)
+        else:
+            self.batches, self.val, meta = sequence_loaders(
+                self.config.data,
+                trainer,
+                sequence_length=cfg.seq_len + 1,
+                image_size=VAE_SIZE,
+                require_actions=True,
+            )
         if meta is not None and meta.action_dim:
             cfg.action_size = int(meta.action_dim)
         self.mdrnn = trainer.prepare_module(
@@ -233,6 +421,13 @@ class MDRNNTask(TrainingTask):
             factor=cfg.scheduler_factor,
             patience=cfg.scheduler_patience,
         )
+        if self._legacy_dir is not None and not cfg.noreload:
+            self._reload(
+                self._legacy_dir,
+                self.trainer.unwrap(self.mdrnn),
+                optimizer,
+                self.scheduler,
+            )
 
     def _losses(self, batch: dict) -> dict[str, torch.Tensor]:
         from simulusion.training.train_mdn_rnn import get_loss
@@ -260,9 +455,16 @@ class MDRNNTask(TrainingTask):
         )
 
     def train_step(self) -> Metrics:
+        if self._legacy_dir is None:
+            return self._step(next(self.batches))
+        rows = [self._step(batch) for batch in self.train_loader]
+        self._epochs_done += 1
+        return mean_metrics(rows)
+
+    def _step(self, batch: dict) -> dict[str, float]:
         self.mdrnn.train()
         with self.trainer.precision.autocast():
-            losses = self._losses(next(self.batches))
+            losses = self._losses(batch)
         self.update(losses["loss"])
         return {k: float(v.detach()) for k, v in losses.items()}
 
@@ -273,13 +475,25 @@ class MDRNNTask(TrainingTask):
         self.mdrnn.eval()
         rows = []
         for i, batch in enumerate(self.val):
-            if i >= self.config.data.val_batches:
+            if self._legacy_dir is None and i >= self.config.data.val_batches:
                 break
             rows.append({f"val_{k}": float(v) for k, v in self._losses(batch).items()})
         metrics = mean_metrics(rows)
         if metrics:
             self.scheduler.step(metrics["val_loss"])
+            if self._legacy_dir is not None:
+                self._record_val(metrics["val_loss"])
         return metrics
+
+    def save_checkpoint(self, directory: Path) -> None:
+        super().save_checkpoint(directory)
+        if self._legacy_dir is not None:
+            self._save_legacy(
+                self._legacy_dir,
+                self.trainer.unwrap(self.mdrnn),
+                self.update.optimizer,
+                self.scheduler,
+            )
 
     def world_model(self) -> Optional[Any]:
         from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
@@ -348,10 +562,27 @@ class ControllerTask(TrainingTask):
     default_max_steps = 100
 
     def __init__(
-        self, config: Any = None, *, env_factory: Optional[Any] = None
+        self,
+        config: Any = None,
+        *,
+        env_factory: Optional[Any] = None,
+        model: Optional[Any] = None,
+        legacy_dir: Optional[str] = None,
     ) -> None:
+        """Args:
+        config: The task config.
+        env_factory: Builds the environment instead of ``gymnasium.make``.
+        model: The V + M world model itself, instead of ``world_model``.
+        legacy_dir: Run as ``train_controller`` does, writing ``best.tar``
+            (``{"epoch", "reward", "state_dict"}``) here whenever the best
+            return improves, starting from it when it exists, and stopping
+            once CMA-ES converges or the best return passes
+            ``model.target_return``.
+        """
         super().__init__(config)
         self._env_factory = env_factory
+        self._model = model
+        self._legacy_dir = Path(legacy_dir) if legacy_dir is not None else None
 
     def setup(self, trainer: Any) -> None:
         import cma
@@ -362,13 +593,16 @@ class ControllerTask(TrainingTask):
         cfg = self.config
         if cfg.mode not in ("env", "dream"):
             raise ValueError("mode must be 'env' or 'dream'.")
-        if not cfg.world_model:
+        if self._model is not None:
+            self.wm: Any = self._model
+        elif not cfg.world_model:
             raise ValueError(
                 "controller acts through a world model: set world_model=<dir>."
             )
-        self.wm: Any = load_world_model(
-            cfg.world_model, device=trainer.device, temperature=cfg.temperature
-        )
+        else:
+            self.wm = load_world_model(
+                cfg.world_model, device=trainer.device, temperature=cfg.temperature
+            )
         if self.wm.spec.family != "world-models":
             raise ValueError(
                 f"{cfg.world_model} is a {self.wm.spec.family} world model, not V + M."
@@ -386,6 +620,19 @@ class ControllerTask(TrainingTask):
         self.generation = 0
         self.best_return = float("-inf")
         self.best_params = self._flat()
+        if self._legacy_dir is not None and (self._legacy_dir / "best.tar").exists():
+            state = torch.load(
+                self._legacy_dir / "best.tar", map_location="cpu", weights_only=True
+            )
+            self.controller.load_state_dict(state["state_dict"])
+            self.best_return = float(state["reward"])
+            self.best_params = self._flat()
+            logger.info("Previous best was %s...", self.best_return)
+            self.es = cma.CMAEvolutionStrategy(
+                self.best_params,
+                cfg.sigma,
+                {"popsize": cfg.model.pop_size, "seed": trainer.config.seed + 1},
+            )
         self.env = self._make_env()
 
     def _make_env(self) -> Any:
@@ -420,7 +667,7 @@ class ControllerTask(TrainingTask):
         """One episode's return for controller parameters ``flat``."""
         self._load(flat)
         wm, cfg = self.wm, self.config
-        obs, _ = self.env.reset()
+        obs = _env_reset(self.env)
         frame = torch.as_tensor(
             np.asarray(obs["image"] if isinstance(obs, dict) else obs)
         )
@@ -436,11 +683,9 @@ class ControllerTask(TrainingTask):
                     break
                 continue
             # Real environment: M only tracks h from the actions taken.
-            next_obs, reward, terminated, truncated, _ = self.env.step(
-                action[0].cpu().numpy()
-            )
+            next_obs, reward, done = _env_step(self.env, action[0].cpu().numpy())
             total += float(reward)
-            if terminated or truncated:
+            if done:
                 break
             out = wm.step(state, action)
             frame = torch.as_tensor(
@@ -465,6 +710,8 @@ class ControllerTask(TrainingTask):
         if returns[best] > self.best_return:
             self.best_return = returns[best]
             self.best_params = np.asarray(solutions[best])
+            if self._legacy_dir is not None:
+                self._save_best()
         self.generation += 1
         return {
             "return_mean": float(np.mean(returns)),
@@ -472,6 +719,28 @@ class ControllerTask(TrainingTask):
             "best_return": self.best_return,
             "sigma": float(self.es.sigma),
         }
+
+    def _save_best(self) -> None:
+        assert self._legacy_dir is not None
+        self._legacy_dir.mkdir(parents=True, exist_ok=True)
+        current = self._flat()
+        self._load(self.best_params)
+        torch.save(
+            {
+                "epoch": self.generation,
+                "reward": self.best_return,
+                "state_dict": self.controller.state_dict(),
+            },
+            self._legacy_dir / "best.tar",
+        )
+        self._load(current)
+
+    def should_stop(self) -> bool:
+        if self._legacy_dir is None:
+            return False
+        return (
+            bool(self.es.stop()) or self.best_return > self.config.model.target_return
+        )
 
     def evaluate(self) -> Metrics:
         mean = np.asarray(self.es.mean)
@@ -519,6 +788,25 @@ class ControllerTask(TrainingTask):
         close = getattr(self.env, "close", None)
         if callable(close):
             close()
+
+
+def _env_reset(env: Any) -> Any:
+    """The first observation, from a Gymnasium ``(obs, info)`` or a bare obs."""
+    out = env.reset()
+    return out[0] if isinstance(out, tuple) else out
+
+
+def _env_step(env: Any, action: Any) -> tuple[Any, float, bool]:
+    """``(obs, reward, done)`` from a Gymnasium 5-tuple or an old-Gym 4-tuple.
+
+    GymImageEnv, which the controller acts in by default, uses the old API.
+    """
+    out = env.step(action)
+    if len(out) == 5:
+        obs, reward, terminated, truncated, _ = out
+        return obs, float(reward), bool(terminated or truncated)
+    obs, reward, done, _ = out
+    return obs, float(reward), bool(done)
 
 
 __all__ = [

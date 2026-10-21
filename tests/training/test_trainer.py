@@ -180,7 +180,8 @@ def test_old_checkpoints_are_pruned(tmp_path: Path) -> None:
     cfg = _config(tmp_path, max_steps=6, checkpoint_every=1, keep_checkpoints=2)
     Trainer(cfg).fit(_ToyTask())
     names = sorted(p.name for p in (tmp_path / "run" / "checkpoints").iterdir())
-    assert names == ["step_00000005", "step_00000006"]
+    # The two newest periodic ones, plus the final one (never pruned).
+    assert names == ["step_00000004", "step_00000005", "step_00000006"]
 
 
 def test_single_process_task_refuses_data_parallel(tmp_path: Path, monkeypatch) -> None:

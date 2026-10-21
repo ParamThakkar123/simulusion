@@ -57,14 +57,35 @@ class IRISTaskConfig:
 
 @register_task("iris")
 class IRISTask(TrainingTask):
-    """IRIS on Atari (or any image environment passed as ``env``)."""
+    """IRIS on Atari (or any image environment passed as ``env``).
+
+    Args:
+        config: The task config.
+        env: The environment to build IRISTrainer with, instead of Atari.
+        iris: Train this :class:`~simulusion.training.train_iris.IRISTrainer`
+            instead of building one: its environment, replay, agent (at its
+            own precision) and ``metrics`` history, which every epoch is
+            appended to. This is how :meth:`IRISTrainer.train` runs.
+        legacy_dir: With ``iris``, also write IRISTrainer's own
+            ``checkpoint_<epoch>.pt`` files here whenever the trainer
+            checkpoints.
+    """
 
     config_cls = IRISTaskConfig
     progress_unit = "epochs"
 
-    def __init__(self, config: Any = None, *, env: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        config: Any = None,
+        *,
+        env: Optional[Any] = None,
+        iris: Optional[Any] = None,
+        legacy_dir: Optional[str | Path] = None,
+    ) -> None:
         super().__init__(config)
         self._env = env
+        self._adopted = iris
+        self._legacy_dir = Path(legacy_dir) if legacy_dir is not None else None
 
     def max_steps(self) -> int:
         return int(self.config.model.total_epochs)
@@ -73,6 +94,10 @@ class IRISTask(TrainingTask):
         from simulusion.training.train_iris import IRISTrainer
 
         cfg = self.config
+        self.epoch = 0
+        if self._adopted is not None:
+            self.iris = self._adopted
+            return
         self.iris = IRISTrainer(
             game=cfg.game or cfg.model.env,
             device=str(trainer.device),
@@ -89,6 +114,8 @@ class IRISTask(TrainingTask):
     def train_step(self) -> Metrics:
         metrics = self.iris.train_epoch(self.epoch)
         self.epoch += 1
+        for key, value in metrics.items():
+            self.iris.metrics[key].append(value)
         return {k: float(v) for k, v in metrics.items()}
 
     def evaluate(self) -> Metrics:
@@ -127,6 +154,9 @@ class IRISTask(TrainingTask):
         )
         if self.config.save_replay:
             save_replay(self.iris.replay_buffer, directory / "replay.npz")
+        if self._legacy_dir is not None:
+            self._legacy_dir.mkdir(parents=True, exist_ok=True)
+            agent.save(str(self._legacy_dir / f"checkpoint_{self.epoch}.pt"))
 
     def load_checkpoint(self, directory: Path) -> None:
         agent = self.iris.agent

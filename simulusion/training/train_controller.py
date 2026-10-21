@@ -10,297 +10,68 @@ Reference:
 """
 
 from typing import Any
-import sys
-from os.path import join, exists
-from os import mkdir, unlink, listdir, getpid
-from time import sleep
-from torch.multiprocessing import Process, Queue
+from os.path import join
 import torch
-import torch.nn.functional as F
-import cma
-import numpy as np
-from tqdm import tqdm
 import gymnasium as gym
 
-from simulusion.models.controller import Controller
-from simulusion.models.mdrnn import MDRNN, MDRNNCell
-from simulusion.vision.VAE.ConvVAE import ConvVAE
 from simulusion.configs.wm_config import WMControllerConfig
 from simulusion.envs.gym_env import GymImageEnv
-
-
-def flatten_parameters(parameters: Any) -> np.ndarray:
-    return np.concatenate([p.data.cpu().numpy().flatten() for p in parameters])
-
-
-def load_parameters(params: Any, controller: Any) -> None:
-    pointer = 0
-    for param in controller.parameters():
-        param_shape = param.shape
-        size = 1
-        for s in param_shape:
-            size *= s
-        param.data.copy_(
-            torch.from_numpy(params[pointer : pointer + size]).view(param_shape)
-        )
-        pointer += size
-
-
-def _run_rollout(
-    ctrl_params: np.ndarray,
-    logdir: str,
-    env_name: str,
-    action_size: int,
-    time_limit: int,
-    device: torch.device,
-) -> float:
-    """Run a single rollout with given controller parameters.
-
-    Args:
-        ctrl_params: Flattened controller parameters as numpy array.
-        logdir: Directory containing trained VAE and MDRNN checkpoints.
-        env_name: Gym environment name.
-        action_size: Dimensionality of action space.
-        time_limit: Maximum steps per episode.
-        device: torch device.
-
-    Returns:
-        float: Total cumulative reward.
-    """
-    vae_file = join(logdir, "vae", "best.tar")
-    rnn_file = join(logdir, "mdrnn", "best.tar")
-
-    vae_state = torch.load(vae_file, map_location=device, weights_only=True)
-    rnn_state = torch.load(rnn_file, map_location=device, weights_only=True)
-    latent_size = 32
-
-    vae = ConvVAE(img_channels=3, latent_size=latent_size).to(device)
-    vae.load_state_dict(vae_state["state_dict"])
-    vae.eval()
-
-    batch_rnn = MDRNN(
-        latents=latent_size, actions=action_size, hiddens=256, gaussians=5
-    )
-    batch_rnn.load_state_dict(rnn_state["state_dict"])
-    batch_rnn.eval()
-
-    cell_rnn = MDRNNCell(
-        latents=latent_size, actions=action_size, hiddens=256, gaussians=5
-    ).to(device)
-    cell_rnn.rnn.weight_ih.data.copy_(batch_rnn.rnn.weight_ih_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.weight_hh.data.copy_(batch_rnn.rnn.weight_hh_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.bias_ih.data.copy_(batch_rnn.rnn.bias_ih_l0.data)  # type: ignore[arg-type]
-    cell_rnn.rnn.bias_hh.data.copy_(batch_rnn.rnn.bias_hh_l0.data)  # type: ignore[arg-type]
-    cell_rnn.gmm_linear.load_state_dict(batch_rnn.gmm_linear.state_dict())
-    cell_rnn.eval()
-    del batch_rnn
-
-    ctrl = Controller(latent_size, 256, action_size).to(device)
-    load_parameters(ctrl_params, ctrl)
-    ctrl.eval()
-
-    try:
-        env: Any = gym.make(env_name, continuous=True)
-    except Exception:
-        env = gym.make(env_name)
-    env = GymImageEnv(env=env, size=(64, 64))
-
-    obs, _ = env.reset()
-    h, c = cell_rnn.get_init_hidden(1)
-    h, c = h.to(device), c.to(device)
-
-    total_reward = 0.0
-    with torch.no_grad():
-        for _ in range(time_limit):
-            obs_tensor = torch.tensor(obs["image"]).float().unsqueeze(0).to(device)
-            obs_tensor = F.interpolate(
-                obs_tensor, size=64, mode="bilinear", align_corners=True
-            )
-            obs_tensor = obs_tensor / 255.0
-
-            mu, logsigma = vae.encoder(obs_tensor)
-            z = mu + logsigma.exp() * torch.randn_like(logsigma)
-
-            # Controller.forward takes the concatenated [z, h] state.
-            action = ctrl(torch.cat([z, h], dim=-1)).cpu().numpy().flatten()
-
-            action_t = torch.tensor(action).float().to(device)
-            _, _, _, _, _, (h, c) = cell_rnn(action_t, z, (h, c))
-
-            next_obs, reward, terminated, truncated, _ = env.step(action)
-            total_reward += reward
-            obs = next_obs
-            if terminated or truncated:
-                break
-
-    env.close()
-    return total_reward
-
-
-def slave_routine(
-    p_queue: Any, r_queue: Any, e_queue: Any, p_index: int, config: Any, time_limit: int
-) -> None:
-    """Worker process routine for parallel rollout evaluation.
-
-    Args:
-        p_queue: Queue containing (s_id, parameters) to evaluate.
-        r_queue: Queue where to place results (s_id, reward).
-        e_queue: End queue - when non-empty, process terminates.
-        p_index: Process index for GPU assignment.
-        config: Controller configuration (must include env_name and action_size).
-        time_limit: Maximum steps per episode.
-    """
-    gpu = p_index % max(torch.cuda.device_count(), 1)
-    device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
-
-    sys.stdout = open(join(config.logdir, "tmp", str(getpid()) + ".out"), "a")
-    sys.stderr = open(join(config.logdir, "tmp", str(getpid()) + ".err"), "a")
-
-    while e_queue.empty():
-        if p_queue.empty():
-            sleep(0.1)
-        else:
-            s_id, params = p_queue.get()
-            reward = _run_rollout(
-                params,
-                config.logdir,
-                config.env_name,
-                config.action_size,
-                time_limit,
-                device,
-            )
-            # CMA-ES minimises, and everything downstream (argmin for the
-            # best solution, `-best > target_return`, the saved `-cur_best`)
-            # treats results as negated returns. Queueing the raw return
-            # made the search minimise the reward it was meant to maximise.
-            r_queue.put((s_id, -reward))
-
-
-def evaluate(
-    solutions: Any, results: Any, rollouts: int, p_queue: Any, r_queue: Any
-) -> Any:
-    """Evaluate current controller."""
-    index_min = np.argmin(results)
-    best_guess = solutions[index_min]
-    restimates = []
-
-    for s_id in range(rollouts):
-        p_queue.put((s_id, best_guess))
-
-    print("Evaluating...")
-    for _ in tqdm(range(rollouts)):
-        while r_queue.empty():
-            sleep(0.1)
-        restimates.append(r_queue.get()[1])
-
-    return best_guess, np.mean(restimates), np.std(restimates)
 
 
 def train_controller(config: WMControllerConfig) -> None:
     """Train a linear controller using CMA-ES.
 
+    Runs on the shared :class:`~simulusion.training.Trainer` through the
+    ``controller`` task, with the VAE and MDN-RNN in ``<logdir>/vae/best.tar``
+    and ``<logdir>/mdrnn/best.tar``. One step is one CMA-ES generation of
+    ``pop_size`` candidates, each scored over ``n_samples`` episodes of up to
+    ``time_limit`` steps in ``env_name``. The best controller so far is kept
+    in ``<logdir>/ctrl/best.tar`` (and started from when it exists); training
+    stops when CMA-ES converges or the best return passes ``target_return``.
+
+    Candidates are scored one after another in this process, so
+    ``max_workers`` and ``display`` no longer apply. The controller's sizes
+    come from the trained models, whatever ``latent_size`` / ``hidden_size``
+    / ``action_size`` say.
+
     Args:
         config: WMControllerConfig containing training hyperparameters,
                 including env_name and action_size.
-
-    The training process includes:
-        - Setting up parallel evaluation workers (each loads VAE + MDRNN)
-        - Running CMA-ES optimization with parallel rollout evaluation
-        - Evaluating and saving best controller checkpoint
     """
-    n_samples = config.n_samples
-    pop_size = config.pop_size
-    num_workers = min(config.max_workers, n_samples * pop_size)
-    time_limit = config.time_limit
+    from simulusion.training.legacy import fit_legacy
+    from simulusion.training.tasks.world_models import (
+        ControllerTask,
+        ControllerTaskConfig,
+    )
+    from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
 
-    tmp_dir = join(config.logdir, "tmp")
-    if not exists(tmp_dir):
-        mkdir(tmp_dir)
-    else:
-        for fname in listdir(tmp_dir):
-            unlink(join(tmp_dir, fname))
-
-    ctrl_dir = join(config.logdir, "ctrl")
-    if not exists(ctrl_dir):
-        mkdir(ctrl_dir)
-
-    p_queue: Queue = Queue()
-    r_queue: Queue = Queue()
-    e_queue: Queue = Queue()
-
-    for p_index in range(num_workers):
-        Process(
-            target=slave_routine,
-            args=(p_queue, r_queue, e_queue, p_index, config, time_limit),
-        ).start()
-
-    controller = Controller(config.latent_size, config.hidden_size, config.action_size)
-
-    cur_best = None
-    ctrl_file = join(ctrl_dir, "best.tar")
-    print("Attempting to load previous best...")
-    if exists(ctrl_file):
-        state = torch.load(ctrl_file, map_location={"cuda:0": "cpu"}, weights_only=True)
-        cur_best = -state["reward"]
-        controller.load_state_dict(state["state_dict"])
-        print(f"Previous best was {-cur_best}...")
-
-    parameters = controller.parameters()
-    es = cma.CMAEvolutionStrategy(
-        flatten_parameters(parameters), 0.1, {"popsize": pop_size}
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = MDRNNWorldModel.from_checkpoints(
+        join(config.logdir, "vae", "best.tar"),
+        join(config.logdir, "mdrnn", "best.tar"),
+        device=device,
     )
 
-    epoch = 0
-    log_step = 3
-    while not es.stop():
-        if cur_best is not None and -cur_best > config.target_return:
-            print("Already better than target, breaking...")
-            break
+    def make_env() -> Any:
+        # As the rollout workers did: CarRacing needs continuous=True.
+        try:
+            env: Any = gym.make(config.env_name, continuous=True)
+        except Exception:
+            env = gym.make(config.env_name)
+        return GymImageEnv(env=env, size=(64, 64))
 
-        r_list = [0] * pop_size
-        solutions = es.ask()
-
-        for s_id, s in enumerate(solutions):
-            for _ in range(n_samples):
-                p_queue.put((s_id, s))
-
-        if config.display:
-            pbar = tqdm(total=pop_size * n_samples)
-        for _ in range(pop_size * n_samples):
-            while r_queue.empty():
-                sleep(0.1)
-            r_s_id, r = r_queue.get()
-            r_list[r_s_id] += r / n_samples
-            if config.display:
-                pbar.update(1)
-        if config.display:
-            pbar.close()
-
-        es.tell(solutions, r_list)
-        es.disp()
-
-        if epoch % log_step == log_step - 1:
-            best_params, best, std_best = evaluate(
-                solutions, r_list, n_samples * pop_size, p_queue, r_queue
-            )
-            print(f"Current evaluation: {best}")
-            if not cur_best or cur_best > best:
-                cur_best = best
-                print(f"Saving new best with value {-cur_best} +- {std_best}...")
-                load_parameters(best_params, controller)
-                torch.save(
-                    {
-                        "epoch": epoch,
-                        "reward": -cur_best,
-                        "state_dict": controller.state_dict(),
-                    },
-                    join(ctrl_dir, "best.tar"),
-                )
-            if -best > config.target_return:
-                print(f"Terminating controller training with value {best}...")
-                break
-
-        epoch += 1
-
-    es.result_pretty()
-    e_queue.put("EOP")
+    ctrl_dir = join(config.logdir, "ctrl")
+    fit_legacy(
+        ControllerTask(
+            ControllerTaskConfig(model=config),
+            env_factory=make_env,
+            model=model,
+            legacy_dir=ctrl_dir,
+        ),
+        ctrl_dir,
+        # CMA-ES has no fixed number of generations; it runs until it
+        # converges or reaches target_return (ControllerTask.should_stop).
+        max_steps=10**9,
+        device=device,
+        eval_every=3,
+    )

@@ -167,12 +167,26 @@ class Episode:
         if frame_key is None:
             raise ValueError(f"No 'frames' array among {keys}.")
         language = arrays["language"] if "language" in keys else None
+        frames = arrays[frame_key]
+        T = len(frames)
+
+        def transitions(*names: str) -> Optional[np.ndarray]:
+            # Per-step layouts (the World Models rollouts, RLDS) store one
+            # entry per frame: the last leads past the final frame and is
+            # dropped, so every array has one entry per transition.
+            name = next((n for n in names if n in keys), None)
+            if name is None:
+                return None
+            value = np.asarray(arrays[name])
+            return value[: T - 1] if len(value) == T else value
+
         return cls(
-            frames=arrays[frame_key],
-            actions=arrays["actions"] if "actions" in keys else None,
-            rewards=arrays["rewards"] if "rewards" in keys else None,
-            terminated=arrays["terminated"] if "terminated" in keys else None,
-            truncated=arrays["truncated"] if "truncated" in keys else None,
+            frames=frames,
+            actions=transitions("actions"),
+            rewards=transitions("rewards"),
+            # World Models rollouts call the episode ends `terminals`.
+            terminated=_ends(arrays, keys, T, ("terminated", "terminals")),
+            truncated=transitions("truncated"),
             cameras={
                 k[len(CAMERA_PREFIX) :]: arrays[k]
                 for k in keys
@@ -190,6 +204,20 @@ class Episode:
     def load(cls, path: str | Path) -> "Episode":
         with np.load(path, allow_pickle=False) as arrays:
             return cls.from_arrays(arrays)
+
+
+def _ends(arrays: Any, keys: list, T: int, names: tuple) -> Optional[np.ndarray]:
+    """Episode-end flags per transition; a per-step array's final flag (the
+    step that ended the episode) moves onto the last transition kept."""
+    name = next((n for n in names if n in keys), None)
+    if name is None:
+        return None
+    value = np.asarray(arrays[name]).astype(bool).reshape(-1)
+    if len(value) == T and T > 1:
+        ends = value[: T - 1].copy()
+        ends[-1] = ends[-1] or bool(value[-1])
+        return ends
+    return value
 
 
 def npz_length(path: str | Path) -> int:

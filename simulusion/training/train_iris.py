@@ -3,10 +3,9 @@ from simulusion.utils.device import default_device_name
 import numpy as np
 from collections import defaultdict
 import os
-from tqdm import tqdm
 import random
 from collections.abc import Callable, Sequence
-from typing import Any, Optional, cast
+from typing import Any, Optional
 
 from types import ModuleType
 from typing import Optional as _Optional
@@ -20,7 +19,6 @@ from simulusion.experiments import (
 from simulusion.models.iris_agent import IRISAgent
 from simulusion.memory.iris_memory import IRISReplayBuffer
 from simulusion.envs.ale_atari_env import make_atari_env
-from simulusion.utils.train_utils import EarlyStopping
 
 # Optional OpenCV import at module scope (avoid function-local imports)
 cv2: _Optional[ModuleType] = None
@@ -564,114 +562,88 @@ class IRISTrainer:
         total_epochs: Optional[int] = None,
         eval_interval: int = 50,
         save_dir: str = "checkpoints/iris",
-    ) -> None:
-        """Full training loop.
+    ) -> Any:
+        """Train for ``total_epochs`` epochs (``config.total_epochs`` by default).
 
-        Args:
-            total_epochs: Total training epochs
-            eval_interval: Evaluate every N epochs
-            save_dir: Directory to save checkpoints
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``iris`` task, with this trainer's environment, replay and agent.
+        Every ``eval_interval`` epochs, once the policy trains, it evaluates
+        (monitoring only); the best of those is written to
+        ``<save_dir>/best_<game>.pt``, and early stopping on it applies when
+        ``config.early_stopping`` is set. ``checkpoint_<epoch>.pt`` is written
+        every ``config.checkpoint_interval`` epochs. The paper's benchmark
+        number is the final evaluation over ``config.eval_episodes``
+        (``self.final_eval_return``, model in ``final_<game>.pt``). The
+        trainer adds resumable checkpoints under ``<save_dir>/checkpoints/``,
+        ``run.json``, ``run_config.yaml`` and ``train_metrics.jsonl``.
+
+        Returns:
+            ``self.metrics``: every epoch's metrics, by name.
         """
-        if total_epochs is None:
-            total_epochs = self.config.total_epochs
+        import shutil
 
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.iris import IRISTask, IRISTaskConfig
+
+        config = self.config
+        epochs = int(total_epochs if total_epochs is not None else config.total_epochs)
+        early = bool(getattr(config, "early_stopping", False))
+        name = self.game.split("/")[-1]
         os.makedirs(save_dir, exist_ok=True)
-
-        print(f"Starting training for {total_epochs} epochs on {self.game}")
+        print(f"Starting training for {epochs} epochs on {self.game}")
         print(f"Action space: {self.action_size}")
         print(f"Device: {self.device}")
 
-        best_eval_return = float("-inf")
-
-        # Return, not loss: the autoencoder and transformer losses keep falling
-        # well after the policy stops improving, so a loss plateau never comes.
-        stopper = None
-        if getattr(self.config, "early_stopping", False):
-            stopper = EarlyStopping(
-                mode="max",
-                patience=self.config.patience,
-                threshold=self.config.min_delta,
+        task = IRISTask(
+            # No replay in checkpoints: 100k frames per checkpoint, and this
+            # loop never resumed.
+            IRISTaskConfig(model=config, game=self.game, save_replay=False),
+            iris=self,
+            legacy_dir=save_dir,
+        )
+        result = fit_legacy(
+            task,
+            save_dir,
+            max_steps=epochs,
+            device=self.device,
+            seed=self.seed,
+            log_every=10,
+            eval_every=eval_interval,
+            checkpoint_every=config.checkpoint_interval,
+            # Return, not loss: the autoencoder and transformer losses keep
+            # falling well after the policy stops improving.
+            best_metric="eval_mean_return",
+            best_mode="max",
+            early_stopping_metric="eval_mean_return" if early else None,
+            early_stopping_mode="max",
+            patience=config.patience,
+            min_delta=config.min_delta,
+        )
+        if result.best_checkpoint is not None:
+            shutil.copyfile(
+                result.best_checkpoint / "task" / "agent.pt",
+                os.path.join(save_dir, f"best_{name}.pt"),
             )
-
-        for epoch in tqdm(range(total_epochs), desc="Training"):
-            # Train one epoch
-            metrics = self.train_epoch(epoch)
-
-            # Log metrics
-            for key, value in metrics.items():
-                self.metrics[key].append(value)
-
-            # Print progress
-            if epoch % 10 == 0:
-                print(f"\nEpoch {epoch}:")
-                for key, value in metrics.items():
-                    print(f"  {key}: {value:.4f}")
-
-            # Evaluate periodically
-            if (
-                epoch % eval_interval == 0
-                and epoch >= self.config.start_actor_critic_after
-            ):
-                eval_metrics = cast(
-                    dict, self.evaluate(num_episodes=self.config.eval_episodes)
-                )
-                print(f"\nEvaluation at epoch {epoch} (monitoring only):")
-                print(
-                    f"  Mean return: {eval_metrics['eval_mean_return']:.2f} +/- {eval_metrics['eval_std_return']:.2f}"
-                )
-
-                # Save best model
-                if eval_metrics["eval_mean_return"] > best_eval_return:
-                    best_eval_return = eval_metrics["eval_mean_return"]
-                    save_path = os.path.join(
-                        save_dir, f"best_{self.game.split('/')[-1]}.pt"
-                    )
-                    self.agent.save(save_path)
-                    print(f"  Saved best model: {save_path}")
-
-                if stopper is not None:
-                    stopper.step(eval_metrics["eval_mean_return"])
-                    if stopper.stop:
-                        print(
-                            f"\nEarly stopping at epoch {epoch}: evaluation return "
-                            f"has not improved by {self.config.min_delta} for "
-                            f"{self.config.patience} evaluations "
-                            f"({self.config.patience * eval_interval} epochs)."
-                        )
-                        break
-
-            # Checkpoint periodically
-            if epoch % self.config.checkpoint_interval == 0:
-                save_path = os.path.join(save_dir, f"checkpoint_{epoch}.pt")
-                self.agent.save(save_path)
-
-        # Paper 3.2: "we evaluate IRIS by computing an average over 100 episodes
-        # collected at the end of training for each game (5 runs)". This final
-        # number -- not the best periodic evaluation -- is what is comparable to
-        # Table 1. Reporting the best of several evaluations would be
-        # optimistically biased: it takes the maximum of a noisy quantity.
-        final_metrics = cast(
-            dict, self.evaluate(num_episodes=self.config.eval_episodes)
-        )
-        self.final_eval_return = final_metrics["eval_mean_return"]
-
-        save_path = os.path.join(save_dir, f"final_{self.game.split('/')[-1]}.pt")
+        # Paper 3.2: the benchmark number is the average over eval_episodes
+        # episodes at the end of training -- not the best periodic evaluation,
+        # which takes the maximum of a noisy quantity.
+        self.final_eval_return = float(result.metrics.get("eval_mean_return", 0.0))
+        save_path = os.path.join(save_dir, f"final_{name}.pt")
         self.agent.save(save_path)
-
         print(
-            f"\nTraining complete. Benchmark score (mean over "
-            f"{self.config.eval_episodes} episodes at end of training): "
-            f"{self.final_eval_return:.2f} +/- {final_metrics['eval_std_return']:.2f}"
+            "\nTraining complete. Benchmark score (mean over "
+            f"{config.eval_episodes} episodes at end of training): "
+            f"{self.final_eval_return:.2f} +/- "
+            f"{result.metrics.get('eval_std_return', 0.0):.2f}"
         )
-        if best_eval_return > float("-inf"):
+        if result.best_value is not None:
             print(
-                f"  (best periodic evaluation during training was "
-                f"{best_eval_return:.2f}; monitoring only, not comparable to "
+                f"  (best evaluation during training was "
+                f"{result.best_value:.2f}; monitoring only, not comparable to "
                 f"the paper's Table 1)"
             )
         print(f"  Final model: {save_path}")
-
-        return self.metrics  # type: ignore[return-value]
+        return self.metrics
 
 
 # Overrides that configure the training *run* rather than the model. They are

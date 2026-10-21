@@ -138,3 +138,19 @@ class TestReduceLROnPlateau:
     def test_invalid_threshold_mode_raises(self, optimizer):
         with pytest.raises(ValueError):
             ReduceLROnPlateau(optimizer, mode="min", threshold_mode="invalid")
+
+
+def test_reduce_lr_on_plateau_state_loads_with_weights_only(tmp_path):
+    """The optimizer is not part of the scheduler's state."""
+    import torch
+
+    model = torch.nn.Linear(2, 1)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=0)
+    scheduler.step(1.0)
+    scheduler.step(2.0)
+    torch.save({"scheduler": scheduler.state_dict()}, tmp_path / "s.pt")
+    state = torch.load(tmp_path / "s.pt", weights_only=True)["scheduler"]
+    restored = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=0)
+    restored.load_state_dict(state)
+    assert restored.best == scheduler.best and restored.optimizer is optimizer

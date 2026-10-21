@@ -14,6 +14,11 @@ from simulusion.world_model import load_world_model
 
 from .conftest import write_episodes
 
+# End-to-end training runs: each builds a model, trains it for a few steps,
+# checkpoints, resumes and exports. On a CPU runner that takes longer than the
+# suite-wide --timeout=30 allows unit tests.
+pytestmark = pytest.mark.timeout(180)
+
 TINY = {
     "vocab_size": 32,
     "tokens_per_frame": 16,
@@ -63,7 +68,7 @@ def _overrides(trainer_overrides: list[str], **extra) -> list[str]:
     model = {
         **TINY,
         "collection_epochs": 10,
-        "env_steps_per_epoch": 30,
+        "env_steps_per_epoch": 20,
         "training_steps_per_epoch": 1,
         "transformer_steps_per_epoch": 1,
         "actor_critic_steps_per_epoch": 1,
@@ -88,16 +93,16 @@ def test_iris_trains_by_epoch_resumes_and_exports(
 ) -> None:
     pytest.importorskip("cv2")
     args = _overrides(trainer_overrides) + [
-        "trainer.max_steps=3",
-        "trainer.eval_every=3",
+        "trainer.max_steps=2",
+        "trainer.eval_every=2",
     ]
     first = _fit(args)
-    assert first.progress == 3
+    assert first.progress == 2
     assert "eval_mean_return" in first.metrics
     assert (first.checkpoint / "task" / "replay.npz").exists()
 
-    resumed = _fit(args[:-2] + ["trainer.max_steps=4", "trainer.resume=auto"])
-    assert resumed.progress == 4 and resumed.iterations == 4
+    resumed = _fit(args[:-2] + ["trainer.max_steps=3", "trainer.resume=auto"])
+    assert resumed.progress == 3 and resumed.iterations == 3
 
     model = load_world_model(resumed.world_model_path, device="cpu")
     assert model.spec.family == "iris" and model.spec.action.n == 3

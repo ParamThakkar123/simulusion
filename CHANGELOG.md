@@ -12,8 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Commands written for the older per-family entrypoints (a `--config` without
   `task:`, or flat overrides such as `total_epochs=100`) still reach them, as
   does `--legacy`.
+- **The per-family training entrypoints run on the shared Trainer.**
+  `DreamerAgent.train()`, `IRISTrainer.train()`, `DiamondAgent.train()`,
+  `Planet.train()` / `train_planet.main`, `GenieTrainer.train()`,
+  `DiT.fit()` / `train_dit`, `JEPAAgent.train()`, `train_convae`,
+  `train_mdn_rnn` and `train_controller` keep their signatures, return values
+  and the files they always wrote, through one helper
+  (`simulusion.training.legacy.fit_legacy`). Their own loops are gone. They
+  now also write resumable checkpoints and `run.json` / `run_config.yaml` /
+  `train_metrics.jsonl` into the same folder. Small differences (checkpoint
+  step names, IRIS/DIAMOND not evaluating after epoch 0, MDN-RNN latents
+  sampled per batch, the controller scored in one process) are listed in the
+  trainer guide. W&B sweeps of `JEPAAgent.train` still use `train_jepa`.
+- The Trainer keeps the best evaluation's checkpoint (`best_metric`,
+  `best_mode`), lets a task end training early (`TrainingTask.should_stop`),
+  and writes the last checkpoint after the final evaluation.
+- Episode folders read World Models rollout files (per-step `observations` /
+  `actions` / `rewards` / `terminals`) directly.
 
 ### Fixed
+- `ReduceLROnPlateau.state_dict()` included the live optimizer, so any
+  checkpoint holding it (`train_convae`'s and `train_mdn_rnn`'s `best.tar`)
+  could not be loaded with `weights_only=True`, as the repo loads everything.
+- The World Models controller's real-environment rollouts unpacked
+  `GymImageEnv.reset()` as a Gymnasium `(obs, info)` pair; it returns the
+  observation alone, so every rollout failed.
 - A resumed DIAMOND run kept a replay buffer only as large as it was at the
   checkpoint: `save_checkpoint` recorded the trimmed length as the capacity.
   Its replay and observation side files are now found next to the

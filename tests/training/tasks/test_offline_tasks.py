@@ -14,6 +14,11 @@ from simulusion.world_model import load_world_model
 
 from .conftest import write_episodes
 
+# End-to-end training runs: each builds a model, trains it for a few steps,
+# checkpoints, resumes and exports. On a CPU runner that takes longer than the
+# suite-wide --timeout=30 allows unit tests.
+pytestmark = pytest.mark.timeout(180)
+
 
 def _image_folder(root: Path, n: int = 12, size: int = 32) -> Path:
     from PIL import Image

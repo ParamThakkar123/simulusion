@@ -10,6 +10,11 @@ import torch
 from simulusion.training.run import run
 from simulusion.world_model import load_world_model
 
+# End-to-end training runs: each builds a model, trains it for a few steps,
+# checkpoints, resumes and exports. On a CPU runner that takes longer than the
+# suite-wide --timeout=30 allows unit tests.
+pytestmark = pytest.mark.timeout(180)
+
 
 def test_planet_trains_resumes_and_exports(tmp_path: Path, trainer_overrides) -> None:
     pytest.importorskip("gymnasium")

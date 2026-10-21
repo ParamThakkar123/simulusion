@@ -155,6 +155,14 @@ class TrainingTask(ABC):
             )
             self.load_state_dict(state)
 
+    def should_stop(self) -> bool:
+        """True to end training now, before the budget (a search that converged).
+
+        Checked after every step. The final evaluation, checkpoint and export
+        still run.
+        """
+        return False
+
     def close(self) -> None:
         """Release environments and other resources."""
 

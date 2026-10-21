@@ -13,13 +13,10 @@ from simulusion.models.model_io import (
     save_config_next_to_checkpoint,
 )
 from simulusion.blocks.mhsa import MultiHeadSelfAttention
-from simulusion.models.diffusion.DDPM import DDPM
 from simulusion.datasets.cifar10 import make_cifar10
 from simulusion.datasets.imagenet1k import make_imagenet1k, make_imagefolder
 from torchvision.transforms import Compose, Normalize, RandomHorizontalFlip, ToTensor
 from simulusion.transforms.image import make_transforms
-from simulusion.utils.train_utils import EarlyStopping
-import time
 from torchvision.utils import save_image
 import os
 from pathlib import Path
@@ -738,180 +735,73 @@ class DiT(ExportableAgentMixin, nn.Module):
             with_val=early_stopping,
         )
 
-        ddpm = DDPM(
-            timesteps=timesteps,
-            beta_start=beta_start,
-            beta_end=beta_end,
-        ).to(device)
+        # The loop itself runs on the shared Trainer through the `dit` task:
+        # L_simple, AdamW at a constant `lr` with no weight decay (paper 4),
+        # gradient clipping at 1 and the EMA. Early stopping scores held-out
+        # loss once per epoch and keeps the best epoch's weights.
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.dit import DiTTask, DiTTaskConfig
 
-        model = cls(
-            img_size=img_size,
-            patch_size=patch,
-            in_channels=channels,
-            d_model=width,
-            depth=depth,
-            heads=heads,
-            drop=drop,
-            t_dim=256,
-            num_classes=num_classes,
-            class_dropout_prob=class_dropout_prob,
-            learn_sigma=learn_sigma,
-        ).to(device)
-
-        def param_count(model: nn.Module) -> int:
-            return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-        print(f"Model Parameters: {param_count(model) / 1e6:.2f}M")
-
-        ema_model = None
-        if ema:
-            import copy
-
-            ema_model = copy.deepcopy(model).to(device).eval()
-            for p in ema_model.parameters():
-                p.requires_grad = False
-
-        def ema_update(
-            m: nn.Module, ema_m: nn.Module, decay: float = ema_decay
-        ) -> None:
-            with torch.no_grad():
-                # Fused multi-tensor EMA: identical arithmetic to the per-tensor
-                # mul_/add_ pair, but one kernel launch for the whole model.
-                ema_params: list[torch.Tensor] = list(ema_m.parameters())
-                src_params: list[torch.Tensor] = list(m.parameters())
-                torch._foreach_mul_(ema_params, decay)
-                torch._foreach_add_(ema_params, src_params, alpha=1 - decay)
-
-        # Paper 4: constant learning rate, no weight decay, no warmup.
-        opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.0)
-
-        stopper = None
-        best_val = float("inf")
+        config = Config(
+            DATASET=dataset,
+            BATCH=batch_size,
+            EPOCHS=epochs,
+            LR=lr,
+            WEIGHT_DECAY=0.0,
+            IMG_SIZE=img_size,
+            CHANNELS=channels,
+            PATCH=patch,
+            WIDTH=width,
+            DEPTH=depth,
+            HEADS=heads,
+            DROP=drop,
+            BETA_START=beta_start,
+            BETA_END=beta_end,
+            TIMESTEPS=timesteps,
+            EMA=ema,
+            EMA_DECAY=ema_decay,
+            NUM_CLASSES=num_classes,
+            CLASS_DROPOUT_PROB=class_dropout_prob,
+            LEARN_SIGMA=learn_sigma,
+            WORKDIR=workdir,
+            ROOT_PATH=root_path,
+        )
+        task = DiTTask(
+            DiTTaskConfig(model=config, image_folder=image_folder),
+            loaders=(train_loader, val_loader),
+            legacy_workdir=workdir,
+        )
+        per_epoch = max(1, len(train_loader))
+        result = fit_legacy(
+            task,
+            workdir,
+            max_steps=epochs * per_epoch,
+            device=device,
+            log_every=100,
+            eval_every=per_epoch if early_stopping else 0,
+            checkpoint_every=checkpoint_every * per_epoch,
+            best_metric="val_loss" if early_stopping else None,
+            best_mode="min",
+            early_stopping_metric="val_loss" if early_stopping else None,
+            early_stopping_mode="min",
+            patience=patience,
+            min_delta=min_delta,
+        )
+        model = task.trainer.unwrap(task.model)
+        ema_model = task.ema
+        ddpm = task.ddpm
         best_state = None
-        if early_stopping:
-            if val_loader is None:
-                raise ValueError(
-                    f"early_stopping is on but no held-out loader was built for "
-                    f"dataset={dataset!r}"
-                )
-            stopper = EarlyStopping(mode="min", patience=patience, threshold=min_delta)
-
-        def diffusion_loss(batch_images: torch.Tensor) -> torch.Tensor:
-            """L_simple on one batch, identical to the training objective."""
-            b = batch_images.size(0)
-            t_b = torch.randint(0, timesteps, (b,), device=device).long()
-            noise_b = torch.randn_like(batch_images)
-            x_t_b = ddpm.q_sample(batch_images, t_b, noise_b)
-            y_b = None
-            if model.y_embedder is not None:
-                y_b = torch.zeros(b, dtype=torch.long, device=device)
-            out = model(x_t_b, t_b, y_b)
-            if model.learn_sigma:
-                out = out[:, : model.in_channels]
-            return F.mse_loss(out, noise_b)
-
-        @torch.no_grad()
-        def validate() -> float:
-            """Mean held-out L_simple.
-
-            The timestep and noise are resampled per batch, so this is a noisy
-            estimator; the seed is fixed per call to keep successive epochs
-            comparable, which is what the plateau test needs.
-            """
-            loader = val_loader
-            if loader is None:
-                raise RuntimeError("validate() called without a held-out loader")
-            was_training = model.training
-            model.eval()
-            generator_state = torch.random.get_rng_state()
-            torch.manual_seed(0)
-            total, count = 0.0, 0
-            for val_imgs, _ in loader:
-                val_imgs = val_imgs.to(device)
-                total += float(diffusion_loss(val_imgs)) * val_imgs.size(0)
-                count += val_imgs.size(0)
-            torch.random.set_rng_state(generator_state)
-            model.train(was_training)
-            return total / max(count, 1)
-
-        global_step = 0
-        model.train()
-
-        start_time = time.time()
-
-        for epoch in range(1, epochs + 1):
-            for imgs, labels in train_loader:
-                imgs = imgs.to(device)
-                b = imgs.size(0)
-                t = torch.randint(0, timesteps, (b,), device=device).long()
-                noise = torch.randn_like(imgs)
-                x_t = ddpm.q_sample(imgs, t, noise)
-
-                y = labels.to(device) if model.y_embedder is not None else None
-                pred = model(x_t, t, y)
-
-                # With learn_sigma the model emits 2C channels: noise then the
-                # covariance parameterisation. Paper 3.1 trains eps with
-                # L_simple and Sigma with the full variational bound; only the
-                # L_simple half is applied here, so the covariance head is
-                # carried but not learned. Set learn_sigma=False for a strictly
-                # epsilon-only model.
-                if model.learn_sigma:
-                    pred = pred[:, : model.in_channels]
-                loss = F.mse_loss(pred, noise)
-
-                opt.zero_grad(set_to_none=True)
-                loss.backward()  # type: ignore[no-untyped-call]
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                opt.step()
-
-                if ema_model is not None:
-                    ema_update(model, ema_model)
-
-                if global_step % 100 == 0:
-                    elapsed = time.time() - start_time
-                    print(
-                        f"Epoch [{epoch}/{epochs}] Step [{global_step}] Loss: {loss.item():.4f} Time Elapsed: {elapsed / 60:.2f} min"
-                    )
-                    start_time = time.time()
-
-                global_step += 1
-
-            if stopper is not None:
-                val_loss = validate()
-                stopper.step(val_loss)
-                improved = val_loss < best_val
-                if improved:
-                    best_val = val_loss
-                    # Keep the best weights, not the last: on a plateau the run
-                    # ends `patience` epochs past the best model, so saving the
-                    # final state would ship a worse one.
-                    source = ema_model if ema_model is not None else model
-                    best_state = {
-                        key: value.detach().clone().cpu()
-                        for key, value in source.state_dict().items()
-                    }
-                print(
-                    f"Epoch [{epoch}/{epochs}] val_loss: {val_loss:.4f} "
-                    f"(best {best_val:.4f}{'*' if improved else ''})"
-                )
-                if stopper.stop:
-                    print(
-                        f"Early stopping at epoch {epoch}: held-out loss has not "
-                        f"improved by {min_delta} for {patience} epochs."
-                    )
-                    break
-
-            # Until this existed, weights were written only after the whole
-            # epoch loop returned, so a run stopped at epoch 399 of 400 -- by a
-            # timeout, an OOM or Ctrl+C -- left nothing on disk at all.
-            # `epoch` already counts from 1.
-            if checkpoint_every > 0 and epoch % checkpoint_every == 0:
-                os.makedirs(workdir, exist_ok=True)
-                periodic = ema_model if ema_model is not None else model
-                periodic_path = Path(workdir) / f"dit_model_epoch{epoch}.pth"
-                torch.save(periodic.state_dict(), periodic_path)
-                print(f"Wrote {periodic_path}")
+        best_val = float("inf")
+        if result.best_checkpoint is not None:
+            # Keep the best weights, not the last: on a plateau the run ends
+            # `patience` epochs past the best model.
+            saved = torch.load(
+                result.best_checkpoint / "task" / "task.pt",
+                map_location="cpu",
+                weights_only=True,
+            )
+            best_state = saved["ema"] if ema_model is not None else saved["model"]
+            best_val = float(result.best_value)
         print("Training Complete.")
 
         os.makedirs(workdir, exist_ok=True)

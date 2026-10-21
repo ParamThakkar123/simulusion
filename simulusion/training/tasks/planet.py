@@ -39,6 +39,7 @@ class PlanetConfig:
     batch_size: int = 32
     chunk_length: int = 50
     beta: float = 1.0
+    record_grads: bool = False
     scheduler_type: Optional[str] = "step"
     scheduler_kwargs: Dict[str, Any] = field(default_factory=dict)
 
@@ -58,18 +59,45 @@ class PlanetTask(TrainingTask):
     An epoch is ``steps_per_epoch`` gradient steps on replayed chunks, then one
     exploration episode with the CEM planner and one evaluation episode, both
     added to the replay. Progress is epochs.
+
+    Args:
+        config: The task config.
+        planet: Train this :class:`~simulusion.models.planet.Planet` instead
+            of building one. This is how :meth:`Planet.train` runs: each
+            epoch's metrics also go to its ``summary``, each evaluation
+            episode is saved as ``vid_<epoch>`` and every checkpoint also
+            writes ``ckpt_<epoch>.pth``, all in its ``results_dir``.
     """
 
     config_cls = PlanetTaskConfig
     progress_unit = "epochs"
 
+    def __init__(self, config: Any = None, *, planet: Optional[Any] = None) -> None:
+        super().__init__(config)
+        self._adopted = planet
+
     def max_steps(self) -> int:
         return int(self.config.model.epochs)
 
     def setup(self, trainer: Any) -> None:
-        from simulusion.models.planet import Planet, make_planet_scheduler
+        from simulusion.models.planet import make_planet_scheduler
 
         cfg = self.config.model
+        if self._adopted is not None:
+            self.planet = self._adopted
+        else:
+            self._build(cfg, trainer)
+        self.update = trainer.gradient_update(
+            self.planet.optimizer, self.planet.rssm.parameters(), max_grad_norm=1000.0
+        )
+        self.scheduler = make_planet_scheduler(
+            self.planet.optimizer, cfg.scheduler_type, cfg.scheduler_kwargs, cfg.epochs
+        )
+        self.epoch = 0
+
+    def _build(self, cfg: PlanetConfig, trainer: Any) -> None:
+        from simulusion.models.planet import Planet
+
         self.planet = Planet(
             cfg.env,
             bit_depth=cfg.bit_depth,
@@ -88,13 +116,6 @@ class PlanetTask(TrainingTask):
             max_episode_steps=cfg.max_episode_steps,
             action_repeats=cfg.action_repeats,
         )
-        self.update = trainer.gradient_update(
-            self.planet.optimizer, self.planet.rssm.parameters(), max_grad_norm=1000.0
-        )
-        self.scheduler = make_planet_scheduler(
-            self.planet.optimizer, cfg.scheduler_type, cfg.scheduler_kwargs, cfg.epochs
-        )
-        self.epoch = 0
 
     def progress(self) -> int:
         return self.epoch
@@ -117,6 +138,7 @@ class PlanetTask(TrainingTask):
                 N=cfg.batch_size,
                 H=cfg.chunk_length,
                 beta=cfg.beta,
+                grads=cfg.record_grads,
                 update=self.update,
             )
             rows.append(flatten_dict(out))
@@ -130,7 +152,7 @@ class PlanetTask(TrainingTask):
             else:
                 self.scheduler.step()
         planet.memory.append([planet.rollout_gen.rollout_once(explore=True)])
-        episode, _, eval_metrics, _ = planet.rollout_gen.rollout_eval()
+        episode, frames, eval_metrics, _ = planet.rollout_gen.rollout_eval()
         planet.memory.append([episode])
         metrics.update(
             {
@@ -140,6 +162,11 @@ class PlanetTask(TrainingTask):
             }
         )
         self.epoch += 1
+        if self._adopted is not None:
+            from simulusion.utils.utils import save_video
+
+            planet.summary.update(metrics)
+            save_video(frames, planet.results_dir, f"vid_{self.epoch}")
         return metrics
 
     def evaluate(self) -> Metrics:
@@ -167,6 +194,11 @@ class PlanetTask(TrainingTask):
             },
             directory / "task.pt",
         )
+        if self._adopted is not None:
+            torch.save(
+                self.planet.rssm.state_dict(),
+                Path(self.planet.results_dir) / f"ckpt_{self.epoch}.pth",
+            )
         if self.config.save_replay:
             save_planet_memory(self.planet.memory, directory / "replay")
 

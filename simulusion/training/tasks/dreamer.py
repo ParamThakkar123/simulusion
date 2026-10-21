@@ -69,20 +69,38 @@ class DreamerTaskConfig:
 class DreamerTask(TrainingTask):
     """Dreamer (V1 defaults) collecting from an environment.
 
-    One :meth:`train_step` is one round of :meth:`DreamerAgent.train`:
-    ``update_steps`` gradient steps on replay, then ``collect_steps`` of
-    environment interaction with the updated policy. The first round also
-    collects ``seed_steps`` with a random policy.
+    One :meth:`train_step` is one round of Dreamer's loop: ``update_steps``
+    gradient steps on replay, then ``collect_steps`` of environment
+    interaction with the updated policy. The first round also collects
+    ``seed_steps`` with a random policy.
+
+    Args:
+        config: The task config.
+        agent: Train this :class:`~simulusion.models.dreamer.DreamerAgent`
+            instead of building one: its environments, its model (at its own
+            precision) and its own logger, which also receives every metric
+            and, every ``log_video_freq`` environment steps, the evaluation
+            videos. This is how :meth:`DreamerAgent.train` runs.
     """
 
     config_cls = DreamerTaskConfig
     progress_unit = "env_steps"
     variant: ClassVar[str] = "dreamer"
 
+    def __init__(self, config: Any = None, *, agent: Optional[Any] = None) -> None:
+        super().__init__(config)
+        self._agent = agent
+
     def max_steps(self) -> int:
         return int(self.config.model.total_steps)
 
     def setup(self, trainer: Any) -> None:
+        self.seeded = False
+        if self._agent is not None:
+            self.train_env = self._agent.train_env
+            self.test_env = self._agent.test_env
+            self.dreamer = self._agent.dreamer
+            return
         from simulusion.models.dreamer import make_env
 
         args = self.config.model
@@ -95,7 +113,6 @@ class DreamerTask(TrainingTask):
             args, obs_shape, action_size, trainer.device, restore=False
         )
         self.dreamer.set_precision(trainer.precision)
-        self.seeded = False
 
     def progress(self) -> int:
         return int(self.dreamer.data_buffer.steps * self.config.model.action_repeat)
@@ -133,18 +150,43 @@ class DreamerTask(TrainingTask):
                 "replay/episodes": float(buffer.episodes),
             }
         )
+        self._to_agent_logger(metrics)
         return metrics
 
     def evaluate(self) -> Metrics:
-        rewards, _, _ = self.dreamer.evaluate(
-            self.test_env, self.config.model.test_episodes
+        args = self.config.model
+        rewards, videos, latents = self.dreamer.evaluate(
+            self.test_env, args.test_episodes
         )
-        return {
+        metrics = {
             "eval_avg_reward": float(np.mean(rewards)),
             "eval_std_reward": float(np.std(rewards)),
             "eval_max_reward": float(np.max(rewards)),
             "eval_min_reward": float(np.min(rewards)),
         }
+        agent = self._agent
+        if agent is not None:
+            if agent.last_latents_ref is not None and latents is not None:
+                agent.last_latents_ref[0] = latents
+            self._to_agent_logger(metrics)
+            freq = int(getattr(args, "log_video_freq", -1))
+            if (
+                freq > 0
+                and self.progress() % freq == 0
+                and len(videos) > 0
+                and len(videos[0]) != 0
+            ):
+                agent.logger.log_videos(
+                    videos, self.progress(), args.max_videos_to_save
+                )
+        return metrics
+
+    def _to_agent_logger(self, metrics: Metrics) -> None:
+        """Send metrics to the adopted agent's own logger, as its loop did."""
+        if self._agent is None:
+            return
+        self._agent.logger.log_scalars(dict(metrics), self.progress())
+        self._agent.logger.flush()
 
     def world_model(self) -> Optional[Any]:
         from simulusion.world_model import as_world_model
@@ -165,6 +207,11 @@ class DreamerTask(TrainingTask):
         )
         if self.config.save_replay:
             save_replay(self.dreamer.data_buffer, directory / "replay.npz")
+        if self._agent is not None:
+            # Where DreamerAgent.train has always put its checkpoints.
+            ckpts = Path(self._agent.logdir) / "ckpts"
+            ckpts.mkdir(parents=True, exist_ok=True)
+            self.dreamer.save(str(ckpts / f"{self.progress()}_ckpt.pt"))
 
     def load_checkpoint(self, directory: Path) -> None:
         self.dreamer.restore_checkpoint(
@@ -183,6 +230,8 @@ class DreamerTask(TrainingTask):
             )
 
     def close(self) -> None:
+        if self._agent is not None:
+            return  # the agent owns its environments and keeps using them
         for env in (getattr(self, "train_env", None), getattr(self, "test_env", None)):
             close = getattr(env, "close", None)
             if callable(close):

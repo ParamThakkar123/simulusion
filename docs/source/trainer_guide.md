@@ -221,8 +221,49 @@ and `close()`.
 
 ## The older entrypoints
 
-`DreamerAgent.train()`, `IRISTrainer.train()`, `DiamondAgent.train()`,
-`train_dit`, `train_jepa`, `train_convae` and the rest still work and use the
-same update code (and the same `GradientUpdate`), so their results are
-unchanged. New features (resume, data parallelism, run directories) land on
-the trainer.
+The per-family entrypoints keep their signatures and still write the files
+they always wrote, but each now runs on the shared Trainer: it builds its
+family's task around the object it was called on and runs it with
+`simulusion.training.legacy.fit_legacy`. There is one training loop, and the
+old calls gain resumable checkpoints and a record of every run.
+
+| Entrypoint | Runs as | Still writes |
+|---|---|---|
+| `DreamerAgent.train(total_steps)` | `dreamer` task | `<logdir>/ckpts/<step>_ckpt.pt`; metrics and eval videos through the agent's own logger |
+| `IRISTrainer.train(total_epochs, eval_interval, save_dir)` | `iris` task | `best_<game>.pt`, `final_<game>.pt`, `checkpoint_<epoch>.pt`; returns the per-epoch metrics, sets `final_eval_return` |
+| `DiamondAgent.train()` | `diamond` task | `checkpoint_<epoch>.pt` in `checkpoint_dir` (with its replay) |
+| `Planet.train(...)`, `train_planet.main` | `planet` task | `ckpt_<epoch>.pth`, `vid_<epoch>`, the TensorBoard summary |
+| `GenieTrainer.train(loaders, ...)` | `genie` task | `genie_step_<N>.pt` in `checkpoint_dir` |
+| `DiT.fit(...)`, `train_dit` | `dit` task | `dit_model.pth`, `dit_model_epoch<N>.pth`, `generated_samples.png` |
+| `JEPAAgent.train()` | `jepa` task | `<write_tag>-latest.pth.tar`, `<write_tag>-ep<N>.pth.tar` |
+| `train_convae`, `train_mdn_rnn` | `vae`, `mdrnn` tasks | `checkpoint.tar`, `best.tar`, `*_final.pth` (and V's samples) |
+| `train_controller` | `controller` task | `<logdir>/ctrl/best.tar` |
+
+What they now all do the same way:
+
+* The run directory is the folder the entrypoint always used. The trainer
+  adds `checkpoints/`, `run.json`, `run_config.yaml` and
+  `train_metrics.jsonl` there, under names that never overwrite a family's
+  own `config.yaml` or `metrics.jsonl`.
+* The object keeps its own device and precision (its `use_amp`).
+* Evaluation, early stopping and "best" checkpoints are the trainer's
+  `eval_every`, `early_stopping_metric` and `best_metric`, set from the
+  entrypoint's own arguments.
+
+Small differences from the loops they replace:
+
+* Periodic checkpoints are taken when progress crosses an interval and named
+  by the step they were written at. Dreamer no longer writes one before any
+  training, and the last one is written after the final evaluation.
+* IRIS evaluates after epochs `eval_interval, 2 * eval_interval, ...` (not
+  also after epoch 0), and its best checkpoint can come from the final
+  evaluation too. DIAMOND likewise.
+* `train_mdn_rnn` samples latents from the VAE as batches are drawn instead
+  of precomputing them once (`use_precomputed_latents` is accepted and
+  ignored). V and M read rollouts as episodes: windows of `seq_len + 1`
+  frames, resized to 64x64.
+* `train_controller` scores candidates in one process (`max_workers` and
+  `display` no longer apply) and takes the controller's sizes from the
+  trained models.
+* `JEPAAgent.train` with `enable_sweep` (W&B sweeps) still runs
+  `train_jepa.main`'s own loop.

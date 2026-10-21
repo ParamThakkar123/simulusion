@@ -48,14 +48,31 @@ def _for_trainer(config: DiamondConfig, trainer: Any) -> DiamondConfig:
 
 @register_task("diamond")
 class DiamondTask(TrainingTask):
-    """DIAMOND on Atari (or any env with the DIAMOND wrapper's API, as ``env``)."""
+    """DIAMOND on Atari (or any env with the DIAMOND wrapper's API, as ``env``).
+
+    Args:
+        config: The task config.
+        env: The environment to build DiamondAgent with, instead of Atari.
+        agent: Train this :class:`~simulusion.training.train_diamond.
+            DiamondAgent` instead of building one (its environment, replay
+            and networks, at its own precision). This is how
+            :meth:`DiamondAgent.train` runs; its ``checkpoint_<epoch>.pt``
+            files are then also written whenever the trainer checkpoints.
+    """
 
     config_cls = DiamondTaskConfig
     progress_unit = "epochs"
 
-    def __init__(self, config: Any = None, *, env: Optional[Any] = None) -> None:
+    def __init__(
+        self,
+        config: Any = None,
+        *,
+        env: Optional[Any] = None,
+        agent: Optional[Any] = None,
+    ) -> None:
         super().__init__(config)
         self._env = env
+        self._adopted = agent
 
     def max_steps(self) -> int:
         return int(self.config.model.num_epochs)
@@ -63,6 +80,10 @@ class DiamondTask(TrainingTask):
     def setup(self, trainer: Any) -> None:
         from simulusion.training.train_diamond import DiamondAgent
 
+        self.epoch = 0
+        if self._adopted is not None:
+            self.agent = self._adopted
+            return
         self.agent = DiamondAgent(
             _for_trainer(self.config.model, trainer), env=self._env
         )
@@ -107,6 +128,9 @@ class DiamondTask(TrainingTask):
             },
             directory / "task.pt",
         )
+        if self._adopted is not None:
+            # Into config.checkpoint_dir, where DiamondAgent.train put them.
+            self.agent.save_checkpoint(f"checkpoint_{self.epoch}.pt")
 
     def load_checkpoint(self, directory: Path) -> None:
         self.agent.load_checkpoint(str(directory / "agent.pt"))

@@ -9,13 +9,11 @@ from simulusion.controller.rssm_policy import RSSMPolicy
 from simulusion.controller.rollout_generator import RolloutGenerator
 from simulusion.utils.utils import (
     TensorBoardMetrics,
-    save_video,
     postprocess_img,
     TorchImageEnvWrapper,
 )
 from typing import Any
 from simulusion.memory.planet_memory import Memory, Episode
-from simulusion.training.train_planet import train as planet_train
 from simulusion.export import ExportableAgentMixin
 
 
@@ -201,106 +199,51 @@ class Planet(ExportableAgentMixin):
         scheduler_type: str = "step",
         scheduler_kwargs: dict | None = None,
     ) -> str:
-        """
-        High-level training loop. Delegates single-step training to the existing `train` function.
+        """Train for ``epochs`` epochs; returns the results directory.
+
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``planet`` task, with this model, planner and replay. Each epoch is
+        ``steps_per_epoch`` gradient steps on ``batch_size`` chunks of ``H``
+        steps, then one exploration and one evaluation episode. As before,
+        metrics go to the TensorBoard summary in ``results_dir``, every
+        evaluation episode is saved as ``vid_<epoch>``, and the RSSM is
+        written to ``ckpt_<epoch>.pth`` every ``save_every`` epochs.
 
         Args:
             scheduler_type (str): Type of scheduler to use ("step", "cosine", "exponential", "plateau", None)
             scheduler_kwargs (dict): Additional arguments for the scheduler
         """
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.planet import (
+            PlanetConfig,
+            PlanetTask,
+            PlanetTaskConfig,
+        )
+
         # allow caller to override results dir for this training run
         if results_dir is not None:
             self.results_dir = results_dir
         os.makedirs(self.results_dir, exist_ok=True)
         self.summary = TensorBoardMetrics(self.results_dir)
-
-        scheduler = make_planet_scheduler(
-            self.optimizer, scheduler_type, scheduler_kwargs, epochs
+        config = PlanetConfig(
+            bit_depth=self.bit_depth,
+            epochs=epochs,
+            steps_per_epoch=steps_per_epoch,
+            batch_size=batch_size,
+            chunk_length=H,
+            beta=beta,
+            record_grads=record_grads,
+            scheduler_type=scheduler_type,
+            scheduler_kwargs=dict(scheduler_kwargs or {}),
         )
-
-        if len(self.memory.episodes) == 0:
-            self.warmup(n_episodes=1, random_policy=True)
-
-        for ep in range(epochs):
-            metrics: dict[str, Any] = {}
-            epoch_loss: float = 0.0  # Track average loss for ReduceLROnPlateau
-
-            for _ in range(steps_per_epoch):
-                train_metrics = planet_train(
-                    self.memory,
-                    self.rssm.train(),
-                    self.optimizer,
-                    self.device,
-                    N=batch_size,
-                    H=H,
-                    beta=beta,
-                    grads=record_grads,
-                )
-                for k, v in train_metrics.items():
-                    if k not in metrics:
-                        metrics[k] = []
-                    if isinstance(v, dict):
-                        for ik, iv in v.items():
-                            metrics.setdefault(f"{k}/{ik}", []).append(iv)
-                    else:
-                        metrics[k].append(v)
-
-            compact = {}
-            for k, vs in metrics.items():
-                try:
-                    compact[k] = np.mean(vs)
-                except Exception:
-                    compact[k] = vs
-
-            # Calculate total loss for ReduceLROnPlateau
-            if "losses/kl" in compact and "losses/reconstruction" in compact:
-                epoch_loss = float(
-                    compact["losses/kl"] + compact["losses/reconstruction"]
-                )
-                if "losses/reward_pred" in compact:
-                    epoch_loss += float(compact["losses/reward_pred"])
-
-            # Add current learning rate to metrics
-            current_lr = self.optimizer.param_groups[0]["lr"]
-            compact["learning_rate"] = current_lr
-
-            self.summary.update(compact)
-
-            # Step the scheduler
-            if scheduler is not None:
-                if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-                    # ReduceLROnPlateau needs the metric to track
-                    scheduler.step(epoch_loss)
-                else:
-                    # Other schedulers just need step()
-                    scheduler.step()
-
-            # Log learning rate changes
-            new_lr = self.optimizer.param_groups[0]["lr"]
-            if new_lr != current_lr:
-                print(
-                    f"Epoch {ep + 1}: Learning rate changed from {current_lr:.2e} to {new_lr:.2e}"
-                )
-
-            self.memory.append([self.rollout_gen.rollout_once(explore=True)])
-            # Four values, not three -- the trailing element is the optional
-            # latents list. See RolloutGenerator.rollout_eval.
-            (
-                eval_episode,
-                eval_frames,
-                eval_metrics,
-                _,
-            ) = self.rollout_gen.rollout_eval()
-            self.memory.append([eval_episode])
-            save_video(eval_frames, self.results_dir, f"vid_{ep + 1}")
-            self.summary.update(eval_metrics)
-
-            if (ep + 1) % save_every == 0:
-                torch.save(
-                    self.rssm.state_dict(),
-                    os.path.join(self.results_dir, f"ckpt_{ep + 1}.pth"),
-                )
-
+        fit_legacy(
+            # The replay is not checkpointed: this loop never resumed.
+            PlanetTask(PlanetTaskConfig(model=config, save_replay=False), planet=self),
+            self.results_dir,
+            max_steps=epochs,
+            device=self.device,
+            checkpoint_every=save_every,
+        )
         return self.results_dir
 
 

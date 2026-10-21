@@ -78,7 +78,6 @@ def _read_av(path: Path, start: Optional[float], end: Optional[float]) -> np.nda
     frames = []
     with av.open(str(path)) as container:
         stream = container.streams.video[0]
-        stream.thread_type = "AUTO"
         if start:
             # Seek lands on the keyframe at or before `start`; frames before it
             # are decoded and dropped below.

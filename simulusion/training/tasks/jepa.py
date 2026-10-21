@@ -38,13 +38,43 @@ class JEPATaskConfig:
 
 @register_task("jepa")
 class JEPATask(TrainingTask):
-    """I-JEPA: context encoder + predictor regress an EMA target encoder's patches."""
+    """I-JEPA: context encoder + predictor regress an EMA target encoder's patches.
+
+    Args:
+        config: The task config.
+        legacy_folder: Run as ``train_jepa`` does, in this folder: one step is
+            a whole epoch (so evaluation, early stopping and checkpoints are
+            per epoch), evaluation scores the whole held-out loader, training
+            starts from ``model.read_checkpoint`` when ``model.load_checkpoint``
+            is set, and every checkpoint also writes ``<write_tag>-latest.pth.tar``
+            (and ``<write_tag>-ep<N>.pth.tar`` every 50 epochs). This is how
+            :meth:`JEPAAgent.train` runs.
+    """
 
     config_cls = JEPATaskConfig
     distributed = True
 
+    #: train_jepa's epochs between numbered checkpoints.
+    LEGACY_CHECKPOINT_FREQ = 50
+
+    def __init__(
+        self, config: Any = None, *, legacy_folder: Optional[str] = None
+    ) -> None:
+        super().__init__(config)
+        self._legacy_folder = legacy_folder
+        if legacy_folder is not None:
+            self.progress_unit = "epochs"  # type: ignore[misc]
+        self._epochs_done = 0
+
     def max_steps(self) -> int:
+        if self._legacy_folder is not None:
+            return int(self.config.model.epochs)
         return int(self.config.model.epochs) * self.ipe
+
+    def progress(self) -> int:
+        if self._legacy_folder is not None:
+            return self._epochs_done
+        return super().progress()
 
     def setup(self, trainer: Any) -> None:
         from simulusion.helpers.jepa_helper import init_model, init_opt
@@ -129,6 +159,8 @@ class JEPATask(TrainingTask):
         )
         self._total = int(self.ipe * c.epochs * c.ipe_scale)
         self.step_index = 0
+        if self._legacy_folder is not None and c.load_checkpoint:
+            self._load_legacy(trainer, optimizer)
 
     def _momentum(self) -> float:
         lo, hi = self.config.model.ema
@@ -161,6 +193,14 @@ class JEPATask(TrainingTask):
         return self.loss_fn(z, h)
 
     def train_step(self) -> Metrics:
+        if self._legacy_folder is None:
+            return self._one_step()
+        # One epoch: a pass over the loader, as train_jepa counts them.
+        rows = [self._one_step() for _ in range(self.ipe)]
+        self._epochs_done += 1
+        return {k: sum(r[k] for r in rows) / len(rows) for k in rows[0]}
+
+    def _one_step(self) -> dict[str, float]:
         udata, masks_enc, masks_pred = self._next()
         new_lr = self.lr_schedule.step()
         new_wd = self.wd_schedule.step()
@@ -194,13 +234,72 @@ class JEPATask(TrainingTask):
         self.predictor.eval()
         total, count = 0.0, 0
         for i, (udata, masks_enc, masks_pred) in enumerate(self.val):
-            if i >= self.config.val_batches:
+            if self._legacy_folder is None and i >= self.config.val_batches:
                 break
             with self.trainer.precision.autocast():
                 loss = float(self._loss(udata, masks_enc, masks_pred))
             total += loss * len(udata[0])
             count += len(udata[0])
         return {"val_loss": total / max(count, 1)}
+
+    def save_checkpoint(self, directory: Path) -> None:
+        super().save_checkpoint(directory)
+        if self._legacy_folder is not None:
+            self._save_legacy()
+
+    def _legacy_state(self) -> dict[str, Any]:
+        c = self.config.model
+        return {
+            "encoder": self.trainer.unwrap(self.encoder).state_dict(),
+            "predictor": self.trainer.unwrap(self.predictor).state_dict(),
+            "target_encoder": self.target.state_dict(),
+            "opt": self.update.optimizer.state_dict(),
+            "scaler": None,
+            "epoch": self._epochs_done,
+            "batch_size": c.batch_size,
+            "world_size": self.trainer.num_processes,
+            "lr": c.lr,
+        }
+
+    def _save_legacy(self) -> None:
+        """train_jepa's own checkpoint files, in its format."""
+        folder = Path(str(self._legacy_folder))
+        folder.mkdir(parents=True, exist_ok=True)
+        tag = self.config.model.write_tag
+        state = self._legacy_state()
+        torch.save(state, folder / f"{tag}-latest.pth.tar")
+        if self._epochs_done and self._epochs_done % self.LEGACY_CHECKPOINT_FREQ == 0:
+            torch.save(state, folder / f"{tag}-ep{self._epochs_done}.pth.tar")
+
+    def _load_legacy(self, trainer: Any, optimizer: Any) -> None:
+        """Start from a train_jepa checkpoint (``model.read_checkpoint``)."""
+        from simulusion.helpers.jepa_helper import load_checkpoint
+
+        c = self.config.model
+        folder = Path(str(self._legacy_folder))
+        path = (
+            folder / c.read_checkpoint
+            if c.read_checkpoint
+            else folder / f"{c.write_tag}-latest.pth.tar"
+        )
+        if Path(str(c.read_checkpoint or "")).is_absolute():
+            path = Path(str(c.read_checkpoint))
+        _, _, _, _, _, start_epoch = load_checkpoint(
+            device=trainer.device,
+            r_path=str(path),
+            encoder=self.trainer.unwrap(self.encoder),
+            predictor=self.trainer.unwrap(self.predictor),
+            target_encoder=self.target,
+            opt=optimizer,
+            scaler=None,
+        )
+        # Bring the schedules and the mask collator to that epoch.
+        for _ in range(int(start_epoch) * self.ipe):
+            self.lr_schedule.step()
+            self.wd_schedule.step()
+            self.masks.step()
+        self.step_index = int(start_epoch) * self.ipe
+        self._epochs_done = int(start_epoch)
 
     def export(self, directory: Path) -> Optional[Path]:
         directory.mkdir(parents=True, exist_ok=True)
@@ -224,6 +323,7 @@ class JEPATask(TrainingTask):
             "update": self.update.state_dict(),
             "step_index": self.step_index,
             "epoch": self._epoch,
+            "epochs_done": self._epochs_done,
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
@@ -238,6 +338,7 @@ class JEPATask(TrainingTask):
             self.wd_schedule.step()
             self.masks.step()
         self._epoch = int(state["epoch"])
+        self._epochs_done = int(state.get("epochs_done", 0))
         if hasattr(self.sampler, "set_epoch"):
             self.sampler.set_epoch(self._epoch)
         self._iter = iter(self.loader)

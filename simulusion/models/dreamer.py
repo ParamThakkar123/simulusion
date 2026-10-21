@@ -21,7 +21,6 @@ from simulusion.vision.dreamer_decoder import ConvDecoder, DenseDecoder, ActionD
 from simulusion.vision.dreamer_encoder import ConvEncoder
 from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.utils.memory_utils import enable_performance_defaults
-from simulusion.utils.train_utils import EarlyStopping
 from simulusion.utils.dreamer_utils import (
     Logger,
     FreezeParameters,
@@ -31,7 +30,6 @@ from simulusion.configs.dreamer_config import DreamerConfig
 from simulusion.export import ExportableAgentMixin
 from simulusion.utils.logging_utils import (
     assert_finite,
-    collect_system_stats,
     get_package_logger,
     setup_logging,
 )
@@ -1349,158 +1347,40 @@ class DreamerAgent(ExportableAgentMixin):
         return self.dreamer.summary()
 
     def train(self, total_steps: int | None = None) -> None:
-        if total_steps is None:
-            total_steps = self.args.total_steps
+        """Train for ``total_steps`` environment steps (``args.total_steps`` by default).
 
-        initial_logs = OrderedDict()
-        seed_episode_rews = self.dreamer.collect_random_episodes(
-            self.train_env, self.args.seed_steps // self.args.action_repeat
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``dreamer`` task, with this agent's environments, model and logger, so
+        metrics and evaluation videos go where they always went. Evaluation
+        runs every ``test_interval`` steps, early stopping on its average
+        reward when ``early_stopping`` is set, and checkpoints land in
+        ``<logdir>/ckpts/<step>_ckpt.pt`` every ``checkpoint_interval`` steps
+        and at the end, as before. The trainer adds a resumable copy of each
+        under ``<logdir>/checkpoints/``, plus ``run.json``,
+        ``run_config.yaml`` and ``train_metrics.jsonl``.
+        """
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.dreamer import DreamerTask, DreamerTaskConfig
+
+        args = self.args
+        early = bool(getattr(args, "early_stopping", False))
+        fit_legacy(
+            # The replay buffer is not checkpointed here: this loop never
+            # resumed, and the buffer can hold millions of frames.
+            DreamerTask(DreamerTaskConfig(model=args, save_replay=False), agent=self),
+            self.logdir,
+            max_steps=int(total_steps if total_steps is not None else args.total_steps),
+            device=self.dreamer.device,
+            seed=args.seed,
+            eval_every=args.test_interval,
+            checkpoint_every=args.checkpoint_interval,
+            early_stopping_metric="eval_avg_reward" if early else None,
+            early_stopping_mode="max",
+            patience=getattr(args, "patience", 10),
+            min_delta=getattr(args, "min_delta", 1e-4),
+            # The agent's own logger already prints to the console.
+            console=False,
         )
-        global_step = self.dreamer.data_buffer.steps * self.args.action_repeat
-        # without loss of generality intial rews for both train and eval are assumed same
-        initial_logs.update(
-            {
-                "train_avg_reward": np.mean(seed_episode_rews),
-                "train_max_reward": np.max(seed_episode_rews),
-                "train_min_reward": np.min(seed_episode_rews),
-                "train_std_reward": np.std(seed_episode_rews),
-                "eval_avg_reward": np.mean(seed_episode_rews),
-                "eval_max_reward": np.max(seed_episode_rews),
-                "eval_min_reward": np.min(seed_episode_rews),
-                "eval_std_reward": np.std(seed_episode_rews),
-            }
-        )
-        self.logger.log_scalars(initial_logs, step=0)
-        self.logger.flush()
-
-        stopper = None
-        if getattr(self.args, "early_stopping", False):
-            stopper = EarlyStopping(
-                mode="max",
-                patience=self.args.patience,
-                threshold=self.args.min_delta,
-            )
-
-        last_saved_step: int | None = None
-        while global_step <= total_steps:
-            logger.info("At global step %s", global_step)
-
-            logs = OrderedDict()
-            video_images = []
-
-            update_start = time.perf_counter()
-            # The summed `model_loss` is dominated by the Gaussian NLL constant
-            # of the observation head, so accumulate the per-component metrics
-            # and average them over the whole update block instead of reporting
-            # whatever the final batch happened to produce.
-            metric_sums: dict[str, float] = {}
-            for _ in range(self.args.update_steps):
-                model_loss, actor_loss, value_loss = self.dreamer.train_one_batch()
-                for name, value in self.dreamer.metrics.items():
-                    metric_sums[name] = metric_sums.get(name, 0.0) + value
-            update_elapsed = max(time.perf_counter() - update_start, 1e-9)
-            update_steps = max(1, self.args.update_steps)
-            averaged_metrics = {
-                name: total / update_steps for name, total in metric_sums.items()
-            }
-
-            collect_count = self.args.collect_steps // self.args.action_repeat
-            collect_start = time.perf_counter()
-            train_rews = self.dreamer.act_and_collect_data(
-                self.train_env, collect_count
-            )
-            collect_elapsed = max(time.perf_counter() - collect_start, 1e-9)
-
-            logs.update(
-                {
-                    "model_loss": model_loss,
-                    "actor_loss": actor_loss,
-                    "value_loss": value_loss,
-                    "train_avg_reward": np.mean(train_rews),
-                    "train_max_reward": np.max(train_rews),
-                    "train_min_reward": np.min(train_rews),
-                    "train_std_reward": np.std(train_rews),
-                    "throughput/env_steps_per_sec": (
-                        collect_count * self.args.action_repeat
-                    )
-                    / collect_elapsed,
-                    "throughput/grad_steps_per_sec": self.args.update_steps
-                    / update_elapsed,
-                    "replay/fill_ratio": min(
-                        1.0,
-                        self.dreamer.data_buffer.steps
-                        / max(1, self.dreamer.data_buffer.size),
-                    ),
-                    "replay/steps": self.dreamer.data_buffer.steps,
-                    "replay/episodes": self.dreamer.data_buffer.episodes,
-                }
-            )
-            logs.update(averaged_metrics)
-
-            stats_freq = getattr(self.args, "log_system_stats_freq", 0)
-            if stats_freq and global_step % stats_freq == 0:
-                logs.update(collect_system_stats(self.dreamer.device))
-
-            if global_step % self.args.test_interval == 0:
-                episode_rews, video_images, latents = self.dreamer.evaluate(
-                    self.test_env, self.args.test_episodes
-                )
-                if self.last_latents_ref is not None and latents is not None:
-                    self.last_latents_ref[0] = latents
-
-                logs.update(
-                    {
-                        "eval_avg_reward": np.mean(episode_rews),
-                        "eval_max_reward": np.max(episode_rews),
-                        "eval_min_reward": np.min(episode_rews),
-                        "eval_std_reward": np.std(episode_rews),
-                    }
-                )
-
-                if stopper is not None:
-                    stopper.step(float(np.mean(episode_rews)))
-                    if stopper.stop:
-                        self.logger.log_scalars(logs, global_step)
-                        print(
-                            f"Early stopping at step {global_step}: evaluation "
-                            f"return has not improved by {self.args.min_delta} "
-                            f"for {self.args.patience} evaluations."
-                        )
-                        ckpt_dir = os.path.join(self.logdir, "ckpts/")
-                        os.makedirs(ckpt_dir, exist_ok=True)
-                        self.dreamer.save(
-                            os.path.join(ckpt_dir, f"{global_step}_ckpt.pt")
-                        )
-                        last_saved_step = global_step
-                        break
-
-            self.logger.log_scalars(logs, global_step)
-
-            if (
-                global_step % self.args.log_video_freq == 0
-                and self.args.log_video_freq != -1
-                and len(video_images) > 0
-                and len(video_images[0]) != 0
-            ):
-                self.logger.log_videos(
-                    video_images, global_step, self.args.max_videos_to_save
-                )
-            if global_step % self.args.checkpoint_interval == 0:
-                ckpt_dir = os.path.join(self.logdir, "ckpts/")
-                if not (os.path.exists(ckpt_dir)):
-                    os.makedirs(ckpt_dir)
-                self.dreamer.save(os.path.join(ckpt_dir, f"{global_step}_ckpt.pt"))
-                last_saved_step = global_step
-
-            global_step = self.dreamer.data_buffer.steps * self.args.action_repeat
-            self.logger.flush()
-
-        # Always leave a checkpoint of the finished run. Short runs never reach
-        # `checkpoint_interval`, and without this they trained and saved nothing.
-        if last_saved_step != global_step:
-            ckpt_dir = os.path.join(self.logdir, "ckpts/")
-            os.makedirs(ckpt_dir, exist_ok=True)
-            self.dreamer.save(os.path.join(ckpt_dir, f"{global_step}_ckpt.pt"))
 
     def evaluate(self) -> tuple:
         logs = OrderedDict()

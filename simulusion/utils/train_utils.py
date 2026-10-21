@@ -259,10 +259,13 @@ class ReduceLROnPlateau:
         Returns:
             Dictionary containing scheduler state.
         """
+        # Not the optimizer: it is a live object (it pickles as a class, so a
+        # checkpoint holding it cannot be read with weights_only=True), and it
+        # is restored from its own state_dict anyway.
         return {
             key: value
             for key, value in self.__dict__.items()
-            if key not in ("is_better",)
+            if key not in ("is_better", "optimizer")
         }
 
     def load_state_dict(self, state_dict: dict) -> None:
@@ -271,5 +274,6 @@ class ReduceLROnPlateau:
         Args:
             state_dict: Dictionary containing scheduler state.
         """
-        self.__dict__.update(state_dict)
+        state = {k: v for k, v in state_dict.items() if k != "optimizer"}
+        self.__dict__.update(state)
         self._init_is_better(self.mode, self.threshold, self.threshold_mode)

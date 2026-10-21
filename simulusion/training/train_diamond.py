@@ -28,7 +28,6 @@ from simulusion.experiments import (
     parse_experiment_args,
 )
 from simulusion.envs.diamond_atari import make_diamond_atari_env
-from simulusion.utils.train_utils import EarlyStopping
 from gymnasium.spaces import Discrete, Box
 from simulusion.datasets.diamond_dataset import (
     ReplayBuffer,
@@ -713,52 +712,41 @@ class DiamondAgent:
         )
 
     def train(self) -> None:
-        """Main training loop following Algorithm 1."""
-        print(f"Training DIAMOND on {self.config.game}")
+        """Train for ``config.num_epochs`` epochs of Algorithm 1.
+
+        Runs on the shared :class:`~simulusion.training.Trainer` through the
+        ``diamond`` task, with this agent's environment, replay and networks.
+        Evaluation runs every ``eval_interval`` epochs, early stopping on its
+        reward when ``early_stopping`` is set, and ``checkpoint_<epoch>.pt``
+        is written to ``checkpoint_dir`` every ``save_interval`` epochs and at
+        the end. The trainer adds resumable checkpoints under
+        ``<checkpoint_dir>/checkpoints/``, ``run.json``, ``run_config.yaml``
+        and ``train_metrics.jsonl``.
+        """
+        from simulusion.training.legacy import fit_legacy
+        from simulusion.training.tasks.diamond import DiamondTask, DiamondTaskConfig
+
+        config = self.config
+        print(f"Training DIAMOND on {config.game}")
         print(f"Device: {self.device}")
         print(f"Action space: {self.action_dim}")
-
-        # Return, not loss: the diffusion loss keeps falling long after the
-        # policy stops improving, so a loss plateau never arrives.
-        stopper = None
-        if getattr(self.config, "early_stopping", False):
-            stopper = EarlyStopping(
-                mode="max",
-                patience=self.config.patience,
-                threshold=self.config.min_delta,
-            )
-
-        for epoch in tqdm(range(self.config.num_epochs), desc="Training"):
-            epoch_metrics = self.train_epoch()
-            if epoch_metrics is None:
-                continue
-
-            if epoch % self.config.log_interval == 0:
-                print(f"\nEpoch {epoch}:")
-                print(f"  Diffusion loss: {epoch_metrics['diffusion_loss']:.4f}")
-                print(f"  Reward loss: {epoch_metrics['reward_loss']:.4f}")
-                print(f"  Policy loss: {epoch_metrics['policy_loss']:.4f}")
-                print(f"  Value loss: {epoch_metrics['value_loss']:.4f}")
-                print(f"  Collected reward: {epoch_metrics['collected_reward']:.2f}")
-
-            if epoch % self.config.eval_interval == 0:
-                eval_reward = self.evaluate()
-                hns = self._compute_human_normalized_score(eval_reward)
-                print(f"  Eval reward: {eval_reward:.2f}, HNS: {hns:.3f}")
-
-                if stopper is not None:
-                    stopper.step(eval_reward)
-                    if stopper.stop:
-                        print(
-                            f"  Early stopping at epoch {epoch}: evaluation reward "
-                            f"has not improved by {self.config.min_delta} for "
-                            f"{self.config.patience} evaluations."
-                        )
-                        self.save_checkpoint(f"checkpoint_{epoch}.pt")
-                        break
-
-            if epoch % self.config.save_interval == 0:
-                self.save_checkpoint(f"checkpoint_{epoch}.pt")
+        early = bool(getattr(config, "early_stopping", False))
+        fit_legacy(
+            DiamondTask(DiamondTaskConfig(model=config), agent=self),
+            config.checkpoint_dir,
+            max_steps=config.num_epochs,
+            device=self.device,
+            seed=config.seed,
+            log_every=config.log_interval,
+            eval_every=config.eval_interval,
+            checkpoint_every=config.save_interval,
+            # Return, not loss: the diffusion loss keeps falling long after
+            # the policy stops improving, so a loss plateau never arrives.
+            early_stopping_metric="eval_reward" if early else None,
+            early_stopping_mode="max",
+            patience=config.patience,
+            min_delta=config.min_delta,
+        )
 
     def train_epoch(self) -> Optional[Dict[str, float]]:
         """One epoch of Algorithm 1: collect, then train every component.

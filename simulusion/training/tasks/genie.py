@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Optional
 
+
+import torch
 
 from simulusion.data.sequence import frames_to_float
 from simulusion.training.task import Metrics, TrainingTask, register_task
@@ -34,15 +38,52 @@ class GenieTask(TrainingTask):
 
     Progress is optimizer steps. Evaluation reports held-out reconstruction
     loss when ``data.val_fraction`` is set.
+
+    Args:
+        config: The task config.
+        genie: Train this :class:`~simulusion.training.train_genie.
+            GenieTrainer` (its model, optimizer, schedule and precision)
+            instead of building one, on ``train_loader`` / ``val_loader``,
+            which yield ``(B, C, T, H, W)`` video tensors. This is how
+            :meth:`GenieTrainer.train` runs; with ``checkpoint_dir`` its
+            ``genie_step_<N>.pt`` files are also written whenever the trainer
+            checkpoints. Single-process only.
     """
 
     config_cls = GenieTaskConfig
     distributed = True
 
+    def __init__(
+        self,
+        config: Any = None,
+        *,
+        genie: Optional[GenieTrainer] = None,
+        train_loader: Optional[Any] = None,
+        val_loader: Optional[Any] = None,
+        checkpoint_dir: Optional[str] = None,
+    ) -> None:
+        super().__init__(config)
+        self._adopted = genie
+        self._train_loader = train_loader
+        self._val_loader = val_loader
+        self._checkpoint_dir = checkpoint_dir
+
     def max_steps(self) -> int:
         return int(self.config.model.max_steps)
 
+    def progress(self) -> int:
+        # The model's own step counter, so a GenieTrainer loaded from a
+        # checkpoint continues towards the same budget.
+        return int(self.genie.global_step)
+
     def setup(self, trainer: Any) -> None:
+        if self._adopted is not None:
+            if trainer.num_processes > 1:
+                raise RuntimeError("GenieTrainer.train runs in a single process.")
+            self.genie = self._adopted
+            self.batches = trainer.infinite(self._train_loader)
+            self.val = self._val_loader
+            return
         cfg = self.config
         model = trainer.prepare_module(build_genie(cfg.model))
         self.genie = GenieTrainer(
@@ -58,16 +99,22 @@ class GenieTask(TrainingTask):
             image_size=cfg.model.image_size,
         )
 
+    def _video(self, batch: Any) -> torch.Tensor:
+        if self._adopted is not None:  # the caller's (B, C, T, H, W) tensors
+            return batch.to(self.genie.device)
+        return frames_to_float(batch["frames"]).permute(0, 2, 1, 3, 4)
+
     def train_step(self) -> Metrics:
-        batch = next(self.batches)
-        video = frames_to_float(batch["frames"]).permute(0, 2, 1, 3, 4)
-        losses = self.genie.train_step(video)
+        losses = self.genie.train_step(self._video(next(self.batches)))
         self.trainer.broadcast_quantizers(self.genie.model)
         return {k: float(v) for k, v in losses.items() if v is not None}
 
     def evaluate(self) -> Metrics:
         if self.val is None:
             return {}
+        if self._adopted is not None:
+            # The whole held-out loader, as GenieTrainer.train scored it.
+            return {"val_recon_loss": self.genie.validate_epoch(self.val)}
         rows = []
         for i, batch in enumerate(self.val):
             if i >= self.config.data.val_batches:
@@ -81,6 +128,13 @@ class GenieTask(TrainingTask):
         from simulusion.world_model.genie import GenieWorldModel
 
         return GenieWorldModel(self.trainer.unwrap(self.genie.model))
+
+    def save_checkpoint(self, directory: Path) -> None:
+        super().save_checkpoint(directory)
+        if self._adopted is not None and self._checkpoint_dir:
+            os.makedirs(self._checkpoint_dir, exist_ok=True)
+            name = f"genie_step_{self.genie.global_step}.pt"
+            self.genie.save_checkpoint(os.path.join(self._checkpoint_dir, name))
 
     def state_dict(self) -> dict[str, Any]:
         return {
