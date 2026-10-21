@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="World Models Study Guide" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-216/world_models_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-216/_images/social_previews/summary_world_models_guide_a7b2acda.png" />
+<meta property="og:image:alt" content="This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then ..." />
+<meta name="description" content="This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then ..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>World Models Study Guide &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "displayMath": [["$$", "$$"], ["\\[", "\\]"]], "packages": {"[+]": ["ams"]}, "processEnvironments": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area", "skipHtmlTags": ["script", "noscript", "style", "textarea", "pre", "code"]}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'world_models_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-216/world_models_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial: Plug Simulusion world models into RL libraries" href="tutorials/world_model_env_rl_libraries.html" />
+    <link rel="prev" title="Controllers and Policies" href="controllers_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">World Models Study Guide</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="world-models-study-guide">
+<h1>World Models Study Guide<a class="headerlink" href="#world-models-study-guide" title="Link to this heading">#</a></h1>
+<p>This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use the API reference for exact constructor and method details.</p>
+<section id="what-is-a-world-model">
+<h2>What is a world model?<a class="headerlink" href="#what-is-a-world-model" title="Link to this heading">#</a></h2>
+<p>A <strong>world model</strong> is a learned simulator. It compresses observations into a latent state, predicts how that state changes after actions, and optionally predicts rewards, terminal flags, or future pixels/tokens. In reinforcement learning, this lets an agent train or plan in imagination instead of relying only on expensive environment interaction.</p>
+<p>A common objective decomposes into reconstruction, dynamics, and task losses:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\mathcal{L}
+&amp;= \mathcal{L}_{\text{recon}}(x_t, \hat{x}_t) \\
+&amp;\quad + \beta\,D_{\mathrm{KL}}\!\left(q(z_t \mid x_{\le t}, a_{&lt;t})\;\middle\|\;p(z_t \mid z_{&lt;t}, a_{&lt;t})\right) \\
+&amp;\quad + \mathcal{L}_{\text{reward}}
+ + \mathcal{L}_{\text{policy}}.
+\end{aligned}\end{split}\]</div>
+<p>The exact terms change by family: Dreamer and PlaNet emphasize latent state-space dynamics, IRIS and Genie emphasize discrete token dynamics, JEPA emphasizes representation prediction without pixel reconstruction, and DiT/DIAMOND emphasize diffusion-based generation.</p>
+<pre  class="mermaid">
+        graph LR
+    A[&quot;Observation&quot;] --&gt; B[&quot;Encoder or tokenizer&quot;]
+    B --&gt; C[&quot;Latent state&quot;]
+    D[&quot;Action&quot;] --&gt; E[&quot;Dynamics model&quot;]
+    C --&gt; E
+    E --&gt; F[&quot;Predicted next latent state&quot;]
+    F --&gt; G[&quot;Decoder reward and value heads&quot;]
+    G --&gt; H[&quot;Planning policy learning or generation&quot;]
+    </pre></section>
+<section id="quick-model-chooser">
+<h2>Quick model chooser<a class="headerlink" href="#quick-model-chooser" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>If you want to study or build…</p></th>
+<th class="head"><p>Start with</p></th>
+<th class="head"><p>Core files</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Latent-dynamics model-based RL from pixels</p></td>
+<td><p>Dreamer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_rssm</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Classical latent planning with CEM-style imagination</p></td>
+<td><p>PlaNet / RSSM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.planet</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.rssm</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Swappable encoders, decoders, and recurrent backbones</p></td>
+<td><p>Modular RSSM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.modular_rssm</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Self-supervised visual representations</p></td>
+<td><p>JEPA + ViT</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.jepa_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.vit</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Sample-efficient Atari with discrete token imagination</p></td>
+<td><p>IRIS</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.iris_agent</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.iris_transformer</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Unsupervised controllable video-world modeling</p></td>
+<td><p>Genie</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.genie</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.latent_action_model</span></code>, <code class="docutils literal notranslate"><span class="pre">simulusion.models.dynamics_model</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Diffusion world models and image/video generation</p></td>
+<td><p>DDPM, DiT, DIAMOND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.diffusion.*</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="shared-concepts">
+<h2>Shared concepts<a class="headerlink" href="#shared-concepts" title="Link to this heading">#</a></h2>
+<section id="latent-state">
+<h3>Latent state<a class="headerlink" href="#latent-state" title="Link to this heading">#</a></h3>
+<p>The latent state is the compact variable the model predicts through time. It may be continuous, discrete, or hybrid:</p>
+<ul class="simple">
+<li><p><strong>Continuous latents</strong> are convenient for Gaussian losses and differentiable dynamics.</p></li>
+<li><p><strong>Discrete latents</strong> are useful for token transformers, autoregressive modeling, and categorical planning.</p></li>
+<li><p><strong>Deterministic recurrent state</strong> stores history that is not represented by the current stochastic latent alone.</p></li>
+</ul>
+</section>
+<section id="dynamics-model">
+<h3>Dynamics model<a class="headerlink" href="#dynamics-model" title="Link to this heading">#</a></h3>
+<p>A dynamics model predicts future state conditioned on action:</p>
+<div class="math notranslate nohighlight">
+\[p(z_{t+1} \mid z_t, h_t, a_t), \qquad h_{t+1}=f_\theta(h_t, z_t, a_t).\]</div>
+<p>A good dynamics model must be accurate enough over multi-step rollouts, not just one-step predictions. This is why many algorithms mix teacher-forced training with imagined rollout losses or policy objectives.</p>
+</section>
+<section id="imagination-and-planning">
+<h3>Imagination and planning<a class="headerlink" href="#imagination-and-planning" title="Link to this heading">#</a></h3>
+<p>Once a model predicts futures, it can be used in two ways:</p>
+<ol class="arabic simple">
+<li><p><strong>Planning:</strong> search over candidate action sequences and execute the first action.</p></li>
+<li><p><strong>Policy learning:</strong> train an actor and critic on imagined trajectories.</p></li>
+</ol>
+<p>Dreamer is the canonical policy-learning example; PlaNet is the canonical planning example.</p>
+</section>
+</section>
+<section id="dreamer">
+<h2>Dreamer<a class="headerlink" href="#dreamer" title="Link to this heading">#</a></h2>
+<p>Dreamer learns a Recurrent State-Space Model (RSSM), then trains an actor-critic in latent imagination. The library exposes high-level training through <code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code> and the core neural components through <code class="docutils literal notranslate"><span class="pre">Dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">RSSM</span></code>, Dreamer encoders/decoders, replay memory, and utilities.</p>
+<section id="mental-model">
+<h3>Mental model<a class="headerlink" href="#mental-model" title="Link to this heading">#</a></h3>
+<pre  class="mermaid">
+        graph TD
+    A[&quot;Image observation&quot;] --&gt; B[&quot;Convolutional encoder&quot;]
+    B --&gt; C[&quot;RSSM posterior&quot;]
+    D[&quot;Previous latent and action&quot;] --&gt; E[&quot;RSSM prior&quot;]
+    C --&gt; F[&quot;Decoder reward and discount heads&quot;]
+    E --&gt; G[&quot;Imagination rollout&quot;]
+    G --&gt; H[&quot;Actor&quot;]
+    G --&gt; I[&quot;Critic&quot;]
+    I --&gt; J[&quot;Return targets&quot;]
+    J --&gt; H
+    </pre></section>
+<section id="what-to-study">
+<h3>What to study<a class="headerlink" href="#what-to-study" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Representation learning:</strong> The encoder maps image observations into embeddings for the RSSM.</p></li>
+<li><p><strong>Posterior vs. prior:</strong> The posterior sees the current observation during training; the prior predicts without seeing it and is used for imagination.</p></li>
+<li><p><strong>KL balancing:</strong> The KL term aligns posterior and prior while avoiding posterior collapse or an over-regularized latent.</p></li>
+<li><p><strong>Actor-critic in imagination:</strong> The policy is optimized using imagined rewards and values rather than direct environment gradients.</p></li>
+</ul>
+<p>The return target commonly used in Dreamer-style agents is the lambda return:</p>
+<div class="math notranslate nohighlight">
+\[G_t^\lambda = r_t + \gamma_t\left((1-\lambda)V(s_{t+1}) + \lambda G_{t+1}^\lambda\right).\]</div>
+</section>
+<section id="when-to-use-it">
+<h3>When to use it<a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h3>
+<p>Use Dreamer when your environment has image observations, actions are known, and you want sample-efficient reinforcement learning that can learn from a replay buffer while improving the policy in latent rollouts.</p>
+</section>
+</section>
+<section id="planet-and-rssm">
+<h2>PlaNet and RSSM<a class="headerlink" href="#planet-and-rssm" title="Link to this heading">#</a></h2>
+<p>PlaNet also learns latent dynamics from pixels, but it is usually associated with online planning rather than fully training an actor in imagination. In Simulusion, <code class="docutils literal notranslate"><span class="pre">Planet</span></code> is the high-level entry point and <code class="docutils literal notranslate"><span class="pre">RecurrentStateSpaceModel</span></code> is the PlaNet-style state-space component.</p>
+<section id="study-focus">
+<h3>Study focus<a class="headerlink" href="#study-focus" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Belief state:</strong> The deterministic recurrent state summarizes history.</p></li>
+<li><p><strong>Stochastic state:</strong> A sampled latent captures uncertainty and multimodality.</p></li>
+<li><p><strong>Planner loop:</strong> Candidate action sequences are scored by imagined returns, then the first action is executed.</p></li>
+</ul>
+<p>PlaNet is a good conceptual bridge: it is simpler than Dreamer’s actor-critic stack but introduces the same latent-dynamics ideas.</p>
+</section>
+</section>
+<section id="modular-rssm">
+<h2>Modular RSSM<a class="headerlink" href="#modular-rssm" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> is designed for experimentation. Instead of hard-coding one encoder, backbone, and decoder, it provides interchangeable components:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">MLPEncoder</span></code>, and <code class="docutils literal notranslate"><span class="pre">ViTEncoder</span></code> for observations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GRUBackbone</span></code>, <code class="docutils literal notranslate"><span class="pre">LSTMBackbone</span></code>, and <code class="docutils literal notranslate"><span class="pre">TransformerBackbone</span></code> for temporal memory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ConvDecoder</span></code> and <code class="docutils literal notranslate"><span class="pre">MLPDecoder</span></code> for reconstruction.</p></li>
+</ul>
+<p>Use it when studying ablations: for example, replacing a GRU with a transformer backbone while keeping the same loss and data pipeline.</p>
+</section>
+<section id="jepa-and-vision-transformers">
+<h2>JEPA and Vision Transformers<a class="headerlink" href="#jepa-and-vision-transformers" title="Link to this heading">#</a></h2>
+<p>JEPA (Joint Embedding Predictive Architecture) learns by predicting representations rather than pixels. The central idea is to avoid spending capacity on reconstructing every pixel detail and instead learn abstract features that are useful for downstream prediction or control.</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{L}_{\text{JEPA}} = \left\|g_\theta(f_\theta(x_{\text{context}}), m) - \operatorname{sg}\left(f_{\bar{\theta}}(x_{\text{target}})\right)\right\|_2^2.\]</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">sg</span></code> denotes stop-gradient, <code class="docutils literal notranslate"><span class="pre">f</span></code> is an encoder, <code class="docutils literal notranslate"><span class="pre">g</span></code> is a predictor, and <code class="docutils literal notranslate"><span class="pre">m</span></code> represents masks or target metadata.</p>
+<section id="simulusion-pieces">
+<h3>Simulusion pieces<a class="headerlink" href="#simulusion-pieces" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code> coordinates representation learning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VisionTransformer</span></code> and ViT helper constructors provide patch-based encoders.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulusion.masks.*</span></code> contains masking/collation strategies for context-target prediction.</p></li>
+</ul>
+</section>
+<section id="id1">
+<h3>When to use it<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>Use JEPA when you primarily want strong latent representations for perception, planning, or future world-model components, especially when pixel-perfect generation is not the goal.</p>
+</section>
+</section>
+<section id="iris">
+<h2>IRIS<a class="headerlink" href="#iris" title="Link to this heading">#</a></h2>
+<p>IRIS represents frames as discrete tokens and trains an autoregressive transformer world model. An actor-critic then learns from imagined token rollouts. This model family is useful for studying the connection between language-model-style sequence prediction and model-based RL.</p>
+<pre  class="mermaid">
+        graph TD
+    A[&quot;Frame&quot;] --&gt; B[&quot;Discrete autoencoder&quot;]
+    B --&gt; C[&quot;Token sequence&quot;]
+    C --&gt; D[&quot;Autoregressive transformer&quot;]
+    E[&quot;Action&quot;] --&gt; D
+    D --&gt; F[&quot;Next tokens&quot;]
+    D --&gt; G[&quot;Reward and terminal heads&quot;]
+    F --&gt; H[&quot;Imagined frame or state&quot;]
+    H --&gt; I[&quot;Actor critic&quot;]
+    </pre><section id="important-ideas">
+<h3>Important ideas<a class="headerlink" href="#important-ideas" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Vector quantization:</strong> Continuous encoder outputs are mapped to codebook entries.</p></li>
+<li><p><strong>Token dynamics:</strong> The transformer predicts the next discrete visual tokens conditioned on previous tokens and actions.</p></li>
+<li><p><strong>Imagination:</strong> Policy learning uses sampled token futures, decoded states, rewards, and termination predictions.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>Simulusion pieces<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">IRISAgent</span></code> combines model and policy behavior.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IRISTransformer</span></code> and <code class="docutils literal notranslate"><span class="pre">IRISWorldModel</span></code> implement token dynamics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DiscreteAutoencoder</span></code>, <code class="docutils literal notranslate"><span class="pre">IRISEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">IRISDecoder</span></code>, and VQ layers implement visual tokenization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code> and <code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code> store experience for world-model and policy updates.</p></li>
+</ul>
+</section>
+</section>
+<section id="genie">
+<h2>Genie<a class="headerlink" href="#genie" title="Link to this heading">#</a></h2>
+<p>Genie studies controllable world modeling from videos, including settings where action labels may not be available. It learns a latent action model (LAM) that infers action-like discrete variables from frame transitions, then trains a dynamics model to predict future video tokens conditioned on those latent actions.</p>
+<section id="core-pipeline">
+<h3>Core pipeline<a class="headerlink" href="#core-pipeline" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Video tokenizer:</strong> compresses frames into discrete visual tokens.</p></li>
+<li><p><strong>Latent Action Model:</strong> infers discrete latent actions from pairs or windows of frames.</p></li>
+<li><p><strong>Dynamics model:</strong> predicts future tokens using visual tokens and latent actions.</p></li>
+<li><p><strong>Sampler:</strong> iteratively fills or samples future tokens for interactive generation.</p></li>
+</ol>
+<p>This is useful for studying how controllability can emerge from observation-only video data.</p>
+</section>
+</section>
+<section id="ddpm-dit-and-diamond-style-diffusion-models">
+<h2>DDPM, DiT, and DIAMOND-style diffusion models<a class="headerlink" href="#ddpm-dit-and-diamond-style-diffusion-models" title="Link to this heading">#</a></h2>
+<p>Diffusion models learn to denoise corrupted data. Instead of predicting a single deterministic next frame, they learn a reverse process from noise to clean samples.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+q(x_t \mid x_0)
+&amp;= \mathcal{N}\left(\sqrt{\bar{\alpha}_t}\,x_0, (1-\bar{\alpha}_t)I\right), \\
+\mathcal{L}_{\text{DDPM}}
+&amp;= \left\|\epsilon - \epsilon_\theta(x_t, t, c)\right\|_2^2.
+\end{aligned}\end{split}\]</div>
+<section id="id3">
+<h3>Simulusion pieces<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DDPM</span></code> implements a denoising diffusion probabilistic model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DiT</span></code> implements a diffusion transformer with patch embedding, time conditioning, and transformer blocks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DiffusionUNet</span></code>, <code class="docutils literal notranslate"><span class="pre">EDMPreconditioner</span></code>, and <code class="docutils literal notranslate"><span class="pre">EulerSampler</span></code> support DIAMOND-style visual dynamics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RewardTerminationModel</span></code> and <code class="docutils literal notranslate"><span class="pre">ActorCriticNetwork</span></code> support RL training around diffusion-generated trajectories.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>When to use it<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<p>Use diffusion when high-quality generative rollouts matter and you can afford more expensive sampling. Use transformer diffusion (<code class="docutils literal notranslate"><span class="pre">DiT</span></code>) when patch-token modeling and scalable attention are central to the experiment.</p>
+</section>
+</section>
+<section id="world-models-ha-schmidhuber-2018">
+<h2>World Models (Ha &amp; Schmidhuber, 2018)<a class="headerlink" href="#world-models-ha-schmidhuber-2018" title="Link to this heading">#</a></h2>
+<p>This family follows the three-component architecture from the <em>World Models</em> paper:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\text{V:}\quad &amp; z_t \sim \text{VAE}(x_t) \\
+\text{M:}\quad &amp; p(z_{t+1} \mid a_t, z_t, h_t) = \sum_k \pi_k\,\mathcal{N}(\mu_k, \sigma_k) \\
+\text{C:}\quad &amp; a_t = W_c\,[z_t, h_t] + b_c
+\end{aligned}\end{split}\]</div>
+<section id="id5">
+<h3>Mental model<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<pre  class="mermaid">
+        graph LR
+    A[&quot;Raw pixels&quot;] --&gt; B[&quot;V: ConvVAE encoder&quot;]
+    B --&gt; C[&quot;Latent vector z&quot;]
+    C --&gt; D[&quot;M: MDN-RNN&quot;]
+    D --&gt; E[&quot;Hidden state h + predicted next z&quot;]
+    C --&gt; F[&quot;C: Linear controller&quot;]
+    E --&gt; F
+    F --&gt; G[&quot;Action a&quot;]
+    G --&gt; H[&quot;Environment&quot;]
+    H --&gt; A
+    </pre></section>
+<section id="three-stage-pipeline">
+<h3>Three-stage pipeline<a class="headerlink" href="#three-stage-pipeline" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Stage</p></th>
+<th class="head"><p>Component</p></th>
+<th class="head"><p>Training</p></th>
+<th class="head"><p>File</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p><strong>V — Vision (ConvVAE)</strong></p></td>
+<td><p>Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent <code class="docutils literal notranslate"><span class="pre">z</span></code> (typically 32-d).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.VAE.ConvVAE</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p><strong>M — Memory (MDN-RNN)</strong></p></td>
+<td><p>Predicts next latent <code class="docutils literal notranslate"><span class="pre">z_{t+1}</span></code> as a Gaussian mixture conditioned on <code class="docutils literal notranslate"><span class="pre">(a_t,</span> <span class="pre">z_t,</span> <span class="pre">h_t)</span></code>. Also predicts rewards and terminal flags.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.mdrnn</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p><strong>C — Controller (Linear)</strong></p></td>
+<td><p>Maps <code class="docutils literal notranslate"><span class="pre">(z_t,</span> <span class="pre">h_t)</span></code> → <code class="docutils literal notranslate"><span class="pre">a_t</span></code>. Trained with CMA-ES (not backprop) to maximize cumulative reward.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.controller</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="key-ideas">
+<h3>Key ideas<a class="headerlink" href="#key-ideas" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Latent-space planning</strong>: The controller operates on compressed <code class="docutils literal notranslate"><span class="pre">z</span></code> + <code class="docutils literal notranslate"><span class="pre">h</span></code>, not raw pixels. This makes CMA-ES tractable (only ~10³ params).</p></li>
+<li><p><strong>Memory via hidden state</strong>: The RNN hidden state <code class="docutils literal notranslate"><span class="pre">h_t</span></code> encodes temporal context. The paper shows removing it drops CarRacing score from 906→632.</p></li>
+<li><p><strong>Dream training</strong>: The trained M can serve as a differentiable simulator. The controller can be trained entirely inside M’s hallucinated latent rollouts and then transferred back to the real environment.</p></li>
+<li><p><strong>Temperature annealing</strong>: During dream training, increasing M’s sampling temperature <code class="docutils literal notranslate"><span class="pre">τ</span></code> makes the dream environment harder, preventing the controller from exploiting model imperfections.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>When to use it<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<p>Use the Ha &amp; Schmidhuber world model when you want:</p>
+<ul class="simple">
+<li><p>A didactic, minimal world model implementation to study how latent-dynamics + evolution works</p></li>
+<li><p>To quickly train a policy on a continuous-control task without GPU-heavy RL backprop</p></li>
+<li><p>A baseline to compare model-based RL (Dreamer/PlaNet) with evolution-based controller training</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Simulusion pieces<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Module</p></th>
+<th class="head"><p>Key classes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>VAE</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.VAE.ConvVAE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ConvVAE</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvVAEEncoder</span></code>, <code class="docutils literal notranslate"><span class="pre">ConvVAEDecoder</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Dynamics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.mdrnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MDRNN</span></code>, <code class="docutils literal notranslate"><span class="pre">MDRNNCell</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Policy</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Controller</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Configs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.wm_config</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WMVAEConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">WMMDNRNNConfig</span></code>, <code class="docutils literal notranslate"><span class="pre">WMControllerConfig</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Datasets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.datasets.wm_dataset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">ObservationDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">SequenceDataset</span></code>, <code class="docutils literal notranslate"><span class="pre">LatentSequenceDataset</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Losses</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.losses.convae_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">conv_vae_loss_fn</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.losses.gmm_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gmm_loss</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Training</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.training.train_world_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_training_pipeline</span></code>, <code class="docutils literal notranslate"><span class="pre">generate_rollouts</span></code>, <code class="docutils literal notranslate"><span class="pre">test_trained_model</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.training.train_convvae</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">train_convae</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.training.train_mdn_rnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">train_mdn_rnn</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.training.train_controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">train_controller</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="quick-start-example">
+<h3>Quick-start example<a class="headerlink" href="#quick-start-example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.wm_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">WMVAEConfig</span><span class="p">,</span> <span class="n">WMMDNRNNConfig</span><span class="p">,</span> <span class="n">WMControllerConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_convvae</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_convae</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_mdn_rnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_mdn_rnn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_controller</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_controller</span>
+
+<span class="c1"># Stage 1: Train VAE</span>
+<span class="n">vae_config</span> <span class="o">=</span> <span class="n">WMVAEConfig</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"height"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="s2">"width"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="s2">"data_dir"</span><span class="p">:</span> <span class="s2">"./data/carracing"</span><span class="p">,</span>
+        <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span>
+        <span class="s2">"num_epochs"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">"learning_rate"</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">train_convae</span><span class="p">(</span><span class="n">vae_config</span><span class="p">)</span>
+
+<span class="c1"># Stage 2: Train MDN-RNN</span>
+<span class="n">mdrnn_config</span> <span class="o">=</span> <span class="n">WMMDNRNNConfig</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="s2">"action_size"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="s2">"gmm_components"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="s2">"data_dir"</span><span class="p">:</span> <span class="s2">"./data/carracing"</span><span class="p">,</span>
+        <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span>
+        <span class="s2">"num_epochs"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">train_mdn_rnn</span><span class="p">(</span><span class="n">vae_config</span><span class="p">,</span> <span class="n">mdrnn_config</span><span class="p">)</span>
+
+<span class="c1"># Stage 3: Train Controller with CMA-ES</span>
+<span class="n">ctrl_config</span> <span class="o">=</span> <span class="n">WMControllerConfig</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"latent_size"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="s2">"action_size"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">"env_name"</span><span class="p">:</span> <span class="s2">"CarRacing-v2"</span><span class="p">,</span>
+        <span class="s2">"logdir"</span><span class="p">:</span> <span class="s2">"./results/carracing"</span><span class="p">,</span>
+        <span class="s2">"pop_size"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="s2">"n_samples"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">"target_return"</span><span class="p">:</span> <span class="mf">950.0</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">train_controller</span><span class="p">(</span><span class="n">ctrl_config</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="testing-a-trained-model">
+<h3>Testing a trained model<a class="headerlink" href="#testing-a-trained-model" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.train_world_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">test_trained_model</span>
+
+<span class="n">test_trained_model</span><span class="p">(</span>
+    <span class="n">logdir</span><span class="o">=</span><span class="s2">"./results/carracing"</span><span class="p">,</span>
+    <span class="n">env_name</span><span class="o">=</span><span class="s2">"CarRacing-v2"</span><span class="p">,</span>
+    <span class="n">action_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">num_episodes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="practical-study-path">
+<h2>Practical study path<a class="headerlink" href="#practical-study-path" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Start with RSSMs:</strong> understand deterministic and stochastic latent state.</p></li>
+<li><p><strong>Study Dreamer:</strong> connect latent dynamics to actor-critic learning.</p></li>
+<li><p><strong>Study PlaNet:</strong> compare planning against learned policies.</p></li>
+<li><p><strong>Study World Models (Ha &amp; Schmidhuber):</strong> see how VAE + MDN-RNN + CMA-ES controller forms the simplest complete pipeline.</p></li>
+<li><p><strong>Study token world models:</strong> IRIS and Genie show how discrete visual tokens enable transformer dynamics.</p></li>
+<li><p><strong>Study representation-only prediction:</strong> JEPA clarifies why not every useful world model must reconstruct pixels.</p></li>
+<li><p><strong>Study diffusion:</strong> compare likelihood-style denoising rollouts against autoregressive and RSSM rollouts.</p></li>
+<li><p><strong>Read the API reference:</strong> map each concept to the exact Simulusion class or function.</p></li>
+</ol>
+</section>
+<section id="common-failure-modes">
+<h2>Common failure modes<a class="headerlink" href="#common-failure-modes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Blurry reconstructions:</strong> decoder or latent bottleneck is too weak, or reconstruction dominates the objective.</p></li>
+<li><p><strong>Good one-step predictions but bad rollouts:</strong> dynamics errors compound; evaluate multi-step imagination.</p></li>
+<li><p><strong>Posterior collapse:</strong> the recurrent state ignores stochastic latents; tune KL weights and capacity.</p></li>
+<li><p><strong>Unstable policy learning:</strong> imagined rewards or values are poorly calibrated; shorten horizon and improve world-model validation first.</p></li>
+<li><p><strong>Token dead codes:</strong> vector quantizer codebook usage collapses; tune commitment loss and EMA updates.</p></li>
+<li><p><strong>Diffusion slow sampling:</strong> reduce denoising steps or use a better sampler/preconditioner.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="controllers_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Controllers and Policies</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tutorials/world_model_env_rl_libraries.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: Plug Simulusion world models into RL libraries</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-a-world-model">What is a world model?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-model-chooser">Quick model chooser</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-concepts">Shared concepts</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latent-state">Latent state</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamics-model">Dynamics model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagination-and-planning">Imagination and planning</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamer">Dreamer</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mental-model">Mental model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-study">What to study</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#planet-and-rssm">PlaNet and RSSM</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#study-focus">Study focus</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modular-rssm">Modular RSSM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jepa-and-vision-transformers">JEPA and Vision Transformers</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion-pieces">Simulusion pieces</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">When to use it</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#iris">IRIS</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#important-ideas">Important ideas</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Simulusion pieces</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#genie">Genie</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#core-pipeline">Core pipeline</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ddpm-dit-and-diamond-style-diffusion-models">DDPM, DiT, and DIAMOND-style diffusion models</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Simulusion pieces</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">When to use it</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#world-models-ha-schmidhuber-2018">World Models (Ha &amp; Schmidhuber, 2018)</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Mental model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#three-stage-pipeline">Three-stage pipeline</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#key-ideas">Key ideas</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">When to use it</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Simulusion pieces</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-example">Quick-start example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-a-trained-model">Testing a trained model</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-study-path">Practical study path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-failure-modes">Common failure modes</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/world_models_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
