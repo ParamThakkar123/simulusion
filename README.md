@@ -120,9 +120,9 @@ plot.
 
 ### One trainer, one config file
 
-Every family also trains on one shared `Trainer` (built on Hugging Face
-Accelerate) from a YAML run config. Precision, data parallelism, resuming,
-evaluation and checkpoints work the same for all of them, and every run
+Every family also trains on one shared `Trainer` from a YAML run config.
+Device, precision, resuming, evaluation and checkpoints work the same for all
+of them, and every run
 writes its resolved `config.yaml` and `run.json` (git commit, package
 versions) so it can be repeated:
 

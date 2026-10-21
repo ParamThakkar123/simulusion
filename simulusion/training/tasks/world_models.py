@@ -172,7 +172,6 @@ class VAETask(_LegacyEpochs, TrainingTask):
     """
 
     config_cls = VAETaskConfig
-    distributed = True
     progress_unit = "steps"
 
     def __init__(self, config: Any = None, *, legacy_dir: Optional[str] = None) -> None:
@@ -206,9 +205,7 @@ class VAETask(_LegacyEpochs, TrainingTask):
             ConvVAE(img_channels=3, latent_size=cfg.latent_size)
         )
         optimizer = torch.optim.Adam(self.vae.parameters(), lr=cfg.learning_rate)
-        self.update = trainer.gradient_update(
-            optimizer, self.vae.parameters(), modules=[self.vae]
-        )
+        self.update = trainer.gradient_update(optimizer, self.vae.parameters())
         self.scheduler = ReduceLROnPlateau(
             optimizer,
             "min",
@@ -218,7 +215,7 @@ class VAETask(_LegacyEpochs, TrainingTask):
         if self._legacy_dir is not None and not cfg.noreload:
             self._reload(
                 self._legacy_dir,
-                self.trainer.unwrap(self.vae),
+                self.vae,
                 optimizer,
                 self.scheduler,
             )
@@ -248,7 +245,7 @@ class VAETask(_LegacyEpochs, TrainingTask):
         assert self._legacy_dir is not None
         samples = self._legacy_dir / "samples"
         samples.mkdir(parents=True, exist_ok=True)
-        vae: Any = self.trainer.unwrap(self.vae)
+        vae: Any = self.vae
         with torch.no_grad():
             z = torch.randn(16, cfg.latent_size, device=self.trainer.device)
             images = vae.decoder(z).cpu()
@@ -289,7 +286,7 @@ class VAETask(_LegacyEpochs, TrainingTask):
         if self._legacy_dir is not None:
             self._save_legacy(
                 self._legacy_dir,
-                self.trainer.unwrap(self.vae),
+                self.vae,
                 self.update.optimizer,
                 self.scheduler,
             )
@@ -297,18 +294,18 @@ class VAETask(_LegacyEpochs, TrainingTask):
     def export(self, directory: Path) -> Optional[Path]:
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "vae.tar"
-        torch.save({"state_dict": self.trainer.unwrap(self.vae).state_dict()}, path)
+        torch.save({"state_dict": self.vae.state_dict()}, path)
         return directory
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "vae": self.trainer.unwrap(self.vae).state_dict(),
+            "vae": self.vae.state_dict(),
             "update": self.update.state_dict(),
             "scheduler": self.scheduler.state_dict(),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        self.trainer.unwrap(self.vae).load_state_dict(state["vae"])
+        self.vae.load_state_dict(state["vae"])
         self.update.load_state_dict(state["update"])
         self.scheduler.load_state_dict(state["scheduler"])
 
@@ -349,7 +346,6 @@ class MDRNNTask(_LegacyEpochs, TrainingTask):
     """
 
     config_cls = MDRNNTaskConfig
-    distributed = True
     progress_unit = "steps"
 
     def __init__(self, config: Any = None, *, legacy_dir: Optional[str] = None) -> None:
@@ -412,9 +408,7 @@ class MDRNNTask(_LegacyEpochs, TrainingTask):
         optimizer = torch.optim.RMSprop(
             self.mdrnn.parameters(), lr=cfg.learning_rate, alpha=0.9
         )
-        self.update = trainer.gradient_update(
-            optimizer, self.mdrnn.parameters(), modules=[self.mdrnn]
-        )
+        self.update = trainer.gradient_update(optimizer, self.mdrnn.parameters())
         self.scheduler = ReduceLROnPlateau(
             optimizer,
             "min",
@@ -424,7 +418,7 @@ class MDRNNTask(_LegacyEpochs, TrainingTask):
         if self._legacy_dir is not None and not cfg.noreload:
             self._reload(
                 self._legacy_dir,
-                self.trainer.unwrap(self.mdrnn),
+                self.mdrnn,
                 optimizer,
                 self.scheduler,
             )
@@ -490,7 +484,7 @@ class MDRNNTask(_LegacyEpochs, TrainingTask):
         if self._legacy_dir is not None:
             self._save_legacy(
                 self._legacy_dir,
-                self.trainer.unwrap(self.mdrnn),
+                self.mdrnn,
                 self.update.optimizer,
                 self.scheduler,
             )
@@ -498,23 +492,23 @@ class MDRNNTask(_LegacyEpochs, TrainingTask):
     def world_model(self) -> Optional[Any]:
         from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
 
-        return MDRNNWorldModel(self.vae, self.trainer.unwrap(self.mdrnn))
+        return MDRNNWorldModel(self.vae, self.mdrnn)
 
     def export(self, directory: Path) -> Optional[Path]:
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / "mdrnn.tar"
-        torch.save({"state_dict": self.trainer.unwrap(self.mdrnn).state_dict()}, path)
+        torch.save({"state_dict": self.mdrnn.state_dict()}, path)
         return directory
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "mdrnn": self.trainer.unwrap(self.mdrnn).state_dict(),
+            "mdrnn": self.mdrnn.state_dict(),
             "update": self.update.state_dict(),
             "scheduler": self.scheduler.state_dict(),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        self.trainer.unwrap(self.mdrnn).load_state_dict(state["mdrnn"])
+        self.mdrnn.load_state_dict(state["mdrnn"])
         self.update.load_state_dict(state["update"])
         self.scheduler.load_state_dict(state["scheduler"])
 
@@ -662,40 +656,16 @@ class ControllerTask(TrainingTask):
     def progress(self) -> int:
         return self.generation
 
-    @torch.no_grad()
     def _episode(self, flat: np.ndarray) -> float:
         """One episode's return for controller parameters ``flat``."""
         self._load(flat)
-        wm, cfg = self.wm, self.config
-        obs = _env_reset(self.env)
-        frame = torch.as_tensor(
-            np.asarray(obs["image"] if isinstance(obs, dict) else obs)
+        return controller_episode(
+            self.wm,
+            self.controller,
+            self.env,
+            time_limit=self.config.model.time_limit,
+            dream=self.config.mode == "dream",
         )
-        state = wm.encode(frame.unsqueeze(0))
-        total = 0.0
-        for _ in range(cfg.model.time_limit):
-            action = self.controller(torch.cat([state["z"], state["h"]], dim=-1))
-            if cfg.mode == "dream":
-                out = wm.step(state, action)
-                state = out.state
-                total += float(out.reward[0])
-                if bool(out.terminated[0]):
-                    break
-                continue
-            # Real environment: M only tracks h from the actions taken.
-            next_obs, reward, done = _env_step(self.env, action[0].cpu().numpy())
-            total += float(reward)
-            if done:
-                break
-            out = wm.step(state, action)
-            frame = torch.as_tensor(
-                np.asarray(
-                    next_obs["image"] if isinstance(next_obs, dict) else next_obs
-                )
-            )
-            z = wm.encode(frame.unsqueeze(0))["z"]
-            state = {"z": z, "h": out.state["h"], "c": out.state["c"]}
-        return total
 
     def train_step(self) -> Metrics:
         cfg = self.config.model
@@ -788,6 +758,48 @@ class ControllerTask(TrainingTask):
         close = getattr(self.env, "close", None)
         if callable(close):
             close()
+
+
+@torch.no_grad()
+def controller_episode(
+    wm: Any, controller: Any, env: Any, *, time_limit: int, dream: bool = False
+) -> float:
+    """One episode of World Models' C acting on V + M's ``[z, h]``; its return.
+
+    Args:
+        wm: A V + M world model (:class:`~simulusion.world_model.vae_mdrnn.
+            MDRNNWorldModel`).
+        controller: Maps ``[z, h]`` to an action.
+        env: Gives the first frame, and in the real environment every reward.
+        time_limit: Steps at most.
+        dream: Act inside the world model, with M's reward and done heads,
+            instead of in ``env``.
+    """
+    obs = _env_reset(env)
+    frame = torch.as_tensor(np.asarray(obs["image"] if isinstance(obs, dict) else obs))
+    state = wm.encode(frame.unsqueeze(0))
+    total = 0.0
+    for _ in range(time_limit):
+        action = controller(torch.cat([state["z"], state["h"]], dim=-1))
+        if dream:
+            out = wm.step(state, action)
+            state = out.state
+            total += float(out.reward[0])
+            if bool(out.terminated[0]):
+                break
+            continue
+        # Real environment: M only tracks h from the actions taken.
+        next_obs, reward, done = _env_step(env, action[0].cpu().numpy())
+        total += float(reward)
+        if done:
+            break
+        out = wm.step(state, action)
+        frame = torch.as_tensor(
+            np.asarray(next_obs["image"] if isinstance(next_obs, dict) else next_obs)
+        )
+        z = wm.encode(frame.unsqueeze(0))["z"]
+        state = {"z": z, "h": out.state["h"], "c": out.state["c"]}
+    return total
 
 
 def _env_reset(env: Any) -> Any:

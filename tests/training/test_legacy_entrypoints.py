@@ -121,6 +121,13 @@ def test_iris_trainer_train(tmp_path: Path) -> None:
     assert {"best_Game-v0.pt", "final_Game-v0.pt", "checkpoint_2.pt"} <= names
     assert isinstance(trainer.final_eval_return, float)
     _trainer_files(save_dir)
+    # Its environments stay open: run_atari_100k evaluates right after train().
+    env = trainer.env
+    closed = []
+    env.close = lambda: closed.append(True)  # type: ignore[attr-defined]
+    trainer.train(total_epochs=0, save_dir=str(tmp_path / "again"))
+    assert not closed
+    assert "eval_mean_return" in trainer.evaluate(num_episodes=1)
 
 
 # ------------------------------------------------------------------ DIAMOND
@@ -148,6 +155,8 @@ def test_diamond_agent_train_and_early_stopping(tmp_path: Path) -> None:
     agent.train()
     files = {p.name for p in (tmp_path / "diamond").iterdir()}
     assert "checkpoint_2.pt" in files
+    # The agent's environment stays open for the caller's own evaluation.
+    assert isinstance(agent.evaluate(num_episodes=1), float)
     _trainer_files(tmp_path / "diamond")
     # The fake env's reward never changes under evaluation, so early
     # stopping ends the run long before 20 epochs.

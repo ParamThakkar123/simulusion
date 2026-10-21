@@ -18,6 +18,21 @@ from simulusion.configs.wm_config import WMControllerConfig
 from simulusion.envs.gym_env import GymImageEnv
 
 
+def make_controller_env(env_name: str) -> Any:
+    """``env_name`` as the controller sees it: 64x64 image observations.
+
+    Environments that take ``continuous`` (CarRacing) get the continuous
+    action space the World Models controller outputs. Environments are made
+    with ``render_mode="rgb_array"``, so those whose observations are vectors
+    (Pendulum, BipedalWalker) are seen through their rendered frames.
+    """
+    try:
+        env: Any = gym.make(env_name, continuous=True, render_mode="rgb_array")
+    except TypeError:
+        env = gym.make(env_name, render_mode="rgb_array")
+    return GymImageEnv(env=env, size=(64, 64))
+
+
 def train_controller(config: WMControllerConfig) -> None:
     """Train a linear controller using CMA-ES.
 
@@ -52,19 +67,11 @@ def train_controller(config: WMControllerConfig) -> None:
         device=device,
     )
 
-    def make_env() -> Any:
-        # As the rollout workers did: CarRacing needs continuous=True.
-        try:
-            env: Any = gym.make(config.env_name, continuous=True)
-        except Exception:
-            env = gym.make(config.env_name)
-        return GymImageEnv(env=env, size=(64, 64))
-
     ctrl_dir = join(config.logdir, "ctrl")
     fit_legacy(
         ControllerTask(
             ControllerTaskConfig(model=config),
-            env_factory=make_env,
+            env_factory=lambda: make_controller_env(config.env_name),
             model=model,
             legacy_dir=ctrl_dir,
         ),

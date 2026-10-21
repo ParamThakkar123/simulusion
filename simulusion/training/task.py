@@ -3,9 +3,9 @@
 A :class:`TrainingTask` is everything that differs between families: which
 networks and optimizers exist, where batches come from (a dataset, a replay
 buffer filled by an environment), and what one unit of training does. The
-trainer owns everything that does not differ: devices and data parallelism,
-precision, seeding, the step budget, logging, evaluation cadence, early
-stopping, checkpoints and resuming, and exporting the world model at the end.
+trainer owns everything that does not differ: the device, precision,
+seeding, the step budget, logging, evaluation cadence, early stopping,
+checkpoints and resuming, and exporting the world model at the end.
 
 .. code-block:: python
 
@@ -65,16 +65,12 @@ class TrainingTask(ABC):
         config_cls: The task's config dataclass.
         progress_unit: What :meth:`progress` counts, for logs: ``"steps"``
             (calls to :meth:`train_step`), ``"env_steps"`` or ``"epochs"``.
-        distributed: The task runs under data parallelism (several
-            processes). Tasks that collect from an environment into a local
-            replay buffer are single-process.
         default_max_steps: Budget used when the trainer config gives none.
     """
 
     name: ClassVar[str] = ""
     config_cls: ClassVar[type]
     progress_unit: ClassVar[str] = "steps"
-    distributed: ClassVar[bool] = False
     default_max_steps: ClassVar[int] = 1000
 
     def __init__(self, config: Any = None) -> None:

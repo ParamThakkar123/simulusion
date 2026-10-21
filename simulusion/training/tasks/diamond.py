@@ -142,6 +142,8 @@ class DiamondTask(TrainingTask):
         self.epoch = int(state["epoch"])
 
     def close(self) -> None:
+        if self._adopted is not None:
+            return  # the caller's DiamondAgent keeps using its environment
         close = getattr(self.agent.env, "close", None)
         if callable(close):
             close()
@@ -197,7 +199,6 @@ class DiamondWorldModelTask(TrainingTask):
     """
 
     config_cls = DiamondWorldModelTaskConfig
-    distributed = True
 
     def max_steps(self) -> int:
         return 50_000
@@ -221,12 +222,7 @@ class DiamondWorldModelTask(TrainingTask):
                 "write the dataset with a meta.json (EpisodeWriter does)."
             )
         self.agent = DiamondAgent(model, env=_NoEnv(int(n)))
-        self.agent.set_precision(
-            trainer.precision, all_reduce=trainer.num_processes > 1
-        )
-        trainer.broadcast_parameters(
-            [self.agent.diffusion_model, self.agent.reward_model]
-        )
+        self.agent.set_precision(trainer.precision)
 
     @staticmethod
     def _batch(batch: dict) -> dict:

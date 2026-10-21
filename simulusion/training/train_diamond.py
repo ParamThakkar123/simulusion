@@ -269,35 +269,27 @@ class DiamondAgent:
         )
         self._build_updates()
 
-    def _build_updates(self, all_reduce: bool = False) -> None:
+    def _build_updates(self) -> None:
         # DIAMOND does not clip gradients (Appendix C lists no clipping).
         self.diffusion_update = GradientUpdate(
             self.diffusion_opt,
             self.diffusion_model.parameters(),
             self.precision,
-            all_reduce=all_reduce,
         )
         self.reward_update = GradientUpdate(
             self.reward_opt,
             self.reward_model.parameters(),
             self.precision,
-            all_reduce=all_reduce,
         )
         self.actor_update = GradientUpdate(
             self.actor_opt, self.actor_critic.parameters(), self.precision
         )
 
-    def set_precision(
-        self, precision: MixedPrecision, *, all_reduce: bool = False
-    ) -> None:
-        """Train at ``precision`` from now on (fresh loss scalers).
-
-        ``all_reduce`` averages the world model's gradients across processes,
-        for data-parallel training of the denoiser and reward model.
-        """
+    def set_precision(self, precision: MixedPrecision) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers)."""
         self.precision = precision
         self.use_amp = precision.enabled
-        self._build_updates(all_reduce=all_reduce)
+        self._build_updates()
 
     def _move_batch_to_device(
         self, batch: Dict[str, torch.Tensor]

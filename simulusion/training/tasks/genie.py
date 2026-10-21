@@ -51,7 +51,6 @@ class GenieTask(TrainingTask):
     """
 
     config_cls = GenieTaskConfig
-    distributed = True
 
     def __init__(
         self,
@@ -78,8 +77,6 @@ class GenieTask(TrainingTask):
 
     def setup(self, trainer: Any) -> None:
         if self._adopted is not None:
-            if trainer.num_processes > 1:
-                raise RuntimeError("GenieTrainer.train runs in a single process.")
             self.genie = self._adopted
             self.batches = trainer.infinite(self._train_loader)
             self.val = self._val_loader
@@ -90,7 +87,7 @@ class GenieTask(TrainingTask):
             model, cfg.model, trainer.device, precision=trainer.precision
         )
         self.genie.update = trainer.gradient_update(
-            self.genie.optimizer, model.parameters(), max_grad_norm=1.0, modules=[model]
+            self.genie.optimizer, model.parameters(), max_grad_norm=1.0
         )
         self.batches, self.val, _ = sequence_loaders(
             cfg.data,
@@ -106,7 +103,6 @@ class GenieTask(TrainingTask):
 
     def train_step(self) -> Metrics:
         losses = self.genie.train_step(self._video(next(self.batches)))
-        self.trainer.broadcast_quantizers(self.genie.model)
         return {k: float(v) for k, v in losses.items() if v is not None}
 
     def evaluate(self) -> Metrics:
@@ -127,7 +123,7 @@ class GenieTask(TrainingTask):
     def world_model(self) -> Optional[Any]:
         from simulusion.world_model.genie import GenieWorldModel
 
-        return GenieWorldModel(self.trainer.unwrap(self.genie.model))
+        return GenieWorldModel(self.genie.model)
 
     def save_checkpoint(self, directory: Path) -> None:
         super().save_checkpoint(directory)
@@ -138,14 +134,14 @@ class GenieTask(TrainingTask):
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "model": self.trainer.unwrap(self.genie.model).state_dict(),
+            "model": self.genie.model.state_dict(),
             "update": self.genie.update.state_dict(),
             "scheduler": self.genie.scheduler.state_dict(),
             "global_step": self.genie.global_step,
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        self.trainer.unwrap(self.genie.model).load_state_dict(state["model"])
+        self.genie.model.load_state_dict(state["model"])
         self.genie.update.load_state_dict(state["update"])
         self.genie.scheduler.load_state_dict(state["scheduler"])
         self.genie.global_step = int(state["global_step"])

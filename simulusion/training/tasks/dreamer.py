@@ -284,7 +284,6 @@ class DreamerWorldModelTask(TrainingTask):
     """
 
     config_cls = DreamerWorldModelTaskConfig
-    distributed = True
 
     def max_steps(self) -> int:
         return 10_000
@@ -318,10 +317,7 @@ class DreamerWorldModelTask(TrainingTask):
         self.dreamer = _core_cls(cfg.variant)(
             args, obs_shape, self.action_dim, trainer.device, restore=False
         )
-        self.dreamer.set_precision(
-            trainer.precision, all_reduce=trainer.num_processes > 1
-        )
-        trainer.broadcast_parameters(self.dreamer.world_model_modules)
+        self.dreamer.set_precision(trainer.precision)
         self.args = args
 
     def _tensors(self, batch: dict) -> tuple:

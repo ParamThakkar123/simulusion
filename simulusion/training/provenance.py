@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 import torch
 
-_PACKAGES = ("simulusion", "torch", "numpy", "accelerate", "gymnasium")
+_PACKAGES = ("simulusion", "torch", "numpy", "gymnasium")
 
 
 def collect_provenance() -> dict[str, Any]:

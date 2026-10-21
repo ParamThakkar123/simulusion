@@ -3,10 +3,10 @@
 ``DreamerAgent.train()``, ``IRISTrainer.train()``, ``DiamondAgent.train()``,
 ``Planet.train()``, ``GenieTrainer.train()``, ``DiT.fit()``,
 ``JEPAAgent.train()``, ``train_convae``, ``train_mdn_rnn`` and
-``train_controller`` keep their signatures, but each now builds its family's :class:`TrainingTask` around the
-object it was called on and runs it with :func:`fit_legacy`, on the shared
-:class:`~simulusion.training.Trainer`. There is one training loop to
-maintain, and the old calls gain what the trainer gives every run: resumable
+``train_controller`` keep their signatures, but each now builds its family's
+:class:`TrainingTask` around the object it was called on and runs it with
+:func:`fit_legacy`, on the shared :class:`~simulusion.training.Trainer`.
+There is one training loop to maintain, and the old calls gain what the trainer gives every run: resumable
 checkpoints and a record of the run (``run.json``, ``run_config.yaml``,
 ``train_metrics.jsonl``).
 
@@ -67,8 +67,8 @@ def fit_legacy(
         run_dir: The folder the entrypoint has always written to.
         max_steps: Budget, in the task's progress unit; the task's own
             default when ``None``.
-        device: The object's device; ``cpu`` keeps the trainer on the CPU,
-            anything else lets Accelerate pick the accelerator.
+        device: The object's device; the trainer runs on the same one
+            (the best available when ``None``).
         precision: The run's precision, for tasks that take it from the
             trainer (JEPA's ``use_bfloat16``); objects that keep their own
             ``use_amp`` ignore it.
@@ -83,12 +83,11 @@ def fit_legacy(
         console: Print metrics as they are logged.
     """
     run_dir = Path(run_dir)
-    is_cpu = device is not None and torch.device(device).type == "cpu"
     config = TrainerConfig(
         max_steps=int(max_steps) if max_steps is not None else None,
         seed=int(seed),
         precision=precision,
-        device="cpu" if is_cpu else None,
+        device=str(torch.device(device)) if device is not None else None,
         log_every=max(1, int(log_every)),
         eval_every=max(0, int(eval_every)),
         checkpoint_every=max(0, int(checkpoint_every)),

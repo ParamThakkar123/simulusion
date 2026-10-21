@@ -52,7 +52,6 @@ class JEPATask(TrainingTask):
     """
 
     config_cls = JEPATaskConfig
-    distributed = True
 
     #: train_jepa's epochs between numbered checkpoints.
     LEGACY_CHECKPOINT_FREQ = 50
@@ -87,9 +86,7 @@ class JEPATask(TrainingTask):
         start_lr, lr = c.start_lr, c.lr
         if c.lr_reference_batch_size:
             # The paper's rates are quoted for an effective batch of 2048.
-            scale = (c.batch_size * trainer.num_processes) / float(
-                c.lr_reference_batch_size
-            )
+            scale = c.batch_size / float(c.lr_reference_batch_size)
             start_lr, lr = start_lr * scale, lr * scale
         self.loss_fn = build_loss_fn(c.loss_type)
         encoder, predictor = init_model(
@@ -122,14 +119,12 @@ class JEPATask(TrainingTask):
             color_distortion=c.use_color_distortion,
             color_jitter=c.color_jitter_strength,
         )
-        # The loaders shard themselves (a DistributedSampler per rank), so
-        # they are not passed through trainer.prepare_dataloader.
+        # Batches are (images, masks_enc, masks_pred) moved to the device by
+        # _batch(), so the loaders are not passed through prepare_dataloader.
         train, self.sampler, self.val = make_jepa_loaders(
             args,
             transform=transform,
             mask_collator=self.masks,
-            world_size=trainer.num_processes,
-            rank=trainer.process_index,
             with_val=self.config.val_batches > 0,
         )
         self.ipe = max(1, len(train))
@@ -154,7 +149,6 @@ class JEPATask(TrainingTask):
         self.update = trainer.gradient_update(
             optimizer,
             [*self.encoder.parameters(), *self.predictor.parameters()],
-            modules=[self.encoder, self.predictor],
             accumulate=False,
         )
         self._total = int(self.ipe * c.epochs * c.ipe_scale)
@@ -213,9 +207,7 @@ class JEPATask(TrainingTask):
         with torch.no_grad():
             m = self._momentum()
             target = list(self.target.parameters())
-            online = [
-                p.detach() for p in self.trainer.unwrap(self.encoder).parameters()
-            ]
+            online = [p.detach() for p in self.encoder.parameters()]
             torch._foreach_mul_(target, m)
             torch._foreach_add_(target, online, alpha=1.0 - m)
         self.step_index += 1
@@ -250,14 +242,14 @@ class JEPATask(TrainingTask):
     def _legacy_state(self) -> dict[str, Any]:
         c = self.config.model
         return {
-            "encoder": self.trainer.unwrap(self.encoder).state_dict(),
-            "predictor": self.trainer.unwrap(self.predictor).state_dict(),
+            "encoder": self.encoder.state_dict(),
+            "predictor": self.predictor.state_dict(),
             "target_encoder": self.target.state_dict(),
             "opt": self.update.optimizer.state_dict(),
             "scaler": None,
             "epoch": self._epochs_done,
             "batch_size": c.batch_size,
-            "world_size": self.trainer.num_processes,
+            "world_size": 1,
             "lr": c.lr,
         }
 
@@ -287,8 +279,8 @@ class JEPATask(TrainingTask):
         _, _, _, _, _, start_epoch = load_checkpoint(
             device=trainer.device,
             r_path=str(path),
-            encoder=self.trainer.unwrap(self.encoder),
-            predictor=self.trainer.unwrap(self.predictor),
+            encoder=self.encoder,
+            predictor=self.predictor,
             target_encoder=self.target,
             opt=optimizer,
             scaler=None,
@@ -306,8 +298,8 @@ class JEPATask(TrainingTask):
         path = directory / "ijepa.pth.tar"
         torch.save(
             {
-                "encoder": self.trainer.unwrap(self.encoder).state_dict(),
-                "predictor": self.trainer.unwrap(self.predictor).state_dict(),
+                "encoder": self.encoder.state_dict(),
+                "predictor": self.predictor.state_dict(),
                 "target_encoder": self.target.state_dict(),
                 "config": self.config.model.to_dict(),
             },
@@ -317,8 +309,8 @@ class JEPATask(TrainingTask):
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "encoder": self.trainer.unwrap(self.encoder).state_dict(),
-            "predictor": self.trainer.unwrap(self.predictor).state_dict(),
+            "encoder": self.encoder.state_dict(),
+            "predictor": self.predictor.state_dict(),
             "target_encoder": self.target.state_dict(),
             "update": self.update.state_dict(),
             "step_index": self.step_index,
@@ -327,8 +319,8 @@ class JEPATask(TrainingTask):
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        self.trainer.unwrap(self.encoder).load_state_dict(state["encoder"])
-        self.trainer.unwrap(self.predictor).load_state_dict(state["predictor"])
+        self.encoder.load_state_dict(state["encoder"])
+        self.predictor.load_state_dict(state["predictor"])
         self.target.load_state_dict(state["target_encoder"])
         self.update.load_state_dict(state["update"])
         self.step_index = int(state["step_index"])

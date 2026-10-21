@@ -181,6 +181,8 @@ class IRISTask(TrainingTask):
         self.iris._reset_collection_state()
 
     def close(self) -> None:
+        if self._adopted is not None:
+            return  # the caller's IRISTrainer keeps using its environments
         for env in (self.iris.env, self.iris._eval_env):
             close = getattr(env, "close", None)
             if callable(close):
@@ -218,7 +220,6 @@ class IRISWorldModelTask(TrainingTask):
     """
 
     config_cls = IRISWorldModelTaskConfig
-    distributed = True
 
     def max_steps(self) -> int:
         return 10_000
@@ -245,12 +246,7 @@ class IRISWorldModelTask(TrainingTask):
         self.agent = IRISAgent(
             config=model, action_size=self.action_dim, device=trainer.device
         )
-        self.agent.set_precision(
-            trainer.precision, all_reduce=trainer.num_processes > 1
-        )
-        trainer.broadcast_parameters(
-            [self.agent.encoder, self.agent.decoder, self.agent.transformer]
-        )
+        self.agent.set_precision(trainer.precision)
 
     def _tensors(self, batch: dict) -> tuple:
         actions = batch["actions"]
@@ -273,7 +269,6 @@ class IRISWorldModelTask(TrainingTask):
         k = min(self.config.model.autoencoder_batch_size, flat.shape[0])
         pick = torch.randperm(flat.shape[0], device=flat.device)[:k]
         ae = self.agent.update_autoencoder(flat[pick])
-        self.trainer.broadcast_quantizers(self.agent.encoder)
         tf = self.agent.update_transformer(frames, acts, rewards, terms)
         return {
             "recon_loss": ae["recon_loss"],

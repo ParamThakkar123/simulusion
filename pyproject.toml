@@ -39,7 +39,6 @@ dependencies = [
     "einops>=0.8.2",
     "tqdm>=4.67.1",
     "pyyaml>=6.0.3",
-    "accelerate>=1.0.0",
 ]
 
 [project.urls]

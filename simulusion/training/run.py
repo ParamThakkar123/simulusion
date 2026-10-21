@@ -174,12 +174,11 @@ def main(argv: Optional[Sequence[str]] = None) -> Optional[TrainResult]:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s")
     trainer = Trainer(trainer_config, run_config=resolved)
     result = trainer.fit(task_cls(task_config))
-    if trainer.is_main_process:
-        print(f"Run directory: {result.run_dir}")
-        if result.world_model_path is not None:
-            print(f"World model:   {result.world_model_path}")
-        if result.model_path is not None:
-            print(f"Model:         {result.model_path}")
+    print(f"Run directory: {result.run_dir}")
+    if result.world_model_path is not None:
+        print(f"World model:   {result.world_model_path}")
+    if result.model_path is not None:
+        print(f"Model:         {result.model_path}")
     return result
 
 

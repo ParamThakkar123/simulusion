@@ -787,7 +787,7 @@ class DiT(ExportableAgentMixin, nn.Module):
             patience=patience,
             min_delta=min_delta,
         )
-        model = task.trainer.unwrap(task.model)
+        model = task.model
         ema_model = task.ema
         ddpm = task.ddpm
         best_state = None
@@ -801,7 +801,8 @@ class DiT(ExportableAgentMixin, nn.Module):
                 weights_only=True,
             )
             best_state = saved["ema"] if ema_model is not None else saved["model"]
-            best_val = float(result.best_value)
+            if result.best_value is not None:
+                best_val = float(result.best_value)
         print("Training Complete.")
 
         os.makedirs(workdir, exist_ok=True)

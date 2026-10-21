@@ -713,7 +713,7 @@ def main_from_cli(argv: list[str] | None = None) -> Any:
         sweep_id = wandb.sweep(
             logging_cfg.get("sweep_config", {}),
             project=logging_cfg.get("wandb_project", "simulusion"),
-            entity=logging_cfg.get("wandb_entity", ""),
+            entity=logging_cfg.get("wandb_entity") or None,
         )
         wandb.agent(sweep_id, function=sweep_train)
     else:

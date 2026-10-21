@@ -145,7 +145,7 @@ class WMControllerConfig:
     latent_size: int = 32
     hidden_size: int = 200
     action_size: int = 3
-    env_name: str = "CarRacing-v2"
+    env_name: str = "CarRacing-v3"
     logdir: str = "results"
     n_samples: int = 4
     pop_size: int = 10

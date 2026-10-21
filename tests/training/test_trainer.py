@@ -35,7 +35,6 @@ class _ToyTask(TrainingTask):
     """Fit y = 2x with a linear layer; progress can jump by several units."""
 
     config_cls = _ToyConfig
-    distributed = True
     default_max_steps = 6
 
     def setup(self, trainer: Trainer) -> None:
@@ -184,16 +183,6 @@ def test_old_checkpoints_are_pruned(tmp_path: Path) -> None:
     assert names == ["step_00000004", "step_00000005", "step_00000006"]
 
 
-def test_single_process_task_refuses_data_parallel(tmp_path: Path, monkeypatch) -> None:
-    class Local(_ToyTask):
-        distributed = False
-
-    trainer = Trainer(_config(tmp_path, max_steps=1))
-    monkeypatch.setattr(Trainer, "num_processes", property(lambda self: 2))
-    with pytest.raises(RuntimeError, match="single process"):
-        trainer.fit(Local())
-
-
 def test_resolve_run_config_layers_defaults_file_and_overrides(tmp_path: Path) -> None:
     path = tmp_path / "run.yaml"
     path.write_text("task: toy-test\ntrainer:\n  max_steps: 9\nmodel:\n  width: 3\n")
@@ -283,23 +272,48 @@ def test_resume_from_a_checkpoint_or_run_directory(tmp_path: Path) -> None:
         )
 
 
-def test_requested_device_must_be_the_one_accelerate_found(
-    tmp_path: Path, monkeypatch
+def test_unavailable_cuda_falls_back_with_a_warning(
+    tmp_path: Path, monkeypatch, caplog
 ) -> None:
     monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
-    with pytest.raises(ValueError, match="device='cuda'"):
-        Trainer(_config(tmp_path, device="cuda"))
+    monkeypatch.setattr("simulusion.utils.device.mps_is_available", lambda: False)
+    with caplog.at_level("WARNING"):
+        trainer = Trainer(_config(tmp_path, device="cuda"))
+    assert trainer.device.type == "cpu"
+    assert "CUDA is not available" in caplog.text
 
 
-def test_sharded_launches_are_refused(tmp_path: Path, monkeypatch) -> None:
-    from accelerate import Accelerator
-    from accelerate.utils import DistributedType
+@pytest.mark.parametrize("device", [None, "auto"])
+def test_unset_device_picks_the_best_available(
+    tmp_path: Path, monkeypatch, device: Optional[str]
+) -> None:
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    monkeypatch.setattr("simulusion.utils.device.mps_is_available", lambda: False)
+    assert Trainer(_config(tmp_path, device=device)).device == torch.device("cpu")
 
-    monkeypatch.setattr(
-        Accelerator, "distributed_type", property(lambda self: DistributedType.FSDP)
-    )
-    with pytest.raises(NotImplementedError, match="FSDP"):
-        Trainer(_config(tmp_path))
+
+def test_prepare_dataloader_moves_nested_batches(tmp_path: Path) -> None:
+    from collections import namedtuple
+
+    from torch.utils.data import DataLoader
+
+    trainer = Trainer(_config(tmp_path))
+    pair = namedtuple("pair", "x y")
+    batches = [
+        {"frames": torch.zeros(2, 3), "meta": [torch.ones(2), "tag"]},
+        pair(torch.zeros(1), 7),
+    ]
+    loader = trainer.prepare_dataloader(batches)
+    assert len(loader) == 2
+    first, second = list(loader)
+    assert first["frames"].device == trainer.device
+    assert first["meta"][1] == "tag" and first["meta"][0].device == trainer.device
+    assert isinstance(second, pair) and second.y == 7
+
+    torch_loader = DataLoader(list(range(6)), batch_size=2)
+    wrapped = trainer.prepare_dataloader(torch_loader)
+    assert wrapped.batch_size == 2 and wrapped.dataset is torch_loader.dataset
+    assert [b.tolist() for b in wrapped] == [[0, 1], [2, 3], [4, 5]]
 
 
 @pytest.mark.parametrize("precision", ["bf16", "auto"])

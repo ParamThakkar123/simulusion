@@ -161,7 +161,6 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
         # What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The
         # shared Trainer replaces it with the run's precision (set_precision).
         self.precision = MixedPrecision.from_use_amp(self.use_amp, device)
-        self._all_reduce = False
         self._build_updates()
 
         # === Training state ===
@@ -364,14 +363,12 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             list(self.encoder.parameters()) + list(self.decoder.parameters()),
             self.precision,
             max_grad_norm=clip,
-            all_reduce=self._all_reduce,
         )
         self.transformer_update = GradientUpdate(
             self.transformer_opt,
             self.transformer.parameters(),
             self.precision,
             max_grad_norm=clip,
-            all_reduce=self._all_reduce,
         )
         self.ac_update = GradientUpdate(
             self.ac_opt,
@@ -381,22 +378,12 @@ class IRISAgent(ExportableAgentMixin, nn.Module):
             + list(self.critic_head.parameters()),
             self.precision,
             max_grad_norm=clip,
-            all_reduce=self._all_reduce,
         )
 
-    def set_precision(
-        self, precision: MixedPrecision, *, all_reduce: bool = False
-    ) -> None:
-        """Train at ``precision`` from now on (fresh loss scalers).
-
-        ``all_reduce`` averages gradients across processes before each step,
-        for data-parallel training of the world model (the tokenizer is called
-        through ``encoder(...)`` from several places, so it is not wrapped in
-        DDP).
-        """
+    def set_precision(self, precision: MixedPrecision) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers)."""
         self.precision = precision
         self.use_amp = precision.enabled
-        self._all_reduce = all_reduce
         self._build_updates()
 
     @staticmethod

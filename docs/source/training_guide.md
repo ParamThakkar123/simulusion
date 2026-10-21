@@ -225,15 +225,6 @@ cfg.restore = True
 cfg.checkpoint_path = "path/to/checkpoint"
 ```
 
-## Distributed Training
-
-For multi-GPU training:
-
-```python
-cfg.num_gpus = 4
-# Simulusion handles distributed setup automatically
-```
-
 ## Best Practices
 
 1. **Start small**: Use short episodes and few steps for debugging

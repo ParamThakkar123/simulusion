@@ -122,6 +122,4 @@ def train_mdn_rnn(
         early_stopping_mode="min",
         patience=mdrnn_config.early_stopping_patience,
     )
-    torch.save(
-        task.trainer.unwrap(task.mdrnn).state_dict(), join(rnn_dir, "mdrnn_final.pth")
-    )
+    torch.save(task.mdrnn.state_dict(), join(rnn_dir, "mdrnn_final.pth"))

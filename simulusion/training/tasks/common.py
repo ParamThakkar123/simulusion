@@ -124,7 +124,7 @@ def sequence_loaders(
             preload=config.preload,
         )
 
-    generator = torch.Generator().manual_seed(config.seed + trainer.process_index)
+    generator = torch.Generator().manual_seed(config.seed)
     train = DataLoader(
         windows(train_eps),
         batch_size=config.batch_size,

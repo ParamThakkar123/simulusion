@@ -52,7 +52,6 @@ class DiTTask(TrainingTask):
     """
 
     config_cls = DiTTaskConfig
-    distributed = True
 
     def __init__(
         self,
@@ -116,7 +115,7 @@ class DiTTask(TrainingTask):
             self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
         )
         self.update = trainer.gradient_update(
-            optimizer, self.model.parameters(), max_grad_norm=1.0, modules=[self.model]
+            optimizer, self.model.parameters(), max_grad_norm=1.0
         )
 
     def train_step(self) -> Metrics:
@@ -130,9 +129,7 @@ class DiTTask(TrainingTask):
             )
         norm = self.update(loss)
         if norm is not None and self.ema is not None:
-            dit_ema_update(
-                self.trainer.unwrap(self.model), self.ema, self.config.model.EMA_DECAY
-            )
+            dit_ema_update(self.model, self.ema, self.config.model.EMA_DECAY)
         metrics = {"loss": float(loss.detach())}
         if norm is not None:
             metrics["grad_norm"] = float(norm)
@@ -170,29 +167,27 @@ class DiTTask(TrainingTask):
         if self._legacy_workdir is not None:
             epoch = self.trainer.iteration // self._batches_per_epoch
             os.makedirs(self._legacy_workdir, exist_ok=True)
-            model = (
-                self.ema if self.ema is not None else self.trainer.unwrap(self.model)
-            )
+            model = self.ema if self.ema is not None else self.model
             torch.save(
                 model.state_dict(),
                 Path(self._legacy_workdir) / f"dit_model_epoch{epoch}.pth",
             )
 
     def export(self, directory: Path) -> Optional[Path]:
-        model = self.ema if self.ema is not None else self.trainer.unwrap(self.model)
+        model = self.ema if self.ema is not None else self.model
         directory.mkdir(parents=True, exist_ok=True)
-        model.save_pretrained(directory / "dit_model.pth")  # type: ignore[operator]
+        model.save_pretrained(directory / "dit_model.pth")
         return directory
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "model": self.trainer.unwrap(self.model).state_dict(),
+            "model": self.model.state_dict(),
             "ema": self.ema.state_dict() if self.ema is not None else None,
             "update": self.update.state_dict(),
         }
 
     def load_state_dict(self, state: dict[str, Any]) -> None:
-        self.trainer.unwrap(self.model).load_state_dict(state["model"])
+        self.model.load_state_dict(state["model"])
         if self.ema is not None and state.get("ema") is not None:
             self.ema.load_state_dict(state["ema"])
         self.update.load_state_dict(state["update"])

@@ -113,15 +113,6 @@ class GradientUpdate:
         accumulation_steps: Optimizer steps happen every this many calls;
             the calls in between only add gradients. Each loss is divided by
             it, so the step sees the mean over the accumulated batches.
-        modules: Modules wrapped for data parallelism. Calls that only
-            accumulate run under their ``no_sync()``, so gradients are
-            all-reduced once per step rather than once per call.
-        all_reduce: Average the gradients across processes before stepping.
-            For models that cannot sit inside a DDP wrapper because they are
-            driven through methods other than ``forward()`` (Dreamer's
-            ``rssm.observe_rollout``, IRIS's tokenizer): DDP only syncs
-            gradients of calls that go through its own ``forward``. A no-op
-            in a single process.
 
     Calling it returns the gradient norm before clipping (a tensor), or
     ``None`` on a call that only accumulated. A non-finite norm under fp16
@@ -136,8 +127,6 @@ class GradientUpdate:
         *,
         max_grad_norm: Optional[float] = None,
         accumulation_steps: int = 1,
-        modules: Iterable[nn.Module] = (),
-        all_reduce: bool = False,
     ) -> None:
         if accumulation_steps < 1:
             raise ValueError("accumulation_steps must be at least 1.")
@@ -146,8 +135,6 @@ class GradientUpdate:
         self.precision = precision
         self.max_grad_norm = max_grad_norm
         self.accumulation_steps = int(accumulation_steps)
-        self.modules = [m for m in modules if hasattr(m, "no_sync")]
-        self.all_reduce = all_reduce
         self.scaler = precision.grad_scaler()
         self._pending = 0
 
@@ -159,13 +146,10 @@ class GradientUpdate:
         self._pending += 1
         final = self._pending >= self.accumulation_steps
         scaled = self.scaler.scale(loss / self.accumulation_steps)
-        with self._sync(final):
-            scaled.backward(retain_graph=retain_graph)  # type: ignore[no-untyped-call]
+        scaled.backward(retain_graph=retain_graph)  # type: ignore[no-untyped-call]
         if not final:
             return None
         self._pending = 0
-        if self.all_reduce:
-            _average_gradients(self.parameters)
         self.scaler.unscale_(self.optimizer)
         if self.max_grad_norm is not None:
             norm = nn.utils.clip_grad_norm_(self.parameters, self.max_grad_norm)
@@ -174,14 +158,6 @@ class GradientUpdate:
         self.scaler.step(self.optimizer)
         self.scaler.update()
         return norm
-
-    def _sync(self, final: bool) -> contextlib.AbstractContextManager[Any]:
-        if final or not self.modules:
-            return contextlib.nullcontext()
-        stack = contextlib.ExitStack()
-        for module in self.modules:
-            stack.enter_context(module.no_sync())  # type: ignore[operator]
-        return stack
 
     def state_dict(self) -> dict[str, Any]:
         return {
@@ -193,30 +169,6 @@ class GradientUpdate:
         self.optimizer.load_state_dict(state["optimizer"])
         if state.get("scaler"):
             self.scaler.load_state_dict(state["scaler"])
-
-
-def _average_gradients(parameters: Iterable[torch.Tensor]) -> None:
-    """Mean of every gradient over the default process group, in one bucket."""
-    import torch.distributed as dist
-
-    if (
-        not (dist.is_available() and dist.is_initialized())
-        or dist.get_world_size() == 1
-    ):
-        return
-    params = [p for p in parameters if p.grad is not None]
-    if not params:
-        return
-    flat = torch.cat([p.grad.reshape(-1) for p in params])  # type: ignore[union-attr]
-    dist.all_reduce(flat)
-    flat /= dist.get_world_size()
-    offset = 0
-    for p in params:
-        grad = p.grad
-        assert grad is not None  # filtered above
-        n = grad.numel()
-        grad.copy_(flat[offset : offset + n].view_as(grad))
-        offset += n
 
 
 def _grad_norm(parameters: Iterable[torch.Tensor]) -> torch.Tensor:

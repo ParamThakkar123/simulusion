@@ -24,6 +24,6 @@ class CNNEncoder(ExportableAgentMixin, nn.Module):
         hidden = self.act_fn(self.conv2(hidden))
         hidden = self.act_fn(self.conv3(hidden))
         hidden = self.act_fn(self.conv4(hidden))
-        hidden = hidden.view(-1, 1024)
+        hidden = hidden.reshape(hidden.size(0), -1)  # (N, 256 * 2 * 2)
         hidden = self.fc(hidden)
         return hidden

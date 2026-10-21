@@ -46,6 +46,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   arguments where `forward` takes one, so every rollout raised.
 - `GenieWorldModel.encode` without actions failed for Genie's default mean-
   pooled latent actions, which infer one action per clip.
+- `train_world_model`'s rollouts saved each environment's raw observations,
+  so for vector-observation environments (Pendulum, BipedalWalker) the VAE
+  trained on three-number "frames". Rollouts are now recorded as the 64x64
+  frames the controller later acts on, rendered where needed, with actions
+  as the controller emits them. The controller's environment is made with
+  `render_mode="rgb_array"`, so such environments are no longer seen as grey
+  bands. `generate_rollouts` generates only the missing rollouts, no longer
+  drops the remainder when splitting work across workers, and runs in-process
+  with one worker. The action size of a discrete environment was read as 0.
+- `train_world_model.test_trained_model` failed on its first step (it
+  unpacked `GymImageEnv.reset()` as a pair and called `Controller` with two
+  arguments) and assumed the default model sizes. It now plays the trained
+  models through the controller's own rollout code, with sizes read from
+  the checkpoints, and returns the episode returns.
+  `train_world_model_carracing` was an older copy of the same script; it is
+  now `train_world_model` with `--env CarRacing-v3` by default.
+- `CarRacing-v2`, the default environment of `WMControllerConfig` and the
+  name in the docs, does not exist in the supported Gymnasium versions;
+  it is `CarRacing-v3`.
+- The Atari 100k runner reported the mean of the two quartiles as the IQM,
+  always reported a standard deviation of 0 (it read a key IRIS's evaluation
+  does not return), trained every game into one folder so their runs wrote
+  over each other, and dropped failed games silently. The IQM is now the
+  interquartile mean, each game trains in its own folder, failures are listed
+  under `errors` in the results file, and unknown games raise instead of
+  scoring against a made-up baseline. `main` takes `games=[...]`,
+  `save_dir` and `eval_episodes`.
+- The PlaNet encoder `view`ed a convolution output that can be
+  non-contiguous, so `train_rssm` failed on the replay buffer's batches.
+  `train_rssm.main` takes its sizes and paths as flags instead of writing to
+  the working directory, and no longer stops in `pdb`.
 
 ### Renamed
 - **Synora is now Simulusion.** The distribution is `simulusion` on PyPI
@@ -56,13 +87,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
-- **One trainer for every family** (`simulusion.training.Trainer`), built on
-  Hugging Face Accelerate (now a core dependency). Any training task runs to a
-  step budget with one precision setting (`fp32` / `bf16` / `fp16` / `auto`),
-  data parallelism (tested on two CPU processes), gradient accumulation,
-  logging to `metrics.jsonl`, periodic evaluation, early
-  stopping, atomic checkpoints with resume (bit-exact in one process; replay
-  buffers included for online agents) and export of the trained world model.
+- **One trainer for every family** (`simulusion.training.Trainer`). Any
+  training task runs to a step budget on one device (CPU, a GPU or MPS) with
+  one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient
+  accumulation, logging to `metrics.jsonl`, periodic evaluation, early
+  stopping, atomic checkpoints with resume (bit-exact; replay buffers
+  included for online agents) and export of the trained world model.
+  Training runs in one process; there is no data-parallel or multi-GPU
+  training.
   Tasks: `dreamer`, `dreamer-v1`, `dreamer-v2`, `planet`, `iris`, `diamond`
   (agents, collecting online), `dreamer-wm`, `iris-wm`, `diamond-wm`, `genie`,
   `vae`, `mdrnn` (world models from data), `controller` (World Models' C by

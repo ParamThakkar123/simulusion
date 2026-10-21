@@ -1,5 +1,5 @@
-from typing import Any
-import pdb
+import argparse
+from typing import Any, Optional, Sequence
 from collections import defaultdict
 from pprint import pprint
 import os
@@ -34,23 +34,30 @@ EMBEDDING_SIZE = 1024
 
 
 def train_rssm(
-    memory: Any, model: Any, optimizer: Any, record_grads: bool = True
+    memory: Any,
+    model: Any,
+    optimizer: Any,
+    record_grads: bool = True,
+    *,
+    iterations: int = 10,
+    batch_size: int = 32,
 ) -> dict:
     """Train an RSSM on replayed trajectories for one optimization phase.
 
-    Samples batches from memory, computes reconstruction and KL objectives
-    across rollout steps, and returns aggregated loss metrics.
+    Samples ``iterations`` batches of ``batch_size`` sequences from memory,
+    computes reconstruction and KL objectives across rollout steps, and
+    returns the per-iteration losses.
     """
     model.train()
     metrics: dict[str, Any] = defaultdict(list)
     if record_grads:
         metrics["grads"] = defaultdict(list)
     device = next(model.parameters()).device
-    for _ in trange(10, desc="# Epoch: ", leave=False):
+    for _ in trange(iterations, desc="# Epoch: ", leave=False):
         # sample and convert to torch tensors on the model device
-        (x, u, _, _), lens = memory.sample(32)
-        x = torch.tensor(x).float().to(device)
-        u = torch.tensor(u).float().to(device)
+        (x, u, _, _), lens = memory.sample(batch_size)
+        x = torch.as_tensor(x).float().to(device)
+        u = torch.as_tensor(u).float().to(device)
         # forward through model (expects tensors)
         states, priors, posteriors = model(x, u)
         prior_dists = [Normal(*p) for p in priors]
@@ -100,8 +107,8 @@ def evaluate(memory: Any, model: Any, path: str, eps: Any) -> None:
     device = next(model.parameters()).device
     # sample and convert to torch tensors on the model device
     (x, u, _, _), lens = memory.sample(1)
-    x = torch.tensor(x).float().to(device)
-    u = torch.tensor(u).float().to(device)
+    x = torch.as_tensor(x).float().to(device)
+    u = torch.as_tensor(u).float().to(device)
 
     if x.dim() == 4:
         x = x.unsqueeze(0)
@@ -126,34 +133,61 @@ def evaluate(memory: Any, model: Any, path: str, eps: Any) -> None:
     save_frames(x[0].cpu(), pred1[:, 0].cpu(), pred2[:, 0].cpu(), f"{path}_{eps}")
 
 
-def main() -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
     """Standalone training loop for RSSM with generated replay fallback support.
 
     Initializes environment/policy/memory, trains over episodes, logs metrics,
     and periodically evaluates and checkpoints the model.
     """
-    from simulusion.utils.device import get_default_device
+    from simulusion.utils.device import get_default_device, resolve_device
 
-    device = get_default_device()
+    parser = argparse.ArgumentParser(description="Train a PlaNet RSSM.")
+    parser.add_argument("--env", default="CartPole-v1")
+    parser.add_argument("--episodes", type=int, default=1000)
+    parser.add_argument("--out_dir", default="results/test_rssm")
+    parser.add_argument(
+        "--data_dir",
+        default=".",
+        help="Where the replay files are read from, or generated into.",
+    )
+    parser.add_argument("--device", default=None)
+    parser.add_argument("--state_size", type=int, default=STATE_SIZE)
+    parser.add_argument("--latent_size", type=int, default=LATENT_SIZE)
+    parser.add_argument("--embedding_size", type=int, default=EMBEDDING_SIZE)
+    parser.add_argument("--candidates", type=int, default=1000)
+    parser.add_argument("--planning_horizon", type=int, default=12)
+    parser.add_argument("--max_episode_steps", type=int, default=None)
+    parser.add_argument("--warmup_episodes", type=int, default=50)
+    parser.add_argument("--test_episodes", type=int, default=10)
+    parser.add_argument("--iterations", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--eval_every", type=int, default=10)
+    parser.add_argument("--checkpoint_every", type=int, default=25)
+    args = parser.parse_args(argv)
+
+    device = (
+        resolve_device(args.device) if args.device is not None else get_default_device()
+    )
     if device.type == "cpu":
         print("WARNING: no GPU (CUDA or MPS) available, using CPU")
-    rssm = RecurrentStateSpaceModel(1, STATE_SIZE, LATENT_SIZE, EMBEDDING_SIZE).to(
-        device
-    )
+    rssm = RecurrentStateSpaceModel(
+        1, args.state_size, args.latent_size, args.embedding_size
+    ).to(device)
     optimizer = torch.optim.Adam(get_combined_params(rssm), lr=1e-3)
 
     # create a planning policy that uses the trained rssm
     policy = RSSMPolicy(
         model=rssm,
-        planning_horizon=12,
-        num_candidates=1000,
+        planning_horizon=args.planning_horizon,
+        num_candidates=args.candidates,
         num_iterations=5,
-        top_candidates=50,
+        top_candidates=min(50, args.candidates),
         device=device,
     )
-    # create an env wrapper and rollout generator (example env name)
-    env = TorchImageEnvWrapper("CartPole-v1", BIT_DEPTH)
-    rollout_gen = RolloutGenerator(env, device, policy=policy)
+    env = TorchImageEnvWrapper(args.env, BIT_DEPTH)
+    rollout_gen = RolloutGenerator(
+        env, device, policy=policy, max_episode_steps=args.max_episode_steps
+    )
 
     # fallback: if replay files don't exist, generate and save them with rollouts
     def ensure_memory(
@@ -171,24 +205,41 @@ def main() -> None:
 
         return mem
 
-    test_data = ensure_memory("test_exp_replay.pth", n_warmup=10, random_policy=True)
-    train_data = ensure_memory("train_exp_replay.pth", n_warmup=50, random_policy=False)
+    os.makedirs(args.data_dir, exist_ok=True)
+    os.makedirs(args.out_dir, exist_ok=True)
+    test_data = ensure_memory(
+        os.path.join(args.data_dir, "test_exp_replay.pth"),
+        n_warmup=args.test_episodes,
+        random_policy=True,
+    )
+    train_data = ensure_memory(
+        os.path.join(args.data_dir, "train_exp_replay.pth"),
+        n_warmup=args.warmup_episodes,
+        random_policy=False,
+    )
     # warm up training memory with a few rollouts
     new_eps = rollout_gen.rollout_n(n=5, random_policy=False)
     train_data.append(new_eps)
 
     global_metrics = defaultdict(list)
-    for i in trange(1000, desc="# Episode: ", leave=False):
-        metrics = train_rssm(train_data, rssm, optimizer, record_grads=False)
+    for i in trange(args.episodes, desc="# Episode: ", leave=False):
+        metrics = train_rssm(
+            train_data,
+            rssm,
+            optimizer,
+            record_grads=False,
+            iterations=args.iterations,
+            batch_size=args.batch_size,
+        )
         for k, v in metrics.items():
             global_metrics[k].extend(metrics[k])
-        plot_metrics(global_metrics, path="results/test_rssm", prefix="TRAIN_")
-        if (i + 1) % 10 == 0:
-            evaluate(test_data, rssm, "results/test_rssm/eps", i + 1)
-        if (i + 1) % 25 == 0:
-            torch.save(rssm.state_dict(), f"results/test_rssm/ckpt_{i + 1}.pth")
-    if os.getenv("TRAIN_RSSM_DEBUG", "0") == "1":
-        pdb.set_trace()
+        plot_metrics(global_metrics, path=args.out_dir, prefix="TRAIN_")
+        if (i + 1) % args.eval_every == 0:
+            evaluate(test_data, rssm, os.path.join(args.out_dir, "eps"), i + 1)
+        if (i + 1) % args.checkpoint_every == 0:
+            torch.save(
+                rssm.state_dict(), os.path.join(args.out_dir, f"ckpt_{i + 1}.pth")
+            )
 
 
 if __name__ == "__main__":

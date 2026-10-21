@@ -4,6 +4,8 @@ from simulusion.configs.dreamer_config import DreamerConfig
 
 
 @pytest.mark.integration
+# Rendering Pendulum frames takes ~50 s on a Windows CPU, ~20 s on Linux CI.
+@pytest.mark.timeout(180)
 def test_dreamer_pendulum_no_crash(tmp_path):
     pytest.importorskip("gymnasium")
     from simulusion.models.dreamer import DreamerAgent

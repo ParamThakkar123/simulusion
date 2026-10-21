@@ -33,7 +33,7 @@ from __future__ import annotations
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import numpy as np
 
@@ -234,12 +234,14 @@ def npz_length(path: str | Path) -> int:
         )
         if name is None:
             raise ValueError(f"{path} holds no 'frames' array.")
+        # Typed in some NumPy releases and not in others; Any suits both.
+        npy_format = cast(Any, np.lib.format)
         with archive.open(name) as handle:
-            version = np.lib.format.read_magic(handle)  # type: ignore[no-untyped-call]
+            version = npy_format.read_magic(handle)
             if version == (1, 0):
-                shape, _, _ = np.lib.format.read_array_header_1_0(handle)  # type: ignore[no-untyped-call]
+                shape, _, _ = npy_format.read_array_header_1_0(handle)
             else:
-                shape, _, _ = np.lib.format.read_array_header_2_0(handle)  # type: ignore[no-untyped-call]
+                shape, _, _ = npy_format.read_array_header_2_0(handle)
     return int(shape[0])
 
 

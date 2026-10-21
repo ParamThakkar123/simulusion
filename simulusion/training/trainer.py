@@ -10,12 +10,10 @@
     )
     result.world_model_path  # runs/<name>/world_model, loadable with load_world_model
 
-The loop is built on `Hugging Face Accelerate`_, so the same code runs on a
-CPU, one GPU, or several processes (any launcher that sets the standard
-``torch.distributed`` environment: ``RANK``, ``WORLD_SIZE``, ``MASTER_ADDR``,
-...) without changes. Precision is a run setting (``fp32``, ``bf16``,
-``fp16``, ``auto``) applied through :class:`~simulusion.training.precision.
-MixedPrecision`, rather than a flag per model.
+A run uses one device: a CPU, one GPU, or Apple MPS. Precision is a run
+setting (``fp32``, ``bf16``, ``fp16``, ``auto``) applied through
+:class:`~simulusion.training.precision.MixedPrecision`, rather than a flag per
+model.
 
 Every run gets a directory holding everything needed to reproduce it::
 
@@ -25,8 +23,6 @@ Every run gets a directory holding everything needed to reproduce it::
         metrics.jsonl        # every logged metric
         checkpoints/step_000500/   # resumable: trainer.resume=<this dir> or "auto"
         world_model/         # the trained world model (WorldModel protocol)
-
-.. _Hugging Face Accelerate: https://huggingface.co/docs/accelerate
 """
 
 from __future__ import annotations
@@ -48,6 +44,7 @@ import torch.nn as nn
 from simulusion.configs.serialization import SerializableConfigMixin
 from simulusion.training.precision import GradientUpdate, MixedPrecision
 from simulusion.training.task import TrainingTask
+from simulusion.utils.device import resolve_device
 from simulusion.utils.logging_utils import MetricsLogger
 from simulusion.utils.train_utils import EarlyStopping
 
@@ -66,18 +63,15 @@ class TrainerConfig(SerializableConfigMixin):
         max_steps: Budget in the task's progress unit (optimizer steps,
             environment steps or epochs; see the task). ``None`` uses the
             task's default.
-        seed: Seeds Python, NumPy and PyTorch (offset per process under data
-            parallelism, so each shards differently).
+        seed: Seeds Python, NumPy and PyTorch.
         deterministic: Ask PyTorch for deterministic kernels. Slower; some
             ops only warn.
         precision: ``fp32``, ``bf16``, ``fp16`` or ``auto``.
-        device: ``None`` picks the accelerator Accelerate finds (CUDA, MPS,
-            else CPU); ``"cpu"`` forces CPU.
+        device: ``None`` (or ``"auto"``) picks CUDA, then MPS, else CPU;
+            ``"cpu"``, ``"cuda"``, ``"cuda:1"`` or ``"mps"`` choose one. A
+            device that is not available falls back with a warning.
         grad_accumulation: Batches per optimizer step, for tasks whose
             updates support it (dataset-driven ones).
-        find_unused_parameters: Tell DDP some parameters may get no gradient
-            in a step (models with optional heads). Only matters with several
-            processes; it costs an extra pass over the graph.
         log_every: Log metrics every this many units of progress.
         eval_every: Evaluate every this many units; 0 only at the end.
         checkpoint_every: Checkpoint every this many units; 0 only at the end.
@@ -107,7 +101,6 @@ class TrainerConfig(SerializableConfigMixin):
     precision: str = "fp32"
     device: Optional[str] = None
     grad_accumulation: int = 1
-    find_unused_parameters: bool = False
     log_every: int = 100
     eval_every: int = 0
     checkpoint_every: int = 0
@@ -164,40 +157,11 @@ class Trainer:
         config_filename: str = "config.yaml",
         metrics_filename: str = "metrics.jsonl",
     ) -> None:
-        from accelerate import Accelerator
-        from accelerate.utils import DistributedDataParallelKwargs
-
         self.config = config if config is not None else TrainerConfig()
-        # Precision is handled by MixedPrecision/GradientUpdate (a loss scaler
-        # per optimizer), so Accelerate itself always runs in "no" mode.
-        self.accelerator = Accelerator(
-            cpu=self.config.device == "cpu",
-            kwargs_handlers=[
-                DistributedDataParallelKwargs(
-                    find_unused_parameters=self.config.find_unused_parameters
-                )
-            ],
+        device = self.config.device
+        self.device: torch.device = resolve_device(
+            None if device in (None, "auto") else device
         )
-        if self.config.device not in (None, "cpu", "auto"):
-            wanted = torch.device(str(self.config.device)).type
-            if wanted != self.accelerator.device.type:
-                raise ValueError(
-                    f"device={self.config.device!r} was requested but Accelerate "
-                    f"selected {self.accelerator.device}. Leave device unset, or "
-                    "use CUDA_VISIBLE_DEVICES / `accelerate config` to choose GPUs."
-                )
-        from accelerate.utils import DistributedType
-
-        if self.accelerator.distributed_type in (
-            DistributedType.FSDP,
-            DistributedType.DEEPSPEED,
-        ):
-            raise NotImplementedError(
-                "Sharded training (FSDP / DeepSpeed) is not supported: gradient "
-                "clipping and checkpoints assume each process holds the whole "
-                "model. Launch with plain data parallelism (DDP)."
-            )
-        self.device: torch.device = self.accelerator.device
         self.precision = MixedPrecision(self.config.precision, self.device)
         self.run_config = dict(run_config) if run_config is not None else None
         self.config_filename = config_filename
@@ -212,69 +176,13 @@ class Trainer:
 
     # ------------------------------------------------------------ for tasks
 
-    @property
-    def is_main_process(self) -> bool:
-        return bool(self.accelerator.is_main_process)
-
-    @property
-    def num_processes(self) -> int:
-        return int(self.accelerator.num_processes)
-
-    @property
-    def process_index(self) -> int:
-        return int(self.accelerator.process_index)
-
     def prepare_module(self, module: nn.Module) -> nn.Module:
-        """Move ``module`` to the device, wrapped for data parallelism if needed."""
-        module = module.to(self.device)
-        if self.num_processes > 1 and any(p.requires_grad for p in module.parameters()):
-            return self.accelerator.prepare_model(module)
-        return module
+        """``module`` on the run's device."""
+        return module.to(self.device)
 
-    def broadcast_parameters(self, modules: Iterable[nn.Module]) -> None:
-        """Copy process 0's weights and buffers to every process.
-
-        DDP does this when it wraps a module. Modules trained unwrapped (with
-        ``gradient_update(..., all_reduce=True)``) must start identical too,
-        and each process is seeded differently. A no-op in one process.
-        """
-        if self.num_processes == 1:
-            return
-        import torch.distributed as dist
-
-        for module in modules:
-            for tensor in [*module.parameters(), *module.buffers()]:
-                dist.broadcast(tensor.data, src=0)
-
-    def broadcast_quantizers(self, *modules: nn.Module) -> None:
-        """Make every process's vector-quantizer codebooks process 0's.
-
-        Codebooks change outside the optimizer: dead-code revival rewrites
-        unused codes with features of the local batch, and EMA quantizers
-        update from local statistics. Under data parallelism each process
-        sees different data, so without this their codebooks (and with them
-        the tokens) drift apart even though the trained weights stay equal.
-        Call it after every update. A no-op in one process.
-        """
-        if self.num_processes == 1:
-            return
-        from simulusion.vision.vq_layer import VectorQuantizer, VectorQuantizerEMA
-
-        quantizers = [
-            sub
-            for module in modules
-            for sub in module.modules()
-            if isinstance(sub, (VectorQuantizer, VectorQuantizerEMA))
-        ]
-        self.broadcast_parameters(quantizers)
-
-    def prepare_dataloader(self, loader: Any) -> Any:
-        """Shard ``loader`` across processes and move its batches to the device."""
-        return self.accelerator.prepare_data_loader(loader)
-
-    def unwrap(self, module: nn.Module) -> nn.Module:
-        """The module inside a data-parallel wrapper (for saving)."""
-        return self.accelerator.unwrap_model(module)
+    def prepare_dataloader(self, loader: Iterable[Any]) -> "DeviceLoader":
+        """``loader`` with every batch's tensors moved to the run's device."""
+        return DeviceLoader(loader, self.device)
 
     def gradient_update(
         self,
@@ -282,35 +190,16 @@ class Trainer:
         parameters: Iterable[torch.Tensor],
         *,
         max_grad_norm: Optional[float] = None,
-        modules: Iterable[nn.Module] = (),
         accumulate: bool = True,
-        all_reduce: bool = False,
     ) -> GradientUpdate:
-        """A :class:`GradientUpdate` at this run's precision and accumulation.
-
-        Pass the DDP-wrapped ``modules`` the parameters belong to, or
-        ``all_reduce=True`` for parameters of modules left unwrapped (see
-        :class:`GradientUpdate`).
-        """
+        """A :class:`GradientUpdate` at this run's precision and accumulation."""
         return GradientUpdate(
             optimizer,
             parameters,
             self.precision,
             max_grad_norm=max_grad_norm,
             accumulation_steps=self.config.grad_accumulation if accumulate else 1,
-            modules=modules,
-            all_reduce=all_reduce and self.num_processes > 1,
         )
-
-    def reduce(self, metrics: Mapping[str, float]) -> dict[str, float]:
-        """Average scalar metrics over processes (a no-op on one process)."""
-        values = {k: float(v) for k, v in metrics.items() if _is_number(v)}
-        if self.num_processes == 1 or not values:
-            return values
-        keys = sorted(values)
-        tensor = torch.tensor([values[k] for k in keys], device=self.device)
-        tensor = self.accelerator.reduce(tensor, reduction="mean")
-        return dict(zip(keys, tensor.tolist()))
 
     @staticmethod
     def infinite(loader: Iterable[Any]) -> Iterator[Any]:
@@ -333,11 +222,6 @@ class Trainer:
     def fit(self, task: TrainingTask) -> TrainResult:
         """Train ``task`` until its budget is spent or early stopping fires."""
         cfg = self.config
-        if self.num_processes > 1 and not task.distributed:
-            raise RuntimeError(
-                f"The '{task.name}' task collects its own data in one process and "
-                "cannot run data-parallel. Launch it as a single process."
-            )
         self.task = task
         task.attach(self)
         resume_dir = self._resolve_resume()
@@ -349,16 +233,14 @@ class Trainer:
         self._seed(cfg.seed)
         if cfg.deterministic:
             _enable_determinism()
-        if self.is_main_process:
-            self.run_dir.mkdir(parents=True, exist_ok=True)
-            self._write_run_files(task)
-            self._metrics_logger = MetricsLogger(
-                str(self.run_dir),
-                enable_console=cfg.console,
-                jsonl_filename=self.metrics_filename,
-                run_name=self.run_dir.name,
-            )
-        self.accelerator.wait_for_everyone()
+        self.run_dir.mkdir(parents=True, exist_ok=True)
+        self._write_run_files(task)
+        self._metrics_logger = MetricsLogger(
+            str(self.run_dir),
+            enable_console=cfg.console,
+            jsonl_filename=self.metrics_filename,
+            run_name=self.run_dir.name,
+        )
 
         task.setup(self)
         if cfg.early_stopping_metric:
@@ -373,14 +255,12 @@ class Trainer:
 
         budget = int(cfg.max_steps if cfg.max_steps is not None else task.max_steps())
         logger.info(
-            "Training '%s' for %d %s on %s (%s, %d process%s) -> %s",
+            "Training '%s' for %d %s on %s (%s) -> %s",
             task.name,
             budget,
             task.progress_unit,
             self.device,
             self.precision.name,
-            self.num_processes,
-            "" if self.num_processes == 1 else "es",
             self.run_dir,
         )
 
@@ -402,7 +282,7 @@ class Trainer:
                 if _crossed(before, progress, cfg.log_every) or progress >= budget:
                     logged = {k: float(np.mean(v)) for k, v in window.items()}
                     logged["time/elapsed_s"] = time.perf_counter() - started
-                    self._log(self.reduce(logged), progress, prefix="train")
+                    self._log(logged, progress, prefix="train")
                     window = {}
 
                 # The last step is evaluated by final_evaluation() below.
@@ -435,7 +315,7 @@ class Trainer:
             self._close_logger()
             raise
 
-        final = self.reduce(task.final_evaluation())
+        final = _numbers(task.final_evaluation())
         if final:
             self._log(final, progress, prefix="eval")
             self._keep_best(final, required=False)
@@ -478,34 +358,31 @@ class Trainer:
         progress = task.progress()
         root = self.run_dir / CHECKPOINT_DIR
         target = root / (name or f"step_{progress:08d}")
-        self.accelerator.wait_for_everyone()
-        if self.is_main_process:
-            staging = root / f".tmp_{target.name}"
-            if staging.exists():
-                shutil.rmtree(staging)
-            (staging / "task").mkdir(parents=True)
-            task.save_checkpoint(staging / "task")
-            torch.save(self._loop_state(), staging / "trainer.pt")
-            (staging / _COMPLETE).write_text(
-                json.dumps(
-                    {
-                        "task": task.name,
-                        "progress": progress,
-                        "progress_unit": task.progress_unit,
-                        "iteration": self.iteration,
-                        "time": time.time(),
-                    },
-                    indent=2,
-                )
-                + "\n"
+        staging = root / f".tmp_{target.name}"
+        if staging.exists():
+            shutil.rmtree(staging)
+        (staging / "task").mkdir(parents=True)
+        task.save_checkpoint(staging / "task")
+        torch.save(self._loop_state(), staging / "trainer.pt")
+        (staging / _COMPLETE).write_text(
+            json.dumps(
+                {
+                    "task": task.name,
+                    "progress": progress,
+                    "progress_unit": task.progress_unit,
+                    "iteration": self.iteration,
+                    "time": time.time(),
+                },
+                indent=2,
             )
-            if target.exists():
-                shutil.rmtree(target)
-            staging.rename(target)
-            if not final and name is None:
-                self._checkpoints.append(target)
-                self._prune_checkpoints()
-        self.accelerator.wait_for_everyone()
+            + "\n"
+        )
+        if target.exists():
+            shutil.rmtree(target)
+        staging.rename(target)
+        if not final and name is None:
+            self._checkpoints.append(target)
+            self._prune_checkpoints()
         return target
 
     def _load_checkpoint(self, directory: Path) -> None:
@@ -518,16 +395,14 @@ class Trainer:
         self._best = state.get("best")
         if self._stopper is not None and state.get("stopper"):
             self._stopper.load_state_dict(state["stopper"])
-        _set_rng_state(state["rng"][min(self.process_index, len(state["rng"]) - 1)])
+        _set_rng_state(state["rng"])
 
     def _loop_state(self) -> dict[str, Any]:
-        # Only the main process writes, so other ranks' RNG is not kept: a
-        # resumed data-parallel run is seeded identically but not bit-exact.
         return {
             "iteration": self.iteration,
             "best": self._best,
             "stopper": self._stopper.state_dict() if self._stopper else None,
-            "rng": [_rng_state()],
+            "rng": _rng_state(),
         }
 
     def _resolve_resume(self) -> Optional[Path]:
@@ -565,7 +440,7 @@ class Trainer:
 
     def _evaluate(self, task: TrainingTask, progress: int) -> bool:
         """Run an evaluation; True when early stopping says to stop."""
-        metrics = self.reduce(task.evaluate())
+        metrics = _numbers(task.evaluate())
         if not metrics:
             return False
         self._log(metrics, progress, prefix="eval")
@@ -618,19 +493,14 @@ class Trainer:
         if model is None:
             return None
         path = self.run_dir / "world_model"
-        if self.is_main_process:
-            model.save(path)
-            logger.info("World model written to %s", path)
-        self.accelerator.wait_for_everyone()
+        model.save(path)
+        logger.info("World model written to %s", path)
         return path
 
     def _export_model(self, task: TrainingTask) -> Optional[Path]:
-        path: Optional[Path] = None
-        if self.is_main_process:
-            path = task.export(self.run_dir / "model")
-            if path is not None:
-                logger.info("Model written to %s", path)
-        self.accelerator.wait_for_everyone()
+        path = task.export(self.run_dir / "model")
+        if path is not None:
+            logger.info("Model written to %s", path)
         return path
 
     def _log(self, metrics: Mapping[str, float], step: int, prefix: str) -> None:
@@ -662,13 +532,12 @@ class Trainer:
                 "progress_unit": task.progress_unit,
                 "device": str(self.device),
                 "precision": self.precision.name,
-                "num_processes": self.num_processes,
             }
         )
         (self.run_dir / "run.json").write_text(json.dumps(info, indent=2) + "\n")
 
     def _seed(self, seed: int) -> None:
-        seed = int(seed) + self.process_index
+        seed = int(seed)
         random.seed(seed)
         np.random.seed(seed % 2**32)
         torch.manual_seed(seed)
@@ -683,6 +552,52 @@ class Trainer:
         if self.task is None:
             raise RuntimeError("No task is being trained.")
         return self.task
+
+
+class DeviceLoader:
+    """Iterate a loader, moving every tensor in each batch to ``device``.
+
+    Batches may be tensors or nested dicts, lists and tuples of them; other
+    values pass through. ``len()`` and other attributes (``dataset``,
+    ``batch_size``, ...) are the wrapped loader's.
+    """
+
+    def __init__(self, loader: Iterable[Any], device: torch.device) -> None:
+        self.loader = loader
+        self.device = device
+        self.non_blocking = device.type == "cuda"
+
+    def __iter__(self) -> Iterator[Any]:
+        for batch in self.loader:
+            yield _to_device(batch, self.device, self.non_blocking)
+
+    def __len__(self) -> int:
+        return len(self.loader)  # type: ignore[arg-type]
+
+    def __getattr__(self, name: str) -> Any:
+        # Only reached for attributes DeviceLoader does not define itself
+        # (dataset, batch_size, sampler, set_epoch, ...).
+        if name == "loader":
+            raise AttributeError(name)
+        return getattr(self.loader, name)
+
+
+def _to_device(batch: Any, device: torch.device, non_blocking: bool) -> Any:
+    if isinstance(batch, torch.Tensor):
+        return batch.to(device, non_blocking=non_blocking)
+    if isinstance(batch, Mapping):
+        moved = {k: _to_device(v, device, non_blocking) for k, v in batch.items()}
+        return moved if type(batch) is dict else cast(Any, type(batch))(moved)
+    if isinstance(batch, tuple) and hasattr(batch, "_fields"):  # namedtuple
+        return type(batch)(*(_to_device(v, device, non_blocking) for v in batch))
+    if isinstance(batch, (list, tuple)):
+        return type(batch)(_to_device(v, device, non_blocking) for v in batch)
+    return batch
+
+
+def _numbers(metrics: Mapping[str, Any]) -> dict[str, float]:
+    """The scalar entries of ``metrics``, as floats."""
+    return {k: float(v) for k, v in metrics.items() if _is_number(v)}
 
 
 def latest_checkpoint(run_dir: str | Path) -> Optional[Path]:
@@ -755,4 +670,10 @@ def _enable_determinism() -> None:
     torch.backends.cudnn.deterministic = True
 
 
-__all__ = ["TrainResult", "Trainer", "TrainerConfig", "latest_checkpoint"]
+__all__ = [
+    "DeviceLoader",
+    "TrainResult",
+    "Trainer",
+    "TrainerConfig",
+    "latest_checkpoint",
+]

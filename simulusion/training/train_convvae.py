@@ -56,6 +56,4 @@ def train_convae(config: WMVAEConfig) -> None:
         early_stopping_mode="min",
         patience=config.early_stopping_patience,
     )
-    torch.save(
-        task.trainer.unwrap(task.vae).state_dict(), join(vae_dir, "convae_final.pth")
-    )
+    torch.save(task.vae.state_dict(), join(vae_dir, "convae_final.pth"))

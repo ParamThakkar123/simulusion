@@ -418,7 +418,6 @@ class Dreamer:
         # Latest per-component loss values, refreshed by `train_one_batch`.
         self.metrics: dict[str, float] = {}
         self._model_components: dict[str, float] = {}
-        self._all_reduce = False
         self._build_model(restore=self.restore)
 
     def _build_model(self, restore: bool = False) -> None:
@@ -685,7 +684,6 @@ class Dreamer:
             self.world_model_params,
             self.precision,
             max_grad_norm=clip,
-            all_reduce=self._all_reduce,
         )
         self.actor_update = GradientUpdate(
             self.actor_opt, self.actor.parameters(), self.precision, max_grad_norm=clip
@@ -697,18 +695,10 @@ class Dreamer:
             max_grad_norm=clip,
         )
 
-    def set_precision(
-        self, precision: MixedPrecision, *, all_reduce: bool = False
-    ) -> None:
-        """Train at ``precision`` from now on (fresh loss scalers).
-
-        ``all_reduce`` averages the world model's gradients across processes,
-        for training it data-parallel (the RSSM is driven through
-        ``observe_rollout``, which a DDP wrapper would not see).
-        """
+    def set_precision(self, precision: MixedPrecision) -> None:
+        """Train at ``precision`` from now on (fresh loss scalers)."""
         self.precision = precision
         self.use_amp = precision.enabled
-        self._all_reduce = all_reduce
         self._build_updates()
 
     def update_world_model(
