@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-10-25
+
 ### Security
 - Raise the locked versions of dependencies with open Dependabot advisories:
   Pillow 13.0.0, certifi 2026.10.23, fsspec 2026.9.0, GitPython 3.2.1,
