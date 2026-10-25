@@ -162,6 +162,8 @@ generated from source, see {doc}`api_reference`.
 | `list_gymnasium_robotics_envs` | `simulusion.envs.robotics_env` | List installed Robotics envs. |
 | `UnityMLAgentsEnv` | `simulusion.envs.unity_env` | Unity ML-Agents adapter. |
 | `make_unity_mlagents_env` | `simulusion.envs.unity_env` | Factory for UnityMLAgentsEnv. |
+| `DreamEnv` | `simulusion.envs.dream` | Any `WorldModel` as a Gymnasium environment, to train agents inside it. |
+| `DreamVectorEnv` | `simulusion.envs.dream` | Many dreams in one batched model call, as a Gymnasium vector environment. |
 | `WorldModelEnv` | `simulusion.envs.world_model_env` | Environment inside a learned world model. |
 | `make_world_model_env` | `simulusion.envs.world_model_env` | Factory for WorldModelEnv. |
 | `TimeLimit` | `simulusion.envs.wrappers` | Episode time limit wrapper. |
