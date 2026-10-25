@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+- Raise the locked versions of dependencies with open Dependabot advisories:
+  Pillow 13.0.0, certifi 2026.10.23, fsspec 2026.9.0, GitPython 3.2.1,
+  nbconvert 7.17.2, filelock 4.2.4, virtualenv 21.14.13, setuptools 84.2.1,
+  opentelemetry-api 1.45.1 and Werkzeug 3.1.9. `constraint-dependencies`
+  now keeps each of them at or above its patched version.
+
 ### Changed
 - `simulusion train MODEL` runs registered tasks on the shared Trainer.
   Commands written for the older per-family entrypoints (a `--config` without
