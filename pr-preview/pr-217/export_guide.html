@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Exporting Models for Deployment" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/export_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Simulusion provides a unified export system that converts trained models and agents into deployable formats — torch.export programs, AOTInductor packages, ONNX, TensorRT and (legacy) TorchScript — ..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/_images/social_previews/summary_export_guide_29c3a54e.png" />
+<meta property="og:image:alt" content="Simulusion provides a unified export system that converts trained models and agents into deployable formats — torch.export programs, AOTInductor packages, ONNX, TensorRT and (legacy) TorchScript — ..." />
+<meta name="description" content="Simulusion provides a unified export system that converts trained models and agents into deployable formats — torch.export programs, AOTInductor packages, ONNX, TensorRT and (legacy) TorchScript — ..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Exporting Models for Deployment &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'export_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/export_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="Configs Reference" href="configs_reference.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Exporting Models for Deployment</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="exporting-models-for-deployment">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Exporting Models for Deployment</a><a class="headerlink" href="#exporting-models-for-deployment" title="Link to this heading">#</a></h1>
+<p>Simulusion provides a unified export system that converts trained models and agents
+into deployable formats — <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> programs, AOTInductor packages, ONNX,
+TensorRT and (legacy) TorchScript — without requiring each model to implement
+its own export logic. For making inference fast, choosing what to export for
+a recurrent world model, and packaging it with its config, see
+<a class="reference internal" href="deployment_guide.html"><span class="doc">Efficient Inference and Deployment</span></a>.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#exporting-models-for-deployment" id="id1">Exporting Models for Deployment</a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p>
+<ul>
+<li><p><a class="reference internal" href="#supported-formats" id="id3">Supported formats</a></p></li>
+<li><p><a class="reference internal" href="#loading-and-verifying-artifacts" id="id4">Loading and verifying artifacts</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#quick-start" id="id5">Quick start</a></p>
+<ul>
+<li><p><a class="reference internal" href="#exporting-any-nn-module" id="id6">Exporting any <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code></a></p></li>
+<li><p><a class="reference internal" href="#exporting-a-trained-agent" id="id7">Exporting a trained agent</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#target-resolution" id="id8">Target resolution</a></p>
+<ul>
+<li><p><a class="reference internal" href="#agent-specific-defaults" id="id9">1. Agent-specific defaults</a></p></li>
+<li><p><a class="reference internal" href="#explicit-target-parameter" id="id10">2. Explicit <code class="docutils literal notranslate"><span class="pre">target=</span></code> parameter</a></p></li>
+<li><p><a class="reference internal" href="#single-module-fallback" id="id11">3. Single-module fallback</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#format-specific-details" id="id12">Format-specific details</a></p>
+<ul>
+<li><p><a class="reference internal" href="#onnx" id="id13">ONNX</a></p></li>
+<li><p><a class="reference internal" href="#torchscript" id="id14">TorchScript</a></p></li>
+<li><p><a class="reference internal" href="#tensorrt" id="id15">TensorRT</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#custom-agents" id="id16">Custom agents</a></p>
+<ul>
+<li><p><a class="reference internal" href="#custom-example-input-inference" id="id17">Custom example input inference</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#low-level-api" id="id18">Low-level API</a></p></li>
+<li><p><a class="reference internal" href="#common-pitfalls" id="id19">Common pitfalls</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id20">See Also</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The export system is built around three levels of API:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Level</p></th>
+<th class="head"><p>Function / Method</p></th>
+<th class="head"><p>When to use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Module method</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">module.export(path,</span> <span class="pre">format,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Every <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> class exported from the top-level <code class="docutils literal notranslate"><span class="pre">simulusion</span></code> namespace (<code class="docutils literal notranslate"><span class="pre">Genie</span></code>, <code class="docutils literal notranslate"><span class="pre">VisionTransformer</span></code>, <code class="docutils literal notranslate"><span class="pre">RSSM</span></code>, …)</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Agent method</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">agent.export(path,</span> <span class="pre">format,</span> <span class="pre">...)</span></code></p></td>
+<td><p>High-level agents (<code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">IRISAgent</span></code>) that inherit <code class="docutils literal notranslate"><span class="pre">ExportableAgentMixin</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Standalone</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">export_any(obj,</span> <span class="pre">path,</span> <span class="pre">...)</span></code> / <code class="docutils literal notranslate"><span class="pre">export_model(module,</span> <span class="pre">path,</span> <span class="pre">...)</span></code></p></td>
+<td><p>When you need explicit control over which submodule is exported or want to bypass automatic target resolution</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="supported-formats">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Supported formats</a><a class="headerlink" href="#supported-formats" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Format</p></th>
+<th class="head"><p>Extension</p></th>
+<th class="head"><p>Use case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;exported_program&quot;</span></code> (aliases: <code class="docutils literal notranslate"><span class="pre">&quot;export&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pt2&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ep&quot;</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.pt2</span></code></p></td>
+<td><p><strong>Recommended.</strong> <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> graph; loadable without the model’s source, and the input to AOTInductor, ExecuTorch and TensorRT</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;aoti&quot;</span></code> (aliases: <code class="docutils literal notranslate"><span class="pre">&quot;aotinductor&quot;</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.pt2</span></code></p></td>
+<td><p>Ahead-of-time compiled package, runnable from Python or C++ (LibTorch) without the model’s Python code; needs a C++ toolchain at export time</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;onnx&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.onnx</span></code></p></td>
+<td><p>Cross-platform inference, mobile, edge devices, TensorRT conversion</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;tensorrt&quot;</span></code> (aliases: <code class="docutils literal notranslate"><span class="pre">&quot;trt&quot;</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.ep</span></code></p></td>
+<td><p>NVIDIA GPU-optimized inference (requires <code class="docutils literal notranslate"><span class="pre">torch_tensorrt</span></code>). Compiles through <code class="docutils literal notranslate"><span class="pre">ir=&quot;dynamo&quot;</span></code> by default; pass <code class="docutils literal notranslate"><span class="pre">ir=&quot;ts&quot;</span></code> for the legacy TorchScript path</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;torchscript&quot;</span></code> (aliases: <code class="docutils literal notranslate"><span class="pre">&quot;jit&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ts&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pt&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;script&quot;</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.pt</span></code></p></td>
+<td><p>Legacy. TorchScript is in maintenance mode upstream; prefer <code class="docutils literal notranslate"><span class="pre">&quot;exported_program&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;aoti&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">torch.export</span></code> options pass straight through, for example
+<code class="docutils literal notranslate"><span class="pre">dynamic_shapes={&quot;x&quot;:</span> <span class="pre">{0:</span> <span class="pre">torch.export.Dim(&quot;batch&quot;)}}</span></code> to keep the batch size
+symbolic.</p>
+</section>
+<section id="loading-and-verifying-artifacts">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Loading and verifying artifacts</a><a class="headerlink" href="#loading-and-verifying-artifacts" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_model</span><span class="p">,</span> <span class="n">load_exported</span><span class="p">,</span> <span class="n">verify_export</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="n">export_model</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"step.pt2"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"exported_program"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+<span class="n">max_err</span> <span class="o">=</span> <span class="n">verify_export</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># raises AssertionError on mismatch</span>
+<span class="n">runner</span> <span class="o">=</span> <span class="n">load_exported</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>  <span class="c1"># format inferred from the suffix</span>
+<span class="n">runner</span> <span class="o">=</span> <span class="n">load_exported</span><span class="p">(</span><span class="s2">"step_aoti.pt2"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"aoti"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">load_exported</span></code> returns a plain callable for every format. ONNX artifacts run
+through ONNX Runtime when it is installed.</p>
+</section>
+</section>
+<section id="quick-start">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<section id="exporting-any-nn-module">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Exporting any <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code></a><a class="headerlink" href="#exporting-any-nn-module" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">simulusion.export_model(module,</span> <span class="pre">path,</span> <span class="pre">...)</span></code> exports any <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>,
+including your own. Simulusion does not add methods to <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>; its
+public model classes get <code class="docutils literal notranslate"><span class="pre">.export()</span></code> from <code class="docutils literal notranslate"><span class="pre">ExportableAgentMixin</span></code>, which you can
+also inherit in your own classes (see <a class="reference internal" href="#custom-agents"><span class="std std-ref">Custom agents</span></a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_model</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MyModel</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="c1"># torch.export program (recommended)</span>
+<span class="n">export_model</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="s2">"model.pt2"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"exported_program"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># ONNX (requires example_inputs)</span>
+<span class="n">export_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"model.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Simulusion’s own models (for example <code class="docutils literal notranslate"><span class="pre">simulusion.create_model(&quot;genie-small&quot;)</span></code>) can
+call the same thing as a method: <code class="docutils literal notranslate"><span class="pre">genie.export(&quot;genie.pt2&quot;,</span> <span class="pre">format=&quot;exported_program&quot;,</span> <span class="pre">example_inputs=video)</span></code>.</p>
+</section>
+<section id="exporting-a-trained-agent">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Exporting a trained agent</a><a class="headerlink" href="#exporting-a-trained-agent" title="Link to this heading">#</a></h3>
+<p>High-level agents support the same <code class="docutils literal notranslate"><span class="pre">.export()</span></code> method directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span><span class="s2">"dreamer"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"walker-walk"</span><span class="p">,</span> <span class="n">total_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="c1"># ... train the agent ...</span>
+
+<span class="c1"># Export the policy to ONNX</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"policy.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">)</span>
+
+<span class="c1"># Export the RSSM world model to TorchScript</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"rssm.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"rssm"</span><span class="p">)</span>
+
+<span class="c1"># Export the observation encoder to ONNX</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"encoder.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"obs_encoder"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The system automatically resolves which submodule to export and infers the
+correct example inputs for each agent type.</p>
+</section>
+</section>
+<section id="target-resolution">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Target resolution</a><a class="headerlink" href="#target-resolution" title="Link to this heading">#</a></h2>
+<p>When you call <code class="docutils literal notranslate"><span class="pre">.export()</span></code>, the system needs to decide which <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> to
+serialize. It uses a priority-based resolution strategy:</p>
+<section id="agent-specific-defaults">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">1. Agent-specific defaults</a><a class="headerlink" href="#agent-specific-defaults" title="Link to this heading">#</a></h3>
+<p>Each agent type has a preferred default target:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Agent</p></th>
+<th class="head"><p>Default target</p></th>
+<th class="head"><p>Example inputs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code></p></td>
+<td><p>Policy head (actor)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[batch,</span> <span class="pre">stoch_size</span> <span class="pre">+</span> <span class="pre">deter_size]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISAgent</span></code></p></td>
+<td><p>Actor-critic head</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[batch,</span> <span class="pre">1,</span> <span class="pre">channels,</span> <span class="pre">h,</span> <span class="pre">w]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent</span></code></p></td>
+<td><p>Vision Transformer encoder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[batch,</span> <span class="pre">3,</span> <span class="pre">crop_size,</span> <span class="pre">crop_size]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="explicit-target-parameter">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">2. Explicit <code class="docutils literal notranslate"><span class="pre">target=</span></code> parameter</a><a class="headerlink" href="#explicit-target-parameter" title="Link to this heading">#</a></h3>
+<p>Override the default by naming a specific submodule:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export by attribute path</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"reward.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"dreamer.reward_model"</span><span class="p">)</span>
+
+<span class="c1"># If the attribute name is unique, the short name works</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"value.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"value_model"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the short name matches multiple modules, the system raises an error and
+lists the available fully qualified paths.</p>
+</section>
+<section id="single-module-fallback">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">3. Single-module fallback</a><a class="headerlink" href="#single-module-fallback" title="Link to this heading">#</a></h3>
+<p>If the object is itself an <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code>, it is exported directly. If it
+contains exactly one <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code> attribute, that attribute is exported.
+If it contains multiple modules, the system picks the first match from this
+priority list: <code class="docutils literal notranslate"><span class="pre">actor</span></code>, <code class="docutils literal notranslate"><span class="pre">policy</span></code>, <code class="docutils literal notranslate"><span class="pre">actor_critic</span></code>, <code class="docutils literal notranslate"><span class="pre">rssm</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>,
+<code class="docutils literal notranslate"><span class="pre">world_model</span></code>, <code class="docutils literal notranslate"><span class="pre">encoder</span></code>.</p>
+</section>
+</section>
+<section id="format-specific-details">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Format-specific details</a><a class="headerlink" href="#format-specific-details" title="Link to this heading">#</a></h2>
+<section id="onnx">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">ONNX</a><a class="headerlink" href="#onnx" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="s2">"policy.onnx"</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"latent"</span><span class="p">],</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"action"</span><span class="p">],</span>
+    <span class="n">dynamic_axes</span><span class="o">=</span><span class="p">{</span><span class="s2">"latent"</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">"batch"</span><span class="p">},</span> <span class="s2">"action"</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">"batch"</span><span class="p">}},</span>
+    <span class="n">opset_version</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span>  <span class="c1"># default</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://pytorch.org/docs/stable/onnx.html">PyTorch ONNX export docs</a>
+for all supported keyword arguments.</p>
+</section>
+<section id="torchscript">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">TorchScript</a><a class="headerlink" href="#torchscript" title="Link to this heading">#</a></h3>
+<p>Two modes, controlled by whether <code class="docutils literal notranslate"><span class="pre">example_inputs</span></code> is provided:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>When to use</p></th>
+<th class="head"><p>Limitation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Tracing</strong> (with <code class="docutils literal notranslate"><span class="pre">example_inputs</span></code>)</p></td>
+<td><p>Fast export of a fixed forward graph</p></td>
+<td><p>May not handle dynamic control flow</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Scripting</strong> (without <code class="docutils literal notranslate"><span class="pre">example_inputs</span></code>)</p></td>
+<td><p>Full module graph with control flow</p></td>
+<td><p>May fail on unsupported Python constructs</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Trace (requires example_inputs)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"traced.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">,</span> <span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">230</span><span class="p">))</span>
+
+<span class="c1"># Script (no example_inputs needed)</span>
+<span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"scripted.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="tensorrt">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">TensorRT</a><a class="headerlink" href="#tensorrt" title="Link to this heading">#</a></h3>
+<p>Requires the optional <code class="docutils literal notranslate"><span class="pre">torch_tensorrt</span></code> package:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch_tensorrt
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="s2">"policy.trt"</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"tensorrt"</span><span class="p">,</span>
+    <span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cuda"</span><span class="p">),</span>
+    <span class="n">enabled_precisions</span><span class="o">=</span><span class="p">{</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">},</span>  <span class="c1"># FP16 inference</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="custom-agents">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Custom agents</a><a class="headerlink" href="#custom-agents" title="Link to this heading">#</a></h2>
+<p>Inherit <code class="docutils literal notranslate"><span class="pre">ExportableAgentMixin</span></code> to give a custom agent (or your own
+<code class="docutils literal notranslate"><span class="pre">nn.Module</span></code>) the <code class="docutils literal notranslate"><span class="pre">.export()</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportableAgentMixin</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyAgent</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">policy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The mixin will automatically discover <code class="docutils literal notranslate"><span class="pre">self.policy</span></code> and prefer it as the
+default target. Pass <code class="docutils literal notranslate"><span class="pre">target=&quot;encoder&quot;</span></code> to export a different submodule.</p>
+<section id="custom-example-input-inference">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Custom example input inference</a><a class="headerlink" href="#custom-example-input-inference" title="Link to this heading">#</a></h3>
+<p>If the auto-inferred example inputs are wrong for your agent, pass them
+explicitly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="s2">"policy.onnx"</span><span class="p">,</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">,</span>
+    <span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span>  <span class="c1"># your custom shape</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Or add inference support by implementing a matching pattern in
+<code class="docutils literal notranslate"><span class="pre">_infer_example_inputs</span></code> in <code class="docutils literal notranslate"><span class="pre">simulusion/export.py</span></code>.</p>
+</section>
+</section>
+<section id="low-level-api">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Low-level API</a><a class="headerlink" href="#low-level-api" title="Link to this heading">#</a></h2>
+<p>For scripting or batch export, use the standalone functions directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_any</span><span class="p">,</span> <span class="n">export_model</span>
+
+<span class="c1"># export_any resolves the target module from any object</span>
+<span class="n">export_any</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="s2">"policy.onnx"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"onnx"</span><span class="p">)</span>
+
+<span class="c1"># export_model exports a raw nn.Module</span>
+<span class="n">export_model</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">policy</span><span class="p">,</span> <span class="s2">"policy.pt"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"torchscript"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="common-pitfalls">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Common pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Missing <code class="docutils literal notranslate"><span class="pre">.eval()</span></code></strong>: Export always sets the module to eval mode before
+tracing and restores the original mode afterwards. Call <code class="docutils literal notranslate"><span class="pre">.eval()</span></code> manually
+if you are inspecting the exported graph afterwards.</p></li>
+<li><p><strong>Dynamic control flow with ONNX</strong>: ONNX requires tracing. If your module
+has <code class="docutils literal notranslate"><span class="pre">if</span></code> statements or loops that depend on tensor values, use TorchScript
+instead.</p></li>
+<li><p><strong>CUDA tensors for TensorRT</strong>: TensorRT export requires example inputs on
+the same device as the module. Pass CUDA tensors as example inputs.</p></li>
+<li><p><strong>Multiple matches for short names</strong>: If you see <code class="docutils literal notranslate"><span class="pre">&quot;matched</span> <span class="pre">multiple</span> <span class="pre">modules&quot;</span></code>, use the fully qualified path, e.g. <code class="docutils literal notranslate"><span class="pre">target=&quot;dreamer.actor&quot;</span></code>
+instead of <code class="docutils literal notranslate"><span class="pre">target=&quot;actor&quot;</span></code>.</p></li>
+</ol>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="inference_guide.html"><span class="doc">Inference Guide</span></a> — running exported models in production</p></li>
+<li><p><a class="reference internal" href="public_api.html"><span class="doc">Public API Quick Reference</span></a> — <code class="docutils literal notranslate"><span class="pre">export_any</span></code> and <code class="docutils literal notranslate"><span class="pre">export_model</span></code> factory functions</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="configs_reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Configs Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-formats">Supported formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-and-verifying-artifacts">Loading and verifying artifacts</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-any-nn-module">Exporting any <code class="docutils literal notranslate"><span class="pre">nn.Module</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exporting-a-trained-agent">Exporting a trained agent</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-resolution">Target resolution</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#agent-specific-defaults">1. Agent-specific defaults</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-target-parameter">2. Explicit <code class="docutils literal notranslate"><span class="pre">target=</span></code> parameter</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-module-fallback">3. Single-module fallback</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#format-specific-details">Format-specific details</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#onnx">ONNX</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchscript">TorchScript</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tensorrt">TensorRT</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-agents">Custom agents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-example-input-inference">Custom example input inference</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#low-level-api">Low-level API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/export_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

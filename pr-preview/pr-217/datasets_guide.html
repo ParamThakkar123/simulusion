@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Datasets" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/datasets_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Simulusion provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the simulusion.datasets module. C..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/_images/social_previews/summary_datasets_guide_c9239451.png" />
+<meta property="og:image:alt" content="Simulusion provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the simulusion.datasets module. C..." />
+<meta name="description" content="Simulusion provides dataset loaders for image, video, RL trajectory, and curated benchmark data. All major datasets are accessible through the top-level package or the simulusion.datasets module. C..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Datasets &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'datasets_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/datasets_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Loss Functions" href="losses_guide.html" />
+    <link rel="prev" title="Vision Components" href="vision_guide.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Datasets</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="datasets">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Datasets</a><a class="headerlink" href="#datasets" title="Link to this heading">#</a></h1>
+<p>Simulusion provides dataset loaders for image, video, RL trajectory, and
+curated benchmark data. All major datasets are accessible through the
+top-level package or the <code class="docutils literal notranslate"><span class="pre">simulusion.datasets</span></code> module.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#datasets" id="id1">Datasets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#which-dataset-to-use" id="id2">Which dataset to use</a></p></li>
+<li><p><a class="reference internal" href="#image-datasets" id="id3">Image datasets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#cifar-10" id="id4">CIFAR-10</a></p></li>
+<li><p><a class="reference internal" href="#imagenet-1k" id="id5">ImageNet-1K</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#video-datasets" id="id6">Video datasets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#videofolderdataset-raw-video-files" id="id7"><code class="docutils literal notranslate"><span class="pre">VideoFolderDataset</span></code> — raw video files</a></p></li>
+<li><p><a class="reference internal" href="#imagefolderdataset-per-frame-sequences" id="id8"><code class="docutils literal notranslate"><span class="pre">ImageFolderDataset</span></code> — per-frame sequences</a></p></li>
+<li><p><a class="reference internal" href="#numpydataset-pre-encoded-numpy-arrays" id="id9"><code class="docutils literal notranslate"><span class="pre">NumPyDataset</span></code> — pre-encoded numpy arrays</a></p></li>
+<li><p><a class="reference internal" href="#hdf5dataset-hdf5-video-stores" id="id10"><code class="docutils literal notranslate"><span class="pre">HDF5Dataset</span></code> — HDF5 video stores</a></p></li>
+<li><p><a class="reference internal" href="#factory-function" id="id11">Factory function</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#rl-trajectory-datasets" id="id12">RL trajectory datasets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#rlenvironmentdataset-episode-recordings" id="id13"><code class="docutils literal notranslate"><span class="pre">RLEnvironmentDataset</span></code> — episode recordings</a></p></li>
+<li><p><a class="reference internal" href="#rolloutdataset-world-models-pipeline" id="id14"><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code> — World Models pipeline</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tinyworlds" id="id15">TinyWorlds</a></p>
+<ul>
+<li><p><a class="reference internal" href="#available-datasets" id="id16">Available datasets</a></p></li>
+<li><p><a class="reference internal" href="#usage" id="id17">Usage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#diamond-replay-buffer" id="id18">DIAMOND replay buffer</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id19">See Also</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="which-dataset-to-use">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Which dataset to use</a><a class="headerlink" href="#which-dataset-to-use" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dataset</p></th>
+<th class="head"><p>Class / Factory</p></th>
+<th class="head"><p>Pipe</p></th>
+<th class="head"><p>Used by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>CIFAR-10</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">make_cifar10(root_path,</span> <span class="pre">transform,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Image classification</p></td>
+<td><p>JEPA, DiT</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>ImageNet-1K</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">make_imagenet1k(root_path,</span> <span class="pre">transform,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Image classification</p></td>
+<td><p>JEPA</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>ImageFolder</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">make_imagefolder(root_path,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Custom image folders</p></td>
+<td><p>JEPA</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Video folder</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VideoFolderDataset(path,</span> <span class="pre">num_frames,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Video files (.mp4, .avi)</p></td>
+<td><p>Genie</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Image sequence</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ImageFolderDataset(path,</span> <span class="pre">num_frames,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Per-frame folder sequences</p></td>
+<td><p>Genie</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>NumPy arrays</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NumPyDataset(path,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Pre-encoded .npy/.npz</p></td>
+<td><p>Genie</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>HDF5</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HDF5Dataset(path,</span> <span class="pre">key,</span> <span class="pre">...)</span></code></p></td>
+<td><p>HDF5 video stores</p></td>
+<td><p>Genie</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>RL trajectories</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RLEnvironmentDataset(path,</span> <span class="pre">...)</span></code></p></td>
+<td><p>.npz episode files</p></td>
+<td><p>World Models pipeline</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Rollout data</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RolloutDataset(root,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Pre-collected .npz rollouts</p></td>
+<td><p>World Models pipeline</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>TinyWorlds</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TinyWorldsDataset(name,</span> <span class="pre">...)</span></code></p></td>
+<td><p>HuggingFace video datasets</p></td>
+<td><p>Genie</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>DIAMOND replay</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ReplayBuffer(capacity,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Online Atari interaction</p></td>
+<td><p>DIAMOND</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="image-datasets">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Image datasets</a><a class="headerlink" href="#image-datasets" title="Link to this heading">#</a></h2>
+<section id="cifar-10">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">CIFAR-10</a><a class="headerlink" href="#cifar-10" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.cifar10</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_cifar10</span>
+
+<span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_cifar10</span><span class="p">(</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"./data"</span><span class="p">,</span>
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">world_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">torchvision.datasets.CIFAR10</span></code> wrapped in a <code class="docutils literal notranslate"><span class="pre">DistributedSampler</span></code>
+dataloader. Used for JEPA and DiT prototyping.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Arg</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform</span></code></p></td>
+<td><p>required</p></td>
+<td><p>Torchvision transforms</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code></p></td>
+<td><p>required</p></td>
+<td><p>Samples per batch</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">root_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Data directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">download</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Download if missing</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Train or test split</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">world_size</span></code> / <code class="docutils literal notranslate"><span class="pre">rank</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> / <code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Distributed training</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="imagenet-1k">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">ImageNet-1K</a><a class="headerlink" href="#imagenet-1k" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagenet1k</span>
+
+<span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagenet1k</span><span class="p">(</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"/data/imagenet"</span><span class="p">,</span>
+    <span class="n">image_folder</span><span class="o">=</span><span class="s2">"imagenet_full_size/061417/"</span><span class="p">,</span>
+    <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">copy_data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># set True for SLURM with network storage</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ImageNet</span></code> class extends <code class="docutils literal notranslate"><span class="pre">torchvision.datasets.ImageFolder</span></code> with:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Local data staging</strong></p></td>
+<td><p>Copies tar archives from network storage to <code class="docutils literal notranslate"><span class="pre">/scratch/slurm_tmpdir/{job_id}/</span></code> and extracts once per SLURM job</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Subset filtering</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ImageNetSubset</span></code> restricts to a text-file list of allowed image IDs</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Custom image folder (any directory structure)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.imagenet1k</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_imagefolder</span>
+
+<span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">make_imagefolder</span><span class="p">(</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="o">=</span><span class="s2">"./my_dataset"</span><span class="p">,</span>
+    <span class="n">image_folder</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
+    <span class="n">val_split</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>  <span class="c1"># hold out 10% for validation</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="video-datasets">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Video datasets</a><a class="headerlink" href="#video-datasets" title="Link to this heading">#</a></h2>
+<p>All video datasets inherit from <code class="docutils literal notranslate"><span class="pre">VideoDatasetBase</span></code> and share the same
+interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">VideoFolderDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/path/to/videos"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">video</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># (16, 3, 64, 64) float</span>
+</pre></div>
+</div>
+<section id="videofolderdataset-raw-video-files">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">VideoFolderDataset</span></code> — raw video files</a><a class="headerlink" href="#videofolderdataset-raw-video-files" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">VideoFolderDataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">VideoFolderDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">extensions</span><span class="o">=</span><span class="p">(</span><span class="s2">".mp4"</span><span class="p">,</span> <span class="s2">".avi"</span><span class="p">,</span> <span class="s2">".mkv"</span><span class="p">,</span> <span class="s2">".mov"</span><span class="p">),</span>
+    <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Scans a directory for video files, loads them with OpenCV, samples
+<code class="docutils literal notranslate"><span class="pre">num_frames</span></code> uniformly, and resizes to <code class="docutils literal notranslate"><span class="pre">image_size</span></code>.</p>
+</section>
+<section id="imagefolderdataset-per-frame-sequences">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">ImageFolderDataset</span></code> — per-frame sequences</a><a class="headerlink" href="#imagefolderdataset-per-frame-sequences" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageFolderDataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">ImageFolderDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/sequences"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Structure:</span>
+<span class="c1"># /data/sequences/sequence_001/</span>
+<span class="c1">#   frame_0001.jpg</span>
+<span class="c1">#   frame_0002.jpg</span>
+<span class="c1">#   ...</span>
+</pre></div>
+</div>
+<p>Each subfolder is a video sequence. Images are sorted by filename (numeric
+stems first, then lexicographic). Shorter sequences pad with the last frame.</p>
+</section>
+<section id="numpydataset-pre-encoded-numpy-arrays">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">NumPyDataset</span></code> — pre-encoded numpy arrays</a><a class="headerlink" href="#numpydataset-pre-encoded-numpy-arrays" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">NumPyDataset</span>
+
+<span class="c1"># .npy file with shape (N, T, H, W, C)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">NumPyDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.npy"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># .npz file</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">NumPyDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.npz"</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">"videos"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Supports both <code class="docutils literal notranslate"><span class="pre">.npy</span></code> and <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files. For <code class="docutils literal notranslate"><span class="pre">.npz</span></code>, specify the array key.</p>
+</section>
+<section id="hdf5dataset-hdf5-video-stores">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">HDF5Dataset</span></code> — HDF5 video stores</a><a class="headerlink" href="#hdf5dataset-hdf5-video-stores" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDF5Dataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">HDF5Dataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/videos.h5"</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">"videos"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># set True for large files</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Supports layouts <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W,</span> <span class="pre">C)</span></code>, <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">T,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>, and <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">T,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">memmap=True</span></code> option reads on demand instead of loading into RAM.</p>
+</section>
+<section id="factory-function">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Factory function</a><a class="headerlink" href="#factory-function" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_video_dataloader</span>
+
+<span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">create_video_dataloader</span><span class="p">(</span>
+    <span class="n">dataset_type</span><span class="o">=</span><span class="s2">"video_folder"</span><span class="p">,</span>  <span class="c1"># "video_folder" | "image_folder" | "numpy" | "rl"</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/path/to/data"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="rl-trajectory-datasets">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">RL trajectory datasets</a><a class="headerlink" href="#rl-trajectory-datasets" title="Link to this heading">#</a></h2>
+<section id="rlenvironmentdataset-episode-recordings">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">RLEnvironmentDataset</span></code> — episode recordings</a><a class="headerlink" href="#rlenvironmentdataset-episode-recordings" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.video_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">RLEnvironmentDataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">RLEnvironmentDataset</span><span class="p">(</span>
+    <span class="n">data_source</span><span class="o">=</span><span class="s2">"/data/episodes"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">obs_key</span><span class="o">=</span><span class="s2">"observations"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Loads <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files containing RL episodes. Each <code class="docutils literal notranslate"><span class="pre">.npz</span></code> should have an
+<code class="docutils literal notranslate"><span class="pre">obs_key</span></code> entry with shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">...)</span></code>. Supports dict observations
+(preferring <code class="docutils literal notranslate"><span class="pre">&quot;image&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;pixels&quot;</span></code> keys), single <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files, or
+directories of <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files.</p>
+</section>
+<section id="rolloutdataset-world-models-pipeline">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code> — World Models pipeline</a><a class="headerlink" href="#rolloutdataset-world-models-pipeline" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.wm_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">RolloutDataset</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">RolloutDataset</span><span class="p">(</span>
+    <span class="n">root</span><span class="o">=</span><span class="s2">"data/carracing"</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+    <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">buffer_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">num_test_files</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">obs</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminal</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Loads pre-collected rollout <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files for the classic World Models
+pipeline (VAE → MDNRNN → Controller). Each <code class="docutils literal notranslate"><span class="pre">.npz</span></code> contains observation
+sequences, actions, rewards, and terminal flags.</p>
+</section>
+</section>
+<section id="tinyworlds">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">TinyWorlds</a><a class="headerlink" href="#tinyworlds" title="Link to this heading">#</a></h2>
+<p>Curated game-video datasets from HuggingFace for training Genie-style
+world models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TinyWorldsDataset</span><span class="p">,</span>
+    <span class="n">TinyWorldsDataLoader</span><span class="p">,</span>
+    <span class="n">create_tinyworlds_dataloader</span><span class="p">,</span>
+    <span class="n">download_all_datasets</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="available-datasets">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Available datasets</a><a class="headerlink" href="#available-datasets" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Size</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PICO_DOOM</span></code></p></td>
+<td><p>Minimal Doom gameplay</p></td>
+<td><p>~50K videos</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PONG</span></code></p></td>
+<td><p>Classic Pong</p></td>
+<td><p>~50K videos</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ZELDA</span></code></p></td>
+<td><p>Zelda Ocarina of Time (2D)</p></td>
+<td><p>~50K videos</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POLE_POSITION</span></code></p></td>
+<td><p>Racing game</p></td>
+<td><p>~50K videos</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SONIC</span></code></p></td>
+<td><p>Sonic the Hedgehog</p></td>
+<td><p>~50K videos</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="usage">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Single dataset</span>
+<span class="n">dataset</span><span class="p">,</span> <span class="n">loader</span> <span class="o">=</span> <span class="n">create_tinyworlds_dataloader</span><span class="p">(</span>
+    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">"SONIC"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># List available datasets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.tinyworlds</span><span class="w"> </span><span class="kn">import</span> <span class="n">TinyWorldsDataLoader</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">list_available_datasets</span><span class="p">())</span>
+
+<span class="c1"># Get metadata without downloading</span>
+<span class="n">info</span> <span class="o">=</span> <span class="n">TinyWorldsDataLoader</span><span class="o">.</span><span class="n">get_dataset_info</span><span class="p">(</span><span class="s2">"ZELDA"</span><span class="p">)</span>
+
+<span class="c1"># Download all datasets at once</span>
+<span class="n">paths</span> <span class="o">=</span> <span class="n">download_all_datasets</span><span class="p">()</span>  <span class="c1"># returns dict of name → local path</span>
+
+<span class="c1"># Direct usage with cache</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">TinyWorldsDataset</span><span class="p">(</span>
+    <span class="n">dataset_name</span><span class="o">=</span><span class="s2">"PONG"</span><span class="p">,</span>
+    <span class="n">num_frames</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+    <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">"~/.cache/tinyworlds"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Data is downloaded from HuggingFace (<code class="docutils literal notranslate"><span class="pre">AlmondGod/tinyworlds</span></code>) and cached
+locally. Requires <code class="docutils literal notranslate"><span class="pre">h5py</span></code> and <code class="docutils literal notranslate"><span class="pre">huggingface_hub</span></code>.</p>
+</section>
+</section>
+<section id="diamond-replay-buffer">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">DIAMOND replay buffer</a><a class="headerlink" href="#diamond-replay-buffer" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.datasets.diamond_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">SequenceDataset</span>
+
+<span class="n">buffer</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">action_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">buffer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">next_obs</span><span class="p">)</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">SequenceDataset</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">sequence_length</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the <a class="reference internal" href="memory_guide.html"><span class="std std-doc">Memory guide</span></a> for full details on replay buffers.</p>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="jepa.html"><span class="doc">JEPA: Joint Embedding Predictive Architecture</span></a> — uses CIFAR-10 and ImageNet-1K datasets</p></li>
+<li><p><a class="reference internal" href="genie.html"><span class="doc">Genie: Generative Interactive Environment</span></a> — uses TinyWorlds datasets and video datasets</p></li>
+<li><p><a class="reference internal" href="diamond.html"><span class="doc">DIAMOND</span></a> — uses DIAMOND replay buffer (Atari)</p></li>
+<li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — uses environment interaction data (not static datasets)</p></li>
+<li><p><a class="reference internal" href="memory_guide.html"><span class="doc">Memory &amp; Replay Buffers</span></a> — replay buffer details for Dreamer, IRIS, PlaNet</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="vision_guide.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Vision Components</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="losses_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Loss Functions</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-dataset-to-use">Which dataset to use</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-datasets">Image datasets</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cifar-10">CIFAR-10</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagenet-1k">ImageNet-1K</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#video-datasets">Video datasets</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#videofolderdataset-raw-video-files"><code class="docutils literal notranslate"><span class="pre">VideoFolderDataset</span></code> — raw video files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagefolderdataset-per-frame-sequences"><code class="docutils literal notranslate"><span class="pre">ImageFolderDataset</span></code> — per-frame sequences</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#numpydataset-pre-encoded-numpy-arrays"><code class="docutils literal notranslate"><span class="pre">NumPyDataset</span></code> — pre-encoded numpy arrays</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5dataset-hdf5-video-stores"><code class="docutils literal notranslate"><span class="pre">HDF5Dataset</span></code> — HDF5 video stores</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#factory-function">Factory function</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rl-trajectory-datasets">RL trajectory datasets</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rlenvironmentdataset-episode-recordings"><code class="docutils literal notranslate"><span class="pre">RLEnvironmentDataset</span></code> — episode recordings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolloutdataset-world-models-pipeline"><code class="docutils literal notranslate"><span class="pre">RolloutDataset</span></code> — World Models pipeline</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tinyworlds">TinyWorlds</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#available-datasets">Available datasets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diamond-replay-buffer">DIAMOND replay buffer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/datasets_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

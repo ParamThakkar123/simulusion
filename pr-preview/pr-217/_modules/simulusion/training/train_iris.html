@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulusion.training.train_iris &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulusion/training/train_iris';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../../_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-217/_modules/simulusion/training/train_iris.html" />
+    <link rel="icon" href="../../../_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../../../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simulusion.training.train_iris</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simulusion.training.train_iris</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_device_name</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.iris_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.experiments</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">dump_config</span><span class="p">,</span>
+    <span class="n">load_experiment_config</span><span class="p">,</span>
+    <span class="n">update_config_object</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.iris_agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.memory.iris_memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISReplayBuffer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.ale_atari_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_atari_env</span>
+
+<span class="c1"># Optional OpenCV import at module scope (avoid function-local imports)</span>
+<span class="n">cv2</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_cv2</span>
+
+    <span class="n">cv2</span> <span class="o">=</span> <span class="n">_cv2</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="n">cv2</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="c1"># Paper Appendix H: Freeway's reward is sparse (the agent only scores by fully</span>
+<span class="c1"># crossing the road) and cars knock it back down, so a random policy will almost</span>
+<span class="c1"># never see a non-zero reward inside the 100k budget. IRIS keeps its fixed</span>
+<span class="c1"># epsilon-greedy parameter and instead lowers the collection sampling</span>
+<span class="c1"># temperature from 1 to 0.01, which suppresses the random walks that would</span>
+<span class="c1"># otherwise stop the agent ever reaching the far side.</span>
+<span class="n">FREEWAY_COLLECT_TEMPERATURE</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+
+<div class="viewcode-block" id="default_collect_temperature">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.default_collect_temperature">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_collect_temperature</span><span class="p">(</span><span class="n">game</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">configured</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Collection sampling temperature, applying the paper's Freeway exception.</span>
+
+<span class="sd">    Only overrides a temperature left at the default of 1.0, so an explicit</span>
+<span class="sd">    setting in a config file or CLI override still wins.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"freeway"</span> <span class="ow">in</span> <span class="n">game</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">configured</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FREEWAY_COLLECT_TEMPERATURE</span>
+    <span class="k">return</span> <span class="n">configured</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_action_size</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Number of action dimensions from a Gym/Gymnasium-style space.</span>
+
+<span class="sd">    Avoids importing ``gym`` / ``gymnasium`` at module load so paper-alignment</span>
+<span class="sd">    tests can import collection helpers on a base ``pip install simulusion``.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">)))</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported action_space type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="IRISTrainer">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IRISTrainer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Training loop for IRIS on Atari 100k benchmark."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">game</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ALE/Pong-v5"</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cuda"</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IRISConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train IRIS on an environment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            game: Environment id, used to build an Atari environment when ``env``</span>
+<span class="sd">                is not supplied, and as the label for checkpoint filenames.</span>
+<span class="sd">            device: Torch device string.</span>
+<span class="sd">            seed: Seed for random, numpy and torch.</span>
+<span class="sd">            config: IRIS hyperparameters; defaults to the paper's values.</span>
+<span class="sd">            env: An already-constructed Gymnasium-style environment to train on.</span>
+<span class="sd">                Supply this to run IRIS outside Atari. It must expose the usual</span>
+<span class="sd">                ``reset() -&gt; (obs, info)`` / ``step(a) -&gt; (obs, r, term, trunc,</span>
+<span class="sd">                info)`` API, a discrete ``action_space``, and image observations</span>
+<span class="sd">                that :meth:`preprocess_frame` can resize to the configured frame</span>
+<span class="sd">                size. When omitted, an Atari environment is built from ``game``</span>
+<span class="sd">                using the config's action-repeat and sticky-action settings.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">game</span> <span class="o">=</span> <span class="n">game</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_device</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">resolve_device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
+
+        <span class="c1"># Set seeds</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># Config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">IRISConfig</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">collect_temperature</span> <span class="o">=</span> <span class="n">default_collect_temperature</span><span class="p">(</span>
+            <span class="n">game</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">collect_temperature</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Environment: use the caller's if given, otherwise build the Atari one</span>
+        <span class="c1"># this trainer defaults to. Everything downstream only relies on the</span>
+        <span class="c1"># Gymnasium step/reset API and a discrete action space, so IRIS can be</span>
+        <span class="c1"># trained on any image-observation environment by passing `env`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env_factory</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">_build_env</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">make_atari_env</span><span class="p">(</span>
+                    <span class="n">game</span><span class="p">,</span>
+                    <span class="n">obs_type</span><span class="o">=</span><span class="s2">"rgb"</span><span class="p">,</span>
+                    <span class="n">frameskip</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">,</span>
+                    <span class="n">repeat_action_probability</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">repeat_action_probability</span><span class="p">,</span>
+                    <span class="n">max_episode_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_episode_steps</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_env_factory</span> <span class="o">=</span> <span class="n">_build_env</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">_build_env</span><span class="p">()</span>
+
+        <span class="c1"># Built on first evaluation; see _evaluation_env.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eval_env</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Discrete spaces expose ``n``; Box-like spaces expose ``shape``.</span>
+        <span class="c1"># Duck-type both so importing this module does not require gym/gymnasium.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span> <span class="o">=</span> <span class="n">_action_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">)</span>
+
+        <span class="c1"># Create replay buffer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span> <span class="o">=</span> <span class="n">IRISReplayBuffer</span><span class="p">(</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>  <span class="c1"># 100k buffer</span>
+            <span class="n">obs_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># Resize frames to 64x64</span>
+            <span class="n">action_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span>
+            <span class="n">seq_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_timesteps</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_batch_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create agent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">IRISAgent</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">action_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Metrics: map metric name -&gt; series of numeric values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+        <span class="c1"># Persistent collection state. Episodes are longer than one epoch's step</span>
+        <span class="c1"># budget, so the environment, the policy's recurrent state and the</span>
+        <span class="c1"># running return all have to survive across collect_experience calls.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_episode_return</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="IRISTrainer.preprocess_frame">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.preprocess_frame">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Preprocess frame: resize to 64x64, return CHW uint8.</span>
+
+<span class="sd">        Frames are kept as uint8 because that is the dtype of the replay buffer</span>
+<span class="sd">        (``IRISReplayBuffer.observations``). Returning floats in [0, 1] here</span>
+<span class="sd">        silently truncated every pixel to 0 on insertion, so the world model and</span>
+<span class="sd">        policy trained exclusively on black images. Normalisation to [0, 1]</span>
+<span class="sd">        happens at consumption time via :meth:`to_float_tensor`.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">cv2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">"cv2 is required for frame preprocessing. Install opencv-python"</span>
+            <span class="p">)</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># grayscale (H, W)</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">and</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># (C, H, W) -&gt; (H, W, C)</span>
+
+        <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">frame_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">frame_height</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="n">cv2</span><span class="o">.</span><span class="n">INTER_LINEAR</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># cv2 drops a trailing single channel</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">frame_channels</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># (H, W, C) -&gt; (C, H, W)</span></div>
+
+
+<div class="viewcode-block" id="IRISTrainer.to_float_tensor">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.to_float_tensor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_float_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convert a uint8 CHW frame (or batch) to a float tensor in [0, 1]."""</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">obs</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">div_</span><span class="p">(</span><span class="mf">255.0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IRISTrainer.collect_experience">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.collect_experience">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collect_experience</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Collect exactly ``num_steps`` environment steps (paper Algorithm 1).</span>
+
+<span class="sd">        The step count is exact because the Atari 100k budget is defined in</span>
+<span class="sd">        environment steps: ``collection_epochs * env_steps_per_epoch`` must equal</span>
+<span class="sd">        100k. Episodes span epochs, so the environment, the policy's LSTM state</span>
+<span class="sd">        and the running episode return all persist between calls and are reset</span>
+<span class="sd">        only on a real episode boundary.</span>
+
+<span class="sd">        Two details follow the paper rather than convenience:</span>
+
+<span class="sd">        * Frames are passed through the discrete autoencoder before reaching the</span>
+<span class="sd">          policy (A.1), because the policy is trained purely on reconstructions.</span>
+<span class="sd">        * The LSTM state is threaded across steps (A.3); the policy is recurrent</span>
+<span class="sd">          and a per-step reset would leave it unable to perceive motion.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_steps: Exact number of environment steps to collect</span>
+<span class="sd">            epsilon: Random action probability</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Mean return of episodes that finished during this call, or the most</span>
+<span class="sd">            recently completed episode's return if none finished.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">raw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_frame</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span>
+        <span class="n">episode_returns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
+            <span class="n">frame_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># Paper A.1: keep the policy's input distribution unchanged by</span>
+            <span class="c1"># reconstructing real frames through the autoencoder.</span>
+            <span class="n">policy_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">(</span><span class="n">frame_tensor</span><span class="p">)</span>
+
+            <span class="n">act_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span>
+                <span class="n">policy_input</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">,</span>
+                <span class="n">temperature</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collect_temperature</span><span class="p">,</span>
+                <span class="n">hidden</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span><span class="p">,</span>
+                <span class="n">return_hidden</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act_out</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="n">action_tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span> <span class="o">=</span> <span class="n">act_out</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">action_tensor</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="n">next_raw</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span>
+
+            <span class="n">action_one_hot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">action_one_hot</span><span class="p">[</span><span class="n">action</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="c1"># The termination head models d_t, the environment's episode</span>
+            <span class="c1"># *termination* (paper 2). A time-limit truncation is not one: the</span>
+            <span class="c1"># MDP would have continued, so labelling it terminal teaches the</span>
+            <span class="c1"># world model to predict episode ends that the game never produces,</span>
+            <span class="c1"># and zeroes the lambda-return's bootstrap at an arbitrary cut. The</span>
+            <span class="c1"># episode is still reset below either way.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">action_one_hot</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">terminated</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
+                <span class="n">episode_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_episode_return</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="c1"># A new episode means a new hidden state; carrying it across the</span>
+                <span class="c1"># boundary would leak the previous episode into the next one.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">raw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+                <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_frame</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_frame</span><span class="p">(</span><span class="n">next_raw</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span> <span class="o">=</span> <span class="n">obs</span>
+
+        <span class="k">if</span> <span class="n">episode_returns</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_episode_return</span></div>
+
+
+<div class="viewcode-block" id="IRISTrainer.train_epoch">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.train_epoch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train for one epoch.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            epoch: Current epoch number</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary of metrics</span>
+<span class="sd">        """</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Phase 1: Collect experience. Collection stops after</span>
+        <span class="c1"># ``collection_epochs`` so the run respects the Atari 100k budget</span>
+        <span class="c1"># (paper Table 5: 500 collection epochs x 200 steps = 100k); the</span>
+        <span class="c1"># remaining epochs keep training on the data already gathered.</span>
+        <span class="k">if</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">collection_epochs</span><span class="p">:</span>
+            <span class="n">mean_return</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_experience</span><span class="p">(</span>
+                <span class="n">num_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">env_steps_per_epoch</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_epsilon</span><span class="p">(</span><span class="n">epoch</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"collection_return"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_return</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">"env_steps"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env_steps</span><span class="p">)</span>
+
+        <span class="c1"># Only update components after warm-start periods</span>
+        <span class="k">if</span> <span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">start_autoencoder_after</span><span class="p">:</span>
+            <span class="c1"># Phase 2: Update autoencoder</span>
+            <span class="n">ae_metrics</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">training_steps_per_epoch</span><span class="p">):</span>
+                <span class="c1"># Sample random frames</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">autoencoder_batch_size</span>
+                <span class="p">)</span>
+
+                <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="o">.</span><span class="n">observations</span><span class="p">[</span><span class="n">indices</span><span class="p">])</span>
+
+                <span class="n">ae_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">update_autoencoder</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"recon_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ae_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"recon_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"vq_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ae_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"vq_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"perceptual_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ae_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"perceptual_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># Perplexity is the effective codebook size. If it trends toward 1</span>
+            <span class="c1"># the autoencoder has collapsed and everything downstream is junk.</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"perplexity"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ae_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"perplexity"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">start_transformer_after</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_timesteps</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="c1"># Phase 3: Update transformer</span>
+            <span class="n">tf_metrics</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_steps_per_epoch</span><span class="p">):</span>
+                <span class="n">obs</span><span class="p">,</span> <span class="n">acts</span><span class="p">,</span> <span class="n">rews</span><span class="p">,</span> <span class="n">terms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="o">.</span><span class="n">sample_sequence</span><span class="p">()</span>
+
+                <span class="n">obs_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+                <span class="n">acts_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">acts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">rews_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">rews</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">terms_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+                <span class="n">tf_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">update_transformer</span><span class="p">(</span>
+                    <span class="n">obs_tensor</span><span class="p">,</span> <span class="n">acts_tensor</span><span class="p">,</span> <span class="n">rews_tensor</span><span class="p">,</span> <span class="n">terms_tensor</span>
+                <span class="p">)</span>
+
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"token_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"token_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"reward_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reward_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">start_actor_critic_after</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">50</span>
+        <span class="p">):</span>
+            <span class="c1"># Phase 4: Update actor-critic in imagination</span>
+            <span class="n">ac_metrics</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_critic_steps_per_epoch</span><span class="p">):</span>
+                <span class="c1"># Sample initial frames plus the frames preceding them, which</span>
+                <span class="c1"># initialise the policy's LSTM state (paper A.3).</span>
+                <span class="n">start_obs</span><span class="p">,</span> <span class="n">burn_in_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer</span><span class="o">.</span><span class="n">sample_with_burn_in</span><span class="p">(</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_critic_batch_size</span><span class="p">,</span>
+                    <span class="n">burn_in</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">burn_in_length</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># The policy only ever sees reconstructions, so the real frames</span>
+                <span class="c1"># that seed imagination must be reconstructed too.</span>
+                <span class="n">initial_frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">start_obs</span><span class="p">)</span>
+                <span class="n">burn_in_frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">burn_in_obs</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Generate imagined trajectories</span>
+                <span class="n">imagined</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">imagine_rollout</span><span class="p">(</span>
+                    <span class="n">initial_frame</span><span class="o">=</span><span class="n">initial_frames</span><span class="p">,</span>
+                    <span class="n">horizon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">imagination_horizon</span><span class="p">,</span>
+                    <span class="n">burn_in_frames</span><span class="o">=</span><span class="n">burn_in_frames</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Update policy</span>
+                <span class="n">ac_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">update_actor_critic</span><span class="p">(</span><span class="n">imagined</span><span class="p">)</span>
+
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"actor_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ac_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"actor_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"value_loss"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ac_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value_loss"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"entropy"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ac_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"entropy"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"value_mean"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ac_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value_mean"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="s2">"return_mean"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ac_metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"return_mean"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">global_step</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">env_steps_per_epoch</span>
+
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+<div class="viewcode-block" id="IRISTrainer.get_epsilon">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.get_epsilon">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_epsilon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Exploration epsilon for collection.</span>
+
+<span class="sd">        Paper Table 5 uses a *fixed* epsilon-greedy parameter of 0.01 combined</span>
+<span class="sd">        with sampling from the policy, rather than the decaying schedule most</span>
+<span class="sd">        Atari 100k baselines use (Appendix H discusses the tradeoff). A decaying</span>
+<span class="sd">        schedule starting near-random makes the early world model fit a data</span>
+<span class="sd">        distribution the policy never revisits.</span>
+<span class="sd">        """</span>
+        <span class="k">del</span> <span class="n">epoch</span>  <span class="c1"># fixed schedule; kept for signature compatibility</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">collect_epsilon</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_evaluation_env</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return ``(env, shares_collection_env)`` for evaluation.</span>
+
+<span class="sd">        Evaluation plays whole episodes, while ``collect_experience`` keeps a</span>
+<span class="sd">        partial one alive across calls (its last observation, the policy's</span>
+<span class="sd">        recurrent state and the running return). Both used ``self.env``, so an</span>
+<span class="sd">        evaluation reset the environment out from under that state: the next</span>
+<span class="sd">        collection step fed the stale pre-eval observation to the policy, then</span>
+<span class="sd">        stepped an environment sitting wherever the evaluation had left it, and</span>
+<span class="sd">        wrote the resulting mismatched transition into the replay buffer.</span>
+
+<span class="sd">        A second environment keeps the two apart. When the caller supplied the</span>
+<span class="sd">        environment there is nothing to build one from, so evaluation borrows it</span>
+<span class="sd">        and the collection state is dropped afterwards instead.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_factory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_env</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eval_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_factory</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_env</span><span class="p">,</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reset_collection_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Drop the in-flight collection episode; the next call starts a new one."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_obs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_hidden</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_return</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="IRISTrainer.evaluate">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.evaluate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_episodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">render</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Evaluate agent performance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_episodes: Number of evaluation episodes</span>
+<span class="sd">            render: If True, also return video frames and per-step latent vectors</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            If render is False (default): dict with evaluation metrics</span>
+<span class="sd">            If render is True: tuple (episode_returns_array, videos_list, latents_array)</span>
+<span class="sd">        """</span>
+        <span class="n">episode_returns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">videos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">latents_all</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">env</span><span class="p">,</span> <span class="n">shares_collection_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluation_env</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_episodes</span><span class="p">):</span>
+            <span class="n">raw_obs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_frame</span><span class="p">(</span><span class="n">raw_obs</span><span class="p">)</span>
+
+            <span class="n">episode_return</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># Fresh recurrent state per episode, carried across steps within it.</span>
+            <span class="n">hidden</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+                <span class="c1"># Prepare frame for policy (CHW, float32, 0-1) and reconstruct it,</span>
+                <span class="c1"># matching the input distribution the policy was trained on.</span>
+                <span class="n">frame_tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">policy_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">reconstruct</span><span class="p">(</span><span class="n">frame_tensor</span><span class="p">)</span>
+                <span class="n">act_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">act</span><span class="p">(</span>
+                    <span class="n">policy_input</span><span class="p">,</span>
+                    <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">temperature</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_temperature</span><span class="p">,</span>
+                    <span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span>
+                    <span class="n">return_hidden</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act_out</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                <span class="n">action_tensor</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="n">act_out</span>
+                <span class="n">action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">action_tensor</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+                <span class="n">next_raw</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+                <span class="n">done</span> <span class="o">=</span> <span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span>
+
+                <span class="c1"># Only when the caller asked for them: a raw Atari frame is</span>
+                <span class="c1"># ~100 KB, so at the default eval_episodes=100 and the 27000-step</span>
+                <span class="c1"># episode cap, collecting them unconditionally could hold tens of</span>
+                <span class="c1"># GB until the eval returned -- enough for the OS to kill the</span>
+                <span class="c1"># process, with no Python error to show for it.</span>
+                <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">next_raw</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="c1"># Fallback: convert processed obs back to HWC</span>
+                        <span class="n">proc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                            <span class="c1"># CHW -&gt; HWC</span>
+                            <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+                <span class="n">next_obs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_frame</span><span class="p">(</span><span class="n">next_raw</span><span class="p">)</span>
+
+                <span class="c1"># Compute latent embedding via encoder (quantized embeddings).</span>
+                <span class="c1"># Also render-only: it is a per-step forward pass whose result</span>
+                <span class="c1"># is returned alongside the video and dropped otherwise.</span>
+                <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">proc_frame</span> <span class="o">=</span> <span class="n">next_obs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">done</span> <span class="k">else</span> <span class="n">obs</span>
+                        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                            <span class="n">ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_float_tensor</span><span class="p">(</span><span class="n">proc_frame</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                            <span class="c1"># eval mode: the quantizer's dead-code revival must not</span>
+                            <span class="c1"># fire while merely reading out a latent for logging.</span>
+                            <span class="n">was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">training</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">z_q</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">ft</span><span class="p">)</span>
+                            <span class="k">finally</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+                            <span class="c1"># z_q: (B, C, H', W') -&gt; reduce spatial dims and take mean over channels</span>
+                            <span class="n">latent</span> <span class="o">=</span> <span class="n">z_q</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+                            <span class="n">latents_all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">latent</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="c1"># If encoder fails, skip latent for this step</span>
+                        <span class="k">pass</span>
+
+                <span class="n">episode_return</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+                <span class="n">obs</span> <span class="o">=</span> <span class="n">next_obs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">done</span> <span class="k">else</span> <span class="n">obs</span>
+
+            <span class="n">episode_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">episode_return</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+                <span class="n">videos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shares_collection_env</span><span class="p">:</span>
+            <span class="c1"># The evaluation left this environment mid-episode somewhere else;</span>
+            <span class="c1"># the half-finished collection episode that referred to it is gone.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reset_collection_state</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+            <span class="c1"># Stack latents into (N, D) array if any</span>
+            <span class="k">if</span> <span class="n">latents_all</span><span class="p">:</span>
+                <span class="n">latents_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">latents_all</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">latents_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">),</span> <span class="n">videos</span><span class="p">,</span> <span class="n">latents_array</span>
+
+        <span class="c1"># Non-render fallback: return simple metrics dict for compatibility</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"eval_mean_return"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_returns</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+            <span class="s2">"eval_std_return"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_returns</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+            <span class="s2">"eval_max_return"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_returns</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+            <span class="s2">"eval_min_return"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">episode_returns</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_returns</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="IRISTrainer.train">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.IRISTrainer.train">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">total_epochs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">eval_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"checkpoints/iris"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train for ``total_epochs`` epochs (``config.total_epochs`` by default).</span>
+
+<span class="sd">        Runs on the shared :class:`~simulusion.training.Trainer` through the</span>
+<span class="sd">        ``iris`` task, with this trainer's environment, replay and agent.</span>
+<span class="sd">        Every ``eval_interval`` epochs, once the policy trains, it evaluates</span>
+<span class="sd">        (monitoring only); the best of those is written to</span>
+<span class="sd">        ``&lt;save_dir&gt;/best_&lt;game&gt;.pt``, and early stopping on it applies when</span>
+<span class="sd">        ``config.early_stopping`` is set. ``checkpoint_&lt;epoch&gt;.pt`` is written</span>
+<span class="sd">        every ``config.checkpoint_interval`` epochs. The paper's benchmark</span>
+<span class="sd">        number is the final evaluation over ``config.eval_episodes``</span>
+<span class="sd">        (``self.final_eval_return``, model in ``final_&lt;game&gt;.pt``). The</span>
+<span class="sd">        trainer adds resumable checkpoints under ``&lt;save_dir&gt;/checkpoints/``,</span>
+<span class="sd">        ``run.json``, ``run_config.yaml`` and ``train_metrics.jsonl``.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``self.metrics``: every epoch's metrics, by name.</span>
+<span class="sd">        """</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_legacy</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.iris</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISTask</span><span class="p">,</span> <span class="n">IRISTaskConfig</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+        <span class="n">epochs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_epochs</span> <span class="k">if</span> <span class="n">total_epochs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">total_epochs</span><span class="p">)</span>
+        <span class="n">early</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"early_stopping"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Starting training for </span><span class="si">{</span><span class="n">epochs</span><span class="si">}</span><span class="s2"> epochs on </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Action space: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Device: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+        <span class="n">task</span> <span class="o">=</span> <span class="n">IRISTask</span><span class="p">(</span>
+            <span class="c1"># No replay in checkpoints: 100k frames per checkpoint, and this</span>
+            <span class="c1"># loop never resumed.</span>
+            <span class="n">IRISTaskConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">game</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">game</span><span class="p">,</span> <span class="n">save_replay</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">iris</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">legacy_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fit_legacy</span><span class="p">(</span>
+            <span class="n">task</span><span class="p">,</span>
+            <span class="n">save_dir</span><span class="p">,</span>
+            <span class="n">max_steps</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">log_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">eval_every</span><span class="o">=</span><span class="n">eval_interval</span><span class="p">,</span>
+            <span class="n">checkpoint_every</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_interval</span><span class="p">,</span>
+            <span class="c1"># Return, not loss: the autoencoder and transformer losses keep</span>
+            <span class="c1"># falling well after the policy stops improving.</span>
+            <span class="n">best_metric</span><span class="o">=</span><span class="s2">"eval_mean_return"</span><span class="p">,</span>
+            <span class="n">best_mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+            <span class="n">early_stopping_metric</span><span class="o">=</span><span class="s2">"eval_mean_return"</span> <span class="k">if</span> <span class="n">early</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">early_stopping_mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+            <span class="n">min_delta</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">min_delta</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">best_checkpoint</span> <span class="o">/</span> <span class="s2">"task"</span> <span class="o">/</span> <span class="s2">"agent.pt"</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"best_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="c1"># Paper 3.2: the benchmark number is the average over eval_episodes</span>
+        <span class="c1"># episodes at the end of training -- not the best periodic evaluation,</span>
+        <span class="c1"># which takes the maximum of a noisy quantity.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eval_mean_return"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"final_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.pt"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">"</span><span class="se">\n</span><span class="s2">Training complete. Benchmark score (mean over "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">eval_episodes</span><span class="si">}</span><span class="s2"> episodes at end of training): "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">final_eval_return</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> +/- "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'eval_std_return'</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">best_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"  (best evaluation during training was "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">best_value</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">; monitoring only, not comparable to "</span>
+                <span class="sa">f</span><span class="s2">"the paper's Table 1)"</span>
+            <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Final model: </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span></div>
+</div>
+
+
+
+<span class="c1"># Overrides that configure the training *run* rather than the model. They are</span>
+<span class="c1"># not IRISConfig fields, so they must be split out before the config is composed</span>
+<span class="c1"># -- `update_config_object` is strict and rejects any key it does not recognise.</span>
+<span class="n">RUNTIME_OVERRIDE_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"game"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">,</span> <span class="s2">"epochs"</span><span class="p">,</span> <span class="s2">"save_dir"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_runtime_overrides</span><span class="p">(</span>
+    <span class="n">overrides</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Partition ``key=value`` overrides into runtime options and config fields."""</span>
+    <span class="n">runtime</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config_overrides</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">overrides</span><span class="p">:</span>
+        <span class="n">key</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sep</span> <span class="ow">and</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="n">RUNTIME_OVERRIDE_KEYS</span><span class="p">:</span>
+            <span class="n">runtime</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config_overrides</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">runtime</span><span class="p">,</span> <span class="n">config_overrides</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.training.train_iris.main">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">argv</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IRISConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run IRIS training with YAML config files and Hydra dot-list overrides."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.experiments</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_experiment_args</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_experiment_args</span><span class="p">(</span><span class="n">argv</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Train IRIS on Atari"</span><span class="p">)</span>
+
+    <span class="c1"># Split first: passing `game=`/`device=`/`seed=` through to the strict config</span>
+    <span class="c1"># loader previously raised ExperimentConfigError, making them unusable.</span>
+    <span class="n">runtime</span><span class="p">,</span> <span class="n">config_overrides</span> <span class="o">=</span> <span class="n">_split_runtime_overrides</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">overrides</span><span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">IRISConfig</span><span class="p">()</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">load_experiment_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">config_overrides</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">update_config_object</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+    <span class="n">game</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"game"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"device"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">default_device_name</span><span class="p">()</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"seed"</span><span class="p">,</span> <span class="mi">42</span><span class="p">))</span>
+    <span class="n">total_epochs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"epochs"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">total_epochs</span><span class="p">))</span>
+    <span class="n">save_dir</span> <span class="o">=</span> <span class="n">runtime</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"save_dir"</span><span class="p">,</span> <span class="s2">"checkpoints/iris"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">print_config</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">dump_config</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">IRISTrainer</span><span class="p">(</span>
+        <span class="n">game</span><span class="o">=</span><span class="n">game</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
+        <span class="n">total_epochs</span><span class="o">=</span><span class="n">total_epochs</span><span class="p">,</span>
+        <span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
