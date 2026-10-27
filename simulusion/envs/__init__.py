@@ -60,6 +60,11 @@ def __getattr__(name: str) -> Any:
             return GymImageEnv
         return make_gym_env
 
+    if name in ("DreamEnv", "DreamVectorEnv"):
+        from .dream import DreamEnv, DreamVectorEnv
+
+        return DreamEnv if name == "DreamEnv" else DreamVectorEnv
+
     if name in ("WorldModelEnv", "make_world_model_env"):
         from .world_model_env import WorldModelEnv, make_world_model_env
 
@@ -295,6 +300,8 @@ __all__ = [
     "register_gymnasium_robotics_envs",
     "GymImageEnv",
     "make_gym_env",
+    "DreamEnv",
+    "DreamVectorEnv",
     "WorldModelEnv",
     "make_world_model_env",
     "PROCGEN_ENVS",

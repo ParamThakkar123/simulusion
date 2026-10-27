@@ -36,7 +36,7 @@ Wrappers <wrappers>
 | [Gymnasium Robotics](robotics.md) | All ids registered by the installed Gymnasium Robotics package, including moved legacy MuJoCo v2/v3 ids | `make_robotics_env`, `list_gymnasium_robotics_envs` | Image dict via `GymImageEnv` | Continuous `Box` |
 | [Unity ML-Agents](unity.md) | External Unity executable simulations with continuous-control behaviors | `UnityMLAgentsEnv`, `env_backend="unity_mlagents"` | Dict with `image` | Continuous `Box[-1, 1]` |
 | [Vectorized environments](vectorized.md) | Multiprocess/vector rollout collection and native ALE vectorization | `TorchVectorizedEnv`, `make_atari_vector_env` | Batched observations | Batched actions |
-| [World Model Env](world_model.md) | Model-based RL, policy optimization, and evaluation inside learned dynamics | `WorldModelEnv`, `make_world_model_env`, `env_backend="world-model"` | Adapter-defined Gymnasium space | Adapter-defined Gymnasium space |
+| [World Model Env](world_model.md) | Model-based RL, policy optimization, and evaluation inside learned dynamics | `DreamEnv`, `DreamVectorEnv` for Simulusion world models; `WorldModelEnv`, `make_world_model_env`, `env_backend="world-model"` for other models | Decoded frames, `uint8` `(H, W, C)` (`DreamEnv`); adapter-defined otherwise | The model's `Discrete` or `Box` actions (`DreamEnv`); adapter-defined otherwise |
 | [Wrappers](wrappers.md) | Shared preprocessing, action conversion, time limits, reward observations, and image transforms | `simulusion.envs.wrappers` | Backend-dependent | Backend-dependent |
 
 ## Shared conventions

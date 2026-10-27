@@ -67,6 +67,8 @@ from simulusion.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
 from simulusion.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
 from simulusion.envs.dmlab import DMLabEnv as DMLabEnv
 from simulusion.envs.dmlab import make_dmlab_env as make_dmlab_env
+from simulusion.envs.dream import DreamEnv as DreamEnv
+from simulusion.envs.dream import DreamVectorEnv as DreamVectorEnv
 from simulusion.envs.gym_env import GymImageEnv as GymImageEnv
 from simulusion.envs.gym_env import make_gym_env as make_gym_env
 from simulusion.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
@@ -231,6 +233,8 @@ __all__ = [
     "DiT",
     "DiTConfig",
     "DiamondConfig",
+    "DreamEnv",
+    "DreamVectorEnv",
     "Dreamer",
     "DreamerAgent",
     "DreamerConfig",

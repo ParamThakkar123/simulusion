@@ -96,6 +96,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **Train agents inside any world model** (`simulusion.envs.DreamEnv`,
+  `DreamVectorEnv`). A `WorldModel`, or a path to a saved one, becomes a
+  Gymnasium environment (or a vector environment stepping many dreams in one
+  batched model call). Dreams start from random clips of real episodes, observe
+  the model's decoded frames, and take rewards and episode ends from its heads
+  (or from a `reward_fn`, required for Genie). Each environment keeps its own
+  PyTorch random state, so seeded dreams repeat without touching the global
+  one, and `DreamEnv.snapshot()` / `restore()` replay a dream exactly.
 - **One trainer for every family** (`simulusion.training.Trainer`). Any
   training task runs to a step budget on one device (CPU, a GPU or MPS) with
   one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient
