@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Info dict contract" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/environments/info_contract.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Every Simulusion environment adapter and wrapper guarantees a minimum set of keys in the info dict returned by step(). Downstream code (value models, replay buffers, logging) may rely on these keys..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/_images/social_previews/summary_environments_info_contract_d4a875d5.png" />
+<meta property="og:image:alt" content="Every Simulusion environment adapter and wrapper guarantees a minimum set of keys in the info dict returned by step(). Downstream code (value models, replay buffers, logging) may rely on these keys..." />
+<meta name="description" content="Every Simulusion environment adapter and wrapper guarantees a minimum set of keys in the info dict returned by step(). Downstream code (value models, replay buffers, logging) may rely on these keys..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Info dict contract &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=fc837d61"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'environments/info_contract';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/environments/info_contract.html" />
+    <link rel="icon" href="../_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Vectorized Environments" href="vectorized.html" />
+    <link rel="prev" title="Unity ML-Agents" href="unity.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Environment Backends</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmc.html">DeepMind Control Suite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmlab.html">DeepMind Lab</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unity.html">Unity ML-Agents</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Info Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vectorized.html">Vectorized Environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="world_model.html">World Model Env</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html">Wrappers</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../environments_guide.html" class="nav-link">Environments Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Environment Backends</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Info dict contract</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="info-dict-contract">
+<h1>Info dict contract<a class="headerlink" href="#info-dict-contract" title="Link to this heading">#</a></h1>
+<p>Every Simulusion environment adapter and wrapper guarantees a minimum set of keys in the <code class="docutils literal notranslate"><span class="pre">info</span></code> dict returned by <code class="docutils literal notranslate"><span class="pre">step()</span></code>. Downstream code (value models, replay buffers, logging) may rely on these keys being present.</p>
+<section id="universally-guaranteed-keys">
+<h2>Universally guaranteed keys<a class="headerlink" href="#universally-guaranteed-keys" title="Link to this heading">#</a></h2>
+<p>The function <code class="docutils literal notranslate"><span class="pre">finalize_step_info()</span></code> in <code class="docutils literal notranslate"><span class="pre">simulusion.envs._contract</span></code> normalises every <code class="docutils literal notranslate"><span class="pre">step()</span></code> return. These three keys are <strong>always</strong> present:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">terminated</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p>The episode ended because the task reached a terminal state (goal reached, failure, etc.).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">truncated</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p>The episode ended because of an external limit (time horizon, max steps, etc.).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">discount</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> (<code class="docutils literal notranslate"><span class="pre">float32</span></code>)</p></td>
+<td><p>Discount factor for the transition. <code class="docutils literal notranslate"><span class="pre">0.0</span></code> when <code class="docutils literal notranslate"><span class="pre">terminated</span></code> is true (absorbing state) or <code class="docutils literal notranslate"><span class="pre">discount</span></code> was explicitly set to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> by the backend; <code class="docutils literal notranslate"><span class="pre">1.0</span></code> otherwise, unless overridden by a model or wrapper.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Important:</strong> <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code> without a wrapping <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> sets <code class="docutils literal notranslate"><span class="pre">discount=0.0</span></code> on <em>any</em> <code class="docutils literal notranslate"><span class="pre">done=True</span></code> return, including truncation, because it treats all terminal transitions the same way. Wrap with <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> to get <code class="docutils literal notranslate"><span class="pre">discount=1.0</span></code> on time-limit truncations (the Dreamer wrapper stack does this automatically). The cross-backend contract tests in <code class="docutils literal notranslate"><span class="pre">tests/envs/test_env_contract.py</span></code> (<code class="docutils literal notranslate"><span class="pre">test_env_contract_shared_assertions</span></code>) verify this behavior for each backend adapter.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+<span class="c1"># info always contains:</span>
+<span class="k">assert</span> <span class="s2">"terminated"</span> <span class="ow">in</span> <span class="n">info</span>
+<span class="k">assert</span> <span class="s2">"truncated"</span> <span class="ow">in</span> <span class="n">info</span>
+<span class="k">assert</span> <span class="s2">"discount"</span> <span class="ow">in</span> <span class="n">info</span>
+</pre></div>
+</div>
+</section>
+<section id="commonly-guaranteed-keys">
+<h2>Commonly guaranteed keys<a class="headerlink" href="#commonly-guaranteed-keys" title="Link to this heading">#</a></h2>
+<p>All backends except <code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code> and <code class="docutils literal notranslate"><span class="pre">DiamondAtari</span></code> (passthrough) set these keys:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">action</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> (<code class="docutils literal notranslate"><span class="pre">float32</span></code>)</p></td>
+<td><p>The action as seen by the policy after normalisation / one-hot encoding.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">executed_action</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> (<code class="docutils literal notranslate"><span class="pre">float32</span></code>)</p></td>
+<td><p>The action actually sent to the underlying environment <strong>before</strong> normalisation. For discrete actions this is the integer index; for continuous actions it is the raw float array. This value can be stored and replayed identically even when the policy maps normalised actions.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="per-backend-keys">
+<h2>Per-backend keys<a class="headerlink" href="#per-backend-keys" title="Link to this heading">#</a></h2>
+<section id="deepmind-control-suite-dmc-py">
+<h3>DeepMind Control Suite (<code class="docutils literal notranslate"><span class="pre">dmc.py</span></code>)<a class="headerlink" href="#deepmind-control-suite-dmc-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Concatenated float array of all non-visual sensor values from the DMC <code class="docutils literal notranslate"><span class="pre">TimeStep</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="gym-gymnasium-gym-env-py">
+<h3>Gym / Gymnasium (<code class="docutils literal notranslate"><span class="pre">gym_env.py</span></code>)<a class="headerlink" href="#gym-gymnasium-gym-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>No</p></td>
+<td><p>Present only when the wrapped environment exposes non-visual observations that can be meaningfully flattened (detected by <code class="docutils literal notranslate"><span class="pre">flatten_vector_observation</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="brax-brax-env-py">
+<h3>Brax (<code class="docutils literal notranslate"><span class="pre">brax_env.py</span></code>)<a class="headerlink" href="#brax-brax-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Raw <code class="docutils literal notranslate"><span class="pre">obs</span></code> vector from the Brax <code class="docutils literal notranslate"><span class="pre">State</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><em>Dynamic keys</em></p></td>
+<td><p>No</p></td>
+<td><p>Every key present in <code class="docutils literal notranslate"><span class="pre">state.metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">state.info</span></code> is copied through (e.g. <code class="docutils literal notranslate"><span class="pre">x_position</span></code>, <code class="docutils literal notranslate"><span class="pre">x_velocity</span></code>, <code class="docutils literal notranslate"><span class="pre">reward_ctrl</span></code>, etc.).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="mujoco-mujoco-env-py">
+<h3>MuJoCo (<code class="docutils literal notranslate"><span class="pre">mujoco_env.py</span></code>)<a class="headerlink" href="#mujoco-mujoco-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Concatenated non-visual sensor values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Current simulation time from <code class="docutils literal notranslate"><span class="pre">mjData.time</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qpos</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> (<code class="docutils literal notranslate"><span class="pre">float64</span></code>)</p></td>
+<td><p>Joint positions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qvel</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> (<code class="docutils literal notranslate"><span class="pre">float64</span></code>)</p></td>
+<td><p>Joint velocities.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="unity-ml-agents-unity-env-py">
+<h3>Unity ML-Agents (<code class="docutils literal notranslate"><span class="pre">unity_env.py</span></code>)<a class="headerlink" href="#unity-ml-agents-unity-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>No</p></td>
+<td><p>Present only when the Unity environment provides non-visual observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interrupted</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code> set only when <code class="docutils literal notranslate"><span class="pre">done</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>; indicates whether the episode was interrupted (e.g. by the Unity trainer).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="deepmind-lab-dmlab-py">
+<h3>DeepMind Lab (<code class="docutils literal notranslate"><span class="pre">dmlab.py</span></code>)<a class="headerlink" href="#deepmind-lab-dmlab-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmlab_action</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>The raw native action array from DeepMind Lab (before one-hot encoding).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="bsuite-bsuite-env-py">
+<h3>BSuite (<code class="docutils literal notranslate"><span class="pre">bsuite_env.py</span></code>)<a class="headerlink" href="#bsuite-bsuite-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>Flattened observation array from the BSuite environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bsuite_id</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>The string identifier of the BSuite task (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="atari-diamond-diamond-atari-py">
+<h3>Atari / Diamond (<code class="docutils literal notranslate"><span class="pre">diamond_atari.py</span></code>)<a class="headerlink" href="#atari-diamond-diamond-atari-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">life_lost</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code> set only when <code class="docutils literal notranslate"><span class="pre">terminate_on_life_loss</span></code> is enabled and the agent loses a life while at least one life remains. All upstream ALE / Gymnasium info keys are passed through unchanged.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="procgen-procgen-env-py">
+<h3>Procgen (<code class="docutils literal notranslate"><span class="pre">procgen_env.py</span></code>)<a class="headerlink" href="#procgen-procgen-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><em>Upstream keys</em></p></td>
+<td><p>No</p></td>
+<td><p>All keys from the underlying Procgen vector environment (for env index <code class="docutils literal notranslate"><span class="pre">0</span></code>) are passed through.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="world-model-world-model-env-py">
+<h3>World Model (<code class="docutils literal notranslate"><span class="pre">world_model_env.py</span></code>)<a class="headerlink" href="#world-model-world-model-env-py" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_state</span></code></p></td>
+<td><p>No</p></td>
+<td><p>The full next state dict from the world model transition; set via <code class="docutils literal notranslate"><span class="pre">setdefault</span></code> so only added when the upstream info does not already provide it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">elapsed_steps</span></code></p></td>
+<td><p>No</p></td>
+<td><p>Number of steps taken inside the <code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code>; set via <code class="docutils literal notranslate"><span class="pre">setdefault</span></code>. All upstream keys from the model’s transition result are passed through.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="wrapper-added-keys">
+<h2>Wrapper-added keys<a class="headerlink" href="#wrapper-added-keys" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Wrapper</p></th>
+<th class="head"><p>Key</p></th>
+<th class="head"><p>Always?</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code></p></td>
+<td><p>(normalises <code class="docutils literal notranslate"><span class="pre">terminated</span></code>, <code class="docutils literal notranslate"><span class="pre">truncated</span></code>, <code class="docutils literal notranslate"><span class="pre">discount</span></code>)</p></td>
+<td><p>Yes</p></td>
+<td><p>Overrides the terminated/truncated/discount from the wrapped environment according to the time-limit logic. See <a class="reference internal" href="wrappers.html"><span class="doc">Environment Wrappers</span></a> for details.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ActionRepeat</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">action_repeat</span></code></p></td>
+<td><p>Yes</p></td>
+<td><p>The number of times the action was actually repeated before the episode ended.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NormalizeActions</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">action</span></code> (overwritten)</p></td>
+<td><p>Yes</p></td>
+<td><p>Stores the normalised action under <code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code>. If the wrapped env provides <code class="docutils literal notranslate"><span class="pre">&quot;action&quot;</span></code> but not <code class="docutils literal notranslate"><span class="pre">&quot;executed_action&quot;</span></code>, the unnormalised action is backed up to <code class="docutils literal notranslate"><span class="pre">&quot;executed_action&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="using-info-dict-keys">
+<h2>Using info dict keys<a class="headerlink" href="#using-info-dict-keys" title="Link to this heading">#</a></h2>
+<section id="logging-and-debugging">
+<h3>Logging and debugging<a class="headerlink" href="#logging-and-debugging" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="o">=</span><span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">)</span>
+<span class="c1"># MuJoCo-specific</span>
+<span class="k">if</span> <span class="s2">"qpos"</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">qpos</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"qpos"</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="replay-buffers">
+<h3>Replay buffers<a class="headerlink" href="#replay-buffers" title="Link to this heading">#</a></h3>
+<p>Always store <code class="docutils literal notranslate"><span class="pre">info[&quot;action&quot;]</span></code> and <code class="docutils literal notranslate"><span class="pre">info[&quot;executed_action&quot;]</span></code> together so the policy update can reconstruct the exact action that was sent to the environment:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">transition</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action"</span><span class="p">),</span>
+    <span class="n">executed_action</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"executed_action"</span><span class="p">),</span>
+    <span class="n">reward</span><span class="o">=</span><span class="n">reward</span><span class="p">,</span>
+    <span class="n">terminated</span><span class="o">=</span><span class="n">terminated</span><span class="p">,</span>
+    <span class="n">truncated</span><span class="o">=</span><span class="n">truncated</span><span class="p">,</span>
+    <span class="n">discount</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="value-function-bootstrapping">
+<h3>Value-function bootstrapping<a class="headerlink" href="#value-function-bootstrapping" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">discount</span></code> key controls whether the value of the next state is bootstrapped:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">terminated</span><span class="p">:</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span>
+<span class="k">elif</span> <span class="n">truncated</span><span class="p">:</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>  <span class="c1"># bootstrap normally</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">reward</span> <span class="o">+</span> <span class="n">info</span><span class="p">[</span><span class="s2">"discount"</span><span class="p">]</span> <span class="o">*</span> <span class="n">next_value</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">discount</span></code> is <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for absorbing terminal states (so the bootstrap term is zero), but <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for non-terminal transitions and typically also <code class="docutils literal notranslate"><span class="pre">1.0</span></code> for truncated transitions (the discount is applied <strong>after</strong> multiplying with <code class="docutils literal notranslate"><span class="pre">discount</span></code>).</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="unity.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Unity ML-Agents</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="vectorized.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Vectorized Environments</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#universally-guaranteed-keys">Universally guaranteed keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#commonly-guaranteed-keys">Commonly guaranteed keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-backend-keys">Per-backend keys</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmind-control-suite-dmc-py">DeepMind Control Suite (<code class="docutils literal notranslate"><span class="pre">dmc.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gym-gymnasium-gym-env-py">Gym / Gymnasium (<code class="docutils literal notranslate"><span class="pre">gym_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#brax-brax-env-py">Brax (<code class="docutils literal notranslate"><span class="pre">brax_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mujoco-mujoco-env-py">MuJoCo (<code class="docutils literal notranslate"><span class="pre">mujoco_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#unity-ml-agents-unity-env-py">Unity ML-Agents (<code class="docutils literal notranslate"><span class="pre">unity_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmind-lab-dmlab-py">DeepMind Lab (<code class="docutils literal notranslate"><span class="pre">dmlab.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bsuite-bsuite-env-py">BSuite (<code class="docutils literal notranslate"><span class="pre">bsuite_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atari-diamond-diamond-atari-py">Atari / Diamond (<code class="docutils literal notranslate"><span class="pre">diamond_atari.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#procgen-procgen-env-py">Procgen (<code class="docutils literal notranslate"><span class="pre">procgen_env.py</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#world-model-world-model-env-py">World Model (<code class="docutils literal notranslate"><span class="pre">world_model_env.py</span></code>)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wrapper-added-keys">Wrapper-added keys</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-info-dict-keys">Using info dict keys</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#logging-and-debugging">Logging and debugging</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replay-buffers">Replay buffers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#value-function-bootstrapping">Value-function bootstrapping</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/environments/info_contract.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

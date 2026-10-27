@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="One Trainer for Every Model" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/trainer_guide.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Every family in Simulusion trains on the same loop, simulusion.training.Trainer, from the same kind of file: a YAML run config that names a task and fills its sections. The trainer owns what is com..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/_images/social_previews/summary_trainer_guide_da02bae4.png" />
+<meta property="og:image:alt" content="Every family in Simulusion trains on the same loop, simulusion.training.Trainer, from the same kind of file: a YAML run config that names a task and fills its sections. The trainer owns what is com..." />
+<meta name="description" content="Every family in Simulusion trains on the same loop, simulusion.training.Trainer, from the same kind of file: a YAML run config that names a task and fills its sections. The trainer owns what is com..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>One Trainer for Every Model &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'trainer_guide';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-219/trainer_guide.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Your Own Data: Episodes and LeRobot" href="episodes_guide.html" />
+    <link rel="prev" title="Public API Quick Reference" href="public_api.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">One Trainer for Every Model</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="one-trainer-for-every-model">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">One Trainer for Every Model</a><a class="headerlink" href="#one-trainer-for-every-model" title="Link to this heading">#</a></h1>
+<p>Every family in Simulusion trains on the same loop,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">simulusion.training.Trainer</span></code>, from the same kind of file: a YAML
+<strong>run config</strong> that names a <strong>task</strong> and fills its sections. The trainer owns
+what is common to all of them: the device, one precision setting, seeding, the step budget, logging, evaluation, early
+stopping, checkpoints and resuming, and exporting the trained world model.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#one-trainer-for-every-model" id="id1">One Trainer for Every Model</a></p>
+<ul>
+<li><p><a class="reference internal" href="#train-from-the-command-line" id="id2">Train from the command line</a></p></li>
+<li><p><a class="reference internal" href="#train-from-python" id="id3">Train from Python</a></p></li>
+<li><p><a class="reference internal" href="#tasks" id="id4">Tasks</a></p></li>
+<li><p><a class="reference internal" href="#run-configs" id="id5">Run configs</a></p></li>
+<li><p><a class="reference internal" href="#what-a-run-leaves-behind" id="id6">What a run leaves behind</a></p></li>
+<li><p><a class="reference internal" href="#writing-a-task" id="id7">Writing a task</a></p></li>
+<li><p><a class="reference internal" href="#the-older-entrypoints" id="id8">The older entrypoints</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="train-from-the-command-line">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Train from the command line</a><a class="headerlink" href="#train-from-the-command-line" title="Link to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># A shipped config by name, with key=value overrides for any field.</span>
+simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>dreamer<span class="w"> </span>model.env<span class="o">=</span>cheetah-run<span class="w"> </span>trainer.precision<span class="o">=</span>bf16
+
+<span class="c1"># Or name the task and set only what you need; the rest keeps its defaults.</span>
+simulusion<span class="w"> </span>train<span class="w"> </span>genie<span class="w"> </span>data.path<span class="o">=</span>data/clips<span class="w"> </span>trainer.max_steps<span class="o">=</span><span class="m">20000</span>
+
+<span class="c1"># See the fully resolved config without training.</span>
+simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>iris<span class="w"> </span>--print-config
+</pre></div>
+</div>
+<p>Nested keys use dots (<code class="docutils literal notranslate"><span class="pre">model.lr=3e-4</span></code>, <code class="docutils literal notranslate"><span class="pre">trainer.eval_every=1000</span></code>). A key that
+does not exist is an error that names its full path, so a typo fails before
+the run starts instead of being ignored. <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">train</span> <span class="pre">--legacy</span> <span class="pre">MODEL</span></code>
+still reaches each family’s older entrypoint.</p>
+</section>
+<section id="train-from-python">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Train from Python</a><a class="headerlink" href="#train-from-python" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">run_training</span><span class="p">(</span>
+    <span class="s2">"simulusion/configs/runs/genie.yaml"</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">"data.path=data/clips"</span><span class="p">,</span> <span class="s2">"trainer.max_steps=500"</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">load_world_model</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">world_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or build the pieces yourself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trainer</span><span class="p">,</span> <span class="n">TrainerConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenieTask</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.genie</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenieTaskConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">GenieTaskConfig</span><span class="p">()</span>
+<span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="s2">"data/clips"</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span><span class="n">TrainerConfig</span><span class="p">(</span><span class="n">max_steps</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s2">"bf16"</span><span class="p">))</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">GenieTask</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="tasks">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Tasks</a><a class="headerlink" href="#tasks" title="Link to this heading">#</a></h2>
+<p>A task is one family’s training: its networks, optimizers, where batches come
+from and what one unit of progress is. The trainer’s budget
+(<code class="docutils literal notranslate"><span class="pre">trainer.max_steps</span></code>) counts that unit.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Task</p></th>
+<th class="head"><p>Trains</p></th>
+<th class="head"><p>Data</p></th>
+<th class="head"><p>Progress</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dreamer</span></code>, <code class="docutils literal notranslate"><span class="pre">dreamer-v1</span></code>, <code class="docutils literal notranslate"><span class="pre">dreamer-v2</span></code></p></td>
+<td><p>world model + actor + critic</p></td>
+<td><p>environment</p></td>
+<td><p>env steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dreamer-wm</span></code></p></td>
+<td><p>Dreamer’s world model alone</p></td>
+<td><p>episode folder</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">planet</span></code></p></td>
+<td><p>RSSM, acting by CEM planning</p></td>
+<td><p>environment</p></td>
+<td><p>epochs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iris</span></code></p></td>
+<td><p>tokenizer + transformer + actor-critic (paper settings)</p></td>
+<td><p>environment</p></td>
+<td><p>epochs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iris-wm</span></code></p></td>
+<td><p>IRIS’s world model alone</p></td>
+<td><p>episode folder</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diamond</span></code></p></td>
+<td><p>denoiser + reward model + actor-critic</p></td>
+<td><p>environment</p></td>
+<td><p>epochs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diamond-wm</span></code></p></td>
+<td><p>DIAMOND’s world model alone</p></td>
+<td><p>episode folder</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">genie</span></code></p></td>
+<td><p>tokenizer + latent actions + dynamics</p></td>
+<td><p>episode folder / videos</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vae</span></code>, <code class="docutils literal notranslate"><span class="pre">mdrnn</span></code></p></td>
+<td><p>World Models’ V, then M</p></td>
+<td><p>episode folder</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">controller</span></code></p></td>
+<td><p>World Models’ C, by CMA-ES (real env or dream)</p></td>
+<td><p>world model</p></td>
+<td><p>generations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dit</span></code></p></td>
+<td><p>DiT image diffusion</p></td>
+<td><p>image dataset</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jepa</span></code></p></td>
+<td><p>I-JEPA image representations</p></td>
+<td><p>image dataset</p></td>
+<td><p>optimizer steps</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-wm</span></code> tasks train a world model <strong>without its agent</strong>: no environment and
+no policy, only recorded episodes (your own, or converted from LeRobot; see
+<a class="reference internal" href="episodes_guide.html"><span class="doc">Your Own Data: Episodes and LeRobot</span></a>). What comes out is a
+<a class="reference internal" href="api_reference.html#simulusion.world_model.WorldModel" title="simulusion.world_model.WorldModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorldModel</span></code></a>, usable by any agent that
+speaks the protocol, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">simulusion.agents.PlanningAgent</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">CEMPlanner</span><span class="p">,</span> <span class="n">PlanningAgent</span><span class="p">,</span> <span class="n">run_episode</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">PlanningAgent</span><span class="p">(</span>
+    <span class="n">simulusion</span><span class="o">.</span><span class="n">load_world_model</span><span class="p">(</span><span class="s2">"runs/dreamer-wm_20261020-120000/world_model"</span><span class="p">),</span>
+    <span class="n">CEMPlanner</span><span class="p">(</span><span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">candidates</span><span class="o">=</span><span class="mi">500</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">episode_return</span> <span class="o">=</span> <span class="n">run_episode</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">agent</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="run-configs">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Run configs</a><a class="headerlink" href="#run-configs" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">task</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">genie</span>
+<span class="nt">trainer</span><span class="p">:</span><span class="w">              </span><span class="c1"># TrainerConfig: shared by every task</span>
+<span class="w">  </span><span class="nt">max_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span>
+<span class="w">  </span><span class="nt">precision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">auto</span><span class="w">     </span><span class="c1"># fp32 | bf16 | fp16 | auto</span>
+<span class="w">  </span><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">  </span><span class="nt">checkpoint_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2000</span>
+<span class="w">  </span><span class="nt">early_stopping_metric</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">val_recon_loss</span>
+<span class="nt">model</span><span class="p">:</span><span class="w">                </span><span class="c1"># the family's own config (GenieConfig here)</span>
+<span class="w">  </span><span class="nt">num_frames</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="nt">data</span><span class="p">:</span><span class="w">                 </span><span class="c1"># where batches come from</span>
+<span class="w">  </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">data/clips</span>
+<span class="w">  </span><span class="nt">val_fraction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+</pre></div>
+</div>
+<p>Shipped configs for every task live in <code class="docutils literal notranslate"><span class="pre">simulusion/configs/runs/</span></code>;
+<code class="docutils literal notranslate"><span class="pre">--config</span> <span class="pre">&lt;name&gt;</span></code> finds them by name.</p>
+<section id="trainer-settings">
+<h3>Trainer settings<a class="headerlink" href="#trainer-settings" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_steps</span></code></p></td>
+<td><p>Budget in the task’s progress unit; the task’s default when unset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>, <code class="docutils literal notranslate"><span class="pre">deterministic</span></code></p></td>
+<td><p>Seeds Python, NumPy and PyTorch; <code class="docutils literal notranslate"><span class="pre">deterministic</span></code> asks for deterministic kernels.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bf16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code> (loss-scaled) or <code class="docutils literal notranslate"><span class="pre">auto</span></code> (bf16 where supported, fp16 on older GPUs, fp32 on CPU). Replaces the per-family <code class="docutils literal notranslate"><span class="pre">use_amp</span></code> flags for runs on the trainer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">null</span></code> (or <code class="docutils literal notranslate"><span class="pre">auto</span></code>) picks CUDA, then MPS, else the CPU; <code class="docutils literal notranslate"><span class="pre">cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">cuda</span></code>, <code class="docutils literal notranslate"><span class="pre">cuda:1</span></code> or <code class="docutils literal notranslate"><span class="pre">mps</span></code> choose one. Training runs on one device.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grad_accumulation</span></code></p></td>
+<td><p>Batches per optimizer step (dataset-driven tasks).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_every</span></code>, <code class="docutils literal notranslate"><span class="pre">eval_every</span></code>, <code class="docutils literal notranslate"><span class="pre">checkpoint_every</span></code></p></td>
+<td><p>Intervals in progress units. Progress may jump (env steps), so each fires when a multiple is crossed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keep_checkpoints</span></code></p></td>
+<td><p>Periodic checkpoints kept; the final one always is.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">out_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">run_name</span></code></p></td>
+<td><p>Run directory: <code class="docutils literal notranslate"><span class="pre">out_dir/run_name</span></code>, timestamped when <code class="docutils literal notranslate"><span class="pre">run_name</span></code> is unset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resume</span></code></p></td>
+<td><p>A checkpoint, a run directory, or <code class="docutils literal notranslate"><span class="pre">auto</span></code> (the newest checkpoint of <code class="docutils literal notranslate"><span class="pre">out_dir/run_name</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">early_stopping_metric</span></code>, <code class="docutils literal notranslate"><span class="pre">early_stopping_mode</span></code>, <code class="docutils literal notranslate"><span class="pre">patience</span></code>, <code class="docutils literal notranslate"><span class="pre">min_delta</span></code></p></td>
+<td><p>Stop when an evaluation metric stops improving.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">console</span></code></p></td>
+<td><p>Also print metrics to the console (they always go to <code class="docutils literal notranslate"><span class="pre">metrics.jsonl</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_world_model</span></code></p></td>
+<td><p>Write the world model to <code class="docutils literal notranslate"><span class="pre">&lt;run&gt;/world_model</span></code> at the end.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="what-a-run-leaves-behind">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">What a run leaves behind</a><a class="headerlink" href="#what-a-run-leaves-behind" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>runs/genie_20261020-120000/
+    config.yaml            # the fully resolved config: `--config` it to repeat the run
+    run.json               # git commit and dirty flag, package versions, GPUs, command line
+    metrics.jsonl          # every logged metric (train/..., eval/...)
+    checkpoints/
+        step_00002000/     # resumable: trainer.resume=&lt;this dir&gt; or resume=auto
+    world_model/           # load_world_model(...) reads it
+    model/                 # tasks that are not world models (dit, jepa, vae) export here
+</pre></div>
+</div>
+<p>Checkpoints are written to a staging directory and renamed when complete, so
+an interrupted write never looks like a checkpoint. They hold the task’s
+weights, optimizer and loss-scaler states, the loop position and RNG states
+(resuming is bit-exact), and for online tasks the replay
+buffer, so a resumed run trains on the same data. Ctrl+C writes one before
+exiting.</p>
+</section>
+<section id="writing-a-task">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Writing a task</a><a class="headerlink" href="#writing-a-task" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainingTask</span><span class="p">,</span> <span class="n">register_task</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.tasks.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceDataConfig</span><span class="p">,</span> <span class="n">sequence_loaders</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyConfig</span><span class="p">:</span>
+    <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3e-4</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">SequenceDataConfig</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SequenceDataConfig</span><span class="p">)</span>
+
+
+<span class="nd">@register_task</span><span class="p">(</span><span class="s2">"my-model"</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="p">(</span><span class="n">TrainingTask</span><span class="p">):</span>
+    <span class="n">config_cls</span> <span class="o">=</span> <span class="n">MyConfig</span>  <span class="c1"># its fields are the run config's sections</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainer</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">prepare_module</span><span class="p">(</span><span class="n">MyModel</span><span class="p">())</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">gradient_update</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">max_grad_norm</span><span class="o">=</span><span class="mf">1.0</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batches</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sequence_loaders</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">trainer</span><span class="p">,</span> <span class="n">sequence_length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">image_size</span><span class="o">=</span><span class="mi">64</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batches</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">"frames"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"loss"</span><span class="p">:</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"model"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Optional hooks: <code class="docutils literal notranslate"><span class="pre">progress()</span></code> (a budget in env steps or epochs),
+<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code>, <code class="docutils literal notranslate"><span class="pre">final_evaluation()</span></code>, <code class="docutils literal notranslate"><span class="pre">world_model()</span></code> (export through the
+protocol), <code class="docutils literal notranslate"><span class="pre">export(directory)</span></code> (other models), <code class="docutils literal notranslate"><span class="pre">save_checkpoint()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">load_checkpoint()</span></code> (state too large for one file, such as a replay buffer)
+and <code class="docutils literal notranslate"><span class="pre">close()</span></code>.</p>
+</section>
+<section id="the-older-entrypoints">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">The older entrypoints</a><a class="headerlink" href="#the-older-entrypoints" title="Link to this heading">#</a></h2>
+<p>The per-family entrypoints keep their signatures and still write the files
+they always wrote, but each now runs on the shared Trainer: it builds its
+family’s task around the object it was called on and runs it with
+<code class="docutils literal notranslate"><span class="pre">simulusion.training.legacy.fit_legacy</span></code>. There is one training loop, and the
+old calls gain resumable checkpoints and a record of every run.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Entrypoint</p></th>
+<th class="head"><p>Runs as</p></th>
+<th class="head"><p>Still writes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent.train(total_steps)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dreamer</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;logdir&gt;/ckpts/&lt;step&gt;_ckpt.pt</span></code>; metrics and eval videos through the agent’s own logger</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISTrainer.train(total_epochs,</span> <span class="pre">eval_interval,</span> <span class="pre">save_dir)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iris</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">best_&lt;game&gt;.pt</span></code>, <code class="docutils literal notranslate"><span class="pre">final_&lt;game&gt;.pt</span></code>, <code class="docutils literal notranslate"><span class="pre">checkpoint_&lt;epoch&gt;.pt</span></code>; returns the per-epoch metrics, sets <code class="docutils literal notranslate"><span class="pre">final_eval_return</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiamondAgent.train()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">diamond</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">checkpoint_&lt;epoch&gt;.pt</span></code> in <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> (with its replay)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Planet.train(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">train_planet.main</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">planet</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ckpt_&lt;epoch&gt;.pth</span></code>, <code class="docutils literal notranslate"><span class="pre">vid_&lt;epoch&gt;</span></code>, the TensorBoard summary</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GenieTrainer.train(loaders,</span> <span class="pre">...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">genie</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">genie_step_&lt;N&gt;.pt</span></code> in <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DiT.fit(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">train_dit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dit</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dit_model.pth</span></code>, <code class="docutils literal notranslate"><span class="pre">dit_model_epoch&lt;N&gt;.pth</span></code>, <code class="docutils literal notranslate"><span class="pre">generated_samples.png</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent.train()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">jepa</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;write_tag&gt;-latest.pth.tar</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;write_tag&gt;-ep&lt;N&gt;.pth.tar</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train_convae</span></code>, <code class="docutils literal notranslate"><span class="pre">train_mdn_rnn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vae</span></code>, <code class="docutils literal notranslate"><span class="pre">mdrnn</span></code> tasks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">checkpoint.tar</span></code>, <code class="docutils literal notranslate"><span class="pre">best.tar</span></code>, <code class="docutils literal notranslate"><span class="pre">*_final.pth</span></code> (and V’s samples)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train_controller</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">controller</span></code> task</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;logdir&gt;/ctrl/best.tar</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>What they now all do the same way:</p>
+<ul class="simple">
+<li><p>The run directory is the folder the entrypoint always used. The trainer
+adds <code class="docutils literal notranslate"><span class="pre">checkpoints/</span></code>, <code class="docutils literal notranslate"><span class="pre">run.json</span></code>, <code class="docutils literal notranslate"><span class="pre">run_config.yaml</span></code> and
+<code class="docutils literal notranslate"><span class="pre">train_metrics.jsonl</span></code> there, under names that never overwrite a family’s
+own <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">metrics.jsonl</span></code>.</p></li>
+<li><p>The object keeps its own device and precision (its <code class="docutils literal notranslate"><span class="pre">use_amp</span></code>).</p></li>
+<li><p>Evaluation, early stopping and “best” checkpoints are the trainer’s
+<code class="docutils literal notranslate"><span class="pre">eval_every</span></code>, <code class="docutils literal notranslate"><span class="pre">early_stopping_metric</span></code> and <code class="docutils literal notranslate"><span class="pre">best_metric</span></code>, set from the
+entrypoint’s own arguments.</p></li>
+</ul>
+<p>Small differences from the loops they replace:</p>
+<ul class="simple">
+<li><p>Periodic checkpoints are taken when progress crosses an interval and named
+by the step they were written at. Dreamer no longer writes one before any
+training, and the last one is written after the final evaluation.</p></li>
+<li><p>IRIS evaluates after epochs <code class="docutils literal notranslate"><span class="pre">eval_interval,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">eval_interval,</span> <span class="pre">...</span></code> (not
+also after epoch 0), and its best checkpoint can come from the final
+evaluation too. DIAMOND likewise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train_mdn_rnn</span></code> samples latents from the VAE as batches are drawn instead
+of precomputing them once (<code class="docutils literal notranslate"><span class="pre">use_precomputed_latents</span></code> is accepted and
+ignored). V and M read rollouts as episodes: windows of <code class="docutils literal notranslate"><span class="pre">seq_len</span> <span class="pre">+</span> <span class="pre">1</span></code>
+frames, resized to 64x64.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">train_controller</span></code> scores candidates in one process (<code class="docutils literal notranslate"><span class="pre">max_workers</span></code> and
+<code class="docutils literal notranslate"><span class="pre">display</span></code> no longer apply) and takes the controller’s sizes from the
+trained models.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">JEPAAgent.train</span></code> with <code class="docutils literal notranslate"><span class="pre">enable_sweep</span></code> (W&amp;B sweeps) still runs
+<code class="docutils literal notranslate"><span class="pre">train_jepa.main</span></code>’s own loop.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="public_api.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Public API Quick Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="episodes_guide.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Your Own Data: Episodes and LeRobot</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-from-the-command-line">Train from the command line</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#train-from-python">Train from Python</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-configs">Run configs</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#trainer-settings">Trainer settings</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-a-run-leaves-behind">What a run leaves behind</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-task">Writing a task</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-older-entrypoints">The older entrypoints</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/trainer_guide.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
