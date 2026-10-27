@@ -5,7 +5,8 @@ the scripts in [`demos/`](https://github.com/ParamThakkar123/simulusion/tree/mai
 trained from scratch on a single **laptop GPU (RTX 3050, 4 GB)** for one to two
 hours. They show what the library does in a short budget, not the paper results,
 which need far more compute. Every section ends with the commands that
-reproduce it.
+reproduce it, and most of the trained models can be
+{ref}`downloaded <gallery-pretrained-checkpoints>` instead.
 
 ```{raw} html
 <div class="demo-grid">
@@ -355,6 +356,37 @@ python demos/jepa_demo.py record
 ```
 
 See {doc}`jepa`.
+
+---
+
+(gallery-pretrained-checkpoints)=
+## Pretrained checkpoints
+
+The checkpoints behind these clips are on the Hugging Face Hub, in the
+[Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
+collection. Each model card links the paper, repeats the results above and
+shows how to load the model.
+
+| Model | Trained on | Hub repo |
+|---|---|---|
+| Dreamer | DMC cartpole swing-up | [`simillusion/dreamer-dmc-cartpole-swingup`](https://huggingface.co/simillusion/dreamer-dmc-cartpole-swingup) |
+| DreamerV2 | DMC cartpole swing-up | [`simillusion/dreamerv2-dmc-cartpole-swingup`](https://huggingface.co/simillusion/dreamerv2-dmc-cartpole-swingup) |
+| PlaNet | DMC cartpole swing-up | [`simillusion/planet-dmc-cartpole-swingup`](https://huggingface.co/simillusion/planet-dmc-cartpole-swingup) |
+| IRIS | Atari Boxing | [`simillusion/iris-atari-boxing`](https://huggingface.co/simillusion/iris-atari-boxing) |
+| DiT | CIFAR-10 | [`simillusion/dit-s4-cifar10`](https://huggingface.co/simillusion/dit-s4-cifar10) |
+| I-JEPA | CIFAR-10 | [`simillusion/ijepa-vit-tiny-cifar10`](https://huggingface.co/simillusion/ijepa-vit-tiny-cifar10) |
+
+The world models load through the common interface:
+
+```python
+from huggingface_hub import snapshot_download
+from simulusion.world_model import load_world_model
+
+wm = load_world_model(snapshot_download("simillusion/iris-atari-boxing"), "iris")
+```
+
+DIAMOND, Genie and ModularRSSM are not published yet: the DIAMOND and Genie
+runs above are too short to be useful as checkpoints.
 
 ---
 
