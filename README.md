@@ -44,6 +44,10 @@ runs, not paper-scale results: the point is to show what each model does.
 
 More clips, learning curves and the commands to reproduce each one are in the
 [gallery](https://paramthakkar123.github.io/simulusion/gallery.html); the scripts live in [`demos/`](demos/).
+The trained Dreamer, DreamerV2, PlaNet, IRIS, DiT and I-JEPA checkpoints are on
+the Hugging Face Hub in the
+[Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
+collection; each model card shows how to load it.
 
 ## Quick Start
 

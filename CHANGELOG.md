@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The trained demo checkpoints for Dreamer, DreamerV2, PlaNet, IRIS, DiT and
+  I-JEPA are on the Hugging Face Hub, in the
+  [Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
+  collection. The README and the gallery link to them, and the gallery lists
+  each repo with how to load it.
+
 ## [1.1.0] — 2026-10-25
 
 ### Security
