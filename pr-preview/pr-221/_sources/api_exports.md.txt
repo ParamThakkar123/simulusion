@@ -233,6 +233,17 @@ See {doc}`trainer_guide`.
 | `MixedPrecision` | `simulusion.training.precision` | Autocast dtype and loss scaling for one precision setting. |
 | `GradientUpdate` | `simulusion.training.precision` | One optimizer's step: backward, unscale, clip, step, with accumulation and gradient all-reduce. |
 
+## Probing
+
+See {doc}`probing`.
+
+| Name | Source | Description |
+|---|---|---|
+| `collect_probe_episodes` | `simulusion.evals` | Record DeepMind Control episodes labelled with MuJoCo's true state. |
+| `ProbeDataset` | `simulusion.evals` | Probe episodes of one task: save, load, split by episode, and build regression targets. |
+| `StateTargets` | `simulusion.evals` | Regression targets per frame, with each row's episode and step. |
+| `unobservable_dims` | `simulusion.evals` | The `qpos` dimensions a tracking camera cannot show. |
+
 ## Data
 
 See {doc}`episodes_guide`.

@@ -89,6 +89,7 @@ model under *Algorithms* in the sidebar.
    world_model_protocol
    deployment_guide
    evaluation_guide
+   probing
    memory_guide
    environments_guide
    environments/index
