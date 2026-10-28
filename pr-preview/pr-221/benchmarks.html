@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Benchmarking World Models" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/benchmarks.html" />
+<meta property="og:site_name" content="Simulusion Documentation" />
+<meta property="og:description" content="Simulusion includes a lightweight benchmark harness for running standardized evaluations of trained world-model agents and exporting results that can be used in experiment logs, reports, and papers..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/_images/social_previews/summary_benchmarks_17895b9e.png" />
+<meta property="og:image:alt" content="Simulusion includes a lightweight benchmark harness for running standardized evaluations of trained world-model agents and exporting results that can be used in experiment logs, reports, and papers..." />
+<meta name="description" content="Simulusion includes a lightweight benchmark harness for running standardized evaluations of trained world-model agents and exporting results that can be used in experiment logs, reports, and papers..." />
+<meta name="twitter:card" content="summary_large_image" />
+
+    <title>Benchmarking World Models &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'benchmarks';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/benchmarks.html" />
+    <link rel="icon" href="_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Run Code In The Docs" href="run_code_in_docs.html" />
+    <link rel="prev" title="Contributing" href="contributing.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">User Guides</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment_guide.html">Efficient Inference and Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation_guide.html">Evaluation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="memory_guide.html">Memory &amp; Replay Buffers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments_guide.html">Environments Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environments/index.html">Environment Backends</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/nuplan.html">NuPlan Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Simulusion CLI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package_overview.html">Package Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers_guide.html">Controllers and Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_guide.html">World Models Study Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/world_model_env_rl_libraries.html">Tutorial: Plug Simulusion world models into RL libraries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modular_rssm_guide.html">Modular RSSM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vision_guide.html">Vision Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets_guide.html">Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="losses_guide.html">Loss Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin_registry.html">Plugin Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="world_models_deep_dive.html">World Models Deep Dive (Ha &amp; Schmidhuber, 2018)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dit.html">DiT: Diffusion Transformer and Diffusion Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diamond.html">DIAMOND</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genie.html">Genie: Generative Interactive Environment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_exports.html">Exported Names by Category</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs_reference.html">Configs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export_guide.html">Exporting Models for Deployment</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Benchmarking World Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_code_in_docs.html">Run Code In The Docs</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Benchmarking World Models</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="benchmarking-world-models">
+<h1>Benchmarking World Models<a class="headerlink" href="#benchmarking-world-models" title="Link to this heading">#</a></h1>
+<p>Simulusion includes a lightweight benchmark harness for running standardized
+evaluations of trained world-model agents and exporting results that can be used
+in experiment logs, reports, and papers.</p>
+<section id="quick-overview">
+<h2>Quick Overview<a class="headerlink" href="#quick-overview" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Preferred CLI entrypoint: <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span></code>.</p></li>
+<li><p>Benchmark adapters live in the Simulusion source tree under <code class="docutils literal notranslate"><span class="pre">simulusion/benchmarks/</span></code>.</p></li>
+</ul>
+</section>
+<section id="supported-adapters">
+<h2>Supported adapters<a class="headerlink" href="#supported-adapters" title="Link to this heading">#</a></h2>
+<p>The benchmark CLI currently registers these adapters out of the box:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">diamond</span></code> - DIAMOND diffusion world-model agent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">iris</span></code> - IRIS transformer-based agent</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dreamerv1</span></code> / <code class="docutils literal notranslate"><span class="pre">dreamerv2</span></code> - Dreamer family</p></li>
+</ul>
+<p>Benchmarks are intended for trained models. For single-agent runs, pass a
+checkpoint with <code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code>. For multi-agent runs, pass one or more
+<code class="docutils literal notranslate"><span class="pre">--checkpoint-map</span> <span class="pre">AGENT=PATH</span></code> values, or use <code class="docutils literal notranslate"><span class="pre">--train-epochs</span></code> when you
+intentionally want the CLI to train before evaluating.</p>
+</section>
+<section id="simulusion-cli-examples">
+<h2>Simulusion CLI examples<a class="headerlink" href="#simulusion-cli-examples" title="Link to this heading">#</a></h2>
+<p>Run IRIS on Pong for 3 episodes using seed 0 and write the standard result files
+to <code class="docutils literal notranslate"><span class="pre">results/bench</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--agent<span class="w"> </span>iris<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--game<span class="w"> </span>ALE/Pong-v5<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint<span class="w"> </span>checkpoints/iris/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--episodes<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<p>Run DIAMOND on Breakout with two explicit seeds and 5 episodes per seed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--agent<span class="w"> </span>diamond<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--game<span class="w"> </span>Breakout-v5<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint<span class="w"> </span>checkpoints/diamond/breakout.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">0</span>,1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--episodes<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--out-dir<span class="w"> </span>results/diamond_breakout
+</pre></div>
+</div>
+<p>Run DreamerV2 on a Gym environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--agent<span class="w"> </span>dreamerv2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--game<span class="w"> </span>Pong-v5<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint<span class="w"> </span>checkpoints/dreamerv2/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--episodes<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--device<span class="w"> </span>cpu
+</pre></div>
+</div>
+<p>Run DreamerV1 on a DeepMind BSuite diagnostic task:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--agent<span class="w"> </span>dreamerv1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--game<span class="w"> </span>catch/0<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--env-backend<span class="w"> </span>bsuite<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint<span class="w"> </span>checkpoints/dreamerv1/bsuite_catch.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">0</span>,1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--episodes<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--device<span class="w"> </span>cpu
+</pre></div>
+</div>
+<p>The BSuite backend is optional. Install it with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">simulusion[bsuite]</span></code> or
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code> before running BSuite tasks. Simulusion wraps BSuite’s compact
+<code class="docutils literal notranslate"><span class="pre">dm_env</span></code> observations as synthetic RGB images so the existing pixel-based
+Dreamer benchmark path can evaluate trained world-model agents.</p>
+<p>Run all registered adapters on the same game with per-agent checkpoints:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--all-agents<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--game<span class="w"> </span>ALE/Pong-v5<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint-map<span class="w"> </span><span class="nv">iris</span><span class="o">=</span>checkpoints/iris/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint-map<span class="w"> </span><span class="nv">diamond</span><span class="o">=</span>checkpoints/diamond/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint-map<span class="w"> </span><span class="nv">dreamerv1</span><span class="o">=</span>checkpoints/dreamerv1/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--checkpoint-map<span class="w"> </span><span class="nv">dreamerv2</span><span class="o">=</span>checkpoints/dreamerv2/pong.pt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seeds<span class="w"> </span><span class="m">0</span>,1<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--episodes<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--out-dir<span class="w"> </span>results/pong_comparison
+</pre></div>
+</div>
+</section>
+<section id="cli-options">
+<h2>CLI options<a class="headerlink" href="#cli-options" title="Link to this heading">#</a></h2>
+<p>Common <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span></code> options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--agent</span> <span class="pre">AGENT</span></code> / <code class="docutils literal notranslate"><span class="pre">-a</span> <span class="pre">AGENT</span></code>: run one adapter (<code class="docutils literal notranslate"><span class="pre">iris</span></code>, <code class="docutils literal notranslate"><span class="pre">diamond</span></code>, <code class="docutils literal notranslate"><span class="pre">dreamerv1</span></code>, or <code class="docutils literal notranslate"><span class="pre">dreamerv2</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--all-agents</span></code>: run every registered adapter on the same environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--game</span> <span class="pre">GAME</span></code> / <code class="docutils literal notranslate"><span class="pre">-g</span> <span class="pre">GAME</span></code>: environment id, such as <code class="docutils literal notranslate"><span class="pre">ALE/Pong-v5</span></code> or a BSuite id like <code class="docutils literal notranslate"><span class="pre">catch/0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--checkpoint</span> <span class="pre">PATH</span></code> / <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">PATH</span></code>: checkpoint path for single-agent benchmarks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--checkpoint-map</span> <span class="pre">AGENT=PATH</span></code>: repeatable per-agent checkpoint mapping for <code class="docutils literal notranslate"><span class="pre">--all-agents</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--env-backend</span> <span class="pre">BACKEND</span></code>: optional backend hint forwarded to adapters. Use <code class="docutils literal notranslate"><span class="pre">bsuite</span></code> for DeepMind BSuite ids such as <code class="docutils literal notranslate"><span class="pre">catch/0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--seeds</span> <span class="pre">SEEDS</span></code>: either <code class="docutils literal notranslate"><span class="pre">N</span></code> for seeds <code class="docutils literal notranslate"><span class="pre">0..N-1</span></code>, or a comma-separated list such as <code class="docutils literal notranslate"><span class="pre">0,1,2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--episodes</span> <span class="pre">N</span></code> / <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">N</span></code>: number of evaluation episodes per seed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--out-dir</span> <span class="pre">DIR</span></code>: output directory for report artifacts. The legacy alias <code class="docutils literal notranslate"><span class="pre">--out_dir</span></code> is also accepted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--device</span> <span class="pre">DEVICE</span></code>: device forwarded to adapters. Defaults to CUDA when available, otherwise CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--preset</span> <span class="pre">PRESET</span></code>: optional adapter/model preset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--train-epochs</span> <span class="pre">N</span></code>: for <code class="docutils literal notranslate"><span class="pre">--all-agents</span></code>, train first when checkpoint maps are not supplied.</p></li>
+</ul>
+<p>You can also run <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span> <span class="pre">--help</span></code> to see the installed CLI help.</p>
+</section>
+<section id="python-usage">
+<h2>Python usage<a class="headerlink" href="#python-usage" title="Link to this heading">#</a></h2>
+<p>For benchmark runs, prefer the main Simulusion CLI so commands are consistent with
+the rest of the package:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>benchmark<span class="w"> </span>--agent<span class="w"> </span>iris<span class="w"> </span>--game<span class="w"> </span>ALE/Pong-v5<span class="w"> </span>--checkpoint<span class="w"> </span>checkpoints/iris/pong.pt
+</pre></div>
+</div>
+<p>The command writes benchmark JSON reports under the configured output
+directory. Load those reports with standard Python tools when you need custom
+analysis:</p>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s2">"results/bench/benchmark_results.json"</span><span class="p">))</span>
+<span class="n">per_seed</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">"aggregate"</span><span class="p">][</span><span class="s2">"per_seed_means"</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">per_seed</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="running-the-atari-100k-benchmark">
+<h2>Running the Atari 100k benchmark<a class="headerlink" href="#running-the-atari-100k-benchmark" title="Link to this heading">#</a></h2>
+<p>To run the full Atari 100k benchmark on all configured games with the
+centralized benchmark module:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>simulusion.benchmarks.atari_100k<span class="w"> </span>--benchmark
+</pre></div>
+</div>
+<p>This runs the Atari 100k evaluator from <code class="docutils literal notranslate"><span class="pre">simulusion/benchmarks</span></code>, computes
+human-normalized scores, and reports aggregate metrics across games and seeds.</p>
+</section>
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">#</a></h2>
+<p>The runner saves these files into the selected <code class="docutils literal notranslate"><span class="pre">out_dir</span></code> (default
+<code class="docutils literal notranslate"><span class="pre">results/bench</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_results.json</span></code> - raw structured results.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_results.csv</span></code> - per-seed rows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_results.md</span></code> - human-readable markdown table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">benchmark_results.tex</span></code> - LaTeX table ready for papers.</p></li>
+</ul>
+<p>Multi-agent runs also write combined reports such as
+<code class="docutils literal notranslate"><span class="pre">combined_benchmark_results.json</span></code> and <code class="docutils literal notranslate"><span class="pre">combined_benchmark_results.csv</span></code> in the
+root output directory, with per-agent details under subdirectories.</p>
+</section>
+<section id="computing-iqm-and-bootstrap-cis">
+<h2>Computing IQM and bootstrap CIs<a class="headerlink" href="#computing-iqm-and-bootstrap-cis" title="Link to this heading">#</a></h2>
+<p>The runner stores per-seed means in the JSON under
+<code class="docutils literal notranslate"><span class="pre">aggregate.per_seed_means</span></code>. Use your preferred statistics package to compute
+IQM and confidence intervals from that array.</p>
+</section>
+<section id="extending-the-harness">
+<h2>Extending the harness<a class="headerlink" href="#extending-the-harness" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Create an adapter in <code class="docutils literal notranslate"><span class="pre">simulusion/benchmarks/adapters.py</span></code> that implements:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">load_checkpoint(path:</span> <span class="pre">str)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluate(num_episodes:</span> <span class="pre">int,</span> <span class="pre">render:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False)</span></code> returning <code class="docutils literal notranslate"><span class="pre">{&quot;episode_returns&quot;:</span> <span class="pre">list[float]}</span></code></p></li>
+</ul>
+</li>
+<li><p>Register your adapter in <code class="docutils literal notranslate"><span class="pre">simulusion/benchmarks/cli.py</span></code> to expose it through <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span></code>.</p></li>
+</ul>
+</section>
+<section id="compute-benchmarks-no-checkpoints-required">
+<h2>Compute benchmarks (no checkpoints required)<a class="headerlink" href="#compute-benchmarks-no-checkpoints-required" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span></code> measures <em>returns</em>, so it needs trained agents and a
+Gymnasium install. To measure <em>cost</em> - parameters, latency, throughput and
+peak memory - use the auto-run sweep instead:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># every core model, tiny scale, on the best available device</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh
+
+<span class="c1"># a realistic training step on the GPU, including the full IRIS/Genie stacks</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--preset<span class="w"> </span>small<span class="w"> </span>--all<span class="w"> </span>--device<span class="w"> </span>cuda
+
+<span class="c1"># one family at the sizes its paper uses</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--family<span class="w"> </span>iris<span class="w"> </span>--preset<span class="w"> </span>paper
+
+<span class="c1"># inference-only, half precision</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--no-backward<span class="w"> </span>--dtype<span class="w"> </span>bf16
+
+<span class="c1"># see what would run</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--list
+</pre></div>
+</div>
+<p>The shell driver is the entrypoint: it installs uv if it is missing, installs
+the project and its locked dependencies with <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">sync</span> <span class="pre">--inexact</span></code>, runs the
+sweep with <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">run</span></code>, and prints the results table. Nothing needs to be set up
+first - no virtualenv, no activation step. <code class="docutils literal notranslate"><span class="pre">--inexact</span></code> means the sync never
+uninstalls packages the lock does not mention, so it is safe to point at an
+environment you already use.</p>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/benchmark_models.py</span></code> does the measuring and can be run directly
+(<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/benchmark_models.py</span> <span class="pre">...</span></code>) when you manage the environment
+yourself. Every model is built from synthetic tensors, so the sweep needs no
+checkpoints, datasets or environments. Each case is isolated: a model that
+fails to build or run is reported as <code class="docutils literal notranslate"><span class="pre">failed</span></code> and the sweep continues.</p>
+<p>One caveat if you installed torch from a CUDA index (as <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>
+describes): <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">sync</span></code> normally leaves it alone, but if uv has to rebuild
+<code class="docutils literal notranslate"><span class="pre">.venv</span></code> from scratch it installs the plain wheel the lock pins, which on
+Windows is CPU-only. Pass <code class="docutils literal notranslate"><span class="pre">--no-sync</span></code> to keep such an environment untouched.</p>
+<p>Wrapper-only flags:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--no-sync</span></code> skips the install step and uses the current environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--extra</span> <span class="pre">NAME</span></code> (repeatable) installs an optional dependency group, e.g.
+<code class="docutils literal notranslate"><span class="pre">--extra</span> <span class="pre">viz</span> <span class="pre">--extra</span> <span class="pre">ml</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--python</span> <span class="pre">VERSION</span></code> picks the interpreter for the environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--uv-help</span></code> prints the driver’s own help.</p></li>
+</ul>
+<p>Everything else is forwarded to the Python sweep:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--preset</span> <span class="pre">tiny|small|paper</span></code> sets batch, sequence length and the width/depth
+overrides; <code class="docutils literal notranslate"><span class="pre">paper</span></code> uses each model’s library defaults.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--batch-size</span></code>, <code class="docutils literal notranslate"><span class="pre">--seq-len</span></code> and <code class="docutils literal notranslate"><span class="pre">--image-size</span></code> override individual preset
+fields; <code class="docutils literal notranslate"><span class="pre">--warmup</span></code> and <code class="docutils literal notranslate"><span class="pre">--iters</span></code> control the timing loop.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--models</span> <span class="pre">a,b</span></code> or <code class="docutils literal notranslate"><span class="pre">--family</span> <span class="pre">dreamer,iris</span></code> narrows the sweep; <code class="docutils literal notranslate"><span class="pre">--all</span></code> adds the
+heavy tier (<code class="docutils literal notranslate"><span class="pre">iris-world-model</span></code>, <code class="docutils literal notranslate"><span class="pre">genie-small</span></code>, <code class="docutils literal notranslate"><span class="pre">jepa-vit-small</span></code>).</p></li>
+<li><p>Reports land in <code class="docutils literal notranslate"><span class="pre">results/model_benchmarks/</span></code> as <code class="docutils literal notranslate"><span class="pre">model_benchmarks.{json,csv,md}</span></code>
+alongside the run metadata (device, dtype, torch version, thread count).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bench</span></code> and <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bench-all</span></code> wrap the two common invocations; pass extra
+flags through <code class="docutils literal notranslate"><span class="pre">BENCH_ARGS</span></code>.</p>
+</section>
+<section id="inference-videos-and-interactive-play">
+<h2>Inference videos and interactive play<a class="headerlink" href="#inference-videos-and-interactive-play" title="Link to this heading">#</a></h2>
+<p>The same shell driver can run a <strong>trained</strong> model instead of the synthetic
+compute sweep. <code class="docutils literal notranslate"><span class="pre">--infer</span></code> writes a video of the model playing (or generating).
+<code class="docutils literal notranslate"><span class="pre">--play</span></code> opens a window so you can play <strong>with</strong> the policy (keys override it)
+or <strong>against</strong> it (<code class="docutils literal notranslate"><span class="pre">--versus</span></code>: you drive, the policy’s chosen action is shown).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># video of DIAMOND playing Breakout, plus a dream clip</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--infer<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-c<span class="w"> </span>checkpoints/diamond/checkpoint_0.pt<span class="w"> </span>--game<span class="w"> </span>Breakout-v5
+
+<span class="c1"># IRIS on Pong, headless</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--infer<span class="w"> </span>--model<span class="w"> </span>iris<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-c<span class="w"> </span>checkpoints/iris/checkpoint_0.pt<span class="w"> </span>--game<span class="w"> </span>ALE/Pong-v5
+
+<span class="c1"># Dreamer in the real env (no OpenCV window)</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--infer<span class="w"> </span>--model<span class="w"> </span>dreamer<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-c<span class="w"> </span>runs/.../ckpts/10000_ckpt.pt<span class="w"> </span>--game<span class="w"> </span>Pendulum-v1
+
+<span class="c1"># interactive: you and the policy share the controls</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>-c<span class="w"> </span>ckpt.pt
+
+<span class="c1"># interactive: you drive, the policy is the on-screen opponent</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--play<span class="w"> </span>--model<span class="w"> </span>diamond<span class="w"> </span>-c<span class="w"> </span>ckpt.pt<span class="w"> </span>--versus
+
+<span class="c1"># Genie latent-action play (or --random-init to check the pipeline)</span>
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--play<span class="w"> </span>--model<span class="w"> </span>genie<span class="w"> </span>-c<span class="w"> </span>checkpoints/genie.pt
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--infer<span class="w"> </span>--model<span class="w"> </span>dit<span class="w"> </span>--random-init
+bash<span class="w"> </span>scripts/benchmark_models.sh<span class="w"> </span>--infer<span class="w"> </span>--list
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--play</span></code> needs a display. <code class="docutils literal notranslate"><span class="pre">--infer</span></code> is the headless path. Videos default to
+<code class="docutils literal notranslate"><span class="pre">results/model_inference/</span></code>. DiT and I-JEPA only support <code class="docutils literal notranslate"><span class="pre">--infer</span></code> (sample /
+mask visualisations), not a game loop.</p>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bench-infer</span></code> and <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">bench-play</span></code> wrap those two modes.</p>
+<p>To add a model to the sweep, append a <code class="docutils literal notranslate"><span class="pre">BenchCase</span></code> to <code class="docutils literal notranslate"><span class="pre">CASES</span></code> in
+<code class="docutils literal notranslate"><span class="pre">scripts/benchmark_models.py</span></code> with a builder that returns the module plus a
+function producing its synthetic inputs.</p>
+</section>
+<section id="tests-and-ci">
+<h2>Tests and CI<a class="headerlink" href="#tests-and-ci" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Place smoke tests under <code class="docutils literal notranslate"><span class="pre">simulusion/benchmarks/tests/</span></code> so CI can run them quickly.</p></li>
+<li><p>The repo contains a <code class="docutils literal notranslate"><span class="pre">mocking_classes.py</span></code> helper for building fake agents and environments for fast unit tests.</p></li>
+</ul>
+</section>
+<section id="where-to-start">
+<h2>Where to start<a class="headerlink" href="#where-to-start" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Run the examples in <code class="docutils literal notranslate"><span class="pre">examples/benchmark_iris.py</span></code> or use <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">benchmark</span></code> directly.</p></li>
+<li><p>If you need help wiring specific agent configs, use <code class="docutils literal notranslate"><span class="pre">--device</span></code>, <code class="docutils literal notranslate"><span class="pre">--preset</span></code>, and checkpoint options, or call the runner programmatically and pass <code class="docutils literal notranslate"><span class="pre">extra_kwargs</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="contributing.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="run_code_in_docs.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Run Code In The Docs</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-overview">Quick Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-adapters">Supported adapters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion-cli-examples">Simulusion CLI examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cli-options">CLI options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python-usage">Python usage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-the-atari-100k-benchmark">Running the Atari 100k benchmark</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#outputs">Outputs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#computing-iqm-and-bootstrap-cis">Computing IQM and bootstrap CIs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extending-the-harness">Extending the harness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-benchmarks-no-checkpoints-required">Compute benchmarks (no checkpoints required)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inference-videos-and-interactive-play">Inference videos and interactive play</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-and-ci">Tests and CI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-start">Where to start</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/benchmarks.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

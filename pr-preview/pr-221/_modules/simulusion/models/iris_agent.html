@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="dark">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulusion.models.iris_agent &#8212; Simulusion</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "dark";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "dark";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=eaa1d750" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=fc837d61"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=3a14cefc"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+
+
+
+
+const initStyles = () => {
+    const defaultStyle = document.createElement('style');
+    defaultStyle.textContent = "pre.mermaid {\n    /* Same as .mermaid-container > pre */\n    display: block;\n    width: 100%;\n}\n\npre.mermaid > svg {\n    /* Same as .mermaid-container > pre > svg */\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}";
+    document.head.appendChild(defaultStyle);
+
+    const fullscreenStyle = document.createElement('style');
+    fullscreenStyle.textContent = ".mermaid-container {\n    position: relative;\n    display: flex;\n    flex-direction: row;\n    width: 100%;\n}\n\n.mermaid-container > pre {\n    display: block;\n    width: 100%;\n}\n\n.mermaid-container > pre > svg {\n    height: 500px;\n    width: 100%;\n    max-width: 100% !important;\n}\n\n.mermaid-fullscreen-btn {\n    position: absolute;\n    width: 28px;\n    height: 28px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.3);\n    border-radius: 4px;\n    cursor: pointer;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: all 0.2s;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);\n    font-size: 14px;\n    line-height: 1;\n    padding: 0;\n    color: #333;\n}\n\n.mermaid-fullscreen-btn:hover {\n    opacity: 100% !important;\n    background: rgba(255, 255, 255, 1);\n    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-btn.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.3);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-btn.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal {\n    display: none;\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 95vw;\n    height: 100vh;\n    background: rgba(255, 255, 255, 0.98);\n    z-index: 9999;\n    padding: 20px;\n    overflow: auto;\n}\n\n.mermaid-fullscreen-modal.dark-theme {\n    background: rgba(0, 0, 0, 0.98);\n}\n\n.mermaid-fullscreen-modal.active {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen {\n    position: relative;\n    width: 95vw;\n    height: 90vh;\n    max-width: 95vw;\n    max-height: 90vh;\n    background: white;\n    border-radius: 8px;\n    padding: 20px;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);\n    overflow: auto;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen.dark-theme {\n    background: #1a1a1a;\n    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);\n}\n\n.mermaid-container-fullscreen pre.mermaid {\n    width: 100%;\n    height: 100%;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n}\n\n.mermaid-container-fullscreen .mermaid svg {\n    height: 100% !important;\n    width: 100% !important;\n    cursor: grab;\n}\n\n.mermaid-fullscreen-close {\n    position: fixed !important;\n    top: 20px !important;\n    right: 20px !important;\n    width: 40px;\n    height: 40px;\n    background: rgba(255, 255, 255, 0.95);\n    border: 1px solid rgba(0, 0, 0, 0.2);\n    border-radius: 50%;\n    cursor: pointer;\n    z-index: 10000;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n    transition: all 0.2s;\n    font-size: 24px;\n    line-height: 1;\n    color: #333;\n}\n\n.mermaid-fullscreen-close:hover {\n    background: white;\n    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);\n    transform: scale(1.1);\n}\n\n.mermaid-fullscreen-close.dark-theme {\n    background: rgba(50, 50, 50, 0.95);\n    border: 1px solid rgba(255, 255, 255, 0.2);\n    color: #e0e0e0;\n}\n\n.mermaid-fullscreen-close.dark-theme:hover {\n    background: rgba(60, 60, 60, 1);\n    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);\n}\n\n.mermaid-fullscreen-modal .mermaid-fullscreen-btn {\n    display: none !important;\n}";
+    document.head.appendChild(fullscreenStyle);
+}
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    // We use a set of heuristics:
+    // 1. Check for common dark mode classes or attributes
+    // 2. Check computed background color brightness
+    if (document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark' ||
+        document.body.classList.contains('dark') ||
+        document.body.getAttribute('data-theme') === 'dark') {
+        // console.log("Dark theme detected via class/attribute");
+        return true;
+    }
+    if (document.documentElement.classList.contains('light') ||
+        document.documentElement.getAttribute('data-theme') === 'light' ||
+        document.body.classList.contains('light') ||
+        document.body.getAttribute('data-theme') === 'light') {
+        // console.log("Light theme detected via class/attribute");
+        return false;
+    }
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // console.log("Dark theme detected via prefers-color-scheme");
+        return true;
+    }
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        // console.log("Background color brightness:", brightness);
+        return brightness < 128;
+    }
+    // console.log("No dark or light theme detected, defaulting to light theme");
+    return false;
+};
+
+let darkTheme = isDarkTheme();
+let modal = null;
+let modalContent = null;
+let previousScrollOffset = [window.scrollX, window.scrollY];
+let _lazyObserver = null;
+let _renderQueue = Promise.resolve();
+let closeModal = () => {};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        closeModal();
+    }
+});
+
+// Apply d3 zoom to each SVG. Idempotent: an SVG already wrapped is skipped,
+// so this is safe to call both for the initial batch and for diagrams that
+// render lazily once they become visible.
+const addZoomToSvgs = (svgs) => {
+    svgs.each(function() {
+        if (this.getAttribute('data-zoom-applied') === 'true') return;
+        var svg = d3.select(this);
+        svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+        var inner = svg.select("g");
+        var zoom = d3.zoom().on("zoom", function(event) {
+            inner.attr("transform", event.transform);
+        });
+        svg.call(zoom);
+        this.setAttribute('data-zoom-applied', 'true');
+    });
+};
+
+const runMermaid = async (rerun) => {
+    console.log("Running mermaid diagrams, rerun =", rerun);
+    // clear all existing mermaid charts
+    let all_mermaids = document.querySelectorAll(".mermaid");
+
+    if (rerun) {
+        // Disconnect any previous lazy rendering observer
+        if (_lazyObserver) {
+            _lazyObserver.disconnect();
+            _lazyObserver = null;
+        }
+
+        all_mermaids.forEach((el) => {
+            el.removeAttribute('data-mermaid-deferred');
+            el.removeAttribute('data-mermaid-render-failed');
+            if(!el.hasAttribute("data-original-code")) {
+                // store original code
+                // console.log(`Storing original code for first run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+            if(el.getAttribute("data-processed") === "true") {
+                // remove and restore original
+                el.removeAttribute("data-processed");
+                // console.log(`Restoring original code for re-run: `, el.getAttribute('data-original-code'));
+                el.innerHTML = el.getAttribute('data-original-code');
+            } else {
+                // store original code
+                // console.log(`Storing original code for re-run: `, el.innerHTML);
+                el.setAttribute('data-original-code', el.innerHTML);
+            }
+        });
+
+        // Separate visible and hidden elements. Mermaid's layout engine measures
+        // text dimensions via the DOM, which fails for elements hidden by a parent
+        // (e.g., Reveal.js non-active slides, sphinx-design unopened tabs),
+        // producing broken SVGs. Render visible elements now, defer hidden ones.
+        const visible = [];
+        const hidden = [];
+        all_mermaids.forEach((el) => {
+            // offsetParent is null for display:none ancestors.
+            // getClientRects().length > 0 catches position:fixed elements
+            // (which also have null offsetParent but are still visible).
+            if (el.offsetParent !== null || el.getClientRects().length > 0) {
+                visible.push(el);
+            } else {
+                hidden.push(el);
+                el.setAttribute('data-mermaid-deferred', 'true');
+            }
+        });
+
+        if (visible.length > 0) {
+            try {
+                await mermaid.run({ nodes: visible });
+            } catch (e) {
+                console.error("Mermaid rendering failed:", e);
+            }
+        }
+
+        // Lazily render hidden elements when they become visible.
+        // Uses a promise chain (_renderQueue) to serialize rendering,
+        // since IntersectionObserver may report multiple entries at once
+        // and mermaid.run() is not safe to call concurrently.
+        if (hidden.length > 0) {
+            if (typeof IntersectionObserver === 'undefined') {
+                console.warn("IntersectionObserver not available; hidden mermaid diagrams will not render.");
+            } else {
+                _renderQueue = Promise.resolve();
+                _lazyObserver = new IntersectionObserver((entries) => {
+                    for (const entry of entries) {
+                        if (entry.isIntersecting && entry.target.getAttribute("data-processed") !== "true") {
+                            _lazyObserver.unobserve(entry.target);
+                            const el = entry.target;
+                            _renderQueue = _renderQueue.then(async () => {
+                                try {
+                                    await mermaid.run({ nodes: [el] });
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    // Apply zoom to the now-rendered diagram, matching
+                                    // the decoration visible diagrams receive.
+                                    if (false) {
+                                        addZoomToSvgs(d3.selectAll("").select(function() {
+                                            return this.querySelector("svg");
+                                        }));
+                                    }
+                                } catch (e) {
+                                    console.error("Mermaid deferred rendering failed:", e);
+                                    el.removeAttribute('data-mermaid-deferred');
+                                    el.setAttribute('data-mermaid-render-failed', 'true');
+                                }
+                            });
+                        }
+                    }
+                });
+                hidden.forEach((el) => _lazyObserver.observe(el));
+            }
+        }
+    }
+
+    all_mermaids = document.querySelectorAll(".mermaid");
+    // Exclude deferred (hidden) and render-failed elements from completion checks
+    const mermaids_active = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])");
+    const mermaids_processed = document.querySelectorAll(".mermaid:not([data-mermaid-deferred]):not([data-mermaid-render-failed])[data-processed='true']");
+
+    if (false) {
+        const mermaids_to_add_zoom = 0 === -1 ? mermaids_active.length : 0;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("").select(function() {
+                return this.querySelector("svg");
+            });
+            // Wait until every active (visible) diagram has rendered. Deferred
+            // diagrams are excluded, so a fixed d3_node_count that counts a
+            // hidden diagram no longer loops forever waiting for its SVG.
+            if(mermaids_active.length !== mermaids_processed.length) {
+                setTimeout(() => runMermaid(false), 200);
+                return;
+            }
+            addZoomToSvgs(svgs);
+        }
+    } else if(mermaids_active.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(() => runMermaid(false), 200);
+        return;
+    }
+
+    // Stop here if not adding fullscreen capability
+    if (!true) return;
+
+    if (modal !== null ) {
+        // Destroy existing modal
+        modal.remove();
+        modal = null;
+        modalContent = null;
+    }
+
+    modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            // Already processed, adjust button class if needed
+            const existingBtn = mermaidDiv.parentNode.querySelector('.mermaid-fullscreen-btn');
+            if (existingBtn) {
+                existingBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+            }
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = "\u26f6";
+        fullscreenBtn.style.opacity = "50%";
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scrollX, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.display = 'block';
+
+                if (false) {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        container.appendChild(fullscreenBtn);
+    });
+};
+
+
+
+const load = async () => {
+    initStyles();
+
+
+    await runMermaid(true);
+
+    const reRunIfThemeChanges = async () => {
+        const newDarkTheme = isDarkTheme();
+        if (newDarkTheme !== darkTheme) {
+            darkTheme = newDarkTheme;
+            console.log("Theme change detected, re-running mermaid with", darkTheme ? "dark" : "default", "theme");
+            await mermaid.initialize(
+                {...{"startOnLoad": false},
+                ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+                }
+            );
+            await runMermaid(true);
+        }
+    };
+
+    // Update theme classes when theme changes
+    const themeObserver = new MutationObserver(reRunIfThemeChanges);
+    themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    themeObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+};
+
+
+
+
+
+console.log("Initializing mermaid with", darkTheme ? "dark" : "default", "theme");
+mermaid.initialize(
+    {...{"startOnLoad": false},
+    ...{ darkMode: darkTheme, theme: darkTheme ? "dark" : "default" },
+    }
+);
+
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulusion/models/iris_agent';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../../../_static/fix_navbar.js?v=7a566309"></script>
+    <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/_modules/simulusion/models/iris_agent.html" />
+    <link rel="icon" href="../../../_static/simulusion-favicon.svg"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="dark">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../../../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+      
+        <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/paramthakkar123/simulusion" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">simulusion.models.iris_agent</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for simulusion.models.iris_agent</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.optim</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">optim</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.logging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.iris_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.model_io</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">apply_config_overrides</span><span class="p">,</span>
+    <span class="n">coerce_config</span><span class="p">,</span>
+    <span class="n">module_summary</span><span class="p">,</span>
+    <span class="n">parameter_count</span> <span class="k">as</span> <span class="n">count_parameters</span><span class="p">,</span>
+    <span class="n">resolve_pretrained_file</span><span class="p">,</span>
+    <span class="n">save_config_next_to_checkpoint</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.training.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientUpdate</span><span class="p">,</span> <span class="n">MixedPrecision</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.iris_encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISEncoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.iris_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">IRISDecoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.perceptual_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_perceptual_loss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.iris_transformer</span><span class="w"> </span><span class="kn">import</span> <span class="n">GraphedDecodeStep</span><span class="p">,</span> <span class="n">IRISTransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.controller.iris_policy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CNNFeatureExtractor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportableAgentMixin</span>
+
+
+<div class="viewcode-block" id="compute_lambda_return">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.compute_lambda_return">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_lambda_return</span><span class="p">(</span>
+    <span class="n">rewards</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">discounts</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">lambda_coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute λ-return target for value function training.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        rewards: Rewards (B, T)</span>
+<span class="sd">        values: Value estimates (B, T+1)</span>
+<span class="sd">        discounts: Discount factors (B, T)</span>
+<span class="sd">        lambda_coef: Lambda parameter for bootstrapping</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        lambda_returns: λ-return targets (B, T)</span>
+<span class="sd">    """</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">lambda_returns</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span>
+
+    <span class="c1"># Start with the last bootstrapped value</span>
+    <span class="n">lambda_returns</span><span class="p">[:,</span> <span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rewards</span><span class="p">[:,</span> <span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">discounts</span><span class="p">[:,</span> <span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">values</span><span class="p">[:,</span> <span class="n">T</span><span class="p">]</span>
+
+    <span class="c1"># Compute λ-returns backwards</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">lambda_returns</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">rewards</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">discounts</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">lambda_coef</span><span class="p">)</span> <span class="o">*</span> <span class="n">values</span><span class="p">[:,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="o">+</span> <span class="n">lambda_coef</span> <span class="o">*</span> <span class="n">lambda_returns</span><span class="p">[:,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lambda_returns</span></div>
+
+
+
+<div class="viewcode-block" id="IRISAgent">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IRISAgent</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Complete IRIS Agent with world model and policy.</span>
+
+<span class="sd">    Combines:</span>
+<span class="sd">    - Discrete autoencoder (encoder + decoder)</span>
+<span class="sd">    - Transformer world model</span>
+<span class="sd">    - Actor-Critic for policy and value learning</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">IRISConfig</span><span class="p">,</span>
+        <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">coerce_config</span><span class="p">(</span><span class="n">IRISConfig</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span> <span class="o">=</span> <span class="n">action_size</span>
+        <span class="c1">#: Replay imagination's single-position decode steps as a CUDA graph.</span>
+        <span class="c1">#: Same computation, far fewer kernel launches; only used on CUDA.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda_graphs</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1">#: Frames per autoencoder pass in :meth:`reconstruct`.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_chunk_size</span> <span class="o">=</span> <span class="mi">128</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logging</span><span class="p">(</span><span class="s2">"IRISAgent"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"use_amp"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">device</span><span class="p">))</span> <span class="o">==</span> <span class="s2">"cuda"</span>
+        <span class="p">)</span>
+
+        <span class="c1"># === Discrete Autoencoder ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">IRISEncoder</span><span class="p">(</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">,</span>
+            <span class="n">tokens_per_frame</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">tokens_per_frame</span><span class="p">,</span>
+            <span class="n">embedding_dim</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">token_embedding_dim</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">frame_channels</span><span class="p">,</span>
+            <span class="n">base_channels</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">encoder_channels</span><span class="p">,</span>
+            <span class="n">num_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">encoder_layers</span><span class="p">,</span>
+            <span class="n">num_residual_blocks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">encoder_residual_blocks</span><span class="p">,</span>
+            <span class="n">frame_shape</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get_frame_shape</span><span class="p">(),</span>
+            <span class="n">commitment_weight</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">commitment_weight</span><span class="p">,</span>
+            <span class="n">quantizer</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">quantizer</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="n">IRISDecoder</span><span class="p">(</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">,</span>
+            <span class="n">embedding_dim</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">token_embedding_dim</span><span class="p">,</span>
+            <span class="n">base_channels</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">decoder_depth</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">frame_channels</span><span class="p">,</span>
+            <span class="n">frame_shape</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get_frame_shape</span><span class="p">(),</span>
+            <span class="n">num_residual_blocks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">encoder_residual_blocks</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># Perceptual loss (paper A.1). Frozen VGG features; excluded from the</span>
+        <span class="c1"># autoencoder optimiser because it exposes no trainable parameters.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span> <span class="o">=</span> <span class="n">build_perceptual_loss</span><span class="p">(</span>
+            <span class="n">enabled</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">perceptual_weight</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">num_blocks</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">perceptual_blocks</span><span class="p">,</span>
+            <span class="n">linear_weights</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">perceptual_linear_weights</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># === Transformer World Model ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">IRISTransformer</span><span class="p">(</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">,</span>
+            <span class="n">tokens_per_frame</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">tokens_per_frame</span><span class="p">,</span>
+            <span class="n">action_size</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span>
+            <span class="n">embed_dim</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_embed_dim</span><span class="p">,</span>
+            <span class="n">num_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_layers</span><span class="p">,</span>
+            <span class="n">num_heads</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_heads</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_dropout</span><span class="p">,</span>
+            <span class="n">gradient_checkpointing</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"gradient_checkpointing"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="c1"># sign-transformed rewards are categorical over {-1, 0, +1}</span>
+            <span class="n">reward_classes</span><span class="o">=</span><span class="mi">3</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">reward_loss</span> <span class="o">==</span> <span class="s2">"cross_entropy"</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># === Actor-Critic ===</span>
+        <span class="c1"># Combine actor and critic with shared CNN features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span> <span class="o">=</span> <span class="n">CNNFeatureExtractor</span><span class="p">(</span>
+            <span class="n">frame_shape</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get_frame_shape</span><span class="p">(),</span>
+            <span class="n">output_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LSTM</span><span class="p">(</span>
+            <span class="n">input_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span>
+            <span class="n">num_layers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">actor_layers</span><span class="p">,</span>
+            <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span> <span class="n">action_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># === Optimizers ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup_optimizers</span><span class="p">()</span>
+
+        <span class="c1"># What `use_amp` selects: fp16 autocast with loss scaling on CUDA. The</span>
+        <span class="c1"># shared Trainer replaces it with the run's precision (set_precision).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">MixedPrecision</span><span class="o">.</span><span class="n">from_use_amp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span>
+
+        <span class="c1"># === Training state ===</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="IRISAgent.from_config">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.from_config">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">IRISConfig</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"IRISAgent"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build an IRIS agent from a config object, dict, YAML file, or YAML string."""</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="n">apply_config_overrides</span><span class="p">(</span><span class="n">coerce_config</span><span class="p">(</span><span class="n">IRISConfig</span><span class="p">,</span> <span class="n">config</span><span class="p">),</span> <span class="n">overrides</span><span class="p">)</span>
+        <span class="n">torch_device</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">action_size</span><span class="o">=</span><span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">torch_device</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.from_pretrained">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.from_pretrained">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_pretrained</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">pretrained_model_name_or_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">IRISConfig</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">checkpoint_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">config_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"config.yaml"</span><span class="p">,</span>
+        <span class="n">repo_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">revision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"IRISAgent"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Load an IRIS agent checkpoint from a local path/directory or HF Hub."""</span>
+
+        <span class="n">checkpoint_candidates</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">checkpoint_filename</span><span class="p">,)</span>
+            <span class="k">if</span> <span class="n">checkpoint_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">(</span><span class="s2">"model.pt"</span><span class="p">,</span> <span class="s2">"iris.pt"</span><span class="p">,</span> <span class="s2">"checkpoint.pt"</span><span class="p">,</span> <span class="s2">"ckpt.pt"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">checkpoint_path</span> <span class="o">=</span> <span class="n">resolve_pretrained_file</span><span class="p">(</span>
+            <span class="n">pretrained_model_name_or_path</span><span class="p">,</span>
+            <span class="n">checkpoint_candidates</span><span class="p">,</span>
+            <span class="n">repo_type</span><span class="o">=</span><span class="n">repo_type</span><span class="p">,</span>
+            <span class="n">revision</span><span class="o">=</span><span class="n">revision</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">checkpoint_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Could not find an IRIS checkpoint for </span><span class="si">{</span><span class="n">pretrained_model_name_or_path</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">map_location</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+            <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">map_location</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">checkpoint_config</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"config"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="p">,</span> <span class="n">IRISConfig</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">checkpoint_config</span>
+        <span class="k">elif</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">IRISConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config_path</span> <span class="o">=</span> <span class="n">resolve_pretrained_file</span><span class="p">(</span>
+                <span class="n">pretrained_model_name_or_path</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">config_filename</span><span class="p">,</span> <span class="s2">"iris_config.yaml"</span><span class="p">,</span> <span class="s2">"config.yml"</span><span class="p">),</span>
+                <span class="n">repo_type</span><span class="o">=</span><span class="n">repo_type</span><span class="p">,</span>
+                <span class="n">revision</span><span class="o">=</span><span class="n">revision</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">config_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="s2">"No config was provided and no config YAML was found beside "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pretrained_model_name_or_path</span><span class="si">!r}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">IRISConfig</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">coerce_config</span><span class="p">(</span><span class="n">IRISConfig</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">apply_config_overrides</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">overrides</span><span class="p">)</span>
+        <span class="n">resolved_action_size</span> <span class="o">=</span> <span class="n">action_size</span> <span class="ow">or</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action_size"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resolved_action_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"action_size must be provided or present in the checkpoint."</span>
+            <span class="p">)</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">action_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">resolved_action_size</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">map_location</span><span class="p">)</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">agent</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.parameter_count">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.parameter_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parameter_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainable_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">count_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainable_only</span><span class="o">=</span><span class="n">trainable_only</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.summary">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">module_summary</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"encoder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">,</span>
+                <span class="s2">"decoder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">,</span>
+                <span class="s2">"transformer"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">,</span>
+                <span class="s2">"cnn"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">,</span>
+                <span class="s2">"lstm"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="p">,</span>
+                <span class="s2">"actor_head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="p">,</span>
+                <span class="s2">"critic_head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_decay_param_groups</span><span class="p">(</span>
+        <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">weight_decay</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Split parameters into decayed and non-decayed groups (minGPT).</span>
+
+<span class="sd">        Weight decay is applied to the weight matrices of Linear/Conv layers</span>
+<span class="sd">        only. Biases, LayerNorm/GroupNorm affine parameters and embedding tables</span>
+<span class="sd">        are excluded: decaying them shrinks the model's ability to represent</span>
+<span class="sd">        offsets and token identities, and is not what "weight decay 0.01" in the</span>
+<span class="sd">        paper's Table 4 refers to.</span>
+<span class="sd">        """</span>
+        <span class="n">decay</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">no_decay</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">decay_modules</span> <span class="o">=</span> <span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">)</span>
+        <span class="n">skip_modules</span> <span class="o">=</span> <span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">LayerNorm</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">GroupNorm</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">)</span>
+
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">submodule</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="ow">or</span> <span class="nb">id</span><span class="p">(</span><span class="n">param</span><span class="p">)</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">param_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"bias"</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="n">skip_modules</span><span class="p">):</span>
+                    <span class="n">no_decay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="n">decay_modules</span><span class="p">):</span>
+                    <span class="n">decay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Bare nn.Parameter (e.g. positional embeddings, VQ codebook</span>
+                    <span class="c1"># scale): treat like an embedding and leave it undecayed.</span>
+                    <span class="n">no_decay</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+        <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">decay</span><span class="p">:</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"params"</span><span class="p">:</span> <span class="n">decay</span><span class="p">,</span> <span class="s2">"weight_decay"</span><span class="p">:</span> <span class="n">weight_decay</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">no_decay</span><span class="p">:</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"params"</span><span class="p">:</span> <span class="n">no_decay</span><span class="p">,</span> <span class="s2">"weight_decay"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">groups</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Setup separate optimizers for each component.</span>
+
+<span class="sd">        Paper Table 4 lists weight decay under the Transformer's hyperparameters,</span>
+<span class="sd">        and Table 5 gives a single learning rate of 1e-4 with Adam. AdamW is used</span>
+<span class="sd">        so the decay is decoupled from the gradient (plain Adam's</span>
+<span class="sd">        ``weight_decay`` is an L2 penalty folded into the gradient, which</span>
+<span class="sd">        interacts badly with adaptive scaling).</span>
+<span class="sd">        """</span>
+        <span class="n">betas</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">adam_beta1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">adam_beta2</span><span class="p">)</span>
+
+        <span class="c1"># Autoencoder: no weight decay (not specified by the paper for the</span>
+        <span class="c1"># discrete autoencoder, and the VQ codebook must not be shrunk).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+            <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_learning_rate</span><span class="p">,</span>
+            <span class="n">betas</span><span class="o">=</span><span class="n">betas</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Transformer: weight decay on matmul weights only (paper Table 4).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_decay_param_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">weight_decay</span><span class="p">),</span>
+            <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_learning_rate</span><span class="p">,</span>
+            <span class="n">betas</span><span class="o">=</span><span class="n">betas</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Actor-Critic: no weight decay (paper Table 6 lists none). The trunk is</span>
+        <span class="c1"># shared (A.3), so it is optimised at the actor learning rate; only the</span>
+        <span class="c1"># critic's own last layer uses value_learning_rate. With the paper's</span>
+        <span class="c1"># settings both rates are 1e-4, making this a single group in practice.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">"params"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+                        <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+                        <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+                    <span class="p">),</span>
+                    <span class="s2">"lr"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_learning_rate</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="p">{</span>
+                    <span class="s2">"params"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+                    <span class="s2">"lr"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">value_learning_rate</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">],</span>
+            <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_learning_rate</span><span class="p">,</span>
+            <span class="n">betas</span><span class="o">=</span><span class="n">betas</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_updates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">clip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">grad_clip_norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_update</span> <span class="o">=</span> <span class="n">GradientUpdate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+            <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">max_grad_norm</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="IRISAgent.set_precision">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.set_precision">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_precision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="n">MixedPrecision</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Train at ``precision`` from now on (fresh loss scalers)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span> <span class="o">=</span> <span class="n">precision</span><span class="o">.</span><span class="n">enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_updates</span><span class="p">()</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_losses_to_floats</span><span class="p">(</span><span class="n">losses</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">losses</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">losses</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">])</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+<div class="viewcode-block" id="IRISAgent.forward_actor_critic">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.forward_actor_critic">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_actor_critic</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># (B, T, C, H, W)</span>
+        <span class="n">hidden</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Forward pass through actor-critic.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: Input frames (B, T, C, H, W)</span>
+<span class="sd">            hidden: Optional LSTM hidden state</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            action_logits: (B, T, action_size)</span>
+<span class="sd">            values: (B, T)</span>
+<span class="sd">            hidden_state: (h, c)</span>
+<span class="sd">        """</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># CNN features. Without gradients (burn-in, acting) the frames go through</span>
+        <span class="c1"># in chunks: a 64 x 20-frame burn-in in one pass needs ~640 MB for the</span>
+        <span class="c1"># first conv's activations alone, enough to exhaust a 4 GB card.</span>
+        <span class="n">frames_flat</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">T</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_grad_enabled</span><span class="p">():</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">frames_flat</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">frames_flat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_chunk_size</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="n">features</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># LSTM</span>
+        <span class="k">if</span> <span class="n">hidden</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_lstm_hidden</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+        <span class="n">lstm_out</span><span class="p">,</span> <span class="n">new_hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
+
+        <span class="c1"># Action and value</span>
+        <span class="n">action_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="p">(</span><span class="n">lstm_out</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="p">(</span><span class="n">lstm_out</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">action_logits</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">new_hidden</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_lstm_hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Initialize LSTM hidden state."""</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_layers</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_layers</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">actor_hidden_size</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IRISAgent.act">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.act">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">act</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frame</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">hidden</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">return_hidden</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Sample action from policy.</span>
+
+<span class="sd">        The policy is recurrent (paper A.3: CNN -&gt; LSTM). Callers stepping an</span>
+<span class="sd">        episode must thread ``hidden`` from one call to the next and reset it on</span>
+<span class="sd">        episode boundaries; dropping it makes the policy effectively memoryless,</span>
+<span class="sd">        which for games like Pong removes any way to infer the ball's direction</span>
+<span class="sd">        from a single frame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frame: Single frame (B, C, H, W)</span>
+<span class="sd">            epsilon: Random action probability</span>
+<span class="sd">            temperature: Action distribution temperature</span>
+<span class="sd">            hidden: LSTM state from the previous step, or None to start fresh</span>
+<span class="sd">            return_hidden: If True, also return the updated LSTM state</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            actions: Selected actions (B,), and the updated LSTM state when</span>
+<span class="sd">            ``return_hidden`` is set.</span>
+<span class="sd">        """</span>
+        <span class="n">was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="n">B</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">frames</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, 1, C, H, W)</span>
+
+                <span class="n">action_logits</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">new_hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_actor_critic</span><span class="p">(</span>
+                    <span class="n">frames</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span>
+                <span class="p">)</span>
+                <span class="n">action_logits</span> <span class="o">=</span> <span class="n">action_logits</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">temperature</span>
+
+                <span class="c1"># Sample from the policy (paper Table 5: epsilon-greedy combined</span>
+                <span class="c1"># with sampling), then replace a fraction ``epsilon`` with</span>
+                <span class="c1"># uniformly random actions. Taking the argmax here instead made</span>
+                <span class="c1"># collection almost deterministic: an untrained policy repeated</span>
+                <span class="c1"># one action for thousands of steps and never explored.</span>
+                <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">action_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">actions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">probs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">epsilon</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">random_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span>
+                    <span class="n">random_actions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+                        <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="p">(</span><span class="n">B</span><span class="p">,),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span>
+                    <span class="p">)</span>
+                    <span class="n">actions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">random_mask</span><span class="p">,</span> <span class="n">random_actions</span><span class="p">,</span> <span class="n">actions</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># Don't leave the module in eval mode if the caller was training.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_hidden</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">actions</span><span class="p">,</span> <span class="n">new_hidden</span>
+        <span class="k">return</span> <span class="n">actions</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.burn_in">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.burn_in">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">burn_in</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Initialise the LSTM state by replaying preceding frames.</span>
+
+<span class="sd">        Paper A.3: "Before starting the imagination procedure from a given frame,</span>
+<span class="sd">        we burn-in the 20 previous frames to initialize the hidden state"</span>
+<span class="sd">        (Kapturowski et al., 2019). Without this the rollout begins from a zero</span>
+<span class="sd">        state that the policy never sees at collection time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: Preceding observations (B, T_burn, C, H, W), already in the</span>
+<span class="sd">                reconstruction domain the policy is trained on.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The LSTM state after the burn-in, or None if no frames were given.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">frames</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_actor_critic</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hidden</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.transform_reward">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.transform_reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rewards</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Apply the configured reward transform.</span>
+
+<span class="sd">        Atari rewards are unbounded integers -- in the thousands for games like</span>
+<span class="sd">        Krull or UpNDown -- and feeding them raw into the value function and</span>
+<span class="sd">        lambda-return makes the critic's target scale game-dependent. The</span>
+<span class="sd">        standard Atari convention, which IRIS follows, is to take the sign.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_transform</span> <span class="o">==</span> <span class="s2">"sign"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_transform</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rewards</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unknown reward_transform </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_transform</span><span class="si">!r}</span><span class="s2">; "</span>
+            <span class="s2">"expected 'sign' or 'none'."</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.reconstruct">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.reconstruct">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reconstruct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pass frames through the discrete autoencoder: ``D(E(x))``.</span>
+
+<span class="sd">        Paper A.1: "during experience collection in the real environment, frames</span>
+<span class="sd">        still go through the autoencoder to keep the input distribution of the</span>
+<span class="sd">        policy unchanged". The policy only ever learns from reconstructions</span>
+<span class="sd">        during imagination, so feeding it raw frames in the real environment is a</span>
+<span class="sd">        distribution shift.</span>
+
+<span class="sd">        The encoder is forced into eval mode for the duration. This is not</span>
+<span class="sd">        cosmetic: the quantizer's dead-code revival only runs in training mode,</span>
+<span class="sd">        and this method is called on single frames during experience collection</span>
+<span class="sd">        and evaluation, when the agent is still in training mode. Leaving it</span>
+<span class="sd">        there re-seeds most of the codebook from the 16 encoder outputs of one</span>
+<span class="sd">        frame on *every* environment step, destroying the vocabulary the world</span>
+<span class="sd">        model is being trained against.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: Real observations (B, C, H, W) or (B, T, C, H, W) in [0, 1].</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Reconstructions with the same shape, clamped to [0, 1].</span>
+<span class="sd">        """</span>
+        <span class="n">leading</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">flat</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="n">frames</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">flat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frames</span>
+
+        <span class="n">encoder_was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">training</span>
+        <span class="n">decoder_was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Chunked so a long burn-in batch (B x 20 frames) does not need the</span>
+            <span class="c1"># decoder's full activation memory at once; on a small GPU that</span>
+            <span class="c1"># spills to system memory and runs several times slower.</span>
+            <span class="n">chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstruct_chunk_size</span>
+            <span class="n">recon</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">part</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">torch</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">encoder_was_training</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">decoder_was_training</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">recon</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">leading</span><span class="p">,</span> <span class="o">*</span><span class="n">recon</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.imagine_rollout">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.imagine_rollout">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">imagine_rollout</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">initial_frame</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="n">burn_in_frames</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sample_tokens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">stop_on_termination</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Generate imagined trajectories using the world model.</span>
+
+<span class="sd">        Implements the imagination MDP of paper 2.3 / Figure 1: starting from a</span>
+<span class="sd">        real observation, the policy acts on decoded frames while the Transformer</span>
+<span class="sd">        rolls the dynamics forward, conditioned on the full imagined history.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial_frame: Starting frame x_0 (B, C, H, W), in [0, 1].</span>
+<span class="sd">            horizon: Number of steps H to imagine.</span>
+<span class="sd">            burn_in_frames: The (B, T_burn, C, H, W) reconstructed observations</span>
+<span class="sd">                preceding ``initial_frame``, used to initialise the policy's LSTM</span>
+<span class="sd">                state (paper A.3). None starts from a zero state.</span>
+<span class="sd">            sample_tokens: Sample next-frame tokens instead of taking the argmax.</span>
+<span class="sd">            temperature: Sampling temperature for token generation.</span>
+<span class="sd">            stop_on_termination: Cut the rollout short once every trajectory in</span>
+<span class="sd">                the batch has hit a predicted episode end (paper 2.3). Set False</span>
+<span class="sd">                to always return exactly ``horizon`` steps; correctness does not</span>
+<span class="sd">                depend on it, since ``continues`` already zeroes the discount</span>
+<span class="sd">                past a termination.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            trajectory: dict with ``frames`` (B, T+1, C, H, W), ``actions``</span>
+<span class="sd">            (B, T), ``rewards`` (B, T) and ``continues`` (B, T). T may be shorter</span>
+<span class="sd">            than ``horizon`` if every rollout predicted an episode end.</span>
+<span class="sd">        """</span>
+        <span class="n">was_training</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">initial_frame</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">tokens_per_frame</span>
+        <span class="n">tokens_per_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">K</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="c1"># Encode initial frame</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">initial_tokens</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">initial_frame</span><span class="p">)</span>
+        <span class="n">current_tokens</span> <span class="o">=</span> <span class="n">initial_tokens</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>  <span class="c1"># (B, K)</span>
+
+        <span class="c1"># Prime the world model's KV cache with z_0. Every subsequent step</span>
+        <span class="c1"># attends over the whole imagined history (paper 2.3, Fig 1):</span>
+        <span class="c1">#   z_{t+1} ~ p(. | z_0, a_0, z_1, a_1, ..., z_t, a_t)</span>
+        <span class="c1"># Sized to what this rollout can fill: z_0 plus ``horizon`` (action +</span>
+        <span class="c1"># frame) blocks. The graphed decode step attends over the whole buffer,</span>
+        <span class="c1"># so unused capacity would cost time without changing the result.</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">init_cache</span><span class="p">(</span>
+            <span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="n">K</span> <span class="o">+</span> <span class="n">horizon</span> <span class="o">*</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Capture before priming: capture writes to position 0 of the cache.</span>
+        <span class="n">decode_step</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">GraphedDecodeStep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_cuda_graphs</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">"cuda"</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">prime_cache</span><span class="p">(</span>
+            <span class="n">current_tokens</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">start_pos</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="c1"># History kept so the cache can be rebuilt if it runs out of capacity.</span>
+        <span class="n">token_history</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_tokens</span><span class="p">]</span>
+        <span class="n">action_history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Retaining T frames and T-1 actions costs (T-1)*(K+1) + K positions, and</span>
+        <span class="c1"># the step that follows needs another K+1. So the window must satisfy</span>
+        <span class="c1"># T*(K+1) + K &lt;= max_seq_len, otherwise a rebuild would leave no room to</span>
+        <span class="c1"># generate and immediately overflow again.</span>
+        <span class="n">capacity_limit</span> <span class="o">=</span> <span class="p">(</span><span class="n">cache</span><span class="o">.</span><span class="n">max_len</span> <span class="o">-</span> <span class="n">K</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">max_context</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">transformer_timesteps</span><span class="p">,</span> <span class="n">capacity_limit</span><span class="p">))</span>
+
+        <span class="c1"># LSTM state for the policy, initialised from the frames preceding x_0.</span>
+        <span class="n">hidden</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">(</span><span class="n">burn_in_frames</span><span class="p">)</span> <span class="k">if</span> <span class="n">burn_in_frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="c1"># The policy update must start from this same state (see</span>
+        <span class="c1"># update_actor_critic), so it is returned with the trajectory.</span>
+        <span class="n">initial_hidden</span> <span class="o">=</span> <span class="n">hidden</span>
+
+        <span class="c1"># Lists to store trajectory. The policy consumes reconstructed frames, so</span>
+        <span class="c1"># every stored frame is a decode of the current tokens (no raw/decoded</span>
+        <span class="c1"># duplicate at t=0). We collect ``horizon`` (frame, action, reward)</span>
+        <span class="c1"># triples plus one trailing frame -&gt; ``horizon + 1`` frames total.</span>
+        <span class="n">frames_imagined</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">actions_imagined</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rewards_imagined</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">continues_imagined</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Hard "this rollout has already ended" mask, used only to decide when to</span>
+        <span class="c1"># stop early. The soft per-step continue probabilities are what feed the</span>
+        <span class="c1"># lambda-return discount.</span>
+        <span class="n">finished</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">horizon</span><span class="p">):</span>
+            <span class="n">grid</span> <span class="o">=</span> <span class="n">current_tokens</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">tokens_per_dim</span><span class="p">,</span> <span class="n">tokens_per_dim</span><span class="p">)</span>
+
+            <span class="c1"># Decode current tokens to get the "observation" the policy sees.</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="n">reconstructed_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">decode_indices</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                <span class="n">frames_imagined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reconstructed_frame</span><span class="p">)</span>
+
+            <span class="c1"># Get action from the recurrent policy, carrying its LSTM state.</span>
+            <span class="n">act_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">act</span><span class="p">(</span>
+                <span class="n">reconstructed_frame</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span>
+                <span class="n">return_hidden</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">act_out</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="n">action</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="n">act_out</span>
+
+            <span class="c1"># If the cache cannot fit another (action + frame) block, rebuild it</span>
+            <span class="c1"># from the most recent ``max_context`` timesteps. Absolute positional</span>
+            <span class="c1"># embeddings make in-place trimming incorrect, so the window is</span>
+            <span class="c1"># re-primed from scratch instead.</span>
+            <span class="k">if</span> <span class="n">pos</span> <span class="o">+</span> <span class="p">(</span><span class="n">K</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cache</span><span class="o">.</span><span class="n">max_len</span><span class="p">:</span>
+                <span class="n">token_history</span> <span class="o">=</span> <span class="n">token_history</span><span class="p">[</span><span class="o">-</span><span class="n">max_context</span><span class="p">:]</span>
+                <span class="n">action_history</span> <span class="o">=</span> <span class="n">action_history</span><span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">token_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">:]</span>
+                <span class="c1"># Reset in place rather than allocating a new cache, so the</span>
+                <span class="c1"># captured decode graph keeps pointing at the buffers in use.</span>
+                <span class="n">cache</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">prime_cache</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">token_history</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">action_history</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">action_history</span> <span class="k">else</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">cache</span><span class="p">,</span>
+                    <span class="n">start_pos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Predict next tokens. Sampling (rather than argmax) keeps the</span>
+            <span class="c1"># imagined futures diverse -- a greedy world model collapses every</span>
+            <span class="c1"># rollout onto the same trajectory and the policy sees no variety.</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">next_tokens</span><span class="p">,</span> <span class="n">action_hidden</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">generate_frame_cached</span><span class="p">(</span>
+                        <span class="n">action</span><span class="p">,</span>
+                        <span class="n">cache</span><span class="p">,</span>
+                        <span class="n">start_pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span>
+                        <span class="n">sample</span><span class="o">=</span><span class="n">sample_tokens</span><span class="p">,</span>
+                        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span>
+                        <span class="n">decode_step</span><span class="o">=</span><span class="n">decode_step</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Get reward and termination predictions. expected_reward folds</span>
+                <span class="c1"># the categorical head back to a scalar via its expectation.</span>
+                <span class="n">reward_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">expected_reward</span><span class="p">(</span><span class="n">action_hidden</span><span class="p">)</span>
+                <span class="n">term_logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">termination_head</span><span class="p">(</span><span class="n">action_hidden</span><span class="p">)</span>
+                <span class="n">term_prob</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">term_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">actions_imagined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="c1"># Rewards are stored unscaled: the lambda-return recursion applies</span>
+            <span class="c1"># gamma * (1 - d_t) to the *future* term, not to r_t itself</span>
+            <span class="c1"># (paper eq. 4), so scaling here would discount r_t twice.</span>
+            <span class="n">rewards_imagined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward_pred</span><span class="p">)</span>
+            <span class="n">continues_imagined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">term_prob</span><span class="p">)</span>
+
+            <span class="n">action_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+            <span class="n">token_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_tokens</span><span class="p">)</span>
+            <span class="n">current_tokens</span> <span class="o">=</span> <span class="n">next_tokens</span>
+
+            <span class="c1"># Paper 2.3: "We stop if an episode end is predicted before reaching</span>
+            <span class="c1"># the horizon." Trigger on the actual argmax prediction rather than a</span>
+            <span class="c1"># decaying probability product, which for an untrained termination</span>
+            <span class="c1"># head would truncate every rollout after a handful of steps.</span>
+            <span class="n">finished</span> <span class="o">=</span> <span class="n">finished</span> <span class="o">|</span> <span class="p">(</span><span class="n">term_logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stop_on_termination</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">finished</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Append the final imagined frame so ``frames`` has one more entry than</span>
+        <span class="c1"># actions -- the trailing frame supplies the bootstrap value V(x_H).</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">final_grid</span> <span class="o">=</span> <span class="n">current_tokens</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">tokens_per_dim</span><span class="p">,</span> <span class="n">tokens_per_dim</span><span class="p">)</span>
+            <span class="n">frames_imagined</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">quantizer</span><span class="o">.</span><span class="n">decode_indices</span><span class="p">(</span><span class="n">final_grid</span><span class="p">))</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span>
+                    <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"frames"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">frames_imagined</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># (B, T+1, C, H, W)</span>
+            <span class="s2">"actions"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">actions_imagined</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">actions_imagined</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"rewards"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">rewards_imagined</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">rewards_imagined</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="c1"># (B, T) soft "episode still running" mask from the termination head.</span>
+            <span class="s2">"continues"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">continues_imagined</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">continues_imagined</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="c1"># LSTM state after the burn-in, the state the first action was</span>
+            <span class="c1"># chosen from; None when the rollout started from a zero state.</span>
+            <span class="s2">"initial_hidden"</span><span class="p">:</span> <span class="n">initial_hidden</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.update_autoencoder">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.update_autoencoder">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_autoencoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update discrete autoencoder.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: Training frames (B, C, H, W)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            losses: Dictionary of loss values</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+            <span class="c1"># Encode</span>
+            <span class="n">z_q</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">vq_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+
+            <span class="c1"># Decode</span>
+            <span class="n">reconstruction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">z_q</span><span class="p">)</span>
+
+            <span class="c1"># Paper A.1: L1 + commitment + perceptual, equally weighted.</span>
+            <span class="n">recon_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">l1_loss</span><span class="p">(</span><span class="n">reconstruction</span><span class="p">,</span> <span class="n">frames</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reconstruction_weight</span> <span class="o">*</span> <span class="n">recon_loss</span> <span class="o">+</span> <span class="n">vq_loss</span><span class="p">[</span><span class="s2">"vq_loss"</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># VGG expects [0, 1]; the decoder is unbounded, so clamp rather</span>
+                <span class="c1"># than let out-of-range values distort the feature statistics.</span>
+                <span class="n">perc_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perceptual_loss</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">reconstruction</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">perceptual_weight</span> <span class="o">*</span> <span class="n">perc_loss</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">perc_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((),</span> <span class="n">device</span><span class="o">=</span><span class="n">frames</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="c1"># Update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"recon_loss"</span><span class="p">:</span> <span class="n">recon_loss</span><span class="p">,</span>
+                <span class="s2">"vq_loss"</span><span class="p">:</span> <span class="n">vq_loss</span><span class="p">[</span><span class="s2">"vq_loss"</span><span class="p">],</span>
+                <span class="s2">"perceptual_loss"</span><span class="p">:</span> <span class="n">perc_loss</span><span class="p">,</span>
+                <span class="s2">"perplexity"</span><span class="p">:</span> <span class="n">vq_loss</span><span class="p">[</span><span class="s2">"perplexity"</span><span class="p">],</span>
+                <span class="s2">"total_loss"</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Autoencoder update: </span><span class="si">{</span><span class="n">losses</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.update_transformer">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.update_transformer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_transformer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># (B, T+1, C, H, W)</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># (B, T)</span>
+        <span class="n">rewards</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># (B, T)</span>
+        <span class="n">terminals</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>  <span class="c1"># (B, T)</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update transformer world model.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: Frame sequence</span>
+<span class="sd">            actions: Actions taken</span>
+<span class="sd">            rewards: Rewards received</span>
+<span class="sd">            terminals: Terminal flags</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            losses: Dictionary of loss values</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="n">B</span><span class="p">,</span> <span class="n">T_plus_1</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Encode all frames to tokens. The autoencoder is trained by its own</span>
+        <span class="c1"># objective (paper A.1), so this is detached: letting the token-prediction</span>
+        <span class="c1"># loss reach the encoder would both waste compute and leave stale</span>
+        <span class="c1"># gradients on parameters the transformer optimiser does not own. The</span>
+        <span class="c1"># whole sequence is encoded in one batched call rather than a per-step</span>
+        <span class="c1"># Python loop.</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="n">flat</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">T_plus_1</span><span class="p">,</span> <span class="o">*</span><span class="n">frames</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>
+            <span class="n">tokens</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">T_plus_1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, T+1, K)</span>
+
+        <span class="c1"># Convert actions from (B, T, action_size) one-hot to (B, T) scalar</span>
+        <span class="c1"># indices. The cast to long is not optional: nn.Embedding rejects float</span>
+        <span class="c1"># indices with an error far from this call site, and the replay buffer</span>
+        <span class="c1"># stores actions as float32.</span>
+        <span class="k">if</span> <span class="n">actions</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, T)</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+            <span class="c1"># Get predictions. The transformer consumes the full T+1 frame</span>
+            <span class="c1"># sequence (teacher forcing) and predicts frames 1..T.</span>
+            <span class="n">token_logits</span><span class="p">,</span> <span class="n">rewards_pred</span><span class="p">,</span> <span class="n">terms_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">(</span>
+                <span class="n">tokens</span><span class="p">,</span>  <span class="c1"># (B, T+1, K)</span>
+                <span class="n">actions</span><span class="p">,</span>  <span class="c1"># (B, T)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Token prediction loss</span>
+            <span class="n">next_tokens</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># (B, T, K)</span>
+            <span class="n">token_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span>
+                <span class="n">token_logits</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">vocab_size</span><span class="p">),</span>
+                <span class="n">next_tokens</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Reward loss. With sign-transformed rewards the target is a class</span>
+            <span class="c1"># index in {-1, 0, +1} -&gt; {0, 1, 2}; otherwise regress the scalar.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reward_loss</span> <span class="o">==</span> <span class="s2">"cross_entropy"</span><span class="p">:</span>
+                <span class="n">reward_targets</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transform_reward</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+                    <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">reward_classes</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="p">)</span>
+                <span class="n">reward_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span>
+                    <span class="n">rewards_pred</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">reward_classes</span><span class="p">),</span>
+                    <span class="n">reward_targets</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">reward_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">rewards_pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_reward</span><span class="p">(</span><span class="n">rewards</span><span class="p">))</span>
+
+            <span class="c1"># Termination loss (cross-entropy)</span>
+            <span class="n">term_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span>
+                <span class="n">terms_pred</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="n">terminals</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Total loss</span>
+            <span class="c1"># Paper 2.2 lists the transition, reward and termination losses</span>
+            <span class="c1"># without relative weights, so they are summed as-is. The previous</span>
+            <span class="c1"># 0.1 factors on reward and termination had no basis in the paper</span>
+            <span class="c1"># and made the world model slow to learn exactly the two signals the</span>
+            <span class="c1"># RL objective depends on.</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">token_loss</span> <span class="o">+</span> <span class="n">reward_loss</span> <span class="o">+</span> <span class="n">term_loss</span>
+
+        <span class="c1"># Update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"token_loss"</span><span class="p">:</span> <span class="n">token_loss</span><span class="p">,</span>
+                <span class="s2">"reward_loss"</span><span class="p">:</span> <span class="n">reward_loss</span><span class="p">,</span>
+                <span class="s2">"term_loss"</span><span class="p">:</span> <span class="n">term_loss</span><span class="p">,</span>
+                <span class="s2">"total_loss"</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Transformer update: </span><span class="si">{</span><span class="n">losses</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.update_actor_critic">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.update_actor_critic">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_actor_critic</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">imagined_trajectory</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update actor-critic in imagination.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            imagined_trajectory: Dictionary from imagine_rollout</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            losses: Dictionary of loss values</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="n">frames</span> <span class="o">=</span> <span class="n">imagined_trajectory</span><span class="p">[</span><span class="s2">"frames"</span><span class="p">]</span>  <span class="c1"># (B, T+1, C, H, W)</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="n">imagined_trajectory</span><span class="p">[</span><span class="s2">"actions"</span><span class="p">]</span>  <span class="c1"># (B, T)</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="n">imagined_trajectory</span><span class="p">[</span><span class="s2">"rewards"</span><span class="p">]</span>  <span class="c1"># (B, T)</span>
+
+        <span class="n">B</span><span class="p">,</span> <span class="n">T_plus_1</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">frames</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+            <span class="c1"># Forward pass over all T+1 frames: the trailing frame supplies the</span>
+            <span class="c1"># bootstrap value V(x_H) for the lambda-return. Previously only the</span>
+            <span class="c1"># first T frames were forwarded and the bootstrap was hardcoded to</span>
+            <span class="c1"># zero, which biased every return target toward 0.</span>
+            <span class="c1"># Start from the burned-in LSTM state the rollout acted from (paper</span>
+            <span class="c1"># A.3). Re-running the trajectory from a zero state instead scores</span>
+            <span class="c1"># the taken actions under a policy that never chose them, and gives</span>
+            <span class="c1"># the early steps values from a cold LSTM and the late ones from a</span>
+            <span class="c1"># warm one; that systematic gap turned into spurious advantages</span>
+            <span class="c1"># that drove the policy's entropy to zero.</span>
+            <span class="n">initial_hidden</span> <span class="o">=</span> <span class="n">imagined_trajectory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"initial_hidden"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">initial_hidden</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">initial_hidden</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">initial_hidden</span><span class="p">)</span>
+            <span class="n">all_logits</span><span class="p">,</span> <span class="n">all_values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_actor_critic</span><span class="p">(</span>
+                <span class="n">frames</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="n">initial_hidden</span>
+            <span class="p">)</span>  <span class="c1"># (B, T+1, A), (B, T+1)</span>
+            <span class="n">action_logits</span> <span class="o">=</span> <span class="n">all_logits</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># (B, T, A)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">all_values</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># (B, T)</span>
+
+            <span class="c1"># Compute log probabilities</span>
+            <span class="n">action_dist</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">action_logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">action_log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">action_dist</span> <span class="o">+</span> <span class="mf">1e-8</span><span class="p">)</span>
+
+            <span class="c1"># Gather log probs for taken actions</span>
+            <span class="n">actions_one_hot</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="n">taken_log_probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">action_log_probs</span> <span class="o">*</span> <span class="n">actions_one_hot</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, T)</span>
+
+            <span class="c1"># Compute λ-returns. Discounts are cut at predicted episode ends so</span>
+            <span class="c1"># imagined rewards past a terminal state do not leak into the target.</span>
+            <span class="n">continues</span> <span class="o">=</span> <span class="n">imagined_trajectory</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"continues"</span><span class="p">)</span>
+            <span class="n">discounts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">rewards</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">discount</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">continues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">discounts</span> <span class="o">=</span> <span class="n">discounts</span> <span class="o">*</span> <span class="n">continues</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">discounts</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">lambda_returns</span> <span class="o">=</span> <span class="n">compute_lambda_return</span><span class="p">(</span>
+                <span class="n">rewards</span><span class="p">,</span>
+                <span class="n">all_values</span><span class="p">,</span>  <span class="c1"># (B, T+1); all_values[:, T] is the bootstrap V(x_H)</span>
+                <span class="n">discounts</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">td_lambda</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Advantage</span>
+            <span class="n">advantages</span> <span class="o">=</span> <span class="n">lambda_returns</span> <span class="o">-</span> <span class="n">values</span>  <span class="c1"># (B, T)</span>
+
+            <span class="c1"># Actor loss (REINFORCE with baseline)</span>
+            <span class="n">actor_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">taken_log_probs</span> <span class="o">*</span> <span class="n">advantages</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+            <span class="c1"># Entropy bonus</span>
+            <span class="n">entropy</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">action_dist</span> <span class="o">*</span> <span class="n">action_log_probs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">actor_loss</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">entropy_coef</span> <span class="o">*</span> <span class="n">entropy</span>
+
+            <span class="c1"># Critic loss</span>
+            <span class="n">value_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">lambda_returns</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
+
+            <span class="c1"># Total loss. Appendix B states L_V (eq. 5) and L_pi (eq. 6) as two</span>
+            <span class="c1"># objectives with no relative weight, and the actor and critic share</span>
+            <span class="c1"># a trunk (A.3), so they are summed as-is. The previous 0.5 on the</span>
+            <span class="c1"># critic had no basis in the paper and quietly halved the value</span>
+            <span class="c1"># head's effective learning rate -- and with it the quality of the</span>
+            <span class="c1"># baseline every REINFORCE advantage is measured against.</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">actor_loss</span> <span class="o">+</span> <span class="n">value_loss</span>
+
+        <span class="c1"># Update</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_update</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_losses_to_floats</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"actor_loss"</span><span class="p">:</span> <span class="n">actor_loss</span><span class="p">,</span>
+                <span class="s2">"value_loss"</span><span class="p">:</span> <span class="n">value_loss</span><span class="p">,</span>
+                <span class="s2">"entropy"</span><span class="p">:</span> <span class="n">entropy</span><span class="p">,</span>
+                <span class="s2">"total_loss"</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
+                <span class="s2">"value_mean"</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                <span class="s2">"return_mean"</span><span class="p">:</span> <span class="n">lambda_returns</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Actor-critic update: </span><span class="si">{</span><span class="n">losses</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+
+    <span class="c1"># Bumped when the module layout changes in a way that makes older</span>
+    <span class="c1"># checkpoints unloadable.</span>
+    <span class="c1">#   v2: Transformer's nn.TransformerEncoder stack replaced with GPT-2 blocks</span>
+    <span class="c1">#       exposing per-layer KV caches.</span>
+    <span class="c1">#   v3: encoder/decoder gained per-layer residual stacks and the decoder</span>
+    <span class="c1">#       widened to 64 channels (Table 2); the actor-critic conv block moved</span>
+    <span class="c1">#       from strided convolutions to conv + max-pool (A.3).</span>
+    <span class="c1">#   v4: decoder gained self-attention at 8/16 and both halves moved their</span>
+    <span class="c1">#       attention blocks into an `attentions` ModuleDict; the reward head</span>
+    <span class="c1">#       became categorical over {-1, 0, +1} (2.2).</span>
+    <span class="c1">#   v5: encoder/decoder convolutions hold a constant 64 channels instead of</span>
+    <span class="c1">#       doubling per layer (Table 2), and the decoder's private, never-</span>
+    <span class="c1">#       trained `index_to_embedding` table was removed.</span>
+    <span class="n">CHECKPOINT_FORMAT</span> <span class="o">=</span> <span class="mi">5</span>
+
+<div class="viewcode-block" id="IRISAgent.save">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Save agent state."""</span>
+        <span class="n">save_config_next_to_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"checkpoint_format"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">CHECKPOINT_FORMAT</span><span class="p">,</span>
+                <span class="s2">"config"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+                <span class="s2">"action_size"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">),</span>
+                <span class="s2">"encoder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"decoder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"transformer"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"cnn"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"lstm"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"actor_head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"critic_head"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"autoencoder_opt"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"transformer_opt"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"ac_opt"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="s2">"global_step"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span><span class="p">,</span>
+                <span class="s2">"epoch"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">path</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IRISAgent.load">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.IRISAgent.load">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Load agent state."""</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">serialization</span><span class="o">.</span><span class="n">safe_globals</span><span class="p">([</span><span class="n">IRISConfig</span><span class="p">]):</span>
+            <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="n">path</span><span class="p">,</span>
+                <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">found_format</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"checkpoint_format"</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">found_format</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CHECKPOINT_FORMAT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> was written in IRIS checkpoint format v</span><span class="si">{</span><span class="n">found_format</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"but this build expects v</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">CHECKPOINT_FORMAT</span><span class="si">}</span><span class="s2">. The module "</span>
+                <span class="s2">"layout has changed (GPT-2 Transformer blocks with key/value "</span>
+                <span class="s2">"caches; per-layer residual stacks in the autoencoder; a "</span>
+                <span class="s2">"max-pooling actor-critic conv block; constant-width "</span>
+                <span class="s2">"encoder/decoder convolutions), so the weights cannot be "</span>
+                <span class="s2">"mapped across. Retrain, or check out the older revision to use "</span>
+                <span class="s2">"this checkpoint."</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"encoder"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"decoder"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"transformer"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"cnn"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lstm</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"lstm"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actor_head</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"actor_head"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">critic_head</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"critic_head"</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoencoder_opt</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"autoencoder_opt"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer_opt</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"transformer_opt"</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ac_opt</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"ac_opt"</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_step</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"global_step"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"epoch"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Param Thakkar.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
