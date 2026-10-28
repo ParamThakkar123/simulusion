@@ -94,6 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **True physics state from DeepMind Control.** `DeepMindControlEnv` reports
+  MuJoCo's `qpos`, `qvel` and `act` in `info["physics_state"]` on every step and
+  through `env.physics_state()` after a reset, without changing the
+  observation agents see. `env.physics_state_spec()` returns a
+  `PhysicsStateSpec` naming each dimension and its kind (hinge angle, slide,
+  free-joint position or quaternion, ...). This is the ground truth for probing
+  which world-model latents recover the simulator's state.
 - **One trainer for every family** (`simulusion.training.Trainer`). Any
   training task runs to a step budget on one device (CPU, a GPU or MPS) with
   one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient

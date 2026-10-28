@@ -83,6 +83,41 @@ The environment catalog includes the canonical Dreamer examples: `cartpole-balan
 
 The image is rendered from DMC physics with `physics.render(height, width, camera_id=...)`, transposed from HWC to CHW, and copied so downstream code can store it safely.
 
+## True physics state
+
+The task observations are engineered features (orientations as sines and
+cosines, egocentric positions, ...). The quantities the simulator actually
+integrates are MuJoCo's generalized positions `qpos`, velocities `qvel` and
+actuator activations `act`. They are the ground truth to use when you check
+what a world model's latent has learned, so the wrapper reports them without
+adding them to the observation that agents see:
+
+```python
+env = DeepMindControlEnv("walker-walk", seed=0)
+env.reset()
+initial = env.physics_state()                 # {"qpos", "qvel", "act"}, float32 copies
+obs, reward, done, info = env.step(action)
+info["physics_state"]["qpos"]                 # the state after this step
+
+spec = env.physics_state_spec()
+spec.qpos_names   # ("rootz", "rootx", "rooty", "right_hip", ...)
+spec.qpos_kinds   # ("slide", "slide", "hinge", "hinge", ...)
+```
+
+`PhysicsStateSpec` names every dimension and gives its kind:
+
+| Kind | Meaning |
+| --- | --- |
+| `hinge` | An angle in radians (`qpos`) or angular velocity (`qvel`). Unbounded, so map angles to sine and cosine before regressing on them. |
+| `slide` | A linear position or velocity along one axis. |
+| `free_pos`, `free_quat` | The `x`/`y`/`z` position and `qw`/`qx`/`qy`/`qz` orientation of a free joint, such as the quadruped's root. |
+| `free_lin`, `free_ang` | A free joint's linear and angular velocity (6 `qvel` entries for 7 `qpos` entries). |
+| `ball_quat`, `ball_ang` | A ball joint's orientation and angular velocity. |
+
+Domains whose camera follows the body cannot show some of these dimensions in
+the image. For example, `rootx` for `walker`, `cheetah` and `hopper` is the
+distance travelled, and the tracking camera hides it.
+
 ## Action contract
 
 The action space is a Gymnasium `Box` built from DMC's action spec minimum and maximum arrays. Dreamer creation wraps the backend in `NormalizeActions`, so policy code can emit normalized actions while the wrapper maps finite bounds back to the native DMC range.

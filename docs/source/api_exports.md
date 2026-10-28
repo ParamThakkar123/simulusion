@@ -139,6 +139,7 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `DeepMindControlEnv` | `simulusion.envs.dmc_env` | DeepMind Control Suite adapter. |
+| `PhysicsStateSpec` | `simulusion.envs` | Names and kinds of each dimension of `DeepMindControlEnv.physics_state()`. |
 | `DMLabEnv` | `simulusion.envs.dmlab_env` | DeepMind Lab adapter. |
 | `make_dmlab_env` | `simulusion.envs.dmlab_env` | Factory for DeepMind Lab. |
 | `DMLAB_LEVELS` | `simulusion.envs.dmlab_env` | Available DMLab level names. |

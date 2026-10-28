@@ -190,11 +190,13 @@ def __getattr__(name: str) -> Any:
         }
         return _map[name]
 
-    if name in ("DeepMindControlEnv", "make_dmc_env"):
-        from .dmc import DeepMindControlEnv, make_dmc_env
+    if name in ("DeepMindControlEnv", "PhysicsStateSpec", "make_dmc_env"):
+        from .dmc import DeepMindControlEnv, PhysicsStateSpec, make_dmc_env
 
         if name == "DeepMindControlEnv":
             return DeepMindControlEnv
+        if name == "PhysicsStateSpec":
+            return PhysicsStateSpec
         return make_dmc_env
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -282,6 +284,7 @@ def make_env(env_id: str, **kwargs: Any) -> Any:
 
 __all__ = [
     "DeepMindControlEnv",
+    "PhysicsStateSpec",
     "make_dmc_env",
     "make_atari_env",
     "list_available_atari_envs",
