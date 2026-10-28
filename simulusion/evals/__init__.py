@@ -1,5 +1,12 @@
 from typing import Any
 
+_PROBING = (
+    "ProbeDataset",
+    "StateTargets",
+    "collect_probe_episodes",
+    "unobservable_dims",
+)
+
 
 def __getattr__(name: str) -> Any:
     if name == "FID":
@@ -18,7 +25,11 @@ def __getattr__(name: str) -> Any:
         from simulusion.evals.psnr import PSNR
 
         return PSNR
+    if name in _PROBING:
+        from simulusion.evals import probing
+
+        return getattr(probing, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = ["FID", "FVD", "LPIPS", "PSNR"]
+__all__ = ["FID", "FVD", "LPIPS", "PSNR", *_PROBING]

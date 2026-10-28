@@ -94,6 +94,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **Probe datasets** (`simulusion.evals.probing`). `collect_probe_episodes`
+  records DeepMind Control episodes with MuJoCo's true state for every frame.
+  `ProbeDataset` saves them as an episode folder and splits them by whole
+  episodes. `ProbeDataset.targets()` turns the state into regression targets:
+  hinge angles become sine and cosine, quaternions get a fixed sign, and the
+  horizontal root position is left out under a camera that tracks the body
+  (`unobservable_dims`). This is the first step toward probing which
+  world-model latents recover the simulator's state. See `docs/source/probing.md`.
 - **True physics state from DeepMind Control.** `DeepMindControlEnv` reports
   MuJoCo's `qpos`, `qvel` and `act` in `info["physics_state"]` on every step and
   through `env.physics_state()` after a reset, without changing the
