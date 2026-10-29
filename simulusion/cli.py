@@ -1039,7 +1039,7 @@ def probe_command(
             task,
             episodes,
             seed=seed,
-            size=tuple(model.spec.obs_shape[1:]),
+            size=(int(model.spec.obs_shape[1]), int(model.spec.obs_shape[2])),
             action_repeat=action_repeat,
             max_steps=max_steps,
         )

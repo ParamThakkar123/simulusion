@@ -95,13 +95,13 @@ adding them to the observation that agents see:
 ```python
 env = DeepMindControlEnv("walker-walk", seed=0)
 env.reset()
-initial = env.physics_state()                 # {"qpos", "qvel", "act"}, float32 copies
+initial = env.physics_state()  # {"qpos", "qvel", "act"}, float32 copies
 obs, reward, done, info = env.step(action)
-info["physics_state"]["qpos"]                 # the state after this step
+info["physics_state"]["qpos"]  # the state after this step
 
 spec = env.physics_state_spec()
-spec.qpos_names   # ("rootz", "rootx", "rooty", "right_hip", ...)
-spec.qpos_kinds   # ("slide", "slide", "hinge", "hinge", ...)
+spec.qpos_names  # ("rootz", "rootx", "rooty", "right_hip", ...)
+spec.qpos_kinds  # ("slide", "slide", "hinge", "hinge", ...)
 ```
 
 `PhysicsStateSpec` names every dimension and gives its kind:

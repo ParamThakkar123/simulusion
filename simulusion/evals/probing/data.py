@@ -337,7 +337,10 @@ def _record_episode(
 ) -> Episode:
     obs = env.reset()
     frames, states, task_obs = [_frame(obs)], [env.physics_state()], [_task(obs)]
-    actions, rewards, terminated, truncated = [], [], [], []
+    actions: list[np.ndarray] = []
+    rewards: list[float] = []
+    terminated: list[bool] = []
+    truncated: list[bool] = []
     done = False
     while not done and (max_steps is None or len(actions) < max_steps):
         action = np.asarray(act(obs), dtype=np.float32)

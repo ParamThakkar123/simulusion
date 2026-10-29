@@ -201,11 +201,13 @@ def fit_mlp_probe(
     best, best_state, stale = float("inf"), copy.deepcopy(net.state_dict()), 0
     for _ in range(epochs):
         net.train()
-        for index in torch.randperm(len(x), generator=generator).split(batch_size):
+        order = torch.randperm(len(x), generator=generator)
+        for start in range(0, len(x), batch_size):
+            index = order[start : start + batch_size]
             xb, yb = x[index].to(device), y[index].to(device)
             loss = torch.nn.functional.mse_loss(net(xb), yb)
             optimizer.zero_grad()
-            loss.backward()
+            loss.backward()  # type: ignore[no-untyped-call]
             optimizer.step()
         net.eval()
         with torch.no_grad():

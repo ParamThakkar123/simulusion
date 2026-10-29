@@ -174,10 +174,13 @@ class ProbeReport:
                 "| Feature | Horizon | Imagined R² | Encoded R² |",
                 "|---|---:|---:|---:|",
             ]
-            for r in self.rollouts:
-                for h, imagined, encoded in zip(r.horizons, r.r2, r.encoded_r2):
+            for rollout in self.rollouts:
+                for h, imagined, encoded in zip(
+                    rollout.horizons, rollout.r2, rollout.encoded_r2
+                ):
                     lines.append(
-                        f"| {r.feature} | {h} | {_fmt(imagined)} | {_fmt(encoded)} |"
+                        f"| {rollout.feature} | {h} | {_fmt(imagined)} | "
+                        f"{_fmt(encoded)} |"
                     )
         if self.notes:
             lines += ["", "## Notes", ""] + [f"- {note}" for note in self.notes]
@@ -287,13 +290,15 @@ def probe_world_model(
         rows = []
         matched = {n: latents[n].match(target_sets[n]) for n in parts}
         for feature in sorted(latents["train"].features):
-            triple = [
+            train, val, test = (
                 (latents[n].features[feature], matched[n].values)
                 for n in ("train", "val", "test")
-            ]
-            scores = score_latents(*triple, names, mlp=mlp, mlp_kwargs=mlp_kwargs)
+            )
+            scores = score_latents(
+                train, val, test, names, mlp=mlp, mlp_kwargs=mlp_kwargs
+            )
             rows.append(
-                ProbeRow.from_scores(source, feature, triple[0][0].shape[1], scores)
+                ProbeRow.from_scores(source, feature, train[0].shape[1], scores)
             )
         return rows
 

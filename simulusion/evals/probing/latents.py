@@ -178,10 +178,10 @@ def extract_latents(
     columns: Dict[str, list[np.ndarray]] = {}
     episode_rows, step_rows = [], []
     for index, episode in enumerate(data):
-        acts = None
+        acts: Optional[torch.Tensor] = None
         if use_actions and episode.actions is not None and len(episode.actions):
-            acts = action_fn(episode.actions) if action_fn else episode.actions
-            acts = _batched(acts)
+            raw = action_fn(episode.actions) if action_fn else episode.actions
+            acts = _batched(raw)
             if spec.action.kind == "continuous" and acts.shape[-1] != spec.action.n:
                 raise ValueError(
                     f"{data.task} has {acts.shape[-1]}-d actions but {spec.family} "
