@@ -1238,6 +1238,78 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
 <td><p>The <code class="docutils literal notranslate"><span class="pre">qpos</span></code> dimensions a tracking camera cannot show.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">extract_latents</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>A world model’s state for every frame of a probe dataset, as named feature arrays.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Latents</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Latent features per frame, with <code class="docutils literal notranslate"><span class="pre">match()</span></code> to line up the targets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">latent_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>One world-model state as named <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">D)</span></code> features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pixel_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Downsampled frames, the no-model baseline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reinitialized</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>A copy of a model with fresh weights, the untrained baseline.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">score_latents</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Linear and MLP probes, DCI and MIG for one latent, on train / val / test splits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit_linear_probe</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Ridge probe with a per-target penalty chosen on validation data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fit_mlp_probe</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Two-hidden-layer MLP probe with early stopping.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dci</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Disentanglement, completeness and informativeness from a linear probe.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mig</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Mutual information gap between latent dimensions and targets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r2_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>R² per target column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">factor_groups</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Merge target columns of one variable (sin/cos, quaternion parts).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rollout_probe</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>R² of a probe on imagined states, per horizon, next to the encoded latents of the same frames.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RolloutScores</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>The result of <code class="docutils literal notranslate"><span class="pre">rollout_probe</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Probe every latent of a world model, with baselines and imagined states, into a <code class="docutils literal notranslate"><span class="pre">ProbeReport</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ProbeReport</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>The scores of <code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code>; saves as JSON, renders as Markdown.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ProbeRow</span></code>, <code class="docutils literal notranslate"><span class="pre">RolloutRow</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>One latent’s scores, and one latent’s scores on imagined states.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scorable</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.evals</span></code></p></td>
+<td><p>Which targets vary enough on the scored frames for R² to mean anything.</p></td>
+</tr>
 </tbody>
 </table>
 </div>

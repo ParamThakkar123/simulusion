@@ -974,6 +974,81 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">acts</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="WorldModelBase.encode_steps">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.WorldModelBase.encode_steps">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">encode_steps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">State</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""The state after every frame, as :meth:`encode` would give it.</span>
+
+<span class="sd">        ``states[t]`` is ``encode(frames[:, :t + 1], actions[:, :t])``, or with</span>
+<span class="sd">        ``context`` only the last ``context`` of those frames. The first</span>
+<span class="sd">        ``context_frames - 1`` entries are ``None``: the model cannot encode</span>
+<span class="sd">        that little context. Recurrent families (Dreamer, PlaNet, World Models)</span>
+<span class="sd">        filter the whole sequence in one pass; the others encode a window per</span>
+<span class="sd">        frame, batched ``chunk`` windows at a time.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            frames: ``(B, T, C, H, W)``, as for :meth:`encode`.</span>
+<span class="sd">            actions: The ``T - 1`` actions between them, or ``None``.</span>
+<span class="sd">            context: Frames of history per state; ``None`` means all of them,</span>
+<span class="sd">                capped at :attr:`WorldModelSpec.max_context`.</span>
+<span class="sd">            chunk: Windows encoded per batch.</span>
+<span class="sd">        """</span>
+        <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_frames</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">need</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">context_frames</span>
+        <span class="k">if</span> <span class="n">T</span> <span class="o">&lt;</span> <span class="n">need</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> needs at least </span><span class="si">{</span><span class="n">need</span><span class="si">}</span><span class="s2"> context frames, got </span><span class="si">{</span><span class="n">T</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">context</span> <span class="o">&lt;</span> <span class="n">need</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"context must be at least </span><span class="si">{</span><span class="n">need</span><span class="si">}</span><span class="s2"> for this model."</span><span class="p">)</span>
+        <span class="n">acts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">context</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_steps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">acts</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+            <span class="n">window</span> <span class="o">=</span> <span class="n">context</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">max_context</span> <span class="ow">or</span> <span class="n">T</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_windowed_steps</span><span class="p">(</span><span class="n">video</span><span class="p">,</span> <span class="n">acts</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunk</span> <span class="o">//</span> <span class="n">B</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_windowed_steps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">video</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">actions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">window</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">chunk</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">State</span><span class="p">]]:</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">State</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">T</span>
+        <span class="n">by_length</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">context_frames</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+            <span class="n">by_length</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">length</span><span class="p">,</span> <span class="n">steps</span> <span class="ow">in</span> <span class="n">by_length</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">steps</span><span class="p">),</span> <span class="n">chunk</span><span class="p">):</span>
+                <span class="n">batch</span> <span class="o">=</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">chunk</span><span class="p">]</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+                <span class="n">clips</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">video</span><span class="p">[:,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">length</span> <span class="p">:</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">])</span>
+                <span class="n">acts</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">acts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">actions</span><span class="p">[:,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">length</span> <span class="p">:</span> <span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode</span><span class="p">(</span><span class="n">clips</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">acts</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+                    <span class="n">states</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="o">*</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">encoded</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="p">}</span>
+        <span class="k">return</span> <span class="n">states</span>
+
 <div class="viewcode-block" id="WorldModelBase.step">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.WorldModelBase.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Transition</span><span class="p">:</span>
@@ -1145,6 +1220,15 @@ window.runMermaid = runMermaid;</script>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">State</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""``frames`` float (B, T, C, H, W) in [0, 1]; ``actions`` (B, T-1[, A])."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_steps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">frames</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">State</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""The state after each frame in one pass, or ``None`` to use windows.</span>
+
+<span class="sd">        Recurrent families override this; their :meth:`_encode` is its last entry.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Transition</span><span class="p">:</span>

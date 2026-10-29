@@ -35,6 +35,16 @@ traj.frames, traj.rewards, traj.terminated  # (B, H, ...)
 | `save(path)` | Writes the model to a directory that `load_world_model` reads back. |
 | `spec` | A `WorldModelSpec`: what the model reads and predicts (below). |
 
+The built-in models also have `encode_steps(frames, actions=None, context=None)`,
+which returns the state after every frame: `states[t]` equals
+`encode(frames[:, :t + 1], actions[:, :t])`. Dreamer, PlaNet and World Models
+filter the sequence in one pass. The others encode one window per frame,
+batched. Pass `context` to limit how many frames of history each state sees;
+`context=1` gives what one frame alone holds. The first `context_frames - 1`
+entries are `None`, because the model can't encode that little context. It is
+not part of the `WorldModel` protocol, so your own models don't need it.
+{doc}`probing` uses it to read a latent for every frame.
+
 ## Conventions
 
 The same for every family, so you never need to know a model's internals:

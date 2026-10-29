@@ -416,7 +416,8 @@ is an open question
 DeepMind Control answers half of it for free: the simulator’s state is known
 exactly, so a latent can be checked against it.</p>
 <p><code class="docutils literal notranslate"><span class="pre">simulusion.evals.probing</span></code> builds that check. This page covers the labelled
-datasets. Extracting latents and fitting probes come next.</p>
+datasets, reading a model’s latent for every frame, scoring how well each
+latent holds the true state, and whether imagined states keep it.</p>
 <section id="probe-datasets">
 <h2>Probe datasets<a class="headerlink" href="#probe-datasets" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">collect_probe_episodes</span><span class="p">,</span> <span class="n">ProbeDataset</span>
@@ -503,6 +504,218 @@ dimension. The velocities stay either way: across frames, motion against the
 floor shows them.</p>
 </section>
 </section>
+<section id="latents-for-every-frame">
+<h2>Latents for every frame<a class="headerlink" href="#latents-for-every-frame" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_latents</span><span class="p">,</span> <span class="n">pixel_features</span><span class="p">,</span> <span class="n">reinitialized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.world_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_world_model</span>
+
+<span class="n">wm</span> <span class="o">=</span> <span class="n">load_world_model</span><span class="p">(</span><span class="s2">"runs/dreamer-cartpole"</span><span class="p">)</span>
+<span class="n">latents</span> <span class="o">=</span> <span class="n">extract_latents</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]</span>          <span class="c1"># (N, D) float32, one row per frame</span>
+<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"features"</span><span class="p">]</span>       <span class="c1"># deter and stoch together, as Dreamer's heads read them</span>
+<span class="n">targets</span> <span class="o">=</span> <span class="n">latents</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span>   <span class="c1"># the target rows for these frames, same order</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">extract_latents</span></code> runs the model’s <code class="docutils literal notranslate"><span class="pre">encode_steps</span></code> over each episode (see
+<a class="reference internal" href="world_model_protocol.html"><span class="doc">One interface for every world model</span></a>), so the latent at frame <code class="docutils literal notranslate"><span class="pre">t</span></code> has seen frames
+<code class="docutils literal notranslate"><span class="pre">0..t</span></code> and the actions between them. Every part of the state becomes its own
+feature:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Family</p></th>
+<th class="head"><p>Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Dreamer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">deter</span></code>, <code class="docutils literal notranslate"><span class="pre">stoch</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, and <code class="docutils literal notranslate"><span class="pre">features</span></code> (<code class="docutils literal notranslate"><span class="pre">deter</span></code> + <code class="docutils literal notranslate"><span class="pre">stoch</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>PlaNet</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">deter</span></code>, <code class="docutils literal notranslate"><span class="pre">stoch</span></code>, <code class="docutils literal notranslate"><span class="pre">features</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>World Models</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">h</span></code>, <code class="docutils literal notranslate"><span class="pre">c</span></code>, <code class="docutils literal notranslate"><span class="pre">features</span></code> (<code class="docutils literal notranslate"><span class="pre">z</span></code> + <code class="docutils literal notranslate"><span class="pre">h</span></code>, what the controller reads)</p></td>
+</tr>
+<tr class="row-odd"><td><p>IRIS, Genie</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tokens</span></code>: the latest frame’s tokens looked up in the codebook, every position concatenated; <code class="docutils literal notranslate"><span class="pre">tokens_pooled</span></code>: their mean</p></td>
+</tr>
+<tr class="row-even"><td><p>DIAMOND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pixels</span></code>: the latest frame, since its state is the frame window itself; <code class="docutils literal notranslate"><span class="pre">reward_h</span></code>, <code class="docutils literal notranslate"><span class="pre">reward_c</span></code>: the reward model’s LSTM</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Inputs echoed in a state (<code class="docutils literal notranslate"><span class="pre">actions</span></code>, <code class="docutils literal notranslate"><span class="pre">prev_actions</span></code>) are dropped. Pass <code class="docutils literal notranslate"><span class="pre">keys</span></code>
+to keep only some features, or <code class="docutils literal notranslate"><span class="pre">features=</span></code> your own function of
+<code class="docutils literal notranslate"><span class="pre">(model,</span> <span class="pre">state)</span></code> for a model of your own.</p>
+<p><strong>History.</strong> <code class="docutils literal notranslate"><span class="pre">context=None</span></code> lets recurrent models filter the whole episode and
+windowed models use their full window. <code class="docutils literal notranslate"><span class="pre">context=1</span></code> asks what one frame holds.
+A single frame has no velocity in it, so the gap between the two on <code class="docutils literal notranslate"><span class="pre">qvel</span></code>
+targets shows how much a model’s memory carries.</p>
+<p><strong>Actions.</strong> The recorded DMC actions are continuous. IRIS, Genie and DIAMOND
+take discrete actions. Give <code class="docutils literal notranslate"><span class="pre">action_fn</span></code> to map an episode’s <code class="docutils literal notranslate"><span class="pre">(T</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">A)</span></code>
+actions to the model’s, or they encode without actions (with a warning). Pass
+<code class="docutils literal notranslate"><span class="pre">actions=False</span></code> to leave them out for any model.</p>
+<p><strong>Controls.</strong> Read every probe against two baselines that go through the same
+pipeline:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pixel_features(data,</span> <span class="pre">size=16)</span></code>: the frames themselves, downsampled. What a
+probe can decode with no model at all.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reinitialized(model)</span></code>: the same architecture with fresh weights. Random
+encoders keep much of what is in the image, so training only gets credit
+for what it adds over this.</p></li>
+</ul>
+</section>
+<section id="probes-and-scores">
+<h2>Probes and scores<a class="headerlink" href="#probes-and-scores" title="Link to this heading">#</a></h2>
+<p>Split by episode three ways. Probes fit on <code class="docutils literal notranslate"><span class="pre">train</span></code>, pick their penalty and stop
+early on <code class="docutils literal notranslate"><span class="pre">val</span></code>, and are scored on <code class="docutils literal notranslate"><span class="pre">test</span></code>, which nothing was tuned on:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">score_latents</span>
+
+<span class="n">train</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">val</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">pair</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"deter"</span><span class="p">):</span>
+    <span class="n">latents</span> <span class="o">=</span> <span class="n">extract_latents</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">latents</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">split</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span><span class="o">.</span><span class="n">values</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">score_latents</span><span class="p">(</span><span class="n">pair</span><span class="p">(</span><span class="n">train</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">test</span><span class="p">),</span> <span class="n">train</span><span class="o">.</span><span class="n">targets</span><span class="p">()</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">linear_r2</span>          <span class="c1"># (K,) held-out R² per target column</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">mlp_r2</span>             <span class="c1"># the same with a small MLP</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">dci</span><span class="o">.</span><span class="n">disentanglement</span><span class="p">,</span> <span class="n">scores</span><span class="o">.</span><span class="n">dci</span><span class="o">.</span><span class="n">completeness</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">mig</span><span class="o">.</span><span class="n">mig</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Score</p></th>
+<th class="head"><p>Question it answers</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Linear R² (<code class="docutils literal notranslate"><span class="pre">fit_linear_probe</span></code>)</p></td>
+<td><p>Is the variable in the latent, linearly? Ridge regression, solved for every penalty from one SVD, penalty chosen per target on <code class="docutils literal notranslate"><span class="pre">val</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MLP R² (<code class="docutils literal notranslate"><span class="pre">fit_mlp_probe</span></code>)</p></td>
+<td><p>Is it there at all? A two-hidden-layer MLP. A large gap over linear means the variable is present but entangled.</p></td>
+</tr>
+<tr class="row-even"><td><p>DCI disentanglement (<code class="docutils literal notranslate"><span class="pre">dci</span></code>)</p></td>
+<td><p>Does each latent dimension serve one variable?</p></td>
+</tr>
+<tr class="row-odd"><td><p>DCI completeness</p></td>
+<td><p>Does each variable live in one latent dimension?</p></td>
+</tr>
+<tr class="row-even"><td><p>DCI informativeness</p></td>
+<td><p>Mean held-out linear R².</p></td>
+</tr>
+<tr class="row-odd"><td><p>MIG (<code class="docutils literal notranslate"><span class="pre">mig</span></code>)</p></td>
+<td><p>For each variable, how much more the best latent dimension knows about it than the second best, as a share of its entropy.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Being decodable is not being discovered. A latent can be a perfect rotation of
+the true state, with R² of 1 and low disentanglement. DCI and MIG measure
+whether the model found the variables themselves rather than some mixture of
+them.</p>
+<p>DCI here uses the absolute weights of the linear probe on standardised data as
+importances. The original paper uses gradient-boosted trees; the linear
+version is a common variant and needs no extra dependency. Columns that
+describe one variable count as one factor: the <code class="docutils literal notranslate"><span class="pre">sin</span></code> and <code class="docutils literal notranslate"><span class="pre">cos</span></code> of an angle,
+and a quaternion’s four parts (<code class="docutils literal notranslate"><span class="pre">factor_groups</span></code>). Pass <code class="docutils literal notranslate"><span class="pre">group=False</span></code> to score
+every column separately.</p>
+<p>A target that hardly moves in the test episodes gets no R² (it shows as <code class="docutils literal notranslate"><span class="pre">-</span></code>
+and is left out of every mean). R² divides by the target’s variance, so a pole
+that hangs still for a whole test episode would turn any small error into a
+huge negative score. The rule is the same everywhere, including imagined
+states: a target scores only where its spread is at least a tenth of its
+training spread (<code class="docutils literal notranslate"><span class="pre">scorable</span></code>). <code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code> lists the targets it skipped.</p>
+<p>MIG builds a histogram for every latent dimension and target pair, so
+<code class="docutils literal notranslate"><span class="pre">score_latents</span></code> skips it for latents wider than <code class="docutils literal notranslate"><span class="pre">max_mig_dims</span></code> (512). That
+covers IRIS and Genie’s concatenated tokens and DIAMOND’s pixels.</p>
+</section>
+<section id="does-the-state-survive-imagination">
+<h2>Does the state survive imagination?<a class="headerlink" href="#does-the-state-survive-imagination" title="Link to this heading">#</a></h2>
+<p>An encoder can map frames onto the true state while the dynamics model drifts
+away from it within a few steps. <code class="docutils literal notranslate"><span class="pre">rollout_probe</span></code> tests the dynamics. It encodes
+real frames up to a start frame, imagines forward on the recorded actions, and
+reads each imagined state with a probe fitted on encoded latents:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_linear_probe</span><span class="p">,</span> <span class="n">rollout_probe</span>
+
+<span class="n">z_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">pair</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
+<span class="n">z_val</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">pair</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<span class="n">probe</span> <span class="o">=</span> <span class="n">fit_linear_probe</span><span class="p">(</span><span class="n">z_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">z_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">)</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">rollout_probe</span><span class="p">(</span>
+    <span class="n">wm</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">probe</span><span class="p">,</span>
+    <span class="n">key</span><span class="o">=</span><span class="s2">"deter"</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="n">test</span><span class="o">.</span><span class="n">targets</span><span class="p">(),</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
+    <span class="n">starts_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>       <span class="c1"># one rollout every 10 frames of each episode</span>
+<span class="p">)</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">r2</span>           <span class="c1"># (4, K) R² on imagined states, per horizon</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">encoded_r2</span>   <span class="c1"># (4, K) R² on encoded latents of the same frames</span>
+</pre></div>
+</div>
+<p>Every horizon also scores the encoded latents on exactly the same target
+frames, so the gap between <code class="docutils literal notranslate"><span class="pre">r2</span></code> and <code class="docutils literal notranslate"><span class="pre">encoded_r2</span></code> is what imagination costs, not
+an artefact of which frames were scored. A probe trained on encoded latents
+assumes imagined states live in the same space. That holds for the RSSM
+families, whose prior and posterior share one state, and for IRIS and Genie,
+whose imagined tokens come from the same codebook.</p>
+<p>Imagination needs actions. Discrete-action models (IRIS, Genie, DIAMOND) need
+an <code class="docutils literal notranslate"><span class="pre">action_fn</span></code> to map DMC’s continuous actions to theirs. Stochastic models
+sample with PyTorch’s RNG, which <code class="docutils literal notranslate"><span class="pre">seed</span></code> fixes.</p>
+</section>
+<section id="one-call-probe-world-model-and-simulusion-probe">
+<h2>One call: <code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code> and <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">probe</span></code><a class="headerlink" href="#one-call-probe-world-model-and-simulusion-probe" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">collect_probe_episodes</span><span class="p">,</span> <span class="n">probe_world_model</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">collect_probe_episodes</span><span class="p">(</span><span class="s2">"cartpole-swingup"</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">probe_world_model</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">())</span>
+<span class="n">report</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"probe.json"</span><span class="p">)</span>      <span class="c1"># ProbeReport.load reads it back</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code> splits the episodes 60/20/20 into train, val and test, and
+scores every feature of the model. It also scores four comparisons through the
+same pipeline:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Source</p></th>
+<th class="head"><p>What it shows</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;family&gt;</span></code></p></td>
+<td><p>The model, with its full context.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;family&gt;</span> <span class="pre">(1</span> <span class="pre">frame)</span></code></p></td>
+<td><p>One frame of context: what the model’s memory adds. Skipped for DIAMOND, which needs three frames.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;family&gt;</span> <span class="pre">(untrained)</span></code></p></td>
+<td><p>The same architecture with fresh weights.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pixels</span></code></p></td>
+<td><p>The downsampled frames, with no model at all.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>It then probes imagined states for the <code class="docutils literal notranslate"><span class="pre">features</span></code> latent (or every latent when
+the family has no combined one). A discrete-action model without an
+<code class="docutils literal notranslate"><span class="pre">action_fn</span></code> is encoded without actions and not rolled out, and the report’s
+notes say so.</p>
+<p>The same from the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>probe<span class="w"> </span>--checkpoint<span class="w"> </span>runs/dreamer-cartpole<span class="w"> </span>--task<span class="w"> </span>cartpole-swingup<span class="w">     </span>--episodes<span class="w"> </span><span class="m">30</span><span class="w"> </span>--data<span class="w"> </span>data/probe/cartpole<span class="w"> </span>--out<span class="w"> </span>probe/dreamer.json
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--data</span></code> records the episodes there the first time and reloads them after,
+so several models can be probed on the same episodes. The frames are recorded
+at the model’s input size. The JSON report and a Markdown copy beside it are
+written to <code class="docutils literal notranslate"><span class="pre">--out</span></code>. See <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">probe</span> <span class="pre">--help</span></code> for the rest (<code class="docutils literal notranslate"><span class="pre">--keys</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--targets</span></code>, <code class="docutils literal notranslate"><span class="pre">--horizons</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-mlp</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-baselines</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-rollout</span></code>).</p>
+</section>
 </section>
 
 
@@ -560,6 +773,10 @@ floor shows them.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-camera-cannot-show">What the camera cannot show</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#latents-for-every-frame">Latents for every frame</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#probes-and-scores">Probes and scores</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#does-the-state-survive-imagination">Does the state survive imagination?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-call-probe-world-model-and-simulusion-probe">One call: <code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code> and <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">probe</span></code></a></li>
 </ul>
   </nav></div>
 

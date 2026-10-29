@@ -460,6 +460,15 @@ with any family.</p>
 </tbody>
 </table>
 </div>
+<p>The built-in models also have <code class="docutils literal notranslate"><span class="pre">encode_steps(frames,</span> <span class="pre">actions=None,</span> <span class="pre">context=None)</span></code>,
+which returns the state after every frame: <code class="docutils literal notranslate"><span class="pre">states[t]</span></code> equals
+<code class="docutils literal notranslate"><span class="pre">encode(frames[:,</span> <span class="pre">:t</span> <span class="pre">+</span> <span class="pre">1],</span> <span class="pre">actions[:,</span> <span class="pre">:t])</span></code>. Dreamer, PlaNet and World Models
+filter the sequence in one pass. The others encode one window per frame,
+batched. Pass <code class="docutils literal notranslate"><span class="pre">context</span></code> to limit how many frames of history each state sees;
+<code class="docutils literal notranslate"><span class="pre">context=1</span></code> gives what one frame alone holds. The first <code class="docutils literal notranslate"><span class="pre">context_frames</span> <span class="pre">-</span> <span class="pre">1</span></code>
+entries are <code class="docutils literal notranslate"><span class="pre">None</span></code>, because the model can’t encode that little context. It is
+not part of the <code class="docutils literal notranslate"><span class="pre">WorldModel</span></code> protocol, so your own models don’t need it.
+<a class="reference internal" href="probing.html"><span class="doc">Probing latents for the true state</span></a> uses it to read a latent for every frame.</p>
 </section>
 <section id="conventions">
 <h2>Conventions<a class="headerlink" href="#conventions" title="Link to this heading">#</a></h2>

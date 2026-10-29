@@ -486,6 +486,23 @@ override the agent’s actions.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">--record-fps</span></code> — video framerate (default 20)</p></li>
 </ul>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">probe</span> <span class="pre">--checkpoint</span> <span class="pre">&lt;PATH&gt;</span> <span class="pre">--task</span> <span class="pre">&lt;DMC_TASK&gt;</span> <span class="pre">[options]</span></code> - Probe a world
+model’s latents for the true DeepMind Control state: records (or with
+<code class="docutils literal notranslate"><span class="pre">--data</span> <span class="pre">DIR</span></code>, reloads) episodes labelled with MuJoCo’s <code class="docutils literal notranslate"><span class="pre">qpos</span></code>/<code class="docutils literal notranslate"><span class="pre">qvel</span></code>, scores
+every latent with linear and MLP probes, DCI and MIG next to pixel, untrained
+and one-frame baselines, and probes imagined states. Writes a JSON report to
+<code class="docutils literal notranslate"><span class="pre">--out</span></code> and a Markdown copy beside it. See <a class="reference internal" href="probing.html"><span class="doc">Probing latents for the true state</span></a>.</p>
+<p>Key options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--checkpoint</span></code>, <code class="docutils literal notranslate"><span class="pre">-c</span></code> — a saved world model (or a checkpoint plus <code class="docutils literal notranslate"><span class="pre">--family</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--task</span></code>, <code class="docutils literal notranslate"><span class="pre">-t</span></code> — DMC task, such as <code class="docutils literal notranslate"><span class="pre">cartpole-swingup</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--data</span></code> — probe dataset folder, recorded on first use</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--episodes</span></code>, <code class="docutils literal notranslate"><span class="pre">--action-repeat</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-steps</span></code> — what to record</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--keys</span></code> — features to score; <code class="docutils literal notranslate"><span class="pre">--targets</span></code> — <code class="docutils literal notranslate"><span class="pre">qpos,qvel,act,task</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--horizons</span></code> — imagined steps to score, e.g. <code class="docutils literal notranslate"><span class="pre">1,5,15</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--no-mlp</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-baselines</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-rollout</span></code> — skip parts</p></li>
+</ul>
+</li>
 <li><p><code class="docutils literal notranslate"><span class="pre">models</span> <span class="pre">list</span></code> - Print the known training entrypoints and (when available)
 exported model names from <code class="docutils literal notranslate"><span class="pre">simulusion.models</span></code>.</p></li>
 </ul>
