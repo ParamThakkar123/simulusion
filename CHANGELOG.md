@@ -94,6 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **Probes and disentanglement scores.** `fit_linear_probe` (ridge, one SVD for
+  every penalty, chosen per target on a validation split) and `fit_mlp_probe`
+  give held-out R² for each true-state variable. `dci` and `mig` score
+  whether each variable lives in its own latent dimensions, grouping an
+  angle's sin and cos, and a quaternion's parts, into one factor.
+  `score_latents` runs them all on train / val / test splits. NumPy and
+  PyTorch only.
 - **Latents for every frame.** `WorldModelBase.encode_steps` returns the state
   after each frame, equal to `encode` on every prefix. Dreamer, PlaNet and
   World Models filter in one pass, and the other families batch one window per

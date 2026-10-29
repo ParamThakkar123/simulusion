@@ -1,14 +1,26 @@
 from typing import Any
 
 _PROBING = (
+    "DCIScores",
     "Latents",
+    "LinearProbe",
+    "MIGScores",
+    "MLPProbe",
     "ProbeDataset",
+    "ProbeScores",
     "StateTargets",
     "collect_probe_episodes",
+    "dci",
     "extract_latents",
+    "factor_groups",
+    "fit_linear_probe",
+    "fit_mlp_probe",
     "latent_features",
+    "mig",
     "pixel_features",
+    "r2_score",
     "reinitialized",
+    "score_latents",
     "unobservable_dims",
 )
 

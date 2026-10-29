@@ -248,6 +248,13 @@ See {doc}`probing`.
 | `latent_features` | `simulusion.evals` | One world-model state as named `(B, D)` features. |
 | `pixel_features` | `simulusion.evals` | Downsampled frames, the no-model baseline. |
 | `reinitialized` | `simulusion.evals` | A copy of a model with fresh weights, the untrained baseline. |
+| `score_latents` | `simulusion.evals` | Linear and MLP probes, DCI and MIG for one latent, on train / val / test splits. |
+| `fit_linear_probe` | `simulusion.evals` | Ridge probe with a per-target penalty chosen on validation data. |
+| `fit_mlp_probe` | `simulusion.evals` | Two-hidden-layer MLP probe with early stopping. |
+| `dci` | `simulusion.evals` | Disentanglement, completeness and informativeness from a linear probe. |
+| `mig` | `simulusion.evals` | Mutual information gap between latent dimensions and targets. |
+| `r2_score` | `simulusion.evals` | R² per target column. |
+| `factor_groups` | `simulusion.evals` | Merge target columns of one variable (sin/cos, quaternion parts). |
 
 ## Data
 

@@ -9,8 +9,8 @@ DeepMind Control answers half of it for free: the simulator's state is known
 exactly, so a latent can be checked against it.
 
 `simulusion.evals.probing` builds that check. This page covers the labelled
-datasets and reading a model's latent for every frame. Fitting probes comes
-next.
+datasets, reading a model's latent for every frame, and scoring how well each
+latent holds the true state.
 
 ## Probe datasets
 
@@ -137,3 +137,50 @@ pipeline:
 - `reinitialized(model)`: the same architecture with fresh weights. Random
   encoders keep much of what is in the image, so training only gets credit
   for what it adds over this.
+
+## Probes and scores
+
+Split by episode three ways. Probes fit on `train`, pick their penalty and stop
+early on `val`, and are scored on `test`, which nothing was tuned on:
+
+```python
+from simulusion.evals import score_latents
+
+train, rest = data.split(0.4)
+val, test = rest.split(0.5)
+
+def pair(split, key="deter"):
+    latents = extract_latents(wm, split, keys=[key])
+    return latents.features[key], latents.match(split.targets()).values
+
+scores = score_latents(pair(train), pair(val), pair(test), train.targets().names)
+scores.linear_r2          # (K,) held-out R² per target column
+scores.mlp_r2             # the same with a small MLP
+scores.dci.disentanglement, scores.dci.completeness
+scores.mig.mig
+```
+
+| Score | Question it answers |
+| --- | --- |
+| Linear R² (`fit_linear_probe`) | Is the variable in the latent, linearly? Ridge regression, solved for every penalty from one SVD, penalty chosen per target on `val`. |
+| MLP R² (`fit_mlp_probe`) | Is it there at all? A two-hidden-layer MLP. A large gap over linear means the variable is present but entangled. |
+| DCI disentanglement (`dci`) | Does each latent dimension serve one variable? |
+| DCI completeness | Does each variable live in one latent dimension? |
+| DCI informativeness | Mean held-out linear R². |
+| MIG (`mig`) | For each variable, how much more the best latent dimension knows about it than the second best, as a share of its entropy. |
+
+Being decodable is not being discovered. A latent can be a perfect rotation of
+the true state, with R² of 1 and low disentanglement. DCI and MIG measure
+whether the model found the variables themselves rather than some mixture of
+them.
+
+DCI here uses the absolute weights of the linear probe on standardised data as
+importances. The original paper uses gradient-boosted trees; the linear
+version is a common variant and needs no extra dependency. Columns that
+describe one variable count as one factor: the `sin` and `cos` of an angle,
+and a quaternion's four parts (`factor_groups`). Pass `group=False` to score
+every column separately.
+
+MIG builds a histogram for every latent dimension and target pair, so
+`score_latents` skips it for latents wider than `max_mig_dims` (512). That
+covers IRIS and Genie's concatenated tokens and DIAMOND's pixels.
