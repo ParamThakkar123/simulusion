@@ -1,11 +1,47 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from simulusion.envs._actions import clip_box_action
 from simulusion.envs._contract import finalize_step_info
 from simulusion.utils.gym_compat import gym
 import numpy as np
+
+# MuJoCo's mjtJoint, and how many qpos / qvel entries each joint type owns.
+_FREE, _BALL, _SLIDE, _HINGE = 0, 1, 2, 3
+_QPOS_PARTS = {
+    _FREE: (("x", "free_pos"), ("y", "free_pos"), ("z", "free_pos"))
+    + tuple((q, "free_quat") for q in ("qw", "qx", "qy", "qz")),
+    _BALL: tuple((q, "ball_quat") for q in ("qw", "qx", "qy", "qz")),
+    _SLIDE: (("", "slide"),),
+    _HINGE: (("", "hinge"),),
+}
+_QVEL_PARTS = {
+    _FREE: tuple((v, "free_lin") for v in ("vx", "vy", "vz"))
+    + tuple((w, "free_ang") for w in ("wx", "wy", "wz")),
+    _BALL: tuple((w, "ball_ang") for w in ("wx", "wy", "wz")),
+    _SLIDE: (("", "slide"),),
+    _HINGE: (("", "hinge"),),
+}
+
+
+@dataclass(frozen=True)
+class PhysicsStateSpec:
+    """Names and kinds of each entry of :meth:`DeepMindControlEnv.physics_state`.
+
+    ``*_names`` label every dimension (``"rootx"``, ``"root/qw"``); ``*_kinds``
+    say how to treat it: ``"hinge"`` is an angle in radians, ``"slide"`` a
+    linear position, ``"free_pos"``/``"free_quat"``/``"ball_quat"`` the parts
+    of free and ball joints, and the ``qvel`` kinds mirror them as
+    ``"hinge"``, ``"slide"``, ``"free_lin"``, ``"free_ang"`` and ``"ball_ang"``.
+    """
+
+    qpos_names: tuple[str, ...]
+    qpos_kinds: tuple[str, ...]
+    qvel_names: tuple[str, ...]
+    qvel_kinds: tuple[str, ...]
+    act_names: tuple[str, ...]
 
 
 class DeepMindControlEnv:
@@ -20,6 +56,9 @@ class DeepMindControlEnv:
         - Automatically handles special cases like "cup" -> "ball_in_cup"
         - Renders RGB images at configurable resolution
         - Returns observations as dict with both state vectors and images
+        - Reports the true MuJoCo state (``qpos``, ``qvel``, ``act``) in
+          ``info["physics_state"]``; see :meth:`physics_state` and
+          :meth:`physics_state_spec`
 
     Args:
         name (str): Environment name in format "domain-task" (e.g., "cheetah-run").
@@ -130,6 +169,7 @@ class DeepMindControlEnv:
                 "action": clipped.copy(),
                 "executed_action": clipped.copy(),
                 "vector_observation": vector_observation,
+                "physics_state": self.physics_state(),
             },
             done=done,
             terminated=done,
@@ -146,6 +186,53 @@ class DeepMindControlEnv:
         obs = dict(time_step.observation)
         obs["image"] = self.render().transpose(2, 0, 1).copy()
         return obs
+
+    def physics_state(self) -> dict[str, np.ndarray]:
+        """The simulator's current state as float32 copies.
+
+        ``qpos`` holds generalized positions, ``qvel`` velocities and ``act``
+        actuator activations (empty for most suite domains). Unlike the task
+        observations, these are the quantities the dynamics evolve, so they are
+        the ground truth for probing what a world model's latent recovers.
+        :meth:`step` returns the same dict in ``info["physics_state"]``; call
+        this after :meth:`reset` for the initial state.
+        """
+        data = self._env.physics.data
+        return {
+            key: np.array(getattr(data, key), dtype=np.float32).reshape(-1)
+            for key in ("qpos", "qvel", "act")
+        }
+
+    def physics_state_spec(self) -> PhysicsStateSpec:
+        """Name and kind of every dimension of :meth:`physics_state`."""
+        model = self._env.physics.model
+        qpos: list[tuple[int, str, str]] = []
+        qvel: list[tuple[int, str, str]] = []
+        for joint in range(int(model.njnt)):
+            name = model.id2name(joint, "joint") or f"joint{joint}"
+            kind = int(model.jnt_type[joint])
+            for layout, start, out in (
+                (_QPOS_PARTS, int(model.jnt_qposadr[joint]), qpos),
+                (_QVEL_PARTS, int(model.jnt_dofadr[joint]), qvel),
+            ):
+                for offset, (part, label) in enumerate(layout[kind]):
+                    out.append(
+                        (start + offset, f"{name}/{part}" if part else name, label)
+                    )
+        qpos.sort()
+        qvel.sort()
+        act = sorted(
+            (int(model.actuator_actadr[i]), model.id2name(i, "actuator") or f"act{i}")
+            for i in range(int(model.nu))
+            if int(model.actuator_actadr[i]) >= 0
+        )
+        return PhysicsStateSpec(
+            qpos_names=tuple(name for _, name, _ in qpos),
+            qpos_kinds=tuple(kind for _, _, kind in qpos),
+            qvel_names=tuple(name for _, name, _ in qvel),
+            qvel_kinds=tuple(kind for _, _, kind in qvel),
+            act_names=tuple(name for _, name in act),
+        )
 
     def render(self, *args: Any, **kwargs: Any) -> np.ndarray:
         if kwargs.get("mode", "rgb_array") != "rgb_array":

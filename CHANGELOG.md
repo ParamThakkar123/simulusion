@@ -103,6 +103,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **`probe_world_model` and `simulusion probe`.** One call probes every latent
+  of a world model for the true DMC state. It also scores the same model with
+  one frame of context, untrained, and raw pixels, and probes imagined states.
+  The `ProbeReport` saves as JSON and renders as Markdown. `simulusion probe`
+  records (or reloads) the episodes at the model's input size and writes both
+  files. A target that barely varies in the test frames gets no R² rather than
+  a meaningless one (`scorable`).
+- **Probing imagined states.** `rollout_probe` encodes real frames, imagines
+  forward on the recorded actions, and reads each imagined state with a probe
+  fitted on encoded latents. It reports R² per horizon next to the encoded
+  latents' R² on the same frames, so the gap is what imagination costs.
+- **Probes and disentanglement scores.** `fit_linear_probe` (ridge, one SVD for
+  every penalty, chosen per target on a validation split) and `fit_mlp_probe`
+  give held-out R² for each true-state variable. `dci` and `mig` score
+  whether each variable lives in its own latent dimensions, grouping an
+  angle's sin and cos, and a quaternion's parts, into one factor.
+  `score_latents` runs them all on train / val / test splits. NumPy and
+  PyTorch only.
+- **Latents for every frame.** `WorldModelBase.encode_steps` returns the state
+  after each frame, equal to `encode` on every prefix. Dreamer, PlaNet and
+  World Models filter in one pass, and the other families batch one window per
+  frame. `extract_latents` turns those states into named features (`deter`,
+  `z`, codebook-embedded IRIS and Genie tokens, ...) aligned with a
+  `ProbeDataset`'s targets. `pixel_features` and `reinitialized` give the
+  pixel and untrained-network baselines.
+- **Probe datasets** (`simulusion.evals.probing`). `collect_probe_episodes`
+  records DeepMind Control episodes with MuJoCo's true state for every frame.
+  `ProbeDataset` saves them as an episode folder and splits them by whole
+  episodes. `ProbeDataset.targets()` turns the state into regression targets:
+  hinge angles become sine and cosine, quaternions get a fixed sign, and the
+  horizontal root position is left out under a camera that tracks the body
+  (`unobservable_dims`). This is the first step toward probing which
+  world-model latents recover the simulator's state. See `docs/source/probing.md`.
+- **True physics state from DeepMind Control.** `DeepMindControlEnv` reports
+  MuJoCo's `qpos`, `qvel` and `act` in `info["physics_state"]` on every step and
+  through `env.physics_state()` after a reset, without changing the
+  observation agents see. `env.physics_state_spec()` returns a
+  `PhysicsStateSpec` naming each dimension and its kind (hinge angle, slide,
+  free-joint position or quaternion, ...). This is the ground truth for probing
+  which world-model latents recover the simulator's state.
 - **One trainer for every family** (`simulusion.training.Trainer`). Any
   training task runs to a step budget on one device (CPU, a GPU or MPS) with
   one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient

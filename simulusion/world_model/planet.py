@@ -65,11 +65,17 @@ class PlanetWorldModel(WorldModelBase):
         return torch.floor(pixels / 2 ** (8 - self.bit_depth)) / levels - 0.5
 
     def _encode(self, frames: torch.Tensor, actions: Optional[torch.Tensor]) -> State:
+        return self._encode_steps(frames, actions)[-1]
+
+    def _encode_steps(
+        self, frames: torch.Tensor, actions: Optional[torch.Tensor]
+    ) -> list[State]:
         B, T = frames.shape[:2]
         rssm = self.rssm
         h: Optional[torch.Tensor] = None
         s: Optional[torch.Tensor] = None
         a: Optional[torch.Tensor] = None
+        states: list[State] = []
         for t in range(T):
             if t > 0:
                 a = (
@@ -79,8 +85,9 @@ class PlanetWorldModel(WorldModelBase):
                 )
             embed = rssm.encoder(self._preprocess(frames[:, t]))
             h, s = rssm.get_init_state(embed, h, s, a)
-        assert h is not None and s is not None
-        return {"deter": h, "stoch": s}
+            assert h is not None and s is not None
+            states.append({"deter": h, "stoch": s})
+        return states
 
     def _step(self, state: State, action: torch.Tensor) -> Transition:
         rssm = self.rssm

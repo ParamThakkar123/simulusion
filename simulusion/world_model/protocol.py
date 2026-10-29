@@ -247,6 +247,78 @@ class WorldModelBase(ABC):
         with torch.no_grad():
             return self._encode(video, acts)
 
+    def encode_steps(
+        self,
+        frames: Any,
+        actions: Any = None,
+        *,
+        context: Optional[int] = None,
+        chunk: int = 256,
+    ) -> list[Optional[State]]:
+        """The state after every frame, as :meth:`encode` would give it.
+
+        ``states[t]`` is ``encode(frames[:, :t + 1], actions[:, :t])``, or with
+        ``context`` only the last ``context`` of those frames. The first
+        ``context_frames - 1`` entries are ``None``: the model cannot encode
+        that little context. Recurrent families (Dreamer, PlaNet, World Models)
+        filter the whole sequence in one pass; the others encode a window per
+        frame, batched ``chunk`` windows at a time.
+
+        Args:
+            frames: ``(B, T, C, H, W)``, as for :meth:`encode`.
+            actions: The ``T - 1`` actions between them, or ``None``.
+            context: Frames of history per state; ``None`` means all of them,
+                capped at :attr:`WorldModelSpec.max_context`.
+            chunk: Windows encoded per batch.
+        """
+        video = self.as_frames(frames)
+        B, T = video.shape[:2]
+        need = self.spec.context_frames
+        if T < need:
+            raise ValueError(
+                f"{type(self).__name__} needs at least {need} context frames, got {T}."
+            )
+        if context is not None and context < need:
+            raise ValueError(f"context must be at least {need} for this model.")
+        acts = self._context_actions(actions, B, T)
+        with torch.no_grad():
+            if context is None:
+                states = self._encode_steps(video, acts)
+                if states is not None:
+                    return list(states)
+            window = context or self.spec.max_context or T
+            return self._windowed_steps(video, acts, window, max(1, chunk // B))
+
+    def _windowed_steps(
+        self,
+        video: torch.Tensor,
+        actions: Optional[torch.Tensor],
+        window: int,
+        chunk: int,
+    ) -> list[Optional[State]]:
+        B, T = video.shape[:2]
+        states: list[Optional[State]] = [None] * T
+        by_length: dict[int, list[int]] = {}
+        for t in range(self.spec.context_frames - 1, T):
+            by_length.setdefault(min(window, t + 1), []).append(t)
+        for length, steps in by_length.items():
+            for i in range(0, len(steps), chunk):
+                batch = steps[i : i + chunk]
+                n = len(batch)
+                clips = torch.stack([video[:, t + 1 - length : t + 1] for t in batch])
+                acts = None
+                if actions is not None:
+                    acts = torch.stack(
+                        [actions[:, t + 1 - length : t] for t in batch]
+                    ).flatten(0, 1)
+                encoded = self._encode(clips.flatten(0, 1), acts)
+                for j, t in enumerate(batch):
+                    states[t] = {
+                        key: value.reshape(n, B, *value.shape[1:])[j]
+                        for key, value in encoded.items()
+                    }
+        return states
+
     def step(self, state: State, action: Any) -> Transition:
         batch = self.batch_size(state)
         tensor = self.spec.action.as_tensor(action, batch, self.device)
@@ -397,6 +469,15 @@ class WorldModelBase(ABC):
     @abstractmethod
     def _encode(self, frames: torch.Tensor, actions: Optional[torch.Tensor]) -> State:
         """``frames`` float (B, T, C, H, W) in [0, 1]; ``actions`` (B, T-1[, A])."""
+
+    def _encode_steps(
+        self, frames: torch.Tensor, actions: Optional[torch.Tensor]
+    ) -> Optional[Sequence[State]]:
+        """The state after each frame in one pass, or ``None`` to use windows.
+
+        Recurrent families override this; their :meth:`_encode` is its last entry.
+        """
+        return None
 
     @abstractmethod
     def _step(self, state: State, action: torch.Tensor) -> Transition:

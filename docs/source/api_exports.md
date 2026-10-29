@@ -139,6 +139,7 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `DeepMindControlEnv` | `simulusion.envs.dmc_env` | DeepMind Control Suite adapter. |
+| `PhysicsStateSpec` | `simulusion.envs` | Names and kinds of each dimension of `DeepMindControlEnv.physics_state()`. |
 | `DMLabEnv` | `simulusion.envs.dmlab_env` | DeepMind Lab adapter. |
 | `make_dmlab_env` | `simulusion.envs.dmlab_env` | Factory for DeepMind Lab. |
 | `DMLAB_LEVELS` | `simulusion.envs.dmlab_env` | Available DMLab level names. |
@@ -231,6 +232,35 @@ See {doc}`trainer_guide`.
 | `run_training(config, overrides)` | `simulusion.training.run` | Train from a YAML run config (or mapping) plus `key=value` overrides. |
 | `MixedPrecision` | `simulusion.training.precision` | Autocast dtype and loss scaling for one precision setting. |
 | `GradientUpdate` | `simulusion.training.precision` | One optimizer's step: backward, unscale, clip, step, with accumulation and gradient all-reduce. |
+
+## Probing
+
+See {doc}`probing`.
+
+| Name | Source | Description |
+|---|---|---|
+| `collect_probe_episodes` | `simulusion.evals` | Record DeepMind Control episodes labelled with MuJoCo's true state. |
+| `ProbeDataset` | `simulusion.evals` | Probe episodes of one task: save, load, split by episode, and build regression targets. |
+| `StateTargets` | `simulusion.evals` | Regression targets per frame, with each row's episode and step. |
+| `unobservable_dims` | `simulusion.evals` | The `qpos` dimensions a tracking camera cannot show. |
+| `extract_latents` | `simulusion.evals` | A world model's state for every frame of a probe dataset, as named feature arrays. |
+| `Latents` | `simulusion.evals` | Latent features per frame, with `match()` to line up the targets. |
+| `latent_features` | `simulusion.evals` | One world-model state as named `(B, D)` features. |
+| `pixel_features` | `simulusion.evals` | Downsampled frames, the no-model baseline. |
+| `reinitialized` | `simulusion.evals` | A copy of a model with fresh weights, the untrained baseline. |
+| `score_latents` | `simulusion.evals` | Linear and MLP probes, DCI and MIG for one latent, on train / val / test splits. |
+| `fit_linear_probe` | `simulusion.evals` | Ridge probe with a per-target penalty chosen on validation data. |
+| `fit_mlp_probe` | `simulusion.evals` | Two-hidden-layer MLP probe with early stopping. |
+| `dci` | `simulusion.evals` | Disentanglement, completeness and informativeness from a linear probe. |
+| `mig` | `simulusion.evals` | Mutual information gap between latent dimensions and targets. |
+| `r2_score` | `simulusion.evals` | R² per target column. |
+| `factor_groups` | `simulusion.evals` | Merge target columns of one variable (sin/cos, quaternion parts). |
+| `rollout_probe` | `simulusion.evals` | R² of a probe on imagined states, per horizon, next to the encoded latents of the same frames. |
+| `RolloutScores` | `simulusion.evals` | The result of `rollout_probe`. |
+| `probe_world_model` | `simulusion.evals` | Probe every latent of a world model, with baselines and imagined states, into a `ProbeReport`. |
+| `ProbeReport` | `simulusion.evals` | The scores of `probe_world_model`; saves as JSON, renders as Markdown. |
+| `ProbeRow`, `RolloutRow` | `simulusion.evals` | One latent's scores, and one latent's scores on imagined states. |
+| `scorable` | `simulusion.evals` | Which targets vary enough on the scored frames for R² to mean anything. |
 
 ## Data
 
