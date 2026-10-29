@@ -12,8 +12,10 @@ from simulusion.evals.probing import (  # noqa: E402
     fit_mlp_probe,
     mig,
     r2_score,
+    scorable,
     score_latents,
 )
+from simulusion.evals.probing.metrics import nanmean  # noqa: E402
 
 K = 4
 
@@ -162,3 +164,18 @@ def test_score_latents_bundles_every_score():
     assert scores.mig is not None and scores.dci.factors == names
     wide = score_latents(train, val, test, names, mlp=False, max_mig_dims=2)
     assert wide.mig is None and wide.mlp is None
+
+
+def test_targets_that_barely_vary_in_test_get_no_r2():
+    train, val, test = _splits(_permuted)
+    # Column 3 hardly moves in the test frames: its R² would be noise.
+    test = (test[0], test[1].copy())
+    test[1][:, 3] = 0.5 + 1e-4 * test[1][:, 3]
+
+    scores = score_latents(train, val, test, ("a", "b", "c", "d"), mlp=False)
+
+    assert np.isnan(scores.linear_r2[3]) and not np.isnan(scores.linear_r2[:3]).any()
+    assert scores.linear == pytest.approx(scores.linear_r2[:3].mean())
+    assert scores.dci.informativeness == pytest.approx(scores.linear)
+    assert scorable(test[1], train[1].std(axis=0)).tolist() == [True] * 3 + [False]
+    assert np.isnan(nanmean(np.array([np.nan, np.nan])))

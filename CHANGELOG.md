@@ -94,6 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **`probe_world_model` and `simulusion probe`.** One call probes every latent
+  of a world model for the true DMC state. It also scores the same model with
+  one frame of context, untrained, and raw pixels, and probes imagined states.
+  The `ProbeReport` saves as JSON and renders as Markdown. `simulusion probe`
+  records (or reloads) the episodes at the model's input size and writes both
+  files. A target that barely varies in the test frames gets no R² rather than
+  a meaningless one (`scorable`).
 - **Probing imagined states.** `rollout_probe` encodes real frames, imagines
   forward on the recorded actions, and reads each imagined state with a probe
   fitted on encoded latents. It reports R² per horizon next to the encoded

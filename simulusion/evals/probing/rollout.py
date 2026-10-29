@@ -30,7 +30,7 @@ from simulusion.evals.probing.latents import (
     _encode_steps,
     latent_features,
 )
-from simulusion.evals.probing.metrics import r2_score
+from simulusion.evals.probing.metrics import nanmean, r2_score, scorable
 
 
 @dataclass(frozen=True)
@@ -53,8 +53,8 @@ class RolloutScores:
     rollouts: int
 
     def mean(self) -> np.ndarray:
-        """``(len(horizons),)`` R² averaged over targets."""
-        return self.r2.mean(axis=1)
+        """``(len(horizons),)`` R² averaged over the scorable targets."""
+        return nanmean(self.r2, axis=1)
 
 
 class _Probe(Protocol):
@@ -144,14 +144,25 @@ def rollout_probe(
             f"No episode is long enough for a {H}-step rollout after "
             f"{first + 1} context frames."
         )
-    stack = lambda parts: np.concatenate(parts)  # noqa: E731
+    # Targets that barely move over the scored frames get no R² (as in
+    # score_latents), measured against the spread the probe was fitted on.
+    reference = getattr(getattr(probe, "y_scale", None), "std", None)
+    if reference is None:
+        reference = targets.values.std(axis=0)
+
+    def scores(predictions: Dict[int, list[np.ndarray]]) -> np.ndarray:
+        rows = []
+        for h in horizons:
+            y = np.concatenate(truth[h])
+            r2 = r2_score(y, np.concatenate(predictions[h]))
+            rows.append(np.where(scorable(y, reference), r2, np.nan))
+        return np.stack(rows)
+
     return RolloutScores(
         horizons=horizons,
         names=targets.names,
-        r2=np.stack([r2_score(stack(truth[h]), stack(imagined[h])) for h in horizons]),
-        encoded_r2=np.stack(
-            [r2_score(stack(truth[h]), stack(encoded[h])) for h in horizons]
-        ),
+        r2=scores(imagined),
+        encoded_r2=scores(encoded),
         rollouts=rollouts,
     )
 

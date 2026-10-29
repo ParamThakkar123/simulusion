@@ -257,6 +257,10 @@ See {doc}`probing`.
 | `factor_groups` | `simulusion.evals` | Merge target columns of one variable (sin/cos, quaternion parts). |
 | `rollout_probe` | `simulusion.evals` | R² of a probe on imagined states, per horizon, next to the encoded latents of the same frames. |
 | `RolloutScores` | `simulusion.evals` | The result of `rollout_probe`. |
+| `probe_world_model` | `simulusion.evals` | Probe every latent of a world model, with baselines and imagined states, into a `ProbeReport`. |
+| `ProbeReport` | `simulusion.evals` | The scores of `probe_world_model`; saves as JSON, renders as Markdown. |
+| `ProbeRow`, `RolloutRow` | `simulusion.evals` | One latent's scores, and one latent's scores on imagined states. |
+| `scorable` | `simulusion.evals` | Which targets vary enough on the scored frames for R² to mean anything. |
 
 ## Data
 

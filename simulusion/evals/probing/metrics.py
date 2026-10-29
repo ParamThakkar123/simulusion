@@ -27,13 +27,40 @@ from __future__ import annotations
 
 import copy
 import re
-from dataclasses import dataclass
-from typing import Optional, Sequence
+from dataclasses import dataclass, replace
+from typing import Any, Optional, Sequence
 
 import numpy as np
 import torch
 
 DEFAULT_ALPHAS = tuple(float(a) for a in np.logspace(-3, 5, 17))
+
+#: A target whose spread on the scored frames is below this share of its
+#: training spread gets no R²: SST is then so small that any error makes R²
+#: hugely negative (a pole that hangs still all test episode, say).
+MIN_SPREAD_RATIO = 0.1
+
+
+def scorable(
+    y: np.ndarray, reference_std: np.ndarray, ratio: float = MIN_SPREAD_RATIO
+) -> np.ndarray:
+    """Which target columns vary enough in ``y`` for R² to mean anything.
+
+    ``reference_std`` is each column's standard deviation where the probe was
+    fitted; a column is scorable when its spread in ``y`` is at least
+    ``ratio`` of that. A column that does not vary at all never is.
+    """
+    spread = np.asarray(y, np.float64).std(axis=0)
+    floor = np.maximum(ratio * np.asarray(reference_std, np.float64), 1e-8)
+    return spread >= floor
+
+
+def nanmean(values: np.ndarray, axis: Optional[int] = None) -> Any:
+    """Mean over the scorable entries; NaN where there are none."""
+    values = np.asarray(values, np.float64)
+    count = np.sum(~np.isnan(values), axis=axis)
+    total = np.nansum(values, axis=axis)
+    return np.where(count > 0, total / np.maximum(count, 1), np.nan)
 
 
 def r2_score(y: np.ndarray, pred: np.ndarray) -> np.ndarray:
@@ -343,11 +370,12 @@ class ProbeScores:
 
     @property
     def linear(self) -> float:
-        return float(self.linear_r2.mean())
+        """Mean R² over the scorable targets (NaN columns are skipped)."""
+        return float(nanmean(self.linear_r2))
 
     @property
     def mlp(self) -> Optional[float]:
-        return None if self.mlp_r2 is None else float(self.mlp_r2.mean())
+        return None if self.mlp_r2 is None else float(nanmean(self.mlp_r2))
 
 
 def score_latents(
@@ -366,18 +394,24 @@ def score_latents(
     Probes fit on ``train``, choose penalties and stop early on ``val``, and
     report on ``test``. MIG is skipped for latents wider than ``max_mig_dims``,
     where its pairwise histograms get slow and its top-two gap meaningless.
+    Targets that barely vary in ``test`` (see :func:`scorable`) get NaN R² and
+    are left out of the means.
     """
+    keep = scorable(test[1], np.asarray(train[1], np.float64).std(axis=0))
     linear = fit_linear_probe(*train, *val)
+    linear_r2 = np.where(keep, linear.r2(*test), np.nan)
     mlp_r2 = None
     if mlp:
         mlp_r2 = fit_mlp_probe(*train, *val, **(mlp_kwargs or {})).r2(*test)
+        mlp_r2 = np.where(keep, mlp_r2, np.nan)
     mig_scores = None
     if with_mig and test[0].shape[1] <= max_mig_dims:
         mig_scores = mig(*test)
+    scores = dci(linear, names, *test)
     return ProbeScores(
         names=tuple(names),
-        linear_r2=linear.r2(*test),
+        linear_r2=linear_r2,
         mlp_r2=mlp_r2,
-        dci=dci(linear, names, *test),
+        dci=replace(scores, informativeness=float(nanmean(linear_r2))),
         mig=mig_scores,
     )

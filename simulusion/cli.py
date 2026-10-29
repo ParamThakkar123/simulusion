@@ -938,6 +938,132 @@ def eval_command(
     )
 
 
+@app.command("probe")
+@click.option(
+    "--checkpoint",
+    "-c",
+    required=True,
+    help="A saved world model directory (world_model.json), or a family checkpoint.",
+)
+@click.option(
+    "--family",
+    default=None,
+    help="The checkpoint's family, if it has no world_model.json.",
+)
+@click.option(
+    "--task",
+    "-t",
+    default=None,
+    help="DMC task to record, such as cartpole-swingup (or use --data).",
+)
+@click.option(
+    "--data",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="A probe dataset folder; recorded there first if it does not exist.",
+)
+@click.option("--episodes", default=20, show_default=True, type=int)
+@click.option(
+    "--action-repeat",
+    default=2,
+    show_default=True,
+    type=int,
+    help="Simulator steps per frame; match the model's training.",
+)
+@click.option("--max-steps", default=None, type=int, help="Cut episodes short.")
+@click.option(
+    "--keys", default=None, help="Comma-separated features to score (default: all)."
+)
+@click.option(
+    "--targets",
+    "include",
+    default="qpos,qvel",
+    show_default=True,
+    help="Target groups: qpos, qvel, act, task.",
+)
+@click.option("--horizons", default="1,5,15", show_default=True)
+@click.option("--mlp/--no-mlp", default=True, show_default=True)
+@click.option("--baselines/--no-baselines", default=True, show_default=True)
+@click.option("--rollout/--no-rollout", default=True, show_default=True)
+@click.option("--device", default=None, help="Device for the model (default: auto).")
+@click.option("--seed", default=0, show_default=True, type=int)
+@click.option(
+    "--out",
+    default=Path("probe_report.json"),
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="Where to write the JSON report; a .md file is written beside it.",
+)
+def probe_command(
+    checkpoint: str,
+    family: str | None,
+    task: str | None,
+    data: Path | None,
+    episodes: int,
+    action_repeat: int,
+    max_steps: int | None,
+    keys: str | None,
+    include: str,
+    horizons: str,
+    mlp: bool,
+    baselines: bool,
+    rollout: bool,
+    device: str | None,
+    seed: int,
+    out: Path,
+) -> None:
+    """Probe a world model's latents for the true DMC state.
+
+    Records (or loads) DMC episodes labelled with MuJoCo's state, then scores
+    every latent of the model with linear and MLP probes, DCI and MIG, next to
+    pixel, untrained and one-frame baselines, and probes imagined states.
+    """
+    from simulusion.evals.probing import (
+        ProbeDataset,
+        collect_probe_episodes,
+        probe_world_model,
+    )
+    from simulusion.world_model import load_world_model
+
+    if data is None and task is None:
+        raise click.UsageError("Pass --task to record episodes, or --data.")
+    model = load_world_model(checkpoint, family, device=device)
+    if data is not None and data.exists():
+        dataset = ProbeDataset.load(data)
+        if task is not None and dataset.task != task:
+            raise click.UsageError(f"{data} holds {dataset.task}, not {task}.")
+    else:
+        assert task is not None
+        click.echo(f"Recording {episodes} episodes of {task}...")
+        dataset = collect_probe_episodes(
+            task,
+            episodes,
+            seed=seed,
+            size=tuple(model.spec.obs_shape[1:]),
+            action_repeat=action_repeat,
+            max_steps=max_steps,
+        )
+        if data is not None:
+            dataset.save(data)
+            click.echo(f"Saved the dataset to {data}")
+    report = probe_world_model(
+        model,
+        dataset,
+        keys=[k.strip() for k in keys.split(",") if k.strip()] if keys else None,
+        include=[g.strip() for g in include.split(",") if g.strip()],
+        horizons=[int(h) for h in horizons.split(",") if h.strip()],
+        baselines=baselines,
+        mlp=mlp,
+        rollout=rollout,
+        seed=seed,
+    )
+    report.save(out)
+    markdown = report.to_markdown()
+    out.with_suffix(".md").write_text(markdown, encoding="utf-8")
+    click.echo(markdown)
+    click.echo(f"Wrote {out} and {out.with_suffix('.md')}")
+
+
 PLAY_MODEL_NAMES = tuple(sorted(PLAY_MODULES))
 
 

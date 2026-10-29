@@ -5,6 +5,7 @@
 frame into features, and :mod:`~simulusion.evals.probing.metrics` scores them
 with probes, DCI and MIG, and :mod:`~simulusion.evals.probing.rollout` probes
 imagined states.
+:func:`~simulusion.evals.probing.report.probe_world_model` runs it all.
 """
 
 from simulusion.evals.probing.data import (
@@ -25,7 +26,14 @@ from simulusion.evals.probing.metrics import (
     fit_mlp_probe,
     mig,
     r2_score,
+    scorable,
     score_latents,
+)
+from simulusion.evals.probing.report import (
+    ProbeReport,
+    ProbeRow,
+    RolloutRow,
+    probe_world_model,
 )
 from simulusion.evals.probing.rollout import RolloutScores, rollout_probe
 from simulusion.evals.probing.latents import (
@@ -43,7 +51,10 @@ __all__ = [
     "MIGScores",
     "MLPProbe",
     "ProbeDataset",
+    "ProbeReport",
+    "ProbeRow",
     "ProbeScores",
+    "RolloutRow",
     "RolloutScores",
     "StateTargets",
     "collect_probe_episodes",
@@ -55,7 +66,9 @@ __all__ = [
     "latent_features",
     "mig",
     "pixel_features",
+    "probe_world_model",
     "r2_score",
+    "scorable",
     "reinitialized",
     "rollout_probe",
     "score_latents",

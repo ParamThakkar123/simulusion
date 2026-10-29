@@ -147,7 +147,9 @@ def test_real_families_imagine_and_are_scored(family):
     )
 
     assert scores.r2.shape == (1, len(targets.names))
-    assert np.isfinite(scores.r2).all() and scores.rollouts > 0
+    # Targets too flat over these few frames are NaN in both, never only one.
+    np.testing.assert_array_equal(np.isnan(scores.r2), np.isnan(scores.encoded_r2))
+    assert np.isfinite(scores.r2).any() and scores.rollouts > 0
 
 
 def test_rollouts_need_actions_horizons_and_long_enough_episodes():

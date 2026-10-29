@@ -9,8 +9,8 @@ DeepMind Control answers half of it for free: the simulator's state is known
 exactly, so a latent can be checked against it.
 
 `simulusion.evals.probing` builds that check. This page covers the labelled
-datasets, reading a model's latent for every frame, and scoring how well each
-latent holds the true state.
+datasets, reading a model's latent for every frame, scoring how well each
+latent holds the true state, and whether imagined states keep it.
 
 ## Probe datasets
 
@@ -181,6 +181,13 @@ describe one variable count as one factor: the `sin` and `cos` of an angle,
 and a quaternion's four parts (`factor_groups`). Pass `group=False` to score
 every column separately.
 
+A target that hardly moves in the test episodes gets no R² (it shows as `-`
+and is left out of every mean). R² divides by the target's variance, so a pole
+that hangs still for a whole test episode would turn any small error into a
+huge negative score. The rule is the same everywhere, including imagined
+states: a target scores only where its spread is at least a tenth of its
+training spread (`scorable`). `probe_world_model` lists the targets it skipped.
+
 MIG builds a histogram for every latent dimension and target pair, so
 `score_latents` skips it for latents wider than `max_mig_dims` (512). That
 covers IRIS and Genie's concatenated tokens and DIAMOND's pixels.
@@ -220,3 +227,42 @@ whose imagined tokens come from the same codebook.
 Imagination needs actions. Discrete-action models (IRIS, Genie, DIAMOND) need
 an `action_fn` to map DMC's continuous actions to theirs. Stochastic models
 sample with PyTorch's RNG, which `seed` fixes.
+
+## One call: `probe_world_model` and `simulusion probe`
+
+```python
+from simulusion.evals import collect_probe_episodes, probe_world_model
+
+data = collect_probe_episodes("cartpole-swingup", episodes=30, action_repeat=2)
+report = probe_world_model(wm, data)
+print(report.to_markdown())
+report.save("probe.json")      # ProbeReport.load reads it back
+```
+
+`probe_world_model` splits the episodes 60/20/20 into train, val and test, and
+scores every feature of the model. It also scores four comparisons through the
+same pipeline:
+
+| Source | What it shows |
+| --- | --- |
+| `<family>` | The model, with its full context. |
+| `<family> (1 frame)` | One frame of context: what the model's memory adds. Skipped for DIAMOND, which needs three frames. |
+| `<family> (untrained)` | The same architecture with fresh weights. |
+| `pixels` | The downsampled frames, with no model at all. |
+
+It then probes imagined states for the `features` latent (or every latent when
+the family has no combined one). A discrete-action model without an
+`action_fn` is encoded without actions and not rolled out, and the report's
+notes say so.
+
+The same from the command line:
+
+```bash
+simulusion probe --checkpoint runs/dreamer-cartpole --task cartpole-swingup     --episodes 30 --data data/probe/cartpole --out probe/dreamer.json
+```
+
+`--data` records the episodes there the first time and reloads them after,
+so several models can be probed on the same episodes. The frames are recorded
+at the model's input size. The JSON report and a Markdown copy beside it are
+written to `--out`. See `simulusion probe --help` for the rest (`--keys`,
+`--targets`, `--horizons`, `--no-mlp`, `--no-baselines`, `--no-rollout`).
