@@ -255,6 +255,8 @@ See {doc}`probing`.
 | `mig` | `simulusion.evals` | Mutual information gap between latent dimensions and targets. |
 | `r2_score` | `simulusion.evals` | R² per target column. |
 | `factor_groups` | `simulusion.evals` | Merge target columns of one variable (sin/cos, quaternion parts). |
+| `rollout_probe` | `simulusion.evals` | R² of a probe on imagined states, per horizon, next to the encoded latents of the same frames. |
+| `RolloutScores` | `simulusion.evals` | The result of `rollout_probe`. |
 
 ## Data
 

@@ -94,6 +94,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **Probing imagined states.** `rollout_probe` encodes real frames, imagines
+  forward on the recorded actions, and reads each imagined state with a probe
+  fitted on encoded latents. It reports R² per horizon next to the encoded
+  latents' R² on the same frames, so the gap is what imagination costs.
 - **Probes and disentanglement scores.** `fit_linear_probe` (ridge, one SVD for
   every penalty, chosen per target on a validation split) and `fit_mlp_probe`
   give held-out R² for each true-state variable. `dci` and `mig` score

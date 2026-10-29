@@ -184,3 +184,39 @@ every column separately.
 MIG builds a histogram for every latent dimension and target pair, so
 `score_latents` skips it for latents wider than `max_mig_dims` (512). That
 covers IRIS and Genie's concatenated tokens and DIAMOND's pixels.
+
+## Does the state survive imagination?
+
+An encoder can map frames onto the true state while the dynamics model drifts
+away from it within a few steps. `rollout_probe` tests the dynamics. It encodes
+real frames up to a start frame, imagines forward on the recorded actions, and
+reads each imagined state with a probe fitted on encoded latents:
+
+```python
+from simulusion.evals import fit_linear_probe, rollout_probe
+
+z_train, y_train = pair(train)
+z_val, y_val = pair(val)
+probe = fit_linear_probe(z_train, y_train, z_val, y_val)
+
+scores = rollout_probe(
+    wm, test, probe,
+    key="deter",
+    targets=test.targets(),
+    horizons=(1, 5, 15, 50),
+    starts_every=10,       # one rollout every 10 frames of each episode
+)
+scores.r2           # (4, K) R² on imagined states, per horizon
+scores.encoded_r2   # (4, K) R² on encoded latents of the same frames
+```
+
+Every horizon also scores the encoded latents on exactly the same target
+frames, so the gap between `r2` and `encoded_r2` is what imagination costs, not
+an artefact of which frames were scored. A probe trained on encoded latents
+assumes imagined states live in the same space. That holds for the RSSM
+families, whose prior and posterior share one state, and for IRIS and Genie,
+whose imagined tokens come from the same codebook.
+
+Imagination needs actions. Discrete-action models (IRIS, Genie, DIAMOND) need
+an `action_fn` to map DMC's continuous actions to theirs. Stochastic models
+sample with PyTorch's RNG, which `seed` fixes.

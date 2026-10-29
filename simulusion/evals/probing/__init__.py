@@ -3,7 +3,8 @@
 :mod:`~simulusion.evals.probing.data` records labelled datasets,
 :mod:`~simulusion.evals.probing.latents` turns a world model's state for every
 frame into features, and :mod:`~simulusion.evals.probing.metrics` scores them
-with probes, DCI and MIG.
+with probes, DCI and MIG, and :mod:`~simulusion.evals.probing.rollout` probes
+imagined states.
 """
 
 from simulusion.evals.probing.data import (
@@ -26,6 +27,7 @@ from simulusion.evals.probing.metrics import (
     r2_score,
     score_latents,
 )
+from simulusion.evals.probing.rollout import RolloutScores, rollout_probe
 from simulusion.evals.probing.latents import (
     Latents,
     extract_latents,
@@ -42,6 +44,7 @@ __all__ = [
     "MLPProbe",
     "ProbeDataset",
     "ProbeScores",
+    "RolloutScores",
     "StateTargets",
     "collect_probe_episodes",
     "dci",
@@ -54,6 +57,7 @@ __all__ = [
     "pixel_features",
     "r2_score",
     "reinitialized",
+    "rollout_probe",
     "score_latents",
     "unobservable_dims",
 ]

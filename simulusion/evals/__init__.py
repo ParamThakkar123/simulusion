@@ -8,6 +8,7 @@ _PROBING = (
     "MLPProbe",
     "ProbeDataset",
     "ProbeScores",
+    "RolloutScores",
     "StateTargets",
     "collect_probe_episodes",
     "dci",
@@ -20,6 +21,7 @@ _PROBING = (
     "pixel_features",
     "r2_score",
     "reinitialized",
+    "rollout_probe",
     "score_latents",
     "unobservable_dims",
 )
