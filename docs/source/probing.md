@@ -9,7 +9,8 @@ DeepMind Control answers half of it for free: the simulator's state is known
 exactly, so a latent can be checked against it.
 
 `simulusion.evals.probing` builds that check. This page covers the labelled
-datasets. Extracting latents and fitting probes come next.
+datasets and reading a model's latent for every frame. Fitting probes comes
+next.
 
 ## Probe datasets
 
@@ -87,3 +88,52 @@ unobservable_dims("quadruped", camera=3)  # () - the egocentric camera is fixed
 Pass a list of `qpos` names to choose for yourself, or `None` to keep every
 dimension. The velocities stay either way: across frames, motion against the
 floor shows them.
+
+## Latents for every frame
+
+```python
+from simulusion.evals import extract_latents, pixel_features, reinitialized
+from simulusion.world_model import load_world_model
+
+wm = load_world_model("runs/dreamer-cartpole")
+latents = extract_latents(wm, val)
+latents.features["deter"]          # (N, D) float32, one row per frame
+latents.features["features"]       # deter and stoch together, as Dreamer's heads read them
+targets = latents.match(val.targets())   # the target rows for these frames, same order
+```
+
+`extract_latents` runs the model's `encode_steps` over each episode (see
+{doc}`world_model_protocol`), so the latent at frame `t` has seen frames
+`0..t` and the actions between them. Every part of the state becomes its own
+feature:
+
+| Family | Features |
+| --- | --- |
+| Dreamer | `deter`, `stoch`, `mean`, `std`, and `features` (`deter` + `stoch`) |
+| PlaNet | `deter`, `stoch`, `features` |
+| World Models | `z`, `h`, `c`, `features` (`z` + `h`, what the controller reads) |
+| IRIS, Genie | `tokens`: the latest frame's tokens looked up in the codebook, every position concatenated; `tokens_pooled`: their mean |
+| DIAMOND | `pixels`: the latest frame, since its state is the frame window itself; `reward_h`, `reward_c`: the reward model's LSTM |
+
+Inputs echoed in a state (`actions`, `prev_actions`) are dropped. Pass `keys`
+to keep only some features, or `features=` your own function of
+`(model, state)` for a model of your own.
+
+**History.** `context=None` lets recurrent models filter the whole episode and
+windowed models use their full window. `context=1` asks what one frame holds.
+A single frame has no velocity in it, so the gap between the two on `qvel`
+targets shows how much a model's memory carries.
+
+**Actions.** The recorded DMC actions are continuous. IRIS, Genie and DIAMOND
+take discrete actions. Give `action_fn` to map an episode's `(T - 1, A)`
+actions to the model's, or they encode without actions (with a warning). Pass
+`actions=False` to leave them out for any model.
+
+**Controls.** Read every probe against two baselines that go through the same
+pipeline:
+
+- `pixel_features(data, size=16)`: the frames themselves, downsampled. What a
+  probe can decode with no model at all.
+- `reinitialized(model)`: the same architecture with fresh weights. Random
+  encoders keep much of what is in the image, so training only gets credit
+  for what it adds over this.

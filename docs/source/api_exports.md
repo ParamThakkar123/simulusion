@@ -243,6 +243,11 @@ See {doc}`probing`.
 | `ProbeDataset` | `simulusion.evals` | Probe episodes of one task: save, load, split by episode, and build regression targets. |
 | `StateTargets` | `simulusion.evals` | Regression targets per frame, with each row's episode and step. |
 | `unobservable_dims` | `simulusion.evals` | The `qpos` dimensions a tracking camera cannot show. |
+| `extract_latents` | `simulusion.evals` | A world model's state for every frame of a probe dataset, as named feature arrays. |
+| `Latents` | `simulusion.evals` | Latent features per frame, with `match()` to line up the targets. |
+| `latent_features` | `simulusion.evals` | One world-model state as named `(B, D)` features. |
+| `pixel_features` | `simulusion.evals` | Downsampled frames, the no-model baseline. |
+| `reinitialized` | `simulusion.evals` | A copy of a model with fresh weights, the untrained baseline. |
 
 ## Data
 

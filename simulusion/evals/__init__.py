@@ -1,9 +1,14 @@
 from typing import Any
 
 _PROBING = (
+    "Latents",
     "ProbeDataset",
     "StateTargets",
     "collect_probe_episodes",
+    "extract_latents",
+    "latent_features",
+    "pixel_features",
+    "reinitialized",
     "unobservable_dims",
 )
 

@@ -94,6 +94,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   unchanged: they are state dicts read with `weights_only=True`.
 
 ### Added
+- **Latents for every frame.** `WorldModelBase.encode_steps` returns the state
+  after each frame, equal to `encode` on every prefix. Dreamer, PlaNet and
+  World Models filter in one pass, and the other families batch one window per
+  frame. `extract_latents` turns those states into named features (`deter`,
+  `z`, codebook-embedded IRIS and Genie tokens, ...) aligned with a
+  `ProbeDataset`'s targets. `pixel_features` and `reinitialized` give the
+  pixel and untrained-network baselines.
 - **Probe datasets** (`simulusion.evals.probing`). `collect_probe_episodes`
   records DeepMind Control episodes with MuJoCo's true state for every frame.
   `ProbeDataset` saves them as an episode folder and splits them by whole
