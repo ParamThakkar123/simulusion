@@ -426,8 +426,8 @@ latent holds the true state, and whether imagined states keep it.</p>
     <span class="s2">"cartpole-swingup"</span><span class="p">,</span>
     <span class="n">episodes</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
     <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>       <span class="c1"># match the world model's input</span>
-    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>     <span class="c1"># match its training setup (Dreamer uses 2 on DMC)</span>
+    <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>  <span class="c1"># match the world model's input</span>
+    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># match its training setup (Dreamer uses 2 on DMC)</span>
 <span class="p">)</span>
 <span class="n">train</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
 <span class="n">data</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"data/probe/cartpole-swingup"</span><span class="p">)</span>
@@ -452,11 +452,11 @@ record the states that matter, and probe on both.</p>
 </section>
 <section id="regression-targets">
 <h2>Regression targets<a class="headerlink" href="#regression-targets" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">targets</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">targets</span><span class="p">()</span>                       <span class="c1"># qpos and qvel</span>
-<span class="n">targets</span><span class="o">.</span><span class="n">values</span>      <span class="c1"># (N, K) float32, one row per frame, episodes in order</span>
-<span class="n">targets</span><span class="o">.</span><span class="n">names</span>       <span class="c1"># ("qpos/slider", "qpos/hinge_1/sin", "qpos/hinge_1/cos", ...)</span>
-<span class="n">targets</span><span class="o">.</span><span class="n">episode</span>     <span class="c1"># (N,) episode index of each row</span>
-<span class="n">targets</span><span class="o">.</span><span class="n">step</span>        <span class="c1"># (N,) frame index of each row within its episode</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">targets</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">targets</span><span class="p">()</span>  <span class="c1"># qpos and qvel</span>
+<span class="n">targets</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># (N, K) float32, one row per frame, episodes in order</span>
+<span class="n">targets</span><span class="o">.</span><span class="n">names</span>  <span class="c1"># ("qpos/slider", "qpos/hinge_1/sin", "qpos/hinge_1/cos", ...)</span>
+<span class="n">targets</span><span class="o">.</span><span class="n">episode</span>  <span class="c1"># (N,) episode index of each row</span>
+<span class="n">targets</span><span class="o">.</span><span class="n">step</span>  <span class="c1"># (N,) frame index of each row within its episode</span>
 </pre></div>
 </div>
 <p>The raw state is not a good regression target as it stands, so <code class="docutils literal notranslate"><span class="pre">targets()</span></code>
@@ -495,7 +495,7 @@ be expected to recover it. <code class="docutils literal notranslate"><span clas
 dimensions out when the dataset was rendered from a tracking camera:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.evals</span><span class="w"> </span><span class="kn">import</span> <span class="n">unobservable_dims</span>
 
-<span class="n">unobservable_dims</span><span class="p">(</span><span class="s2">"walker"</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>     <span class="c1"># ("rootx",)</span>
+<span class="n">unobservable_dims</span><span class="p">(</span><span class="s2">"walker"</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># ("rootx",)</span>
 <span class="n">unobservable_dims</span><span class="p">(</span><span class="s2">"quadruped"</span><span class="p">,</span> <span class="n">camera</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># () - the egocentric camera is fixed</span>
 </pre></div>
 </div>
@@ -511,9 +511,9 @@ floor shows them.</p>
 
 <span class="n">wm</span> <span class="o">=</span> <span class="n">load_world_model</span><span class="p">(</span><span class="s2">"runs/dreamer-cartpole"</span><span class="p">)</span>
 <span class="n">latents</span> <span class="o">=</span> <span class="n">extract_latents</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]</span>          <span class="c1"># (N, D) float32, one row per frame</span>
-<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"features"</span><span class="p">]</span>       <span class="c1"># deter and stoch together, as Dreamer's heads read them</span>
-<span class="n">targets</span> <span class="o">=</span> <span class="n">latents</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span>   <span class="c1"># the target rows for these frames, same order</span>
+<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">]</span>  <span class="c1"># (N, D) float32, one row per frame</span>
+<span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"features"</span><span class="p">]</span>  <span class="c1"># deter and stoch together, as Dreamer's heads read them</span>
+<span class="n">targets</span> <span class="o">=</span> <span class="n">latents</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span>  <span class="c1"># the target rows for these frames, same order</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">extract_latents</span></code> runs the model’s <code class="docutils literal notranslate"><span class="pre">encode_steps</span></code> over each episode (see
@@ -575,13 +575,15 @@ early on <code class="docutils literal notranslate"><span class="pre">val</span>
 <span class="n">train</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
 <span class="n">val</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">pair</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"deter"</span><span class="p">):</span>
     <span class="n">latents</span> <span class="o">=</span> <span class="n">extract_latents</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">latents</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">latents</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">split</span><span class="o">.</span><span class="n">targets</span><span class="p">())</span><span class="o">.</span><span class="n">values</span>
 
+
 <span class="n">scores</span> <span class="o">=</span> <span class="n">score_latents</span><span class="p">(</span><span class="n">pair</span><span class="p">(</span><span class="n">train</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">pair</span><span class="p">(</span><span class="n">test</span><span class="p">),</span> <span class="n">train</span><span class="o">.</span><span class="n">targets</span><span class="p">()</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-<span class="n">scores</span><span class="o">.</span><span class="n">linear_r2</span>          <span class="c1"># (K,) held-out R² per target column</span>
-<span class="n">scores</span><span class="o">.</span><span class="n">mlp_r2</span>             <span class="c1"># the same with a small MLP</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">linear_r2</span>  <span class="c1"># (K,) held-out R² per target column</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">mlp_r2</span>  <span class="c1"># the same with a small MLP</span>
 <span class="n">scores</span><span class="o">.</span><span class="n">dci</span><span class="o">.</span><span class="n">disentanglement</span><span class="p">,</span> <span class="n">scores</span><span class="o">.</span><span class="n">dci</span><span class="o">.</span><span class="n">completeness</span>
 <span class="n">scores</span><span class="o">.</span><span class="n">mig</span><span class="o">.</span><span class="n">mig</span>
 </pre></div>
@@ -647,14 +649,16 @@ reads each imagined state with a probe fitted on encoded latents:</p>
 <span class="n">probe</span> <span class="o">=</span> <span class="n">fit_linear_probe</span><span class="p">(</span><span class="n">z_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">z_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">)</span>
 
 <span class="n">scores</span> <span class="o">=</span> <span class="n">rollout_probe</span><span class="p">(</span>
-    <span class="n">wm</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">probe</span><span class="p">,</span>
+    <span class="n">wm</span><span class="p">,</span>
+    <span class="n">test</span><span class="p">,</span>
+    <span class="n">probe</span><span class="p">,</span>
     <span class="n">key</span><span class="o">=</span><span class="s2">"deter"</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="n">test</span><span class="o">.</span><span class="n">targets</span><span class="p">(),</span>
     <span class="n">horizons</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
-    <span class="n">starts_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>       <span class="c1"># one rollout every 10 frames of each episode</span>
+    <span class="n">starts_every</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># one rollout every 10 frames of each episode</span>
 <span class="p">)</span>
-<span class="n">scores</span><span class="o">.</span><span class="n">r2</span>           <span class="c1"># (4, K) R² on imagined states, per horizon</span>
-<span class="n">scores</span><span class="o">.</span><span class="n">encoded_r2</span>   <span class="c1"># (4, K) R² on encoded latents of the same frames</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">r2</span>  <span class="c1"># (4, K) R² on imagined states, per horizon</span>
+<span class="n">scores</span><span class="o">.</span><span class="n">encoded_r2</span>  <span class="c1"># (4, K) R² on encoded latents of the same frames</span>
 </pre></div>
 </div>
 <p>Every horizon also scores the encoded latents on exactly the same target
@@ -674,7 +678,7 @@ sample with PyTorch’s RNG, which <code class="docutils literal notranslate"><s
 <span class="n">data</span> <span class="o">=</span> <span class="n">collect_probe_episodes</span><span class="p">(</span><span class="s2">"cartpole-swingup"</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">report</span> <span class="o">=</span> <span class="n">probe_world_model</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">())</span>
-<span class="n">report</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"probe.json"</span><span class="p">)</span>      <span class="c1"># ProbeReport.load reads it back</span>
+<span class="n">report</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"probe.json"</span><span class="p">)</span>  <span class="c1"># ProbeReport.load reads it back</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">probe_world_model</span></code> splits the episodes 60/20/20 into train, val and test, and

@@ -21,8 +21,8 @@ data = collect_probe_episodes(
     "cartpole-swingup",
     episodes=50,
     seed=0,
-    size=(64, 64),       # match the world model's input
-    action_repeat=2,     # match its training setup (Dreamer uses 2 on DMC)
+    size=(64, 64),  # match the world model's input
+    action_repeat=2,  # match its training setup (Dreamer uses 2 on DMC)
 )
 train, val = data.split(0.2)
 data.save("data/probe/cartpole-swingup")
@@ -49,11 +49,11 @@ record the states that matter, and probe on both.
 ## Regression targets
 
 ```python
-targets = train.targets()                       # qpos and qvel
-targets.values      # (N, K) float32, one row per frame, episodes in order
-targets.names       # ("qpos/slider", "qpos/hinge_1/sin", "qpos/hinge_1/cos", ...)
-targets.episode     # (N,) episode index of each row
-targets.step        # (N,) frame index of each row within its episode
+targets = train.targets()  # qpos and qvel
+targets.values  # (N, K) float32, one row per frame, episodes in order
+targets.names  # ("qpos/slider", "qpos/hinge_1/sin", "qpos/hinge_1/cos", ...)
+targets.episode  # (N,) episode index of each row
+targets.step  # (N,) frame index of each row within its episode
 ```
 
 The raw state is not a good regression target as it stands, so `targets()`
@@ -81,7 +81,7 @@ dimensions out when the dataset was rendered from a tracking camera:
 ```python
 from simulusion.evals import unobservable_dims
 
-unobservable_dims("walker", camera=0)     # ("rootx",)
+unobservable_dims("walker", camera=0)  # ("rootx",)
 unobservable_dims("quadruped", camera=3)  # () - the egocentric camera is fixed
 ```
 
@@ -97,9 +97,9 @@ from simulusion.world_model import load_world_model
 
 wm = load_world_model("runs/dreamer-cartpole")
 latents = extract_latents(wm, val)
-latents.features["deter"]          # (N, D) float32, one row per frame
-latents.features["features"]       # deter and stoch together, as Dreamer's heads read them
-targets = latents.match(val.targets())   # the target rows for these frames, same order
+latents.features["deter"]  # (N, D) float32, one row per frame
+latents.features["features"]  # deter and stoch together, as Dreamer's heads read them
+targets = latents.match(val.targets())  # the target rows for these frames, same order
 ```
 
 `extract_latents` runs the model's `encode_steps` over each episode (see
@@ -149,13 +149,15 @@ from simulusion.evals import score_latents
 train, rest = data.split(0.4)
 val, test = rest.split(0.5)
 
+
 def pair(split, key="deter"):
     latents = extract_latents(wm, split, keys=[key])
     return latents.features[key], latents.match(split.targets()).values
 
+
 scores = score_latents(pair(train), pair(val), pair(test), train.targets().names)
-scores.linear_r2          # (K,) held-out R² per target column
-scores.mlp_r2             # the same with a small MLP
+scores.linear_r2  # (K,) held-out R² per target column
+scores.mlp_r2  # the same with a small MLP
 scores.dci.disentanglement, scores.dci.completeness
 scores.mig.mig
 ```
@@ -207,14 +209,16 @@ z_val, y_val = pair(val)
 probe = fit_linear_probe(z_train, y_train, z_val, y_val)
 
 scores = rollout_probe(
-    wm, test, probe,
+    wm,
+    test,
+    probe,
     key="deter",
     targets=test.targets(),
     horizons=(1, 5, 15, 50),
-    starts_every=10,       # one rollout every 10 frames of each episode
+    starts_every=10,  # one rollout every 10 frames of each episode
 )
-scores.r2           # (4, K) R² on imagined states, per horizon
-scores.encoded_r2   # (4, K) R² on encoded latents of the same frames
+scores.r2  # (4, K) R² on imagined states, per horizon
+scores.encoded_r2  # (4, K) R² on encoded latents of the same frames
 ```
 
 Every horizon also scores the encoded latents on exactly the same target
@@ -236,7 +240,7 @@ from simulusion.evals import collect_probe_episodes, probe_world_model
 data = collect_probe_episodes("cartpole-swingup", episodes=30, action_repeat=2)
 report = probe_world_model(wm, data)
 print(report.to_markdown())
-report.save("probe.json")      # ProbeReport.load reads it back
+report.save("probe.json")  # ProbeReport.load reads it back
 ```
 
 `probe_world_model` splits the episodes 60/20/20 into train, val and test, and

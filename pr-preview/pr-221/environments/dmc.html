@@ -530,13 +530,13 @@ what a world model’s latent has learned, so the wrapper reports them without
 adding them to the observation that agents see:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="s2">"walker-walk"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="n">initial</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physics_state</span><span class="p">()</span>                 <span class="c1"># {"qpos", "qvel", "act"}, float32 copies</span>
+<span class="n">initial</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physics_state</span><span class="p">()</span>  <span class="c1"># {"qpos", "qvel", "act"}, float32 copies</span>
 <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-<span class="n">info</span><span class="p">[</span><span class="s2">"physics_state"</span><span class="p">][</span><span class="s2">"qpos"</span><span class="p">]</span>                 <span class="c1"># the state after this step</span>
+<span class="n">info</span><span class="p">[</span><span class="s2">"physics_state"</span><span class="p">][</span><span class="s2">"qpos"</span><span class="p">]</span>  <span class="c1"># the state after this step</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">physics_state_spec</span><span class="p">()</span>
-<span class="n">spec</span><span class="o">.</span><span class="n">qpos_names</span>   <span class="c1"># ("rootz", "rootx", "rooty", "right_hip", ...)</span>
-<span class="n">spec</span><span class="o">.</span><span class="n">qpos_kinds</span>   <span class="c1"># ("slide", "slide", "hinge", "hinge", ...)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">qpos_names</span>  <span class="c1"># ("rootz", "rootx", "rooty", "right_hip", ...)</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">qpos_kinds</span>  <span class="c1"># ("slide", "slide", "hinge", "hinge", ...)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">PhysicsStateSpec</span></code> names every dimension and gives its kind:</p>
