@@ -12,6 +12,9 @@ Controls:
   W/A/S/D    - steer (UP / LEFT / DOWN / RIGHT)
   SPACE / X  - FIRE
   Z          - NOOP
+  S (DREAM)  - save the last --dream-buffer dream frames as
+               dream_<timestamp>.mp4, with actions and predicted rewards
+               in dream_<timestamp>.json
   Q / ESC    - quit
 
 When no human key is pressed the actor-critic policy takes over (AGENT control).
@@ -20,6 +23,7 @@ Hold a mapped key to take control (HUMAN control).
 Usage:
     python -m simulusion.inference.play_diamond --checkpoint path/to/checkpoint.pt --game Breakout-v5
     python -m simulusion.inference.play_diamond --checkpoint path/to/checkpoint.pt --record gameplay.mp4
+    python -m simulusion.inference.play_diamond --checkpoint path/to/checkpoint.pt --dream-buffer 100
 """
 
 import argparse
@@ -32,6 +36,7 @@ import torch
 
 from simulusion.configs.diamond_config import DiamondConfig
 from simulusion.inference.play_base import (
+    DreamBuffer,
     get_action_from_key,
     init_video_recorder,
     resolve_checkpoint_path,
@@ -59,6 +64,8 @@ ACTION_NAMES = {
     16: "DOWNRIGHTFIRE",
     17: "DOWNLEFTFIRE",
 }
+
+NOTICE_SECONDS = 2.0
 
 
 def _as_int(value: Any) -> int:
@@ -151,7 +158,11 @@ def run_play(
     record_fps: int = 20,
     control: str = "assist",
     sampling_steps: int | None = None,
+    dream_buffer: int = 50,
 ) -> None:
+    """Open the play window. In DREAM mode, S saves the last ``dream_buffer``
+    imagined frames with their actions and predicted rewards (0 turns it off).
+    """
     agent = make_agent(checkpoint, game, device, seed, sampling_steps)
     device_obj = agent.device
     cfg = agent.config
@@ -172,6 +183,10 @@ def run_play(
     fps_timer = time.time()
     fps_display = 0
     control_mode = "AGENT"
+    dream = DreamBuffer(dream_buffer)
+    reward_hidden: Any = None
+    notice = ""
+    notice_until = 0.0
 
     video_recorder = init_video_recorder(record, fps=record_fps)
     cv2.namedWindow("DIAMOND Play", cv2.WINDOW_NORMAL)
@@ -191,6 +206,22 @@ def run_play(
         policy_hidden = agent.actor_critic.init_hidden(1, device_obj)
         episode_reward = 0.0
         step_count = 0
+        start_dream()
+
+    def start_dream() -> None:
+        nonlocal reward_hidden
+        dream.clear()
+        reward_hidden = agent.reward_model.init_hidden(1, device_obj)
+
+    def save_dream() -> None:
+        nonlocal notice, notice_until
+        if len(dream) == 0:
+            notice = "Nothing to save"
+        else:
+            video, data = dream.save(fps=record_fps, game=game)
+            notice = "Saved"
+            print(f"Saved {video.resolve()} and {data.resolve()}")
+        notice_until = time.time() + NOTICE_SECONDS
 
     while running:
         key = cv2.waitKey(16) & 0xFF
@@ -202,9 +233,14 @@ def run_play(
             dream_mode = not dream_mode
             print(f"Switched to {'DREAM' if dream_mode else 'REAL'} mode")
             policy_hidden = agent.actor_critic.init_hidden(1, device_obj)
+            if dream_mode:
+                start_dream()
         if key == ord("r"):
             reset_episode()
             print("Reset episode")
+        if dream_mode and key == ord("s"):
+            save_dream()
+            key = -1
 
         obs_tensor = build_obs_tensor()
 
@@ -237,6 +273,15 @@ def run_play(
             display_rgb = to_display_frame(gen_np)
             gen_u8 = (display_rgb * 255).astype(np.uint8)
             display_bgr = cv2.cvtColor(gen_u8, cv2.COLOR_RGB2BGR)
+
+            if dream_buffer > 0:
+                with torch.no_grad():
+                    reward, _, reward_hidden = agent.reward_model.predict(
+                        obs=obs_tensor[:, -1],
+                        actions=torch.tensor([_as_int(action)], device=device_obj),
+                        hidden_state=reward_hidden,
+                    )
+                dream.add(gen_u8, _as_int(action), float(reward[0]))
 
             obs_history.append(gen_np)
 
@@ -273,7 +318,9 @@ def run_play(
             f"{mode_label}  {control_mode}  R: {episode_reward:.1f}  Step: {step_count}  FPS: {fps_display}",
             f"Action: {action_name} ({action})"
             + (f"  |  AGENT: {agent_name}" if control == "versus" else ""),
-            "[TAB] toggle  [R] reset  [arrows/WASD] drive  [Q] quit",
+            "[TAB] toggle  [R] reset  [arrows/WASD] drive  "
+            + ("[S] save  " if dream_mode else "")
+            + "[Q] quit",
         ]
         for i, line in enumerate(info_lines):
             cv2.putText(
@@ -283,6 +330,16 @@ def run_play(
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.45,
                 (0, 255, 0),
+                1,
+            )
+        if time.time() < notice_until:
+            cv2.putText(
+                display_bgr,
+                notice,
+                (5, display_bgr.shape[0] - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.45,
+                (0, 255, 255),
                 1,
             )
 
@@ -297,6 +354,13 @@ def run_play(
     cv2.destroyAllWindows()
     agent.env.close()
     print("Exited.")
+
+
+def _non_negative_int(value: str) -> int:
+    number = int(value)
+    if number < 0:
+        raise argparse.ArgumentTypeError("must be >= 0")
+    return number
 
 
 def main() -> None:
@@ -339,6 +403,12 @@ def main() -> None:
         action="store_true",
         help="Shortcut for --control versus.",
     )
+    parser.add_argument(
+        "--dream-buffer",
+        type=_non_negative_int,
+        default=50,
+        help="Dream frames S saves in DREAM mode (default: 50; 0 turns it off).",
+    )
     args = parser.parse_args()
     run_play(
         checkpoint=args.checkpoint,
@@ -350,6 +420,7 @@ def main() -> None:
         record_fps=args.record_fps,
         control="versus" if args.versus else args.control,
         sampling_steps=args.sampling_steps,
+        dream_buffer=args.dream_buffer,
     )
 
 
