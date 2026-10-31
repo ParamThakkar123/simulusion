@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   [Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
   collection. The README and the gallery link to them, and the gallery lists
   each repo with how to load it.
+- `simulusion play -m diamond`: press `S` in DREAM mode to save the last
+  `--dream-buffer` dream frames (default 50) as `dream_<timestamp>.mp4`, with
+  the actions and predicted rewards in `dream_<timestamp>.json`. Before, the
+  only way to keep a dream was `--record` from the start.
 
 ## [1.1.0] — 2026-10-25
 
