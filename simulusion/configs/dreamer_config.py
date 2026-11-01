@@ -33,6 +33,11 @@ class DreamerConfig(SerializableConfigMixin):
     gym_render_mode: str = "rgb_array"
     frame_stack: int = 1
 
+    # DeepMind Control observations: "pixels" renders an image each step
+    # (Visual Control); "state" gives the proprioceptive vector under
+    # obs["state"] without rendering (Proprio Control). Dreamer V1/V2
+    # encode images only, so they need "pixels".
+    dmc_obs_type: str = "pixels"
     # DeepMind Lab options. dmlab_action_repeat is native DMLab frame
     # repeat; Dreamer action_repeat is still applied by the shared wrapper
     # stack outside the backend adapter.

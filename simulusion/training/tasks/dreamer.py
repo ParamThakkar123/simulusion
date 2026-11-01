@@ -101,13 +101,13 @@ class DreamerTask(TrainingTask):
             self.test_env = self._agent.test_env
             self.dreamer = self._agent.dreamer
             return
-        from simulusion.models.dreamer import make_env
+        from simulusion.models.dreamer import image_obs_shape, make_env
 
         args = self.config.model
         args.seed = trainer.config.seed
         self.train_env = make_env(args)
         self.test_env = make_env(args)
-        obs_shape = self.train_env.observation_space["image"].shape
+        obs_shape = image_obs_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
         self.dreamer = _core_cls(self.variant)(
             args, obs_shape, action_size, trainer.device, restore=False

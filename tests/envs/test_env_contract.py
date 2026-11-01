@@ -364,7 +364,7 @@ def test_dmc_adapter_matches_contract(monkeypatch):
     frame = env.render()
     next_obs, reward, done, info = env.step(np.array([2.0, -2.0], dtype=np.float32))
 
-    assert set(obs) == {"position", "image"}
+    assert set(obs) == {"position", "state", "image"}
     assert set(next_obs) == set(obs)
     assert frame.shape == (8, 8, 3)
     assert frame.shape == (8, 8, 3)

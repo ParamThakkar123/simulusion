@@ -124,7 +124,11 @@ def make_env(args: Any) -> Any:
     elif backend == "dmc":
         from simulusion.envs.dmc import DeepMindControlEnv
 
-        env = DeepMindControlEnv(args.env, args.seed, size=size)
+        obs_type = str(getattr(args, "dmc_obs_type", "pixels"))
+        if obs_type == "pixels":
+            env = DeepMindControlEnv(args.env, args.seed, size=size)
+        else:
+            env = DeepMindControlEnv(args.env, args.seed, size=size, obs_type=obs_type)
     elif backend in {"dmlab", "deepmind_lab", "deepmindlab"}:
         from simulusion.envs.dmlab import DMLabEnv
 
@@ -230,6 +234,25 @@ def make_env(args: Any) -> Any:
     duration = max(1, int(args.time_limit) // repeat)
     env = env_wrapper.TimeLimit(env, duration)
     return env
+
+
+def image_obs_shape(env: Any) -> Any:
+    """Shape of ``env``'s image observation, which Dreamer V1/V2 encode.
+
+    Raises a clear error for environments that produce no image, such as
+    DeepMind Control with ``dmc_obs_type="state"``.
+    """
+    space = env.observation_space
+    try:
+        image_space = space["image"]
+    except KeyError:
+        keys = sorted(getattr(space, "spaces", None) or [])
+        raise ValueError(
+            "Dreamer V1/V2 learn from image observations, but this environment "
+            f"only produces {keys or 'unnamed observations'}. For DeepMind "
+            "Control set dmc_obs_type='pixels'."
+        ) from None
+    return image_space.shape
 
 
 def _coerce_dreamer_config(config: Any | None) -> DreamerConfig:
@@ -553,7 +576,7 @@ class Dreamer:
         if obs_shape is None or action_size is None:
             env = make_env(args)
             if obs_shape is None:
-                obs_shape = tuple(env.observation_space["image"].shape)
+                obs_shape = image_obs_shape(env)
             if action_size is None:
                 action_size = int(env.action_space.shape[0])
         torch_device = (
@@ -1237,7 +1260,7 @@ class DreamerAgent(ExportableAgentMixin):
         self.train_env = make_env(self.args)
         self.test_env = make_env(self.args)
 
-        obs_shape = self.train_env.observation_space["image"].shape
+        obs_shape = image_obs_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
         self.dreamer = self.core_cls(
             self.args, obs_shape, action_size, device, self.args.restore

@@ -79,9 +79,42 @@ The environment catalog includes the canonical Dreamer examples: `cartpole-balan
 `DeepMindControlEnv.reset()` returns a dictionary containing:
 
 - Every key from `dm_control`'s `observation_spec()` as a `float32` Gymnasium `Box`.
-- An additional `image` key with shape `(3, H, W)` and dtype `uint8`.
+- `state`: those entries flattened into one `float32` vector, in the order of the
+  observation spec. This is the same `state` key the Gym, MuJoCo, BSuite, Brax
+  and Unity adapters expose.
+- With `obs_type="pixels"` (the default), an `image` key with shape `(3, H, W)`
+  and dtype `uint8`.
 
 The image is rendered from DMC physics with `physics.render(height, width, camera_id=...)`, transposed from HWC to CHW, and copied so downstream code can store it safely.
+
+## Proprioceptive observations
+
+`obs_type` picks between the two DeepMind Control benchmarks of the DreamerV3
+paper (Hafner et al., 2023):
+
+| `obs_type` | Benchmark | Observation |
+| --- | --- | --- |
+| `"pixels"` (default) | Visual Control | `image` plus `state` |
+| `"state"` | Proprio Control | `state` only; nothing is rendered |
+
+```python
+env = DeepMindControlEnv("walker-walk", seed=0, obs_type="state")
+obs = env.reset()
+obs["state"].shape  # (24,)
+```
+
+State mode skips rendering, so it is much faster, and the observation space has
+no `image` key. `env.render()` still works when you want frames for a video. For
+Dreamer configs, set `dmc_obs_type="state"`. Dreamer V1/V2 encode images only and
+raise a clear error for a state-only environment; use a model that takes vector
+observations.
+
+## Episode ends
+
+DMC tasks have no failure states: every episode ends at the task's time limit
+(1000 steps) with discount 1. The adapter reports that as a truncation
+(`info["truncated"]`), so learners bootstrap the value of the final state. Only a
+discount of 0 is reported as a termination (`info["terminated"]`).
 
 ## Action contract
 
@@ -108,4 +141,6 @@ Pass `camera=<id>` when constructing `DeepMindControlEnv` directly. If no camera
 - **`ModuleNotFoundError: dm_control`**: install `dm-control` in the active environment.
 - **Task name parsing errors**: use `domain-task` format, such as `walker-walk`; use `cup-catch` for `ball_in_cup/catch`.
 - **Unexpected image size**: set `cfg.image_size` or pass `size=(height, width)` directly.
+- **`KeyError: 'image'`**: the environment was built with `obs_type="state"`; read
+  `obs["state"]` instead, or use `obs_type="pixels"`.
 - **Action range issues**: if you bypass Dreamer `make_env()`, add `NormalizeActions` yourself when the policy emits normalized actions.
