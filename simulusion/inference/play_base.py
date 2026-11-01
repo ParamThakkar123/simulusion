@@ -4,10 +4,16 @@ Provides:
   - resolve_checkpoint_path() — resolve checkpoint paths with fallback directories
   - KEY_TO_ACTION / get_action_from_key() — Atari keyboard mapping
   - ActionControl — enum for HUMAN vs AGENT control display
+  - DreamBuffer — the last N dream steps, saved on demand
 """
 
+import json
+from collections import deque
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
+
+import numpy as np
 
 # OpenCV arrow key codes (platform-independent via unmasked waitKey)
 _ARROW_UP = 0x26
@@ -81,3 +87,56 @@ def init_video_recorder(
     from simulusion.utils.utils import StreamingVideoWriter
 
     return StreamingVideoWriter(record_path, fps=fps, frame_shape=frame_shape)
+
+
+class DreamBuffer:
+    """The last ``size`` dream steps: frame, action and predicted reward.
+
+    Frame ``k`` is the one the world model imagined after ``actions[k]``, and
+    ``rewards[k]`` is the reward it predicted for that action.
+    """
+
+    def __init__(self, size: int) -> None:
+        self._steps: deque[tuple[np.ndarray, int, float]] = deque(maxlen=size)
+
+    def __len__(self) -> int:
+        return len(self._steps)
+
+    def add(self, frame: np.ndarray, action: int, reward: float) -> None:
+        """Append one step; ``frame`` is uint8 RGB."""
+        self._steps.append((frame, int(action), float(reward)))
+
+    def clear(self) -> None:
+        self._steps.clear()
+
+    def save(
+        self, directory: str | Path = ".", fps: int = 20, **info: Any
+    ) -> tuple[Path, Path]:
+        """Write ``dream_<timestamp>.mp4`` and ``.json``; return both paths."""
+        from simulusion.utils.utils import StreamingVideoWriter
+
+        if not self._steps:
+            raise ValueError("no dream steps to save")
+
+        stem = "dream_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f")[:-3]
+        video = Path(directory) / f"{stem}.mp4"
+        data = video.with_suffix(".json")
+
+        writer = StreamingVideoWriter(str(video), fps=fps)
+        for frame, _, _ in self._steps:
+            writer.write_frame(frame)
+        writer.close()
+
+        data.write_text(
+            json.dumps(
+                {
+                    "video": video.name,
+                    **info,
+                    "fps": fps,
+                    "actions": [action for _, action, _ in self._steps],
+                    "rewards": [reward for _, _, reward in self._steps],
+                },
+                indent=2,
+            )
+        )
+        return video, data

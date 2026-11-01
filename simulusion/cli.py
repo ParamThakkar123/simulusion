@@ -974,6 +974,13 @@ PLAY_MODEL_NAMES = tuple(sorted(PLAY_MODULES))
     help="Save gameplay video (e.g. gameplay.mp4)",
 )
 @click.option("--record-fps", default=20, type=int, help="FPS for recorded video")
+@click.option(
+    "--dream-buffer",
+    default=None,
+    type=click.IntRange(min=0),
+    help="diamond only: dream frames S saves in DREAM mode "
+    "(default 50; 0 turns it off)",
+)
 def play_command(
     model: str,
     checkpoint: str,
@@ -983,9 +990,15 @@ def play_command(
     deterministic: bool,
     record: Path | None,
     record_fps: int,
+    dream_buffer: int | None,
 ) -> None:
     """Interactively play inside a trained world model (real env + dream mode)."""
     model_key = model.lower()
+    extra: dict[str, int] = {}
+    if dream_buffer is not None:
+        if model_key != "diamond":
+            raise click.UsageError("--dream-buffer only applies to --model diamond")
+        extra["dream_buffer"] = dream_buffer
     module_path = PLAY_MODULES[model_key]
     mod = importlib.import_module(module_path)
     mod.run_play(
@@ -996,6 +1009,7 @@ def play_command(
         deterministic=deterministic,
         record=str(record) if record else None,
         record_fps=record_fps,
+        **extra,
     )
 
 

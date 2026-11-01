@@ -141,7 +141,14 @@ jobs:
           force: false
 
   deploy-pr-preview:
-    if: github.event_name == 'pull_request'
+    # Pull requests from forks get a read-only GITHUB_TOKEN no matter what
+    # `permissions` asks for, so pushing the preview to gh-pages fails with a
+    # 403. Their docs still build (and fail the run if broken) in `build`; only
+    # the preview is skipped. Do not switch to pull_request_target to work
+    # around this: it would hand a write token to a run building fork code.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       contents: write
       pull-requests: write

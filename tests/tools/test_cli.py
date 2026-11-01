@@ -202,3 +202,42 @@ def test_play_defaults_game_per_model(monkeypatch):
 
     assert res.exit_code == 0, res.output
     assert calls["game"] == "Breakout-v5"
+
+
+def test_play_passes_dream_buffer_to_diamond_only(monkeypatch):
+    calls = {}
+
+    class FakeModule:
+        @staticmethod
+        def run_play(**kwargs):
+            calls.update(kwargs)
+
+    monkeypatch.setattr(cli.importlib, "import_module", lambda path: FakeModule)
+    runner = _runner()
+
+    res = runner.invoke(
+        cli.app, ["play", "-m", "diamond", "-c", "ckpt.pt", "--dream-buffer", "7"]
+    )
+    assert res.exit_code == 0, res.output
+    assert calls["dream_buffer"] == 7
+
+    calls.clear()
+    res = runner.invoke(cli.app, ["play", "-m", "dreamer", "-c", "ckpt.pt"])
+    assert res.exit_code == 0, res.output
+    assert "dream_buffer" not in calls
+
+    calls.clear()
+    res = runner.invoke(
+        cli.app, ["play", "-m", "dreamer", "-c", "ckpt.pt", "--dream-buffer", "7"]
+    )
+    assert res.exit_code != 0
+    assert "--dream-buffer" in res.output
+    assert calls == {}
+
+
+def test_play_rejects_a_negative_dream_buffer():
+    res = _runner().invoke(
+        cli.app, ["play", "-m", "diamond", "-c", "ckpt.pt", "--dream-buffer", "-1"]
+    )
+    assert res.exit_code != 0
+    assert "Invalid value" in res.output
