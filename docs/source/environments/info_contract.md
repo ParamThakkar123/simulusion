@@ -38,6 +38,7 @@ All backends except `WorldModelEnv` and `DiamondAtari` (passthrough) set these k
 | Key | Always? | Description |
 |---|---|---|
 | `vector_observation` | Yes | Concatenated float array of all non-visual sensor values from the DMC `TimeStep`. |
+| `physics_state` | Yes | The simulator's state after the step: `{"qpos", "qvel", "act"}` float32 arrays. `env.physics_state()` gives the same dict after `reset()`, and `env.physics_state_spec()` names each dimension. See {doc}`dmc`. |
 
 ### Gym / Gymnasium (`gym_env.py`)
 

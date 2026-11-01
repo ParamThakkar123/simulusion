@@ -61,18 +61,25 @@ class MDRNNWorldModel(WorldModelBase):
         )
 
     def _encode(self, frames: torch.Tensor, actions: Optional[torch.Tensor]) -> State:
-        B, T = frames.shape[:2]
         if actions is None:
             # The LSTM conditions on the actions between frames; without them
             # only the last frame is usable context.
-            frames, T = frames[:, -1:], 1
+            frames = frames[:, -1:]
+        return self._encode_steps(frames, actions)[-1]
+
+    def _encode_steps(
+        self, frames: torch.Tensor, actions: Optional[torch.Tensor]
+    ) -> list[State]:
+        B, T = frames.shape[:2]
         mu, _ = self.vae.encoder(frames.flatten(0, 1))
         latents = mu.reshape(B, T, -1)
         h, c = self.cell.get_init_hidden(B)
-        for t in range(T - 1):
-            assert actions is not None
-            *_, (h, c) = self.cell(actions[:, t], latents[:, t], (h, c))
-        return {"z": latents[:, -1], "h": h, "c": c}
+        states = [{"z": latents[:, 0], "h": h, "c": c}]
+        for t in range(1, T):
+            if actions is not None:
+                *_, (h, c) = self.cell(actions[:, t - 1], latents[:, t - 1], (h, c))
+            states.append({"z": latents[:, t], "h": h, "c": c})
+        return states
 
     def _step(self, state: State, action: torch.Tensor) -> Transition:
         mus, sigmas, logpi, reward, done, (h, c) = self.cell(

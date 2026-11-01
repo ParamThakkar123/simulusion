@@ -166,6 +166,10 @@ class _FrameStackBaseEnv:
 
 
 class _FakePhysics:
+    data = type(
+        "Data", (), {"qpos": np.zeros(2), "qvel": np.zeros(2), "act": np.zeros(0)}
+    )()
+
     def render(self, height, width, camera_id=0):
         return np.zeros((height, width, 3), dtype=np.uint8)
 

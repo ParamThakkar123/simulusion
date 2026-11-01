@@ -1,7 +1,8 @@
-# Your Own Data: Episodes and LeRobot
+# Your Own Data: Episodes, LeRobot and Games
 
 Every dataset-driven task reads one format: a folder of **episodes**. Video,
-reinforcement-learning trajectories and robot demonstrations all fit it, so
+reinforcement-learning trajectories, robot demonstrations and video games
+all fit it, so
 one dataset can train Genie, Dreamer's or IRIS's world model, or World
 Models' VAE and MDN-RNN.
 
@@ -118,3 +119,123 @@ Dictionary actions (the RT-1 format) are flattened in `RLDSKeys.action`
 order. RLDS stores an action in every step, so the last one (past the final
 observation) is dropped; `is_terminal` on the final step marks the last
 transition terminated, and an episode that ends without it is truncated.
+
+## Games
+
+Video games are the classic world-model playground. Which route leads to an
+episode folder depends on whether the game can run inside Python.
+
+### Retro console games (stable-retro)
+
+[stable-retro](https://github.com/Farama-Foundation/stable-retro) emulates
+over a thousand NES, SNES, Genesis and other console games
+(`pip install "simulusion[retro]"`; it has no Windows wheel, so use WSL
+there). Only Airstriker ships with its ROM; import ROMs you own with
+`python -m retro.import /path/to/roms`.
+
+Record a game played by a policy (random buttons by default):
+
+```bash
+simulusion datasets games                                   # the presets
+simulusion datasets record airstriker data/airstriker --episodes 5
+simulusion datasets record street-fighter-2 data/sf2 --episodes 50 --max-steps 3000
+simulusion train genie data.path=data/sf2
+```
+
+or replay `.bk2` movies, the button-by-button recordings of human play that
+stable-retro and BizHawk write. Replays are exact, frame for frame, and human
+play reaches far more of a game than random buttons:
+
+```bash
+simulusion datasets import retro-movie movies/ data/sf2_human --game street-fighter-2
+```
+
+```python
+from simulusion.data import import_retro_movies, record_retro
+
+record_retro("super-mario-bros", "data/smb", episodes=20, max_steps=2000)
+import_retro_movies("movies/", "data/smb_human", game="super-mario-bros")
+```
+
+Actions are the console's buttons, one `0 / 1` column each, in the order
+`meta.json` lists under `info.buttons` (for a two-player movie, `P1_*` then
+`P2_*`). `record_retro(..., actions="discrete")` (`--discrete`) records an
+index into the integration's valid button combinations instead. Rewards and
+episode ends come from the game's integration, and `record_retro` marks an
+episode cut off by `max_steps` as truncated. The recorded buttons are the ones
+the console received, after the integration drops invalid presses (UP with
+DOWN).
+
+### Games without an emulator (Terraria)
+
+PC games such as Terraria cannot run in a training loop, so their data is
+captured footage (OBS, ShadowPlay, ...) plus, for action-conditioned models,
+a log of the inputs held on each frame:
+
+```text
+captures/
+    session_01.mp4
+    session_01.inputs.csv     # optional: a header, then one row per video frame
+    session_02.mp4
+    session_02.inputs.csv
+```
+
+```text
+frame,left,right,jump,mouse_x,mouse_y
+0,0,1,0,812,440
+1,0,1,1,812,441
+```
+
+A `frame` column, if present, is only checked to be increasing; the other
+columns become `actions` (numbers: `0 / 1` for keys, positions for the
+mouse). `.inputs.npy`, a `(frames, inputs)` array, works too. Videos are
+decoded one frame at a time, so long 1080p captures fit in memory, and cut
+into clips:
+
+```bash
+simulusion datasets import video captures/ data/terraria --game terraria --clip-length 500
+simulusion datasets import video captures/ data/terraria --no-inputs   # frames only
+```
+
+Either every video has an input log or none does.
+
+### Preprocessing and presets
+
+A {py:class}`~simulusion.data.FramePipeline` describes how raw frames become
+training frames: `crop` (pixels cut from the `(top, bottom, left, right)`
+edges, for a score bar or letterboxing), `size` `(height, width)`,
+`grayscale`, and `frame_skip`. Frame skip merges the transitions between kept
+frames: rewards add up, an episode end in any of them ends the merged one, and
+actions combine by `action_reduce`: `"first"` (exact for action-repeat
+recordings), `"any"` (keeps a short button press; used for human replays and
+captures) or `"mean"`. The pipeline is saved in `meta.json` under
+`info.pipeline`.
+
+| Preset | Game | Source | Default pipeline |
+|---|---|---|---|
+| `street-fighter-2` | Street Fighter II' Special Champion Edition (Genesis) | stable-retro | 64 x 64, every 4th frame |
+| `super-mario-bros` | Super Mario Bros. (NES) | stable-retro | 64 x 64, every 4th frame |
+| `super-mario-world` | Super Mario World (SNES) | stable-retro | 64 x 64, every 4th frame |
+| `sonic` | Sonic The Hedgehog (Genesis) | stable-retro | 64 x 64, every 4th frame |
+| `airstriker` | Airstriker (Genesis, ROM included) | stable-retro | 64 x 64, every 4th frame |
+| `terraria` | Terraria | gameplay video | 72 x 128, every 4th frame, `"any"` |
+
+Command-line options override a preset's pipeline (`--size 84x84 --crop
+16,0,0,0 --grayscale --frame-skip 2`), and from Python every importer takes a
+`pipeline=`. Any stable-retro integration works without a preset
+(`simulusion datasets record SonicTheHedgehog2-Genesis data/sonic2`), and
+{py:func}`~simulusion.data.register_game` adds presets:
+
+```python
+from simulusion.data import FramePipeline, GamePreset, register_game
+
+register_game(
+    GamePreset(
+        name="streets-of-rage-2",
+        title="Streets of Rage 2 (Genesis)",
+        source="retro",
+        retro_game="StreetsOfRage2-Genesis",
+        pipeline=FramePipeline(crop=(16, 0, 0, 0), size=(64, 64), frame_skip=4),
+    )
+)
+```

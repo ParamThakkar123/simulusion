@@ -39,6 +39,24 @@ Commands
   Options: `--camera`, `--all-cameras`, `--episodes 0-9`. See
   {doc}`episodes_guide`.
 
+- `datasets import video <source> <out_dir>` - Convert gameplay videos, with
+  optional per-frame input logs (`<video>.inputs.csv`), into an episode
+  folder: games without an emulator, such as Terraria. Options: `--game`,
+  `--size HxW`, `--crop T,B,L,R`, `--grayscale`, `--frame-skip N`,
+  `--clip-length N`, `--no-inputs`.
+
+- `datasets import retro-movie <source> <out_dir>` - Replay stable-retro /
+  BizHawk `.bk2` movies of human play into an episode folder. Options:
+  `--game`, the pipeline options above, `--players N`.
+
+- `datasets record <game> <out_dir>` - Play a retro console game
+  (stable-retro) with random buttons and record it as episodes. Options:
+  `--episodes`, `--max-steps`, `--state`, `--discrete`, the pipeline options
+  above.
+
+- `datasets games` - List the game presets (Street Fighter II, Super Mario
+  Bros., Sonic, Terraria, ...).
+
 - `datasets info <path>` - Summarise an episode folder: episodes, frames,
   action space, cameras, observations, source.
 
@@ -85,6 +103,22 @@ Commands
   - `--deterministic` / `--stochastic` — action selection (default deterministic)
   - `--record PATH` — save gameplay video
   - `--record-fps` — video framerate (default 20)
+
+- `probe --checkpoint <PATH> --task <DMC_TASK> [options]` - Probe a world
+  model's latents for the true DeepMind Control state: records (or with
+  `--data DIR`, reloads) episodes labelled with MuJoCo's `qpos`/`qvel`, scores
+  every latent with linear and MLP probes, DCI and MIG next to pixel, untrained
+  and one-frame baselines, and probes imagined states. Writes a JSON report to
+  `--out` and a Markdown copy beside it. See {doc}`probing`.
+
+  Key options:
+  - `--checkpoint`, `-c` — a saved world model (or a checkpoint plus `--family`)
+  - `--task`, `-t` — DMC task, such as `cartpole-swingup`
+  - `--data` — probe dataset folder, recorded on first use
+  - `--episodes`, `--action-repeat`, `--max-steps` — what to record
+  - `--keys` — features to score; `--targets` — `qpos,qvel,act,task`
+  - `--horizons` — imagined steps to score, e.g. `1,5,15`
+  - `--no-mlp`, `--no-baselines`, `--no-rollout` — skip parts
 
 - `models list` - Print the known training entrypoints and (when available)
   exported model names from `simulusion.models`.

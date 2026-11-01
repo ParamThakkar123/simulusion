@@ -229,6 +229,43 @@ def test_encode_without_actions(family):
     assert model.decode(state).shape == (B, *model.spec.obs_shape)
 
 
+def _same_state(a, b):
+    assert set(a) == set(b)
+    for key in a:
+        torch.testing.assert_close(a[key], b[key], atol=1e-5, rtol=1e-4)
+
+
+def test_encode_steps_match_encode_on_every_prefix(family):
+    model = _build(family)
+    T = model.spec.context_frames + 2
+    frames = _frames(model, steps=T)
+    actions = _actions(model.spec.action, B, T - 1)
+
+    torch.manual_seed(1)
+    states = model.encode_steps(frames, actions)
+    assert len(states) == T
+    first = model.spec.context_frames - 1
+    assert all(state is None for state in states[:first])
+    for t in range(first, T):
+        # Same seed: Dreamer's stochastic posterior draws the same noise.
+        torch.manual_seed(1)
+        _same_state(states[t], model.encode(frames[:, : t + 1], actions[:, :t]))
+
+
+def test_encode_steps_with_a_short_context_use_windows():
+    model = _build("world-models")
+    frames = _frames(model, steps=4)
+    actions = _actions(model.spec.action, B, 3)
+
+    single = model.encode_steps(frames, actions, context=1)
+    for t, state in enumerate(single):
+        # One frame of context: z of that frame and a fresh LSTM state.
+        alone = model.encode(frames[:, t : t + 1])
+        _same_state(state, alone)
+    with pytest.raises(ValueError, match="context"):
+        _build("diamond").encode_steps(_frames(_build("diamond"), steps=4), context=1)
+
+
 def test_rollout_is_repeated_steps(family):
     model = _build(family)
     spec = model.spec

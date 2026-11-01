@@ -7,6 +7,7 @@ packages inside the commands that need them.
 
 from __future__ import annotations
 
+import dataclasses
 import importlib
 import json
 import logging
@@ -320,18 +321,65 @@ def datasets_convert(src: Path, dest_format: str, out_dir: Path | None) -> None:
         click.echo(f"Wrote: {out_name}.mp4")
 
 
+_GAME_OPTION = click.option(
+    "--game",
+    default=None,
+    help="Game preset whose preprocessing to use (see `datasets games`).",
+)
+_PIPELINE_OPTIONS = [
+    click.option("--size", default=None, help="Resize frames to HxW, e.g. 64x64."),
+    click.option(
+        "--crop",
+        default=None,
+        help="Pixels to cut from the top,bottom,left,right edges, e.g. 16,0,0,0.",
+    ),
+    click.option("--grayscale", is_flag=True, help="Store one luminance channel."),
+    click.option("--frame-skip", type=int, default=None, help="Keep every N-th frame."),
+]
+
+
+def _pipeline_options(command: Any) -> Any:
+    for option in reversed(_PIPELINE_OPTIONS):
+        command = option(command)
+    return command
+
+
 @datasets_app.command("import")
-@click.argument("source_format", type=click.Choice(["lerobot"]))
-@click.argument("source", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.argument("source_format", type=click.Choice(["lerobot", "video", "retro-movie"]))
+@click.argument("source", type=click.Path(exists=True, path_type=Path))
 @click.argument("out_dir", type=click.Path(path_type=Path))
-@click.option("--camera", default=None, help="View to keep as the main frames.")
 @click.option(
-    "--all-cameras", is_flag=True, help="Keep every other view as an extra camera."
+    "--camera", default=None, help="LeRobot: view to keep as the main frames."
+)
+@click.option(
+    "--all-cameras",
+    is_flag=True,
+    help="LeRobot: keep every other view as an extra camera.",
 )
 @click.option(
     "--episodes",
     default=None,
-    help="Episode indices to import, e.g. '0-9' or '0,3,7'.",
+    help="LeRobot: episode indices to import, e.g. '0-9' or '0,3,7'.",
+)
+@_GAME_OPTION
+@_pipeline_options
+@click.option(
+    "--clip-length",
+    type=int,
+    default=None,
+    help="video: cut each video into episodes of at most N frames.",
+)
+@click.option(
+    "--inputs/--no-inputs",
+    default=True,
+    show_default=True,
+    help="video: read <video>.inputs.csv / .inputs.npy input logs as actions.",
+)
+@click.option(
+    "--players",
+    type=int,
+    default=None,
+    help="retro-movie: keep only the first N players' buttons.",
 )
 def datasets_import(
     source_format: str,
@@ -340,31 +388,185 @@ def datasets_import(
     camera: str | None,
     all_cameras: bool,
     episodes: str | None,
+    game: str | None,
+    size: str | None,
+    crop: str | None,
+    grayscale: bool,
+    frame_skip: int | None,
+    clip_length: int | None,
+    inputs: bool,
+    players: int | None,
 ) -> None:
-    """Convert a local LeRobot dataset folder into an episode folder.
+    """Convert a dataset into an episode folder.
+
+    SOURCE_FORMAT is one of:
+
+    \b
+    lerobot       a local LeRobot dataset folder
+    video         gameplay videos (a file or folder), with optional per-frame
+                  input logs: games without an emulator, such as Terraria
+    retro-movie   stable-retro / BizHawk .bk2 movies of human play, replayed
+                  through the emulator (pip install simulusion[retro])
 
     The folder is what every training task reads (`data.path=OUT_DIR`).
 
-    
+    \b
     Examples:
         simulusion datasets import lerobot datasets/pusht data/pusht
         simulusion datasets import lerobot ./my_lerobot_dataset data/mine --all-cameras
+        simulusion datasets import video captures/ data/terraria --game terraria --clip-length 500
+        simulusion datasets import retro-movie movies/ data/sf2 --game street-fighter-2
     """
-    del source_format  # only "lerobot" for now
-    from simulusion.data.lerobot import import_lerobot
-
     try:
-        out = import_lerobot(
-            source,
-            out_dir,
-            camera=camera,
-            extra_cameras="all" if all_cameras else (),
-            episodes=_parse_index_list(episodes) if episodes else None,
-        )
+        pipeline = _pipeline_from_options(game, size, crop, grayscale, frame_skip)
+        if source_format == "lerobot":
+            if not source.is_dir():
+                raise ValueError(f"{source} is not a LeRobot dataset folder.")
+            from simulusion.data.lerobot import import_lerobot
+
+            out = import_lerobot(
+                source,
+                out_dir,
+                camera=camera,
+                extra_cameras="all" if all_cameras else (),
+                episodes=_parse_index_list(episodes) if episodes else None,
+            )
+        elif source_format == "video":
+            from simulusion.data.gameplay import import_gameplay
+
+            out = import_gameplay(
+                source,
+                out_dir,
+                game=game,
+                pipeline=pipeline,
+                clip_length=clip_length,
+                inputs=inputs,
+            )
+        else:
+            from simulusion.data.retro import import_retro_movies
+
+            if pipeline is not None:
+                # Human play: keep a press that falls between kept frames.
+                pipeline = dataclasses.replace(pipeline, action_reduce="any")
+            out = import_retro_movies(
+                source, out_dir, game=game, pipeline=pipeline, players=players
+            )
     except (ImportError, FileNotFoundError, KeyError, ValueError) as exc:
-        _echo_error(str(exc))
+        _echo_error(_message(exc))
         raise click.exceptions.Exit(1)
     _echo_dataset_info(out)
+
+
+@datasets_app.command("record")
+@click.argument("game")
+@click.argument("out_dir", type=click.Path(path_type=Path))
+@click.option("--episodes", type=int, default=10, show_default=True)
+@click.option(
+    "--max-steps",
+    type=int,
+    default=4500,
+    show_default=True,
+    help="Steps per episode before it is cut off (each step is frame-skip frames).",
+)
+@click.option("--state", default=None, help="Save state to start from.")
+@click.option(
+    "--discrete",
+    is_flag=True,
+    help="Record an index into the valid button combinations, not a button vector.",
+)
+@_pipeline_options
+@click.option("--seed", type=int, default=0, show_default=True)
+def datasets_record(
+    game: str,
+    out_dir: Path,
+    episodes: int,
+    max_steps: int,
+    state: str | None,
+    discrete: bool,
+    size: str | None,
+    crop: str | None,
+    grayscale: bool,
+    frame_skip: int | None,
+    seed: int,
+) -> None:
+    """Play a retro game with random buttons and record it as episodes.
+
+    GAME is a preset (see `datasets games`) or any stable-retro integration.
+    Needs `pip install simulusion[retro]` and, except for Airstriker, the
+    game's ROM (`python -m retro.import /path/to/roms`).
+
+    \b
+    Examples:
+        simulusion datasets record airstriker data/airstriker --episodes 5
+        simulusion datasets record street-fighter-2 data/sf2 --frame-skip 2
+    """
+    try:
+        from simulusion.data.retro import record_retro
+
+        out = record_retro(
+            game,
+            out_dir,
+            episodes=episodes,
+            max_steps=max_steps,
+            state=state,
+            actions="discrete" if discrete else "buttons",
+            pipeline=_pipeline_from_options(game, size, crop, grayscale, frame_skip),
+            seed=seed,
+        )
+    except (ImportError, FileNotFoundError, KeyError, ValueError) as exc:
+        _echo_error(_message(exc))
+        raise click.exceptions.Exit(1)
+    _echo_dataset_info(out)
+
+
+@datasets_app.command("games")
+def datasets_games() -> None:
+    """List the game presets `datasets import` and `datasets record` accept."""
+    from simulusion.data.games import get_game, list_games
+
+    for name in list_games():
+        preset = get_game(name)
+        how = (
+            f"stable-retro {preset.retro_game}"
+            if preset.source == "retro"
+            else "gameplay video"
+        )
+        click.echo(f"{name:<18} {preset.title}  [{how}]")
+
+
+def _pipeline_from_options(
+    game: str | None,
+    size: str | None,
+    crop: str | None,
+    grayscale: bool,
+    frame_skip: int | None,
+) -> Any:
+    """A FramePipeline from the CLI options, starting from the game preset's;
+    None when none was given, so the importer uses the preset's own."""
+    if size is None and crop is None and not grayscale and frame_skip is None:
+        return None
+    from simulusion.data.games import get_game, list_games
+    from simulusion.data.preprocess import FramePipeline
+
+    base = get_game(game).pipeline if game in list_games() else FramePipeline()
+    changes: dict[str, Any] = {}
+    if size is not None:
+        parts = size.lower().split("x")
+        if len(parts) != 2:
+            raise ValueError(f"--size takes HxW, e.g. 64x64; got '{size}'.")
+        changes["size"] = (int(parts[0]), int(parts[1]))
+    if crop is not None:
+        changes["crop"] = tuple(int(v) for v in crop.split(","))
+    if grayscale:
+        changes["grayscale"] = True
+    if frame_skip is not None:
+        changes["frame_skip"] = frame_skip
+    return dataclasses.replace(base, **changes)
+
+
+def _message(exc: Exception) -> str:
+    # KeyError's str() wraps the message in quotes.
+    return str(exc.args[0]) if isinstance(exc, KeyError) and exc.args else str(exc)
 
 
 @datasets_app.command("info")
@@ -936,6 +1138,132 @@ def eval_command(
         metrics=metrics_list,
         record=str(record) if record else None,
     )
+
+
+@app.command("probe")
+@click.option(
+    "--checkpoint",
+    "-c",
+    required=True,
+    help="A saved world model directory (world_model.json), or a family checkpoint.",
+)
+@click.option(
+    "--family",
+    default=None,
+    help="The checkpoint's family, if it has no world_model.json.",
+)
+@click.option(
+    "--task",
+    "-t",
+    default=None,
+    help="DMC task to record, such as cartpole-swingup (or use --data).",
+)
+@click.option(
+    "--data",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="A probe dataset folder; recorded there first if it does not exist.",
+)
+@click.option("--episodes", default=20, show_default=True, type=int)
+@click.option(
+    "--action-repeat",
+    default=2,
+    show_default=True,
+    type=int,
+    help="Simulator steps per frame; match the model's training.",
+)
+@click.option("--max-steps", default=None, type=int, help="Cut episodes short.")
+@click.option(
+    "--keys", default=None, help="Comma-separated features to score (default: all)."
+)
+@click.option(
+    "--targets",
+    "include",
+    default="qpos,qvel",
+    show_default=True,
+    help="Target groups: qpos, qvel, act, task.",
+)
+@click.option("--horizons", default="1,5,15", show_default=True)
+@click.option("--mlp/--no-mlp", default=True, show_default=True)
+@click.option("--baselines/--no-baselines", default=True, show_default=True)
+@click.option("--rollout/--no-rollout", default=True, show_default=True)
+@click.option("--device", default=None, help="Device for the model (default: auto).")
+@click.option("--seed", default=0, show_default=True, type=int)
+@click.option(
+    "--out",
+    default=Path("probe_report.json"),
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="Where to write the JSON report; a .md file is written beside it.",
+)
+def probe_command(
+    checkpoint: str,
+    family: str | None,
+    task: str | None,
+    data: Path | None,
+    episodes: int,
+    action_repeat: int,
+    max_steps: int | None,
+    keys: str | None,
+    include: str,
+    horizons: str,
+    mlp: bool,
+    baselines: bool,
+    rollout: bool,
+    device: str | None,
+    seed: int,
+    out: Path,
+) -> None:
+    """Probe a world model's latents for the true DMC state.
+
+    Records (or loads) DMC episodes labelled with MuJoCo's state, then scores
+    every latent of the model with linear and MLP probes, DCI and MIG, next to
+    pixel, untrained and one-frame baselines, and probes imagined states.
+    """
+    from simulusion.evals.probing import (
+        ProbeDataset,
+        collect_probe_episodes,
+        probe_world_model,
+    )
+    from simulusion.world_model import load_world_model
+
+    if data is None and task is None:
+        raise click.UsageError("Pass --task to record episodes, or --data.")
+    model = load_world_model(checkpoint, family, device=device)
+    if data is not None and data.exists():
+        dataset = ProbeDataset.load(data)
+        if task is not None and dataset.task != task:
+            raise click.UsageError(f"{data} holds {dataset.task}, not {task}.")
+    else:
+        assert task is not None
+        click.echo(f"Recording {episodes} episodes of {task}...")
+        dataset = collect_probe_episodes(
+            task,
+            episodes,
+            seed=seed,
+            size=(int(model.spec.obs_shape[1]), int(model.spec.obs_shape[2])),
+            action_repeat=action_repeat,
+            max_steps=max_steps,
+        )
+        if data is not None:
+            dataset.save(data)
+            click.echo(f"Saved the dataset to {data}")
+    report = probe_world_model(
+        model,
+        dataset,
+        keys=[k.strip() for k in keys.split(",") if k.strip()] if keys else None,
+        include=[g.strip() for g in include.split(",") if g.strip()],
+        horizons=[int(h) for h in horizons.split(",") if h.strip()],
+        baselines=baselines,
+        mlp=mlp,
+        rollout=rollout,
+        seed=seed,
+    )
+    report.save(out)
+    markdown = report.to_markdown()
+    out.with_suffix(".md").write_text(markdown, encoding="utf-8")
+    click.echo(markdown)
+    click.echo(f"Wrote {out} and {out.with_suffix('.md')}")
 
 
 PLAY_MODEL_NAMES = tuple(sorted(PLAY_MODULES))

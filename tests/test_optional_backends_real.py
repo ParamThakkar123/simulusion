@@ -198,6 +198,44 @@ def test_real_dmc_backend_smoke():
     assert {"discount", "terminated", "truncated"} <= set(info)
 
 
+def test_real_dmc_physics_state_matches_simulator():
+    """``physics_state`` and its spec line up with MuJoCo's own layout."""
+    pytest.importorskip("dm_control")
+
+    from simulusion.envs.dmc import DeepMindControlEnv
+
+    env = DeepMindControlEnv("walker-walk", seed=0, size=(8, 8))
+    env.reset()
+    _, _, _, info = env.step(np.zeros(env.action_space.shape, dtype=np.float32))
+    physics = env._env.physics
+    np.testing.assert_allclose(info["physics_state"]["qpos"], physics.data.qpos)
+    np.testing.assert_allclose(info["physics_state"]["qvel"], physics.data.qvel)
+
+    spec = env.physics_state_spec()
+    assert spec.qpos_names == tuple(physics.named.data.qpos.axes.row.names)
+    assert spec.qpos_names[:3] == ("rootz", "rootx", "rooty")
+    assert spec.qpos_kinds[:3] == ("slide", "slide", "hinge")
+    assert spec.act_names == ()
+
+    # Quadruped has a free root joint (7 qpos, 6 qvel) and activated actuators.
+    quadruped = DeepMindControlEnv("quadruped-walk", seed=0, size=(8, 8))
+    state, spec = quadruped.physics_state(), quadruped.physics_state_spec()
+    assert len(spec.qpos_names) == state["qpos"].shape[0] == 23
+    assert len(spec.qvel_names) == state["qvel"].shape[0] == 22
+    assert len(spec.act_names) == state["act"].shape[0] == 12
+    assert spec.qpos_names[:7] == (
+        "root/x",
+        "root/y",
+        "root/z",
+        "root/qw",
+        "root/qx",
+        "root/qy",
+        "root/qz",
+    )
+    assert spec.qpos_kinds[3:7] == ("free_quat",) * 4
+    assert spec.qvel_kinds[:6] == ("free_lin",) * 3 + ("free_ang",) * 3
+
+
 def test_dmc_installer_never_resolves_upstream_labmaze():
     from simulusion.install_dmc import DM_CONTROL_DEPS, install_steps
 

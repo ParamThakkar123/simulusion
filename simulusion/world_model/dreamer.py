@@ -53,16 +53,23 @@ class DreamerWorldModel(WorldModelBase):
         )
 
     def _encode(self, frames: torch.Tensor, actions: Optional[torch.Tensor]) -> State:
+        return self._encode_steps(frames, actions)[-1]
+
+    def _encode_steps(
+        self, frames: torch.Tensor, actions: Optional[torch.Tensor]
+    ) -> list[State]:
         B, T = frames.shape[:2]
         stepper = self.stepper
         state = stepper.init_state(B)
         prev = torch.zeros(B, self.spec.action.n, device=self.device)
+        states = []
         for t in range(T):
             if t > 0 and actions is not None:
                 prev = actions[:, t - 1].clamp(-1.0, 1.0)
             # DreamerStepper.observe takes raw [0, 255] pixels.
             state = stepper.observe(state, frames[:, t] * 255.0, prev)
-        return state
+            states.append(state)
+        return states
 
     def _step(self, state: State, action: torch.Tensor) -> Transition:
         out = self.stepper.imagine(state, action)
