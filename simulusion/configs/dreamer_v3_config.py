@@ -92,6 +92,11 @@ class DreamerV3Config(DreamerConfig):
     mlp_layers: int = 3
     reward_layers: int = 1
     cont_layers: int = 1
+    # Observations to encode and reconstruct, e.g. ["image", "instr"] or
+    # "state". Images are stacked into one CNN, vectors into one symlog MLP.
+    # None picks "image" if the environment has one, else "state", plus
+    # "instr" when present.
+    obs_keys: list[str] | None = None
     activation: str = "silu"
     # Uniform mixture for world model latents and the discrete policy, which
     # keeps categorical distributions from becoming deterministic.

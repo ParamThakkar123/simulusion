@@ -49,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   replayed sequences start from them, and training writes fresh states back.
   Each minibatch is filled from the online queue first. Collection continues
   the open episode across calls instead of resetting the environment.
+- DreamerV3 encodes several observations at once (`obs_keys`), as in the
+  paper: image inputs are stacked into one CNN, vector inputs into one symlog
+  MLP, and the decoder reconstructs each of them. By default it encodes the
+  image, or the state vector when there is no image (DMC Proprio Control), plus
+  a DMLab language instruction when present. Replay and checkpoints keep every
+  input.
 - DreamerV3's reward and continue predictors are 1-layer MLPs
   (`reward_layers`, `cont_layers`), the replay ratio counts policy steps
   (action repeat divided out, matching the paper's worked example), and replay

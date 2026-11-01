@@ -1237,6 +1237,11 @@ class DreamerAgent(ExportableAgentMixin):
             f"or None; got {type(config).__name__}."
         )
 
+    def _observation_shape(self, env: Any) -> Any:
+        """What the core is built to encode: the image, for Dreamer V1/V2."""
+
+        return image_obs_shape(env)
+
     def _build_core(
         self, obs_shape: Any, action_size: int, device: torch.device
     ) -> Any:
@@ -1329,7 +1334,7 @@ class DreamerAgent(ExportableAgentMixin):
         self.train_env = make_env(self.args)
         self.test_env = make_env(self.args)
 
-        obs_shape = image_obs_shape(self.train_env)
+        obs_shape = self._observation_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
         self.dreamer = self._build_core(obs_shape, action_size, device)
 

@@ -29,6 +29,7 @@ Reference:
 from __future__ import annotations
 
 import copy
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
@@ -57,15 +58,93 @@ from simulusion.utils.dreamer_v3_utils import (
 from simulusion.utils.logging_utils import assert_finite, get_package_logger
 from simulusion.vision.dreamer_v3_nets import (
     DreamerV3Actor,
-    DreamerV3Decoder,
-    DreamerV3Encoder,
     DreamerV3Head,
+    DreamerV3MultiDecoder,
+    DreamerV3MultiEncoder,
     preprocess_image,
+    split_obs_space,
 )
 
 logger = get_package_logger(__name__)
 
-__all__ = ["DreamerV3", "DreamerV3Agent", "coerce_dreamer_v3_config"]
+__all__ = [
+    "DreamerV3",
+    "DreamerV3Agent",
+    "coerce_dreamer_v3_config",
+    "select_obs_space",
+]
+
+# Keys tried, in order, when a single-input model is given an observation dict
+# that does not use the key it was built with.
+_SINGLE_INPUT_ALIASES = ("image", "obs", "state")
+
+
+def select_obs_space(
+    observation_space: Any, obs_keys: Any = None
+) -> dict[str, tuple[int, ...]]:
+    """Choose which observations DreamerV3 encodes, and their shapes.
+
+    Args:
+        observation_space: A Gym ``Dict`` space (or a single ``Box``, which is
+            treated as ``"image"`` if rank 3 and ``"state"`` otherwise).
+        obs_keys: Keys to encode, as a list or a comma-separated string. ``None``
+            picks ``"image"`` if the environment has one, else ``"state"`` (or
+            ``"obs"``), plus ``"instr"`` when present. That matches the paper's
+            benchmarks: pixels for Visual Control, the state vector for Proprio
+            Control, and image plus instruction for DMLab language levels.
+
+    Returns:
+        Observation key -> shape, in encoding order.
+
+    Raises:
+        ValueError: If a requested key is missing, or nothing usable is found.
+    """
+    space: Any = observation_space
+    spaces: Any = getattr(space, "spaces", None)
+    if spaces is None and isinstance(space, Mapping):
+        spaces = space  # a plain dict of spaces
+    if spaces is None:
+        shape = tuple(int(d) for d in getattr(space, "shape"))
+        spaces = {("image" if len(shape) == 3 else "state"): space}
+    available = {
+        key: tuple(int(d) for d in space.shape) for key, space in spaces.items()
+    }
+
+    if isinstance(obs_keys, str):
+        obs_keys = [key.strip() for key in obs_keys.split(",") if key.strip()]
+    if obs_keys:
+        missing = [key for key in obs_keys if key not in available]
+        if missing:
+            raise ValueError(
+                f"obs_keys {missing} are not observations of this environment; "
+                f"it has {sorted(available)}."
+            )
+        keys = list(obs_keys)
+    else:
+        keys = [
+            next(
+                (key for key in ("image", "state", "obs") if key in available),
+                "",
+            )
+        ]
+        if not keys[0]:
+            raise ValueError(
+                "Could not pick an observation to encode from "
+                f"{sorted(available)}; set obs_keys."
+            )
+        if "instr" in available and "instr" not in keys:
+            keys.append("instr")
+    selected = {key: available[key] for key in keys}
+    split_obs_space(selected)  # validates ranks and image sizes
+    return selected
+
+
+def _as_obs_space(obs_shape: Any) -> dict[str, tuple[int, ...]]:
+    """Normalize a single shape or a key -> shape mapping."""
+    if isinstance(obs_shape, Mapping):
+        return {str(k): tuple(int(d) for d in v) for k, v in obs_shape.items()}
+    shape = tuple(int(dim) for dim in obs_shape)
+    return {("image" if len(shape) == 3 else "state"): shape}
 
 
 def coerce_dreamer_v3_config(config: Any | None) -> DreamerV3Config:
@@ -90,7 +169,9 @@ class DreamerV3:
     Args:
         args: A :class:`DreamerV3Config` (or any object exposing the same
             attributes).
-        obs_shape: Observation shape, ``(C, H, W)`` or ``(D,)``.
+        obs_shape: Observation shape, ``(C, H, W)`` or ``(D,)``, or a mapping
+            from observation key to shape to encode several inputs (see
+            :func:`select_obs_space`).
         action_size: Number of discrete actions, or continuous action dimension.
         device: Torch device to place the modules on.
         restore: Whether to restore from ``args.checkpoint_path`` after building.
@@ -105,24 +186,31 @@ class DreamerV3:
         restore: bool = False,
     ) -> None:
         self.args = args
-        self.obs_shape = tuple(int(dim) for dim in obs_shape)
+        #: Encoded observations: key -> shape.
+        self.obs_space = _as_obs_space(obs_shape)
+        self._single_input = not isinstance(obs_shape, Mapping)
+        self.image_keys, self.vector_keys = split_obs_space(self.obs_space)
+        # The single input's shape, kept for code written against one input.
+        self.obs_shape = (
+            next(iter(self.obs_space.values())) if len(self.obs_space) == 1 else ()
+        )
         self.action_size = int(action_size)
         self.device = torch.device(device)
         self.restore = bool(restore)
         self.restore_path = getattr(args, "checkpoint_path", "")
-        self.is_image_obs = len(self.obs_shape) == 3
+        self.is_image_obs = bool(self.image_keys)
         self.discrete_actions = str(getattr(args, "actor_dist", "auto")) == "onehot"
         self.last_metrics: dict[str, float] = {}
         # Per-environment collection state, so successive collection calls
         # continue the same episode instead of resetting the environment.
         self._carry: dict[int, dict[str, Any]] = {}
 
-        obs_dtype = np.uint8 if self.is_image_obs else np.float32
+        obs_dtype = np.uint8
         store_latents = bool(getattr(args, "replay_latents", True))
         deter_size = args.resolved_recurrent_units if store_latents else 0
         latent_dim = int(args.latent_dim) if store_latents else 0
         bytes_per_record = DreamerV3ReplayBuffer.bytes_per_record(
-            self.obs_shape, obs_dtype, self.action_size, deter_size, latent_dim
+            self.obs_space, obs_dtype, self.action_size, deter_size, latent_dim
         )
         max_buffer_size = int(
             (get_available_memory() * 0.8) // max(1, bytes_per_record)
@@ -137,7 +225,7 @@ class DreamerV3:
 
         self.data_buffer = DreamerV3ReplayBuffer(
             size=buffer_size,
-            obs_shape=self.obs_shape,
+            obs_shape=self.obs_space,
             action_size=self.action_size,
             seq_len=int(args.train_seq_len),
             batch_size=int(args.batch_size),
@@ -170,8 +258,8 @@ class DreamerV3:
         classes = args.resolved_latent_classes
         depth = args.resolved_cnn_depth
 
-        self.obs_encoder = DreamerV3Encoder(
-            self.obs_shape,
+        self.obs_encoder = DreamerV3MultiEncoder(
+            self.obs_space,
             cnn_depth=depth,
             hidden_size=hidden,
             mlp_layers=int(args.mlp_layers),
@@ -191,9 +279,8 @@ class DreamerV3:
         ).to(self.device)
 
         feature_size = self.rssm.feature_size
-        self.obs_decoder = DreamerV3Decoder(
+        self.obs_decoder = DreamerV3MultiDecoder(
             feature_size,
-            self.obs_shape,
             encoder=self.obs_encoder,
             cnn_depth=depth,
             hidden_size=hidden,
@@ -293,7 +380,7 @@ class DreamerV3:
         cls,
         config: Any = None,
         *,
-        obs_shape: tuple[int, ...] | None = None,
+        obs_shape: Any = None,
         action_size: int | None = None,
         device: str | torch.device | None = None,
         restore: bool | None = None,
@@ -312,7 +399,9 @@ class DreamerV3:
         if obs_shape is None or action_size is None:
             env = make_env(args)
             if obs_shape is None:
-                obs_shape = tuple(env.observation_space["image"].shape)
+                obs_shape = select_obs_space(
+                    env.observation_space, getattr(args, "obs_keys", None)
+                )
             if action_size is None:
                 action_size = int(env.action_space.shape[0])
             if str(args.actor_dist) == "auto":
@@ -385,15 +474,20 @@ class DreamerV3:
             args = DreamerV3Config.from_yaml(config_path)
         args = cast(DreamerV3Config, _apply_config_overrides(args, overrides))
 
-        obs_shape = (
-            checkpoint.get("obs_shape") if isinstance(checkpoint, dict) else None
-        )
+        obs_shape: Any = None
+        if isinstance(checkpoint, dict):
+            if checkpoint.get("obs_space") is not None:
+                obs_shape = {
+                    str(k): tuple(v) for k, v in checkpoint["obs_space"].items()
+                }
+            elif checkpoint.get("obs_shape") is not None:
+                obs_shape = tuple(checkpoint["obs_shape"])
         action_size = (
             checkpoint.get("action_size") if isinstance(checkpoint, dict) else None
         )
         model = cls.from_config(
             args,
-            obs_shape=tuple(obs_shape) if obs_shape is not None else None,
+            obs_shape=obs_shape,
             action_size=int(action_size) if action_size is not None else None,
             device=map_location,
             restore=False,
@@ -449,11 +543,52 @@ class DreamerV3:
     # Observation handling
     # ------------------------------------------------------------------
 
-    def preprocess(self, obs: torch.Tensor) -> torch.Tensor:
-        """Map raw observations into the model's input space."""
-        if self.is_image_obs:
-            return preprocess_image(obs)
-        return obs.to(torch.float32)
+    def _as_obs_dict(self, obs: Any) -> dict[str, Any]:
+        """Observations keyed like :attr:`obs_space`.
+
+        A single-input model also accepts a bare array, or a dict that stores
+        its input under one of the usual names (``image``, ``obs``, ``state``).
+        """
+        if not isinstance(obs, Mapping):
+            if len(self.obs_space) != 1:
+                raise TypeError(
+                    f"This model encodes {sorted(self.obs_space)}; pass a dict."
+                )
+            return {next(iter(self.obs_space)): obs}
+        selected: dict[str, Any] = {}
+        for key, shape in self.obs_space.items():
+            if key in obs:
+                selected[key] = obs[key]
+                continue
+            alias = None
+            if self._single_input:
+                alias = next(
+                    (
+                        name
+                        for name in _SINGLE_INPUT_ALIASES
+                        if name in obs and np.ndim(obs[name]) >= len(shape)
+                    ),
+                    None,
+                )
+            if alias is None:
+                raise KeyError(f"Observation has no {key!r}; it has {sorted(obs)}.")
+            selected[key] = obs[alias]
+        return selected
+
+    def preprocess(self, obs: Any) -> dict[str, torch.Tensor]:
+        """Map raw observations into the model's input space.
+
+        Images go to ``[0, 1]``; vectors are cast to float32 (the encoder applies
+        symlog). Returns a dict keyed like :attr:`obs_space`.
+        """
+        processed: dict[str, torch.Tensor] = {}
+        for key, value in self._as_obs_dict(obs).items():
+            tensor = torch.as_tensor(value, device=self.device)
+            if key in self.image_keys:
+                processed[key] = preprocess_image(tensor)
+            else:
+                processed[key] = tensor.to(torch.float32)
+        return processed
 
     # ------------------------------------------------------------------
     # World model
@@ -498,7 +633,8 @@ class DreamerV3:
         since ``h_t`` has seen ``a_{t-1}``.
 
         Args:
-            obs: ``(T, B, *obs_shape)`` raw observations ``x_t``.
+            obs: ``(T, B, *shape)`` raw observations ``x_t``: a dict keyed like
+                :attr:`obs_space`, or a single array for a single-input model.
             prev_actions: ``(T, B, action_size)`` actions ``a_{t-1}``.
             rewards: ``(T, B)`` rewards ``r_t``.
             is_terminal: ``(T, B)`` whether ``x_t`` is a terminal state.
@@ -514,14 +650,15 @@ class DreamerV3:
         embed = self.obs_encoder(processed)
 
         if init_state is None:
-            init_state = self.rssm.init_state(obs.shape[1], self.device)
+            init_state = self.rssm.init_state(rewards.shape[1], self.device)
         posterior, prior = self.rssm.observe_rollout(
             embed, prev_actions, is_first.unsqueeze(-1), init_state
         )
         features = self.rssm.get_feat(posterior)
 
         reconstruction = self.obs_decoder(features)
-        recon_loss = self.obs_decoder.loss(reconstruction, processed)
+        recon_terms = self.obs_decoder.loss_terms(reconstruction, processed)
+        recon_loss = sum(recon_terms.values(), torch.zeros_like(rewards))
 
         reward_loss = -self.reward_model(features).log_prob(rewards)
         continue_loss = -self.continue_model(features).log_prob(1.0 - is_terminal)
@@ -554,6 +691,9 @@ class DreamerV3:
                 "wm/rep_loss": float(rep_loss.mean().detach()),
             }
         )
+        if len(recon_terms) > 1:
+            for key, term in recon_terms.items():
+                self.last_metrics[f"wm/recon_loss/{key}"] = float(term.mean().detach())
         return loss, posterior
 
     # ------------------------------------------------------------------
@@ -792,7 +932,7 @@ class DreamerV3:
             return torch.as_tensor(batch[name], dtype=torch.float32, device=self.device)
 
         return {
-            "obs": torch.as_tensor(batch["observations"], device=self.device),
+            "obs": self._as_obs_dict(batch["observations"]),
             "prev_actions": as_float("prev_actions"),
             "rewards": as_float("rewards"),
             "is_first": as_float("is_first"),
@@ -814,7 +954,7 @@ class DreamerV3:
 
         batch = self.data_buffer.sample()
         data = self._batch_to_tensors(batch)
-        batch_size = data["obs"].shape[1]
+        batch_size = data["rewards"].shape[1]
         init_state = None
         if self.data_buffer.stores_latents:
             init_state = self.initial_state(
@@ -889,10 +1029,12 @@ class DreamerV3:
     # Environment interaction
     # ------------------------------------------------------------------
 
-    def _obs_to_tensor(self, obs: Any) -> torch.Tensor:
-        array = obs["image"] if isinstance(obs, dict) else obs
-        tensor = torch.as_tensor(np.asarray(array).copy(), device=self.device)
-        return tensor.unsqueeze(0)
+    def _obs_to_tensor(self, obs: Any) -> dict[str, torch.Tensor]:
+        """One environment observation as a batch of one, per encoded input."""
+        return {
+            key: torch.as_tensor(np.asarray(value).copy(), device=self.device)[None]
+            for key, value in self._as_obs_dict(obs).items()
+        }
 
     def observe(
         self,
@@ -1105,11 +1247,9 @@ class DreamerV3:
                 episode_rewards[episode] += reward
 
                 if render:
-                    image = obs["image"] if isinstance(obs, dict) else obs
-                    if np.asarray(image).ndim == 3:
-                        video_images[episode].append(
-                            np.asarray(image).transpose(1, 2, 0).copy()
-                        )
+                    frame = _video_frame(env, obs)
+                    if frame is not None:
+                        video_images[episode].append(frame)
                     if latents is not None:
                         latents.append(self.rssm.get_feat(posterior)[0].cpu().numpy())
 
@@ -1141,6 +1281,9 @@ class DreamerV3:
             {
                 "config": self.args.to_dict(),
                 "obs_shape": tuple(self.obs_shape),
+                "obs_space": {
+                    key: list(shape) for key, shape in self.obs_space.items()
+                },
                 "action_size": int(self.action_size),
                 "rssm": self.rssm.state_dict(),
                 "obs_encoder": self.obs_encoder.state_dict(),
@@ -1184,6 +1327,21 @@ class DreamerV3:
         if checkpoint.get("return_norm") is not None:
             self.return_norm.load_state_dict(checkpoint["return_norm"])
         self._updates = int(checkpoint.get("updates", 0))
+
+
+def _video_frame(env: Any, obs: Any) -> np.ndarray | None:
+    """An HWC frame for evaluation videos: the image observation, else a render."""
+    image = obs.get("image") if isinstance(obs, Mapping) else obs
+    if image is not None and np.ndim(image) == 3:
+        return np.asarray(image).transpose(1, 2, 0).copy()
+    render = getattr(env, "render", None)
+    if render is None:
+        return None
+    try:
+        frame = np.asarray(render())
+    except Exception:
+        return None
+    return frame.copy() if frame.ndim == 3 else None
 
 
 def _is_true_termination(info: Any, done: bool | float) -> float:
@@ -1240,6 +1398,12 @@ class DreamerV3Agent(DreamerAgent):
 
     core_cls = DreamerV3  # type: ignore[assignment]
     _config_cls = DreamerV3Config
+
+    def _observation_shape(self, env: Any) -> Any:
+        """Every observation DreamerV3 encodes (``obs_keys``), not only the image."""
+        return select_obs_space(
+            env.observation_space, getattr(self.args, "obs_keys", None)
+        )
 
     def _build_core(
         self, obs_shape: Any, action_size: int, device: torch.device

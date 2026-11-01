@@ -228,6 +228,7 @@ or `simulusion.create_config(...)`. Run `simulusion.list_models()` for the live 
 | `dreamer` | **Dreamer** | Model-based RL with latent dynamics (alias for `dreamer-v1`) | Imagination, actor-critic |
 | `dreamer-v1` | **DreamerV1** | Latent imagination with Gaussian heads | Normal heads, standard KL |
 | `dreamer-v2` | **DreamerV2** | Discrete latents for pixel control | Symlog two-hot heads, balanced KL |
+| `dreamer-v3` | **DreamerV3** | One configuration across domains, pixels or state | Categorical latents with free bits, percentile return normalization, LaProp |
 | `planet` | **PlaNet** | Latent planning from pixels, no explicit policy | RSSM, CEM planner |
 | `modular-rssm` | **ModularRSSM** | Composable recurrent state-space model | Swappable priors/posteriors, custom heads |
 | `iris` | **IRIS** | Sample-efficient RL with Transformers | Discrete VAEs, world models |

@@ -20,6 +20,7 @@ Reference:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, Sequence
 
 import numpy as np
@@ -27,6 +28,7 @@ import torch
 import torch.nn as nn
 import torch.distributions as distributions
 
+from simulusion.export import ExportableAgentMixin
 from simulusion.layers.rms_norm import RMSNorm
 from simulusion.utils.dreamer_utils import symlog
 from simulusion.utils.dreamer_v3_utils import SymexpTwoHotDist
@@ -35,6 +37,9 @@ __all__ = [
     "ChannelRMSNorm",
     "DreamerV3Encoder",
     "DreamerV3Decoder",
+    "DreamerV3MultiEncoder",
+    "DreamerV3MultiDecoder",
+    "split_obs_space",
     "DreamerV3Head",
     "DreamerV3Actor",
     "count_parameters",
@@ -73,7 +78,7 @@ def _is_image(shape: Sequence[int]) -> bool:
     return len(shape) == 3
 
 
-class ChannelRMSNorm(nn.Module):
+class ChannelRMSNorm(ExportableAgentMixin, nn.Module):
     """RMSNorm over the channel dimension of an ``(N, C, H, W)`` tensor."""
 
     def __init__(self, channels: int, eps: float = 1e-6) -> None:
@@ -90,7 +95,7 @@ def _conv_out(size: int, kernel: int = 4, stride: int = 2, padding: int = 1) -> 
     return (size + 2 * padding - kernel) // stride + 1
 
 
-class DreamerV3Encoder(nn.Module):
+class DreamerV3Encoder(ExportableAgentMixin, nn.Module):
     """Encode observations into the embedding consumed by the RSSM posterior.
 
     Args:
@@ -163,7 +168,7 @@ class DreamerV3Encoder(nn.Module):
         return out.reshape(*batch_shape, self.embed_size)
 
 
-class DreamerV3Decoder(nn.Module):
+class DreamerV3Decoder(ExportableAgentMixin, nn.Module):
     """Reconstruct observations from model states.
 
     Returns the predicted mean rather than a distribution: DreamerV3 trains the
@@ -286,7 +291,7 @@ class DreamerV3Decoder(nn.Module):
         )
 
 
-class DreamerV3Head(nn.Module):
+class DreamerV3Head(ExportableAgentMixin, nn.Module):
     """MLP head for reward, value, and continuation prediction.
 
     Args:
@@ -346,7 +351,7 @@ class DreamerV3Head(nn.Module):
         raise ValueError(f"Unknown head distribution {self.dist!r}")
 
 
-class DreamerV3Actor(nn.Module):
+class DreamerV3Actor(ExportableAgentMixin, nn.Module):
     """Policy head supporting one-hot discrete and continuous actions.
 
     DreamerV3 uses the Reinforce estimator for both action types, so the head
@@ -443,6 +448,197 @@ class DreamerV3Actor(nn.Module):
             return action
         noisy = action + torch.randn_like(action) * action_noise
         return torch.clamp(noisy, -1.0, 1.0)
+
+
+def split_obs_space(
+    obs_space: Mapping[str, Sequence[int]],
+) -> tuple[list[str], list[str]]:
+    """Split observation keys into image (rank 3) and vector (rank 1) keys.
+
+    Raises:
+        ValueError: For other ranks, or images whose spatial sizes differ
+            (image inputs are stacked along channels into one CNN).
+    """
+    images: list[str] = []
+    vectors: list[str] = []
+    for key, shape in obs_space.items():
+        rank = len(tuple(shape))
+        if rank == 3:
+            images.append(key)
+        elif rank == 1:
+            vectors.append(key)
+        else:
+            raise ValueError(
+                f"Observation {key!r} has shape {tuple(shape)}; DreamerV3 encodes "
+                "images (C, H, W) and vectors (D,)."
+            )
+    sizes = {tuple(obs_space[key])[1:] for key in images}
+    if len(sizes) > 1:
+        raise ValueError(
+            f"Image observations {images} must share a spatial size; got {sizes}."
+        )
+    return images, vectors
+
+
+class DreamerV3MultiEncoder(ExportableAgentMixin, nn.Module):
+    """Encode a dict of observations into one embedding.
+
+    As in DreamerV3, image inputs are stacked along channels and encoded by one
+    CNN, vector inputs are concatenated, symlog transformed and encoded by one
+    MLP, and the two embeddings are concatenated.
+
+    Args:
+        obs_space: Observation key -> shape, ``(C, H, W)`` or ``(D,)``.
+        cnn_depth, hidden_size, mlp_layers, min_resolution, activation: As for
+            :class:`DreamerV3Encoder`.
+    """
+
+    def __init__(
+        self,
+        obs_space: Mapping[str, Sequence[int]],
+        cnn_depth: int = 32,
+        hidden_size: int = 256,
+        mlp_layers: int = 3,
+        min_resolution: int = 4,
+        activation: str = "silu",
+    ) -> None:
+        super().__init__()
+        self.obs_space = {
+            key: tuple(int(d) for d in shape) for key, shape in obs_space.items()
+        }
+        if not self.obs_space:
+            raise ValueError("obs_space must name at least one observation")
+        self.image_keys, self.vector_keys = split_obs_space(self.obs_space)
+        kwargs: dict[str, Any] = dict(
+            cnn_depth=cnn_depth,
+            hidden_size=hidden_size,
+            mlp_layers=mlp_layers,
+            min_resolution=min_resolution,
+            activation=activation,
+        )
+        self.image_encoder: DreamerV3Encoder | None = None
+        self.vector_encoder: DreamerV3Encoder | None = None
+        if self.image_keys:
+            first = self.obs_space[self.image_keys[0]]
+            channels = sum(self.obs_space[key][0] for key in self.image_keys)
+            self.image_encoder = DreamerV3Encoder((channels, *first[1:]), **kwargs)
+        if self.vector_keys:
+            size = sum(self.obs_space[key][0] for key in self.vector_keys)
+            self.vector_encoder = DreamerV3Encoder((size,), **kwargs)
+        self.embed_size = sum(
+            encoder.embed_size
+            for encoder in (self.image_encoder, self.vector_encoder)
+            if encoder is not None
+        )
+
+    def forward(self, obs: Mapping[str, torch.Tensor]) -> torch.Tensor:
+        """Embed ``obs``: images in ``[0, 1]``, vectors raw (symlog is applied here).
+
+        Every tensor has shape ``(*batch, *obs_space[key])``.
+        """
+        parts = []
+        if self.image_encoder is not None:
+            parts.append(
+                self.image_encoder(torch.cat([obs[k] for k in self.image_keys], -3))
+            )
+        if self.vector_encoder is not None:
+            parts.append(
+                self.vector_encoder(torch.cat([obs[k] for k in self.vector_keys], -1))
+            )
+        return torch.cat(parts, dim=-1)
+
+
+class DreamerV3MultiDecoder(ExportableAgentMixin, nn.Module):
+    """Reconstruct every encoded observation from the model state.
+
+    Mirrors :class:`DreamerV3MultiEncoder`: one transposed CNN emits all image
+    channels (sigmoid, compared with ``[0, 1]`` targets), one MLP emits all
+    vector entries (compared with symlog targets). Each input's squared error
+    is summed over its dimensions, and the inputs' errors are added.
+
+    Args:
+        feature_size: Size of the model state ``(z, h)``.
+        encoder: The encoder whose inputs and resolution schedule to mirror.
+        cnn_depth, hidden_size, mlp_layers, activation: As for
+            :class:`DreamerV3Decoder`.
+    """
+
+    def __init__(
+        self,
+        feature_size: int,
+        encoder: DreamerV3MultiEncoder,
+        cnn_depth: int = 32,
+        hidden_size: int = 256,
+        mlp_layers: int = 3,
+        activation: str = "silu",
+    ) -> None:
+        super().__init__()
+        self.obs_space = dict(encoder.obs_space)
+        self.image_keys = list(encoder.image_keys)
+        self.vector_keys = list(encoder.vector_keys)
+        kwargs: dict[str, Any] = dict(
+            cnn_depth=cnn_depth,
+            hidden_size=hidden_size,
+            mlp_layers=mlp_layers,
+            activation=activation,
+        )
+        self.image_decoder: DreamerV3Decoder | None = None
+        self.vector_decoder: DreamerV3Decoder | None = None
+        if encoder.image_encoder is not None:
+            self.image_decoder = DreamerV3Decoder(
+                feature_size,
+                encoder.image_encoder.obs_shape,
+                encoder=encoder.image_encoder,
+                **kwargs,
+            )
+        if encoder.vector_encoder is not None:
+            self.vector_decoder = DreamerV3Decoder(
+                feature_size, encoder.vector_encoder.obs_shape, **kwargs
+            )
+
+    def forward(self, features: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Predict each observation, keyed like the encoder's inputs."""
+        out: dict[str, torch.Tensor] = {}
+        if self.image_decoder is not None:
+            channels = [self.obs_space[k][0] for k in self.image_keys]
+            images = self.image_decoder(features).split(channels, dim=-3)
+            out.update(zip(self.image_keys, images))
+        if self.vector_decoder is not None:
+            sizes = [self.obs_space[k][0] for k in self.vector_keys]
+            vectors = self.vector_decoder(features).split(sizes, dim=-1)
+            out.update(zip(self.vector_keys, vectors))
+        return out
+
+    def loss_terms(
+        self,
+        prediction: Mapping[str, torch.Tensor],
+        target: Mapping[str, torch.Tensor],
+    ) -> dict[str, torch.Tensor]:
+        """Per-input reconstruction loss, each summed over that input's dimensions.
+
+        Image targets are expected in ``[0, 1]``; vector targets raw (they are
+        symlog transformed here, as the decoder predicts in symlog space).
+        """
+        terms: dict[str, torch.Tensor] = {}
+        for key in self.image_keys:
+            error = 0.5 * (prediction[key] - target[key]).pow(2)
+            terms[key] = error.flatten(-3).sum(-1)
+        for key in self.vector_keys:
+            error = 0.5 * (prediction[key] - symlog(target[key])).pow(2)
+            terms[key] = error.sum(-1)
+        return terms
+
+    def loss(
+        self,
+        prediction: Mapping[str, torch.Tensor],
+        target: Mapping[str, torch.Tensor],
+    ) -> torch.Tensor:
+        """Total reconstruction loss: the per-input losses added together."""
+        terms = list(self.loss_terms(prediction, target).values())
+        total = terms[0]
+        for term in terms[1:]:
+            total = total + term
+        return total
 
 
 def head_input_size(latent_dim: int, latent_classes: int, deter_size: int) -> int:

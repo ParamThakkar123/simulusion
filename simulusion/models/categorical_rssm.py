@@ -33,6 +33,7 @@ import torch
 import torch.distributions as distributions
 import torch.nn as nn
 
+from simulusion.export import ExportableAgentMixin
 from simulusion.layers.block_gru import BlockGRUCell
 from simulusion.layers.rms_norm import RMSNorm
 
@@ -56,7 +57,7 @@ def _activation(name: str) -> nn.Module:
         raise ValueError(f"Unknown activation {name!r}. Options: {options}") from exc
 
 
-class CategoricalRSSM(nn.Module):
+class CategoricalRSSM(ExportableAgentMixin, nn.Module):
     """DreamerV3 world model dynamics over categorical latent states.
 
     Args:

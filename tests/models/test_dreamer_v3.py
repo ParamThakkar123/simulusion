@@ -102,17 +102,16 @@ def fill(model, steps=40, episode_length=13, image=True):
 
 def wm_loss(model):
     """Sample a replay batch and run the world model loss on it."""
+    sample = model.data_buffer.sample()
+    # Observations stay a dict of raw arrays, one per encoded input.
     batch = {
-        key: torch.as_tensor(value)
-        for key, value in model.data_buffer.sample().items()
-        if key != "indices"
+        key: torch.as_tensor(value).float()
+        for key, value in sample.items()
+        if key not in ("indices", "observations")
     }
-    batch = {
-        key: value if key == "observations" else value.float()
-        for key, value in batch.items()
-    }
+    batch["observations"] = sample["observations"]
     init = model.initial_state(
-        batch["observations"].shape[1], batch["init_deter"], batch["init_stoch"]
+        batch["rewards"].shape[1], batch["init_deter"], batch["init_stoch"]
     )
     loss, posterior = model.world_model_loss(
         batch["observations"],
@@ -633,7 +632,8 @@ class TestDreamerV3Core:
     def test_vector_observation_training(self):
         model = DreamerV3(tiny_config(), (9,), 2, "cpu")
         assert not model.is_image_obs
-        assert model.data_buffer.observations.dtype == np.float32
+        assert model.obs_space == {"state": (9,)}
+        assert getattr(model.data_buffer, "obs__state").dtype == np.float32
         fill(model, image=False)
         assert all(np.isfinite(value) for value in model.train_one_batch())
 

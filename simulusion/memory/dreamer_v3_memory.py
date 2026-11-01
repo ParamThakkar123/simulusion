@@ -34,6 +34,7 @@ Reference:
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Mapping
 from typing import Any, Deque, Sequence
 
 import numpy as np
@@ -46,12 +47,18 @@ class DreamerV3ReplayBuffer:
 
     Args:
         size: Maximum number of records retained.
-        obs_shape: Shape of a single observation.
+        obs_shape: Shape of a single observation, or a mapping from observation
+            key to shape for several inputs (``{"image": (3, 64, 64), "instr":
+            (1024,)}``). With a mapping, each key is stored in its own array,
+            :meth:`add` reads those keys from the observation dict, and
+            :meth:`sample` returns ``"observations"`` as a dict.
         action_size: Dimension of the action vector.
         seq_len: Length of the sampled sequences.
         batch_size: Number of sequences per batch.
         obs_dtype: Storage dtype for observations. ``uint8`` for images keeps
-            the buffer four times smaller than ``float32``.
+            the buffer four times smaller than ``float32``. With several inputs,
+            a mapping from key to dtype; keys left out store rank-3 (image)
+            observations as ``uint8`` and others as ``float32``.
         online_fraction: Largest fraction of each batch drawn from the online
             queue. The paper fills the batch from the queue first, which is
             ``1.0``; lower values reserve slots for uniform samples.
@@ -62,7 +69,7 @@ class DreamerV3ReplayBuffer:
     """
 
     #: Arrays written by :func:`simulusion.training.tasks.common.save_replay`.
-    replay_arrays = (
+    replay_arrays: tuple[str, ...] = (
         "observations",
         "prev_actions",
         "rewards",
@@ -77,7 +84,7 @@ class DreamerV3ReplayBuffer:
     def __init__(
         self,
         size: int,
-        obs_shape: Sequence[int],
+        obs_shape: Sequence[int] | Mapping[str, Sequence[int]],
         action_size: int,
         seq_len: int,
         batch_size: int,
@@ -101,7 +108,18 @@ class DreamerV3ReplayBuffer:
             raise ValueError(f"latent_classes={latent_classes} does not fit in uint8")
 
         self.size = int(size)
-        self.obs_shape = tuple(int(dim) for dim in obs_shape)
+        #: Key -> shape when storing several inputs; None for a single array.
+        self.obs_space: dict[str, tuple[int, ...]] | None = None
+        if isinstance(obs_shape, Mapping):
+            if not obs_shape:
+                raise ValueError("obs_shape mapping must name at least one input")
+            self.obs_space = {
+                str(key): tuple(int(dim) for dim in shape)
+                for key, shape in obs_shape.items()
+            }
+            self.obs_shape: tuple[int, ...] = ()
+        else:
+            self.obs_shape = tuple(int(dim) for dim in obs_shape)
         self.action_size = int(action_size)
         self.seq_len = int(seq_len)
         self.batch_size = int(batch_size)
@@ -111,7 +129,24 @@ class DreamerV3ReplayBuffer:
         self.latent_classes = int(latent_classes)
         self.stores_latents = self.deter_size > 0
 
-        self.observations = np.empty((self.size, *self.obs_shape), dtype=obs_dtype)
+        self.replay_arrays = type(self).replay_arrays
+        self._obs_arrays: dict[str, np.ndarray] = {}
+        if self.obs_space is None:
+            self.observations = np.empty((self.size, *self.obs_shape), dtype=obs_dtype)
+        else:
+            names = []
+            for key, shape in self.obs_space.items():
+                array = np.empty(
+                    (self.size, *shape), dtype=_obs_dtype(key, shape, obs_dtype)
+                )
+                self._obs_arrays[key] = array
+                # Exposed as attributes so the generic replay checkpointing
+                # (which reads `replay_arrays` by name) saves every input.
+                setattr(self, _obs_attr(key), array)
+                names.append(_obs_attr(key))
+            self.replay_arrays = tuple(
+                name for name in self.replay_arrays if name != "observations"
+            ) + tuple(names)
         self.prev_actions = np.zeros((self.size, self.action_size), dtype=np.float32)
         self.rewards = np.zeros((self.size,), dtype=np.float32)
         self.is_first = np.zeros((self.size,), dtype=np.float32)
@@ -141,14 +176,21 @@ class DreamerV3ReplayBuffer:
 
     @staticmethod
     def bytes_per_record(
-        obs_shape: Sequence[int],
+        obs_shape: Sequence[int] | Mapping[str, Sequence[int]],
         obs_dtype: Any,
         action_size: int,
         deter_size: int = 0,
         latent_dim: int = 0,
     ) -> int:
         """Memory one record takes, for sizing the buffer to available RAM."""
-        obs = int(np.prod(obs_shape)) * np.dtype(obs_dtype).itemsize
+        if isinstance(obs_shape, Mapping):
+            obs = sum(
+                int(np.prod(shape))
+                * np.dtype(_obs_dtype(key, tuple(shape), obs_dtype)).itemsize
+                for key, shape in obs_shape.items()
+            )
+        else:
+            obs = int(np.prod(obs_shape)) * np.dtype(obs_dtype).itemsize
         # prev action + reward + three flags (float32) + has_latent.
         scalars = action_size * 4 + 4 * 4 + 1
         return obs + scalars + int(deter_size) * 2 + int(latent_dim)
@@ -194,7 +236,26 @@ class DreamerV3ReplayBuffer:
             self.end_episode()
 
         index = self.idx
-        self.observations[index] = self._extract_obs(obs)
+        if self.obs_space is None:
+            self.observations[index] = self._extract_obs(obs)
+        else:
+            if not isinstance(obs, Mapping):
+                raise TypeError(
+                    "This buffer stores several inputs; pass the observation dict."
+                )
+            missing = [key for key in self.obs_space if key not in obs]
+            if missing and len(self.obs_space) == 1:
+                # One input stored under another usual name ("image"/"obs"),
+                # accepted as the single-array buffer always did.
+                (array,) = self._obs_arrays.values()
+                array[index] = self._extract_obs(obs)
+            elif missing:
+                raise KeyError(
+                    f"Observation is missing {missing}; it has {sorted(obs)}."
+                )
+            else:
+                for key, array in self._obs_arrays.items():
+                    array[index] = np.asarray(obs[key])
         if is_first:
             self.prev_actions[index] = 0.0
             self.rewards[index] = 0.0
@@ -363,8 +424,15 @@ class DreamerV3ReplayBuffer:
         ) % self.size
         init_deter, init_stoch, init_valid = self._initial_state(start_arr)
 
+        observations: np.ndarray | dict[str, np.ndarray]
+        if self.obs_space is None:
+            observations = self.observations[index]
+        else:
+            observations = {
+                key: array[index] for key, array in self._obs_arrays.items()
+            }
         return {
-            "observations": self.observations[index],
+            "observations": observations,
             "prev_actions": self.prev_actions[index],
             "rewards": self.rewards[index],
             "is_first": self.is_first[index],
@@ -375,6 +443,21 @@ class DreamerV3ReplayBuffer:
             "init_stoch": init_stoch,
             "init_valid": init_valid,
         }
+
+
+def _obs_attr(key: str) -> str:
+    return f"obs__{key}"
+
+
+def _obs_dtype(key: str, shape: Sequence[int], obs_dtype: Any) -> Any:
+    """Storage dtype for one input: an explicit entry, else by rank."""
+    if isinstance(obs_dtype, Mapping):
+        if key in obs_dtype:
+            return obs_dtype[key]
+        return np.uint8 if len(tuple(shape)) == 3 else np.float32
+    if len(tuple(shape)) == 3:
+        return obs_dtype
+    return np.float32
 
 
 def _to_numpy(value: Any) -> np.ndarray:

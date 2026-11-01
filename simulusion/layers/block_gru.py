@@ -21,12 +21,13 @@ import math
 import torch
 import torch.nn as nn
 
+from simulusion.export import ExportableAgentMixin
 from simulusion.layers.rms_norm import RMSNorm
 
 __all__ = ["BlockLinear", "BlockGRUCell"]
 
 
-class BlockLinear(nn.Module):
+class BlockLinear(ExportableAgentMixin, nn.Module):
     """Linear layer applied independently within each of ``blocks`` groups.
 
     Equivalent to a dense layer whose weight matrix is constrained to be
@@ -98,7 +99,7 @@ class BlockLinear(nn.Module):
         )
 
 
-class BlockGRUCell(nn.Module):
+class BlockGRUCell(ExportableAgentMixin, nn.Module):
     """GRU cell with block-diagonal recurrent weights and RMSNorm gating.
 
     The cell expects the caller to supply a dense input embedding of size
