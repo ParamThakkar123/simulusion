@@ -271,6 +271,11 @@ See {doc}`episodes_guide`.
 | `EpisodeFolder` | `simulusion.data` | A folder of episodes (`.npz`, videos, `.npy`), the dataset every task reads. |
 | `EpisodeWriter` | `simulusion.data` | Append episodes to a folder and record its `meta.json`. |
 | `LeRobotEpisodes` | `simulusion.data` | Local LeRobot datasets (v2.x and v3.0) as episodes. |
+| `record_retro` | `simulusion.data` | Play a retro console game (stable-retro) and record it as episodes. |
+| `import_retro_movies` | `simulusion.data` | Replay `.bk2` movies of human play into an episode folder. |
+| `import_gameplay` | `simulusion.data` | Gameplay videos with per-frame input logs (games without an emulator, such as Terraria) as episodes. |
+| `FramePipeline` | `simulusion.data` | Crop, resize, grayscale and frame skip for game frames. |
+| `GamePreset` | `simulusion.data` | A named game's data source and default preprocessing. |
 
 ## Agents
 

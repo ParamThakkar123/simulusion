@@ -304,7 +304,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="episodes_guide.html">Your Own Data: Episodes, LeRobot and Games</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
@@ -439,7 +439,21 @@ a compressed <code class="docutils literal notranslate"><span class="pre">.npz</
 <li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">import</span> <span class="pre">lerobot</span> <span class="pre">&lt;source&gt;</span> <span class="pre">&lt;out_dir&gt;</span></code> - Convert a local LeRobot
 dataset folder into an episode folder, the format every training task reads.
 Options: <code class="docutils literal notranslate"><span class="pre">--camera</span></code>, <code class="docutils literal notranslate"><span class="pre">--all-cameras</span></code>, <code class="docutils literal notranslate"><span class="pre">--episodes</span> <span class="pre">0-9</span></code>. See
-<a class="reference internal" href="episodes_guide.html"><span class="doc">Your Own Data: Episodes and LeRobot</span></a>.</p></li>
+<a class="reference internal" href="episodes_guide.html"><span class="doc">Your Own Data: Episodes, LeRobot and Games</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">import</span> <span class="pre">video</span> <span class="pre">&lt;source&gt;</span> <span class="pre">&lt;out_dir&gt;</span></code> - Convert gameplay videos, with
+optional per-frame input logs (<code class="docutils literal notranslate"><span class="pre">&lt;video&gt;.inputs.csv</span></code>), into an episode
+folder: games without an emulator, such as Terraria. Options: <code class="docutils literal notranslate"><span class="pre">--game</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--size</span> <span class="pre">HxW</span></code>, <code class="docutils literal notranslate"><span class="pre">--crop</span> <span class="pre">T,B,L,R</span></code>, <code class="docutils literal notranslate"><span class="pre">--grayscale</span></code>, <code class="docutils literal notranslate"><span class="pre">--frame-skip</span> <span class="pre">N</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--clip-length</span> <span class="pre">N</span></code>, <code class="docutils literal notranslate"><span class="pre">--no-inputs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">import</span> <span class="pre">retro-movie</span> <span class="pre">&lt;source&gt;</span> <span class="pre">&lt;out_dir&gt;</span></code> - Replay stable-retro /
+BizHawk <code class="docutils literal notranslate"><span class="pre">.bk2</span></code> movies of human play into an episode folder. Options:
+<code class="docutils literal notranslate"><span class="pre">--game</span></code>, the pipeline options above, <code class="docutils literal notranslate"><span class="pre">--players</span> <span class="pre">N</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">record</span> <span class="pre">&lt;game&gt;</span> <span class="pre">&lt;out_dir&gt;</span></code> - Play a retro console game
+(stable-retro) with random buttons and record it as episodes. Options:
+<code class="docutils literal notranslate"><span class="pre">--episodes</span></code>, <code class="docutils literal notranslate"><span class="pre">--max-steps</span></code>, <code class="docutils literal notranslate"><span class="pre">--state</span></code>, <code class="docutils literal notranslate"><span class="pre">--discrete</span></code>, the pipeline options
+above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">games</span></code> - List the game presets (Street Fighter II, Super Mario
+Bros., Sonic, Terraria, …).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">datasets</span> <span class="pre">info</span> <span class="pre">&lt;path&gt;</span></code> - Summarise an episode folder: episodes, frames,
 action space, cameras, observations, source.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">[task]</span> <span class="pre">[--config</span> <span class="pre">FILE]</span> <span class="pre">[--print-config]</span> <span class="pre">[key=value</span> <span class="pre">...]</span></code> - Train on

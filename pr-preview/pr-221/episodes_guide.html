@@ -6,19 +6,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta property="og:title" content="Your Own Data: Episodes and LeRobot" />
+<meta property="og:title" content="Your Own Data: Episodes, LeRobot and Games" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/episodes_guide.html" />
 <meta property="og:site_name" content="Simulusion Documentation" />
-<meta property="og:description" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories and robot demonstrations all fit it, so one dataset can train Genie, Dreamer’s or IRIS’s..." />
+<meta property="og:description" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories, robot demonstrations and video games all fit it, so one dataset can train Genie, Dreame..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/_images/social_previews/summary_episodes_guide_88c5f15e.png" />
-<meta property="og:image:alt" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories and robot demonstrations all fit it, so one dataset can train Genie, Dreamer’s or IRIS’s..." />
-<meta name="description" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories and robot demonstrations all fit it, so one dataset can train Genie, Dreamer’s or IRIS’s..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-221/_images/social_previews/summary_episodes_guide_8b0bd086.png" />
+<meta property="og:image:alt" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories, robot demonstrations and video games all fit it, so one dataset can train Genie, Dreame..." />
+<meta name="description" content="Every dataset-driven task reads one format: a folder of episodes. Video, reinforcement-learning trajectories, robot demonstrations and video games all fit it, so one dataset can train Genie, Dreame..." />
 <meta name="twitter:card" content="summary_large_image" />
 
-    <title>Your Own Data: Episodes and LeRobot &#8212; Simulusion</title>
+    <title>Your Own Data: Episodes, LeRobot and Games &#8212; Simulusion</title>
   
   
   
@@ -304,7 +304,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public API Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trainer_guide.html">One Trainer for Every Model</a></li>
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Your Own Data: Episodes and LeRobot</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Your Own Data: Episodes, LeRobot and Games</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_guide.html">Training Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inference_guide.html">Inference Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="world_model_protocol.html">One interface for every world model</a></li>
@@ -389,7 +389,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Your Own Data: Episodes and LeRobot</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Your Own Data: Episodes, LeRobot and Games</span></li>
   </ul>
 </nav>
 </div>
@@ -406,21 +406,23 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="your-own-data-episodes-and-lerobot">
-<h1><a class="toc-backref" href="#id1" role="doc-backlink">Your Own Data: Episodes and LeRobot</a><a class="headerlink" href="#your-own-data-episodes-and-lerobot" title="Link to this heading">#</a></h1>
+  <section id="your-own-data-episodes-lerobot-and-games">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Your Own Data: Episodes, LeRobot and Games</a><a class="headerlink" href="#your-own-data-episodes-lerobot-and-games" title="Link to this heading">#</a></h1>
 <p>Every dataset-driven task reads one format: a folder of <strong>episodes</strong>. Video,
-reinforcement-learning trajectories and robot demonstrations all fit it, so
+reinforcement-learning trajectories, robot demonstrations and video games
+all fit it, so
 one dataset can train Genie, Dreamer’s or IRIS’s world model, or World
 Models’ VAE and MDN-RNN.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#your-own-data-episodes-and-lerobot" id="id1">Your Own Data: Episodes and LeRobot</a></p>
+<li><p><a class="reference internal" href="#your-own-data-episodes-lerobot-and-games" id="id1">Your Own Data: Episodes, LeRobot and Games</a></p>
 <ul>
 <li><p><a class="reference internal" href="#the-episode" id="id2">The episode</a></p></li>
 <li><p><a class="reference internal" href="#training-windows" id="id3">Training windows</a></p></li>
 <li><p><a class="reference internal" href="#lerobot" id="id4">LeRobot</a></p></li>
 <li><p><a class="reference internal" href="#rlds-episodes" id="id5">RLDS episodes</a></p></li>
+<li><p><a class="reference internal" href="#games" id="id6">Games</a></p></li>
 </ul>
 </li>
 </ul>
@@ -555,6 +557,145 @@ order. RLDS stores an action in every step, so the last one (past the final
 observation) is dropped; <code class="docutils literal notranslate"><span class="pre">is_terminal</span></code> on the final step marks the last
 transition terminated, and an episode that ends without it is truncated.</p>
 </section>
+<section id="games">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Games</a><a class="headerlink" href="#games" title="Link to this heading">#</a></h2>
+<p>Video games are the classic world-model playground. Which route leads to an
+episode folder depends on whether the game can run inside Python.</p>
+<section id="retro-console-games-stable-retro">
+<h3>Retro console games (stable-retro)<a class="headerlink" href="#retro-console-games-stable-retro" title="Link to this heading">#</a></h3>
+<p><a class="reference external" href="https://github.com/Farama-Foundation/stable-retro">stable-retro</a> emulates
+over a thousand NES, SNES, Genesis and other console games
+(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;simulusion[retro]&quot;</span></code>; it has no Windows wheel, so use WSL
+there). Only Airstriker ships with its ROM; import ROMs you own with
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">retro.import</span> <span class="pre">/path/to/roms</span></code>.</p>
+<p>Record a game played by a policy (random buttons by default):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>datasets<span class="w"> </span>games<span class="w">                                   </span><span class="c1"># the presets</span>
+simulusion<span class="w"> </span>datasets<span class="w"> </span>record<span class="w"> </span>airstriker<span class="w"> </span>data/airstriker<span class="w"> </span>--episodes<span class="w"> </span><span class="m">5</span>
+simulusion<span class="w"> </span>datasets<span class="w"> </span>record<span class="w"> </span>street-fighter-2<span class="w"> </span>data/sf2<span class="w"> </span>--episodes<span class="w"> </span><span class="m">50</span><span class="w"> </span>--max-steps<span class="w"> </span><span class="m">3000</span>
+simulusion<span class="w"> </span>train<span class="w"> </span>genie<span class="w"> </span>data.path<span class="o">=</span>data/sf2
+</pre></div>
+</div>
+<p>or replay <code class="docutils literal notranslate"><span class="pre">.bk2</span></code> movies, the button-by-button recordings of human play that
+stable-retro and BizHawk write. Replays are exact, frame for frame, and human
+play reaches far more of a game than random buttons:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>datasets<span class="w"> </span>import<span class="w"> </span>retro-movie<span class="w"> </span>movies/<span class="w"> </span>data/sf2_human<span class="w"> </span>--game<span class="w"> </span>street-fighter-2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_retro_movies</span><span class="p">,</span> <span class="n">record_retro</span>
+
+<span class="n">record_retro</span><span class="p">(</span><span class="s2">"super-mario-bros"</span><span class="p">,</span> <span class="s2">"data/smb"</span><span class="p">,</span> <span class="n">episodes</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">max_steps</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+<span class="n">import_retro_movies</span><span class="p">(</span><span class="s2">"movies/"</span><span class="p">,</span> <span class="s2">"data/smb_human"</span><span class="p">,</span> <span class="n">game</span><span class="o">=</span><span class="s2">"super-mario-bros"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Actions are the console’s buttons, one <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">/</span> <span class="pre">1</span></code> column each, in the order
+<code class="docutils literal notranslate"><span class="pre">meta.json</span></code> lists under <code class="docutils literal notranslate"><span class="pre">info.buttons</span></code> (for a two-player movie, <code class="docutils literal notranslate"><span class="pre">P1_*</span></code> then
+<code class="docutils literal notranslate"><span class="pre">P2_*</span></code>). <code class="docutils literal notranslate"><span class="pre">record_retro(...,</span> <span class="pre">actions=&quot;discrete&quot;)</span></code> (<code class="docutils literal notranslate"><span class="pre">--discrete</span></code>) records an
+index into the integration’s valid button combinations instead. Rewards and
+episode ends come from the game’s integration, and <code class="docutils literal notranslate"><span class="pre">record_retro</span></code> marks an
+episode cut off by <code class="docutils literal notranslate"><span class="pre">max_steps</span></code> as truncated. The recorded buttons are the ones
+the console received, after the integration drops invalid presses (UP with
+DOWN).</p>
+</section>
+<section id="games-without-an-emulator-terraria">
+<h3>Games without an emulator (Terraria)<a class="headerlink" href="#games-without-an-emulator-terraria" title="Link to this heading">#</a></h3>
+<p>PC games such as Terraria cannot run in a training loop, so their data is
+captured footage (OBS, ShadowPlay, …) plus, for action-conditioned models,
+a log of the inputs held on each frame:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>captures/
+    session_01.mp4
+    session_01.inputs.csv     # optional: a header, then one row per video frame
+    session_02.mp4
+    session_02.inputs.csv
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>frame,left,right,jump,mouse_x,mouse_y
+0,0,1,0,812,440
+1,0,1,1,812,441
+</pre></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">frame</span></code> column, if present, is only checked to be increasing; the other
+columns become <code class="docutils literal notranslate"><span class="pre">actions</span></code> (numbers: <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">/</span> <span class="pre">1</span></code> for keys, positions for the
+mouse). <code class="docutils literal notranslate"><span class="pre">.inputs.npy</span></code>, a <code class="docutils literal notranslate"><span class="pre">(frames,</span> <span class="pre">inputs)</span></code> array, works too. Videos are
+decoded one frame at a time, so long 1080p captures fit in memory, and cut
+into clips:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>simulusion<span class="w"> </span>datasets<span class="w"> </span>import<span class="w"> </span>video<span class="w"> </span>captures/<span class="w"> </span>data/terraria<span class="w"> </span>--game<span class="w"> </span>terraria<span class="w"> </span>--clip-length<span class="w"> </span><span class="m">500</span>
+simulusion<span class="w"> </span>datasets<span class="w"> </span>import<span class="w"> </span>video<span class="w"> </span>captures/<span class="w"> </span>data/terraria<span class="w"> </span>--no-inputs<span class="w">   </span><span class="c1"># frames only</span>
+</pre></div>
+</div>
+<p>Either every video has an input log or none does.</p>
+</section>
+<section id="preprocessing-and-presets">
+<h3>Preprocessing and presets<a class="headerlink" href="#preprocessing-and-presets" title="Link to this heading">#</a></h3>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">FramePipeline</span></code> describes how raw frames become
+training frames: <code class="docutils literal notranslate"><span class="pre">crop</span></code> (pixels cut from the <code class="docutils literal notranslate"><span class="pre">(top,</span> <span class="pre">bottom,</span> <span class="pre">left,</span> <span class="pre">right)</span></code>
+edges, for a score bar or letterboxing), <code class="docutils literal notranslate"><span class="pre">size</span></code> <code class="docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">grayscale</span></code>, and <code class="docutils literal notranslate"><span class="pre">frame_skip</span></code>. Frame skip merges the transitions between kept
+frames: rewards add up, an episode end in any of them ends the merged one, and
+actions combine by <code class="docutils literal notranslate"><span class="pre">action_reduce</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code> (exact for action-repeat
+recordings), <code class="docutils literal notranslate"><span class="pre">&quot;any&quot;</span></code> (keeps a short button press; used for human replays and
+captures) or <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>. The pipeline is saved in <code class="docutils literal notranslate"><span class="pre">meta.json</span></code> under
+<code class="docutils literal notranslate"><span class="pre">info.pipeline</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Preset</p></th>
+<th class="head"><p>Game</p></th>
+<th class="head"><p>Source</p></th>
+<th class="head"><p>Default pipeline</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">street-fighter-2</span></code></p></td>
+<td><p>Street Fighter II’ Special Champion Edition (Genesis)</p></td>
+<td><p>stable-retro</p></td>
+<td><p>64 x 64, every 4th frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">super-mario-bros</span></code></p></td>
+<td><p>Super Mario Bros. (NES)</p></td>
+<td><p>stable-retro</p></td>
+<td><p>64 x 64, every 4th frame</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">super-mario-world</span></code></p></td>
+<td><p>Super Mario World (SNES)</p></td>
+<td><p>stable-retro</p></td>
+<td><p>64 x 64, every 4th frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sonic</span></code></p></td>
+<td><p>Sonic The Hedgehog (Genesis)</p></td>
+<td><p>stable-retro</p></td>
+<td><p>64 x 64, every 4th frame</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">airstriker</span></code></p></td>
+<td><p>Airstriker (Genesis, ROM included)</p></td>
+<td><p>stable-retro</p></td>
+<td><p>64 x 64, every 4th frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">terraria</span></code></p></td>
+<td><p>Terraria</p></td>
+<td><p>gameplay video</p></td>
+<td><p>72 x 128, every 4th frame, <code class="docutils literal notranslate"><span class="pre">&quot;any&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Command-line options override a preset’s pipeline (<code class="docutils literal notranslate"><span class="pre">--size</span> <span class="pre">84x84</span> <span class="pre">--crop</span> <span class="pre">16,0,0,0</span> <span class="pre">--grayscale</span> <span class="pre">--frame-skip</span> <span class="pre">2</span></code>), and from Python every importer takes a
+<code class="docutils literal notranslate"><span class="pre">pipeline=</span></code>. Any stable-retro integration works without a preset
+(<code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">datasets</span> <span class="pre">record</span> <span class="pre">SonicTheHedgehog2-Genesis</span> <span class="pre">data/sonic2</span></code>), and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">register_game()</span></code> adds presets:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">FramePipeline</span><span class="p">,</span> <span class="n">GamePreset</span><span class="p">,</span> <span class="n">register_game</span>
+
+<span class="n">register_game</span><span class="p">(</span>
+    <span class="n">GamePreset</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"streets-of-rage-2"</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Streets of Rage 2 (Genesis)"</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="s2">"retro"</span><span class="p">,</span>
+        <span class="n">retro_game</span><span class="o">=</span><span class="s2">"StreetsOfRage2-Genesis"</span><span class="p">,</span>
+        <span class="n">pipeline</span><span class="o">=</span><span class="n">FramePipeline</span><span class="p">(</span><span class="n">crop</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">frame_skip</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
@@ -608,6 +749,12 @@ transition terminated, and an episode that ends without it is truncated.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-windows">Training windows</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lerobot">LeRobot</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rlds-episodes">RLDS episodes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#games">Games</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#retro-console-games-stable-retro">Retro console games (stable-retro)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#games-without-an-emulator-terraria">Games without an emulator (Terraria)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-and-presets">Preprocessing and presets</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
