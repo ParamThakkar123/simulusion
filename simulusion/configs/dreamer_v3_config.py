@@ -13,7 +13,7 @@ Reference:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from simulusion.configs.dreamer_config import DreamerConfig
 
@@ -85,6 +85,10 @@ class DreamerV3Config(DreamerConfig):
     recurrent_units: int | None = None
     cnn_depth: int | None = None
     latent_classes: int | None = None
+    # The model_size whose widths were filled in, so that a later change of
+    # model_size (e.g. through dataclasses.replace) refills them instead of
+    # keeping the old size's widths.
+    sized_for: str | None = field(default=None, repr=False)
     latent_dim: int = 32
     gru_blocks: int = 8
     # Encoder/decoder (vector inputs), actor and critic are 3-layer MLPs; the
@@ -175,6 +179,10 @@ class DreamerV3Config(DreamerConfig):
     replay_latents: bool = True
 
     use_amp: bool = False
+    # Replay the two sequential loops of each update (the observe rollout and
+    # imagination) as CUDA graphs. Same computation, far fewer kernel launches;
+    # only used on CUDA without AMP.
+    cuda_graphs: bool = True
     grad_clip_norm: float = 0.0  # Superseded by adaptive gradient clipping.
     seed_steps: int = 5000
     collect_steps: int = 1000
@@ -197,9 +205,17 @@ class DreamerV3Config(DreamerConfig):
             )
 
         preset = MODEL_SIZES[key]
+        previous = MODEL_SIZES.get(str(self.sized_for or "").strip().lower(), {})
         for field_name, value in preset.items():
-            if getattr(self, field_name) is None:
+            current = getattr(self, field_name)
+            # Refill widths that are unset or still equal the previous size's
+            # preset; widths set explicitly to something else are kept.
+            if current is None or (
+                previous and key != self.sized_for and current == previous[field_name]
+            ):
                 setattr(self, field_name, value)
+        self.model_size = key
+        self.sized_for = key
 
         if self.recurrent_units is not None and self.recurrent_units % self.gru_blocks:
             raise ValueError(

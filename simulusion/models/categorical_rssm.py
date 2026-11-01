@@ -169,15 +169,21 @@ class CategoricalRSSM(ExportableAgentMixin, nn.Module):
 
     def get_dist(self, logits: torch.Tensor) -> distributions.Independent:
         """Return the factorized categorical distribution over the latent."""
-        base = distributions.OneHotCategoricalStraightThrough(logits=logits)
+        base = distributions.OneHotCategoricalStraightThrough(
+            logits=logits, validate_args=False
+        )
         return distributions.Independent(base, 1)
 
     def _sample(self, logits: torch.Tensor) -> torch.Tensor:
         """Draw a straight-through one-hot sample from the latent distribution."""
         probs = torch.softmax(logits, dim=-1)
-        index = torch.multinomial(
-            probs.reshape(-1, self.latent_classes), num_samples=1
-        ).reshape(*probs.shape[:-1])
+        # Inverse-CDF sampling: the first class whose cumulative probability
+        # exceeds a uniform draw. Same distribution as torch.multinomial, but a
+        # few elementwise kernels with no per-call host overhead.
+        with torch.no_grad():
+            uniform = torch.rand_like(probs[..., :1])
+            below = (probs.cumsum(-1) < uniform).sum(-1)
+            index = below.clamp(max=self.latent_classes - 1)
         sample = torch.nn.functional.one_hot(index, self.latent_classes).to(probs.dtype)
         # Straight-through: hard sample forward, soft probabilities backward.
         return sample + probs - probs.detach()
@@ -336,9 +342,13 @@ class CategoricalRSSM(ExportableAgentMixin, nn.Module):
     ) -> torch.Tensor:
         """KL between two factorized categorical latents, summed over factors."""
         post = distributions.Independent(
-            distributions.OneHotCategorical(logits=posterior_logit), 1
+            distributions.OneHotCategorical(
+                logits=posterior_logit, validate_args=False
+            ),
+            1,
         )
         prior = distributions.Independent(
-            distributions.OneHotCategorical(logits=prior_logit), 1
+            distributions.OneHotCategorical(logits=prior_logit, validate_args=False),
+            1,
         )
         return distributions.kl.kl_divergence(post, prior)

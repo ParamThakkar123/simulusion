@@ -164,6 +164,7 @@ def make_env(args: Any) -> Any:
             seed=args.seed,
             size=size,
             render_mode=getattr(args, "gym_render_mode", "rgb_array"),
+            make_kwargs=getattr(args, "gym_make_kwargs", None),
         )
     elif backend in {"mujoco", "mjcf", "native_mujoco"}:
         from simulusion.envs.mujoco_env import make_mujoco_env_from_config

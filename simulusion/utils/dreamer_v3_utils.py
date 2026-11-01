@@ -55,7 +55,8 @@ def twohot(target: torch.Tensor, bins: torch.Tensor) -> torch.Tensor:
         raise ValueError("bins must contain at least two entries")
 
     target = target.to(bins.dtype)
-    clipped = target.clamp(min=float(bins[0]), max=float(bins[-1]))
+    # Tensor bounds, so the clamp does not wait on the GPU.
+    clipped = target.clamp(min=bins[0], max=bins[-1])
 
     # Index of the lower bracketing bin. `bins[below] <= clipped <= bins[above]`.
     below = bins.reshape(*([1] * clipped.ndim), num_bins) <= clipped.unsqueeze(-1)
@@ -121,6 +122,10 @@ class SymexpTwoHotDist:
                 dtype=torch.float32,
             )
         )
+        # Bins ascend, so the negative ones are a prefix. Their count is found
+        # on the host (symexp keeps signs) instead of by masking GPU tensors.
+        grid = torch.linspace(-self.symlog_range, self.symlog_range, self.num_bins)
+        self._num_negative = int((grid < 0).sum())
 
     @property
     def probs(self) -> torch.Tensor:
@@ -141,8 +146,8 @@ class SymexpTwoHotDist:
         probs = self.probs.double()
         bins = self.bins.double()
         weighted = probs * bins
-        negative = weighted[..., self.bins < 0]
-        positive = weighted[..., self.bins >= 0]
+        negative = weighted[..., : self._num_negative]
+        positive = weighted[..., self._num_negative :]
         # Reverse the negative half so both halves accumulate small -> large.
         negative_sum = torch.flip(negative, dims=(-1,)).sum(dim=-1)
         positive_sum = positive.sum(dim=-1)
@@ -210,6 +215,12 @@ class ReturnNormalizer:
     def scale(self) -> float:
         """Current smoothed percentile range (before the limit is applied)."""
         return 0.0 if self._scale is None else float(self._scale)
+
+    def scale_tensor(self) -> torch.Tensor:
+        """:attr:`scale` as a tensor, read without synchronizing with the GPU."""
+        if self._scale is None:
+            return torch.zeros(())
+        return torch.as_tensor(self._scale).detach()
 
     def update(self, returns: torch.Tensor) -> torch.Tensor:
         """Update the EMA from a batch of returns and return the denominator."""

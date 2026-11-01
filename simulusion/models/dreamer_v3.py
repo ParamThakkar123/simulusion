@@ -200,7 +200,7 @@ class DreamerV3:
         self.restore_path = getattr(args, "checkpoint_path", "")
         self.is_image_obs = bool(self.image_keys)
         self.discrete_actions = str(getattr(args, "actor_dist", "auto")) == "onehot"
-        self.last_metrics: dict[str, float] = {}
+        self._metrics: dict[str, Any] = {}
         # Per-environment collection state, so successive collection calls
         # continue the same episode instead of resetting the environment.
         self._carry: dict[int, dict[str, Any]] = {}
@@ -246,6 +246,8 @@ class DreamerV3:
             high=float(args.return_norm_high),
         )
         self._build_model(restore=self.restore)
+        self._observe_graph: Any = None
+        self._imagine_graph: Any = None
 
     # ------------------------------------------------------------------
     # Construction
@@ -651,7 +653,7 @@ class DreamerV3:
 
         if init_state is None:
             init_state = self.rssm.init_state(rewards.shape[1], self.device)
-        posterior, prior = self.rssm.observe_rollout(
+        posterior, prior = self._observe_rollout(
             embed, prev_actions, is_first.unsqueeze(-1), init_state
         )
         features = self.rssm.get_feat(posterior)
@@ -682,23 +684,81 @@ class DreamerV3:
             + float(args.beta_rep) * rep_loss
         ).mean()
 
-        self.last_metrics.update(
+        self._metrics.update(
             {
-                "wm/recon_loss": float(recon_loss.mean().detach()),
-                "wm/reward_loss": float(reward_loss.mean().detach()),
-                "wm/continue_loss": float(continue_loss.mean().detach()),
-                "wm/dyn_loss": float(dyn_loss.mean().detach()),
-                "wm/rep_loss": float(rep_loss.mean().detach()),
+                "wm/recon_loss": recon_loss.mean().detach(),
+                "wm/reward_loss": reward_loss.mean().detach(),
+                "wm/continue_loss": continue_loss.mean().detach(),
+                "wm/dyn_loss": dyn_loss.mean().detach(),
+                "wm/rep_loss": rep_loss.mean().detach(),
             }
         )
         if len(recon_terms) > 1:
             for key, term in recon_terms.items():
-                self.last_metrics[f"wm/recon_loss/{key}"] = float(term.mean().detach())
+                self._metrics[f"wm/recon_loss/{key}"] = term.mean().detach()
         return loss, posterior
 
     # ------------------------------------------------------------------
     # Imagination and actor-critic
     # ------------------------------------------------------------------
+
+    def _graphs_enabled(self) -> bool:
+        return (
+            bool(getattr(self.args, "cuda_graphs", True))
+            and self.device.type == "cuda"
+            and not self.use_amp
+        )
+
+    def _observe_rollout(
+        self,
+        embed: torch.Tensor,
+        actions: torch.Tensor,
+        is_first: torch.Tensor,
+        init_state: dict,
+    ) -> tuple[dict, dict]:
+        """``rssm.observe_rollout``, replayed as a CUDA graph when possible."""
+        if self._graphs_enabled() and torch.is_grad_enabled() and embed.requires_grad:
+            graph = self._observe_graph
+            if graph is None or not graph.matches(embed, actions, is_first, init_state):
+                from simulusion.models.dreamer_v3_graphs import GraphedObserveRollout
+
+                graph = self._capture(
+                    "observe_graph",
+                    lambda: GraphedObserveRollout(
+                        self.rssm, embed, actions, is_first, init_state
+                    ),
+                )
+            if graph is not None:
+                return graph(embed, actions, is_first, init_state)
+        return self.rssm.observe_rollout(embed, actions, is_first, init_state)
+
+    def _capture(self, name: str, build: Any) -> Any:
+        """Build a CUDA graph, or turn graphs off (with a warning) if that fails."""
+        try:
+            graph = build()
+        except RuntimeError as exc:
+            logger.warning("CUDA graph capture failed; running eagerly: %s", exc)
+            self.args.cuda_graphs = False
+            torch.cuda.synchronize()
+            return None
+        setattr(self, f"_{name}", graph)
+        return graph
+
+    def _imagine_rollout(self, start: dict, horizon: int) -> tuple[dict, torch.Tensor]:
+        """``rssm.imagine_rollout`` under the actor, as a CUDA graph when possible."""
+        policy = self.actor.forward
+        if self._graphs_enabled() and not torch.is_grad_enabled():
+            graph = self._imagine_graph
+            if graph is None or not graph.matches(start, horizon):
+                from simulusion.models.dreamer_v3_graphs import GraphedImagination
+
+                graph = self._capture(
+                    "imagine_graph",
+                    lambda: GraphedImagination(self.rssm, policy, start, horizon),
+                )
+            if graph is not None:
+                return graph(start)
+        return self.rssm.imagine_rollout(policy, start, horizon)
 
     @torch.no_grad()
     def _imagine(
@@ -734,9 +794,7 @@ class DreamerV3:
 
         start = self.rssm.detach_state(self.rssm.seq_to_batch(posterior))
         with FreezeParameters(self.world_model_modules + self.actor_modules):
-            states, actions = self.rssm.imagine_rollout(
-                lambda feat: self.actor(feat), start, horizon
-            )
+            states, actions = self._imagine_rollout(start, horizon)
             features = self.rssm.get_feat(states)
             rewards = self.reward_model(features[1:]).mean
             continues = self.continue_model(features[1:]).probs
@@ -789,12 +847,12 @@ class DreamerV3:
         objective = log_prob * advantage + float(args.actor_entropy) * entropy
         loss = -(weights * objective).mean()
 
-        self.last_metrics.update(
+        self._metrics.update(
             {
-                "actor/entropy": float(entropy.mean().detach()),
-                "actor/advantage": float(advantage.mean()),
-                "actor/return_scale": self.return_norm.scale,
-                "actor/imag_reward": float(imagined["rewards"].mean()),
+                "actor/entropy": entropy.mean().detach(),
+                "actor/advantage": advantage.mean().detach(),
+                "actor/return_scale": self.return_norm.scale_tensor(),
+                "actor/imag_reward": imagined["rewards"].mean().detach(),
             }
         )
         return loss
@@ -835,12 +893,12 @@ class DreamerV3:
             replay_loss = self._critic_terms(replay["features"], replay["returns"])
             replay_loss = (replay["weights"] * replay_loss).mean()
             total = total + float(args.critic_replay_loss_scale) * replay_loss
-            self.last_metrics["critic/replay_loss"] = float(replay_loss.detach())
+            self._metrics["critic/replay_loss"] = replay_loss.detach()
 
-        self.last_metrics.update(
+        self._metrics.update(
             {
-                "critic/value": float(imagined["values"].mean()),
-                "critic/target": float(targets.mean()),
+                "critic/value": imagined["values"].mean().detach(),
+                "critic/target": targets.mean().detach(),
             }
         )
         return total
@@ -909,7 +967,7 @@ class DreamerV3:
             clip=float(self.args.agc_clip),
             eps=float(self.args.agc_eps),
         )
-        self.last_metrics[f"grad_norm/{name}"] = float(grad_norm)
+        self._metrics[f"grad_norm/{name}"] = grad_norm.detach()
         scaler.step(optimizer)
         scaler.update()
 
@@ -920,6 +978,29 @@ class DreamerV3:
                 self.slow_value_model.parameters(), self.value_model.parameters()
             ):
                 slow.mul_(decay).add_(fast.detach(), alpha=1.0 - decay)
+
+    @property
+    def last_metrics(self) -> dict[str, float]:
+        """Diagnostics from the last update, as plain floats.
+
+        Updates record them as GPU tensors; they are copied to the host here in
+        a single transfer instead of one synchronizing ``float()`` per value.
+        """
+        pending = [k for k, v in self._metrics.items() if torch.is_tensor(v)]
+        if pending:
+            device = self._metrics[pending[0]].device
+            values = torch.stack(
+                [
+                    self._metrics[k].detach().float().reshape(()).to(device)
+                    for k in pending
+                ]
+            ).tolist()
+            self._metrics.update(zip(pending, values))
+        return self._metrics
+
+    @last_metrics.setter
+    def last_metrics(self, value: dict[str, Any]) -> None:
+        self._metrics = dict(value)
 
     @property
     def metrics(self) -> dict[str, float]:
@@ -1019,11 +1100,15 @@ class DreamerV3:
         self._update_slow_critic()
         self._updates += 1
 
-        return [
-            float(model_loss.detach()),
-            float(actor_loss.detach()),
-            float(value_loss.detach()),
-        ]
+        self._metrics.update(
+            {
+                "model_loss": model_loss.detach(),
+                "actor_loss": actor_loss.detach(),
+                "value_loss": value_loss.detach(),
+            }
+        )
+        metrics = self.last_metrics  # One host transfer for every value.
+        return [metrics["model_loss"], metrics["actor_loss"], metrics["value_loss"]]
 
     # ------------------------------------------------------------------
     # Environment interaction

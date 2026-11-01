@@ -31,6 +31,10 @@ class DreamerConfig(SerializableConfigMixin):
     env_instance: Any = field(default=None, metadata={"serialize": False})
     image_size: tuple[int, int] = (64, 64)
     gym_render_mode: str = "rgb_array"
+    # Extra keyword arguments for gym.make when `env` is an id, e.g.
+    # {"frameskip": 1, "repeat_action_probability": 0.25} for ALE games, whose
+    # v5 ids otherwise skip 4 frames before Dreamer's action repeat.
+    gym_make_kwargs: Any = None
     frame_stack: int = 1
 
     # DeepMind Control observations: "pixels" renders an image each step

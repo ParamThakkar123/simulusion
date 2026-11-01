@@ -345,7 +345,7 @@ class DreamerV3Head(ExportableAgentMixin, nn.Module):
         if self.dist == "symexp_twohot":
             return SymexpTwoHotDist(out, self.num_bins, self.symlog_range)
         if self.dist == "binary":
-            return distributions.Bernoulli(logits=out.squeeze(-1))
+            return distributions.Bernoulli(logits=out.squeeze(-1), validate_args=False)
         if self.dist == "symlog_mse":
             return out.squeeze(-1)
         raise ValueError(f"Unknown head distribution {self.dist!r}")
@@ -415,11 +415,13 @@ class DreamerV3Actor(ExportableAgentMixin, nn.Module):
                 uniform = torch.ones_like(probs) / float(self.action_size)
                 probs = (1.0 - self.unimix) * probs + self.unimix * uniform
                 logits = torch.log(probs)
-            return distributions.OneHotCategorical(logits=logits)
+            return distributions.OneHotCategorical(logits=logits, validate_args=False)
         mean, std = torch.chunk(out, 2, dim=-1)
         mean = torch.tanh(mean)
         std = (self.max_std - self.min_std) * torch.sigmoid(std + 2.0) + self.min_std
-        return distributions.Independent(distributions.Normal(mean, std), 1)
+        return distributions.Independent(
+            distributions.Normal(mean, std, validate_args=False), 1
+        )
 
     def forward(
         self, features: torch.Tensor, deterministic: bool = False
@@ -434,7 +436,19 @@ class DreamerV3Actor(ExportableAgentMixin, nn.Module):
                     logits.dtype
                 )
             return dist.mean
-        return dist.sample()
+        if self.discrete:
+            # Inverse-CDF draw of a one-hot action: the distribution of
+            # OneHotCategorical.sample without torch.multinomial, which cannot
+            # be captured in a CUDA graph.
+            probs = torch.as_tensor(getattr(dist, "probs"))
+            uniform = torch.rand_like(probs[..., :1])
+            index = (probs.cumsum(-1) < uniform).sum(-1).clamp(max=self.action_size - 1)
+            return torch.nn.functional.one_hot(index, self.action_size).to(probs.dtype)
+        # mean + std * noise samples the same Normal. torch.normal would first
+        # check std >= 0 on the host, which a CUDA graph cannot contain.
+        normal = getattr(dist, "base_dist")
+        with torch.no_grad():
+            return normal.loc + normal.scale * torch.randn_like(normal.loc)
 
     def add_exploration(
         self, action: torch.Tensor, action_noise: float = 0.0

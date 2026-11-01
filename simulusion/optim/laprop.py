@@ -18,7 +18,7 @@ References:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, cast
 
 import torch
 from torch.optim import Optimizer
@@ -53,18 +53,24 @@ def adaptive_grad_clip_(
     if not pairs:
         return torch.zeros(())
 
-    total_sq = torch.zeros((), device=pairs[0][1].device, dtype=torch.float32)
-    for param, grad in pairs:
-        grad_norm = grad.detach().float().norm(2)
-        total_sq = total_sq + grad_norm.pow(2)
+    params = [param.detach() for param, _ in pairs]
+    grads = [grad.detach() for _, grad in pairs]
+    # One fused kernel per list instead of a Python loop over tensors.
+    grad_norms = torch.stack([norm.float() for norm in torch._foreach_norm(grads, 2)])
+    param_norms = torch.stack(
+        [norm.float() for norm in torch._foreach_norm(params, 2)]
+    ).clamp(min=eps)
+    # Clamping the scale at 1 keeps gradients within budget untouched.
+    scales = (clip * param_norms / grad_norms.clamp(min=1e-12)).clamp(max=1.0)
+    by_dtype: dict[torch.dtype, tuple[list[torch.Tensor], list[torch.Tensor]]] = {}
+    for grad, scale in zip(grads, scales.unbind()):
+        group = by_dtype.setdefault(grad.dtype, ([], []))
+        group[0].append(grad)
+        group[1].append(scale.to(grad.dtype))
+    for group_grads, group_scales in by_dtype.values():
+        torch._foreach_mul_(group_grads, group_scales)
 
-        param_norm = param.detach().float().norm(2).clamp(min=eps)
-        max_norm = clip * param_norm
-        # Clamping the scale at 1 keeps gradients within budget untouched.
-        scale = (max_norm / grad_norm.clamp(min=1e-12)).clamp(max=1.0)
-        grad.detach().mul_(scale.to(grad.dtype))
-
-    return total_sq.sqrt()
+    return grad_norms.pow(2).sum().sqrt()
 
 
 class LaProp(Optimizer):
@@ -116,11 +122,13 @@ class LaProp(Optimizer):
             eps = group["eps"]
             weight_decay = group["weight_decay"]
 
+            # Parameters are updated together, one fused kernel per operation,
+            # in buckets that share a step count, device and dtype.
+            buckets: dict[tuple, list[torch.Tensor]] = {}
             for param in group["params"]:
                 if param.grad is None:
                     continue
-                grad = param.grad
-                if grad.is_sparse:
+                if param.grad.is_sparse:
                     raise RuntimeError("LaProp does not support sparse gradients")
 
                 state = self.state[param]
@@ -128,26 +136,33 @@ class LaProp(Optimizer):
                     state["step"] = 0
                     state["exp_avg"] = torch.zeros_like(param)
                     state["exp_avg_sq"] = torch.zeros_like(param)
-
-                exp_avg = state["exp_avg"]
-                exp_avg_sq = state["exp_avg_sq"]
                 state["step"] += 1
-                step = state["step"]
+                key = (state["step"], param.device, param.dtype)
+                buckets.setdefault(key, []).append(param)
+
+            for (step, _, _), params in buckets.items():
+                grads = [cast(torch.Tensor, param.grad) for param in params]
+                exp_avgs = [self.state[param]["exp_avg"] for param in params]
+                exp_avg_sqs = [self.state[param]["exp_avg_sq"] for param in params]
 
                 bias_correction1 = 1.0 - beta1**step
                 bias_correction2 = 1.0 - beta2**step
 
                 # RMSProp normalization first ...
-                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
-                denom = (exp_avg_sq / bias_correction2).sqrt_().add_(eps)
-                normalized = grad / denom
+                torch._foreach_mul_(exp_avg_sqs, beta2)
+                torch._foreach_addcmul_(exp_avg_sqs, grads, grads, value=1.0 - beta2)
+                denom = torch._foreach_div(exp_avg_sqs, bias_correction2)
+                torch._foreach_sqrt_(denom)
+                torch._foreach_add_(denom, eps)
+                normalized = torch._foreach_div(grads, list(denom))
 
                 # ... then momentum on the already-normalized gradient.
-                exp_avg.mul_(beta1).add_(normalized, alpha=1.0 - beta1)
+                torch._foreach_mul_(exp_avgs, beta1)
+                torch._foreach_add_(exp_avgs, normalized, alpha=1.0 - beta1)
 
                 if weight_decay != 0.0:
-                    param.add_(param, alpha=-lr * weight_decay)
+                    torch._foreach_mul_(params, 1.0 - lr * weight_decay)
 
-                param.add_(exp_avg, alpha=-lr / bias_correction1)
+                torch._foreach_add_(params, exp_avgs, alpha=-lr / bias_correction1)
 
         return loss

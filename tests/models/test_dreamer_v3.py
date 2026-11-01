@@ -1135,3 +1135,31 @@ class TestPublicApi:
         from simulusion.api import list_envs
 
         assert len(list_envs("dreamerv3")) > 0
+
+
+class TestTrainerCheckpoints:
+    """The shared Dreamer task checkpoints a DreamerV3 core."""
+
+    def test_task_checkpoint_round_trip(self, tmp_path):
+        from types import SimpleNamespace
+
+        from simulusion.training.tasks.dreamer import DreamerTask, DreamerTaskConfig
+
+        cfg = tiny_config()
+        model = DreamerV3(cfg, (6,), 2, "cpu")
+        task = DreamerTask.__new__(DreamerTask)
+        task.config = DreamerTaskConfig(model=cfg, save_replay=False)
+        task.dreamer = model
+        task.seeded = True
+        task._agent = None
+        task._trainer = SimpleNamespace(device=torch.device("cpu"))
+
+        # DreamerV3 has no V1/V2 GradientUpdate objects; saving must not need them.
+        task.save_checkpoint(tmp_path)
+        assert (tmp_path / "dreamer.pt").exists()
+
+        with torch.no_grad():
+            for param in model.actor.parameters():
+                param.zero_()
+        task.load_checkpoint(tmp_path)
+        assert any(p.abs().sum() > 0 for p in model.actor.parameters())

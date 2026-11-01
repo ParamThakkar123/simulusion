@@ -17,6 +17,17 @@ import numpy as np
 from PIL import Image
 
 
+def _register_ale(gymnasium: Any) -> None:
+    """Register the ``ALE/`` ids, which Gymnasium 1.x no longer auto-loads."""
+    try:
+        import ale_py
+    except ImportError:
+        return
+    register = getattr(gymnasium, "register_envs", None)
+    if callable(register):
+        register(ale_py)
+
+
 def make_gym_env(env: Any, **kwargs: Any) -> Any:
     """Create a GymImageEnv wrapper for generic Gym/Gymnasium environments.
 
@@ -73,7 +84,9 @@ class GymImageEnv:
         size: tuple[int, int] = (64, 64),
         render_mode: str = "rgb_array",
         include_state: bool = False,
+        make_kwargs: dict[str, Any] | None = None,
     ) -> None:
+        self._make_kwargs = dict(make_kwargs or {})
         self._size = (int(size[0]), int(size[1]))
         self._seed = seed
         self._render_mode = render_mode
@@ -83,6 +96,8 @@ class GymImageEnv:
 
         if isinstance(env, str):
             self._env = self._make_env_from_id(env, render_mode)
+        elif self._make_kwargs:
+            raise ValueError("make_kwargs only applies when env is an id string.")
         else:
             self._env = env
 
@@ -127,10 +142,13 @@ class GymImageEnv:
 
     def _make_env_from_id(self, env_id: str, render_mode: str) -> Any:
         # Prefer gymnasium if available, then fallback to gym.
+        kw = self._make_kwargs
         gymnasium = import_gymnasium()
+        if env_id.startswith("ALE/") and gymnasium is not None:
+            _register_ale(gymnasium)
         if gymnasium is not None:
             try:
-                return gymnasium.make(env_id, render_mode=render_mode)
+                return gymnasium.make(env_id, render_mode=render_mode, **kw)
             except ImportError as exc:
                 from simulusion.envs.robotics_env import (
                     is_moved_mujoco_error,
@@ -141,16 +159,16 @@ class GymImageEnv:
                     raise
                 register_gymnasium_robotics_envs()
                 try:
-                    return gymnasium.make(env_id, render_mode=render_mode)
+                    return gymnasium.make(env_id, render_mode=render_mode, **kw)
                 except TypeError:
-                    return gymnasium.make(env_id)
+                    return gymnasium.make(env_id, **kw)
             except TypeError:
-                return gymnasium.make(env_id)
+                return gymnasium.make(env_id, **kw)
 
         try:
-            return gym.make(env_id, render_mode=render_mode)
+            return gym.make(env_id, render_mode=render_mode, **kw)
         except TypeError:
-            return gym.make(env_id)
+            return gym.make(env_id, **kw)
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
