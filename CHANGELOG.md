@@ -134,6 +134,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `PhysicsStateSpec` naming each dimension and its kind (hinge angle, slide,
   free-joint position or quaternion, ...). This is the ground truth for probing
   which world-model latents recover the simulator's state.
+- **Video game datasets** (#133). Retro console games through stable-retro
+  (`pip install "simulusion[retro]"`): `record_retro` plays a game and records
+  frames, button presses, rewards and episode ends; `import_retro_movies`
+  replays `.bk2` movies of human play. Games without an emulator, such as
+  Terraria, come in as gameplay video with optional per-frame input logs
+  (`import_gameplay`), decoded a frame at a time and cut into clips.
+  `FramePipeline` crops, resizes, converts to grayscale and skips frames
+  (merging rewards, episode ends and actions), and `GamePreset`s bundle a
+  game's source and pipeline: `street-fighter-2`, `super-mario-bros`,
+  `super-mario-world`, `sonic`, `airstriker` and `terraria`. On the command
+  line: `simulusion datasets record`, `datasets import video`,
+  `datasets import retro-movie` and `datasets games`.
 - **One trainer for every family** (`simulusion.training.Trainer`). Any
   training task runs to a step budget on one device (CPU, a GPU or MPS) with
   one precision setting (`fp32` / `bf16` / `fp16` / `auto`), gradient

@@ -245,6 +245,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "EpisodeFolder": "simulusion.data",
     "EpisodeWriter": "simulusion.data",
     "LeRobotEpisodes": "simulusion.data",
+    "FramePipeline": "simulusion.data",
+    "GamePreset": "simulusion.data",
+    "record_retro": "simulusion.data",
+    "import_retro_movies": "simulusion.data",
+    "import_gameplay": "simulusion.data",
     # Agents that act through any world model.
     "CEMPlanner": "simulusion.agents",
     "PlanningAgent": "simulusion.agents",

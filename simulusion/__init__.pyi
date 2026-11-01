@@ -53,7 +53,12 @@ from simulusion.controller.rollout_generator import RolloutGenerator as RolloutG
 from simulusion.controller.rssm_policy import RSSMPolicy as RSSMPolicy
 from simulusion.data.folder import EpisodeFolder as EpisodeFolder
 from simulusion.data.folder import EpisodeWriter as EpisodeWriter
+from simulusion.data.gameplay import import_gameplay as import_gameplay
+from simulusion.data.games import GamePreset as GamePreset
 from simulusion.data.lerobot import LeRobotEpisodes as LeRobotEpisodes
+from simulusion.data.preprocess import FramePipeline as FramePipeline
+from simulusion.data.retro import import_retro_movies as import_retro_movies
+from simulusion.data.retro import record_retro as record_retro
 from simulusion.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
 from simulusion.envs.ale_atari_env import make_atari_env as make_atari_env
 from simulusion.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
@@ -251,7 +256,9 @@ __all__ = [
     "EpisodeFolder",
     "EpisodeWriter",
     "ExportableAgentMixin",
+    "FramePipeline",
     "FreezeParameters",
+    "GamePreset",
     "Genie",
     "GenieConfig",
     "GenieSmallConfig",
@@ -358,6 +365,8 @@ __all__ = [
     "get_env_backend_spec",
     "get_model_spec",
     "get_registered_model_spec",
+    "import_gameplay",
+    "import_retro_movies",
     "inference_context",
     "jepa_linear_probe",
     "list_available_atari_envs",
@@ -394,6 +403,7 @@ __all__ = [
     "optimize_for_inference",
     "preprocess_obs",
     "quantize_weights",
+    "record_retro",
     "register_env_backend",
     "register_gymnasium_robotics_envs",
     "register_task",

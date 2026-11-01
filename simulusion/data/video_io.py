@@ -10,7 +10,7 @@ from __future__ import annotations
 import importlib.util
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 import numpy as np
 
@@ -43,6 +43,59 @@ def read_video(
         f"Decoding {Path(path).name} needs PyAV (pip install simulusion[lerobot]) "
         "or OpenCV (pip install simulusion[viz])."
     )
+
+
+def iter_video(path: str | Path) -> Iterator[np.ndarray]:
+    """Yield a video's frames one at a time as ``(H, W, 3)`` uint8 RGB, for
+    footage too long to hold in memory at full resolution."""
+    path = Path(path)
+    if importlib.util.find_spec("av") is not None:
+        import av
+
+        with av.open(str(path)) as container:
+            for decoded in container.decode(container.streams.video[0]):
+                yield decoded.to_ndarray(format="rgb24")
+        return
+    if importlib.util.find_spec("cv2") is not None:
+        import cv2
+
+        capture = cv2.VideoCapture(str(path))
+        if not capture.isOpened():
+            capture.release()
+            raise FileNotFoundError(f"Could not open video: {path}")
+        try:
+            while True:
+                ok, frame = capture.read()
+                if not ok:
+                    break
+                yield cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        finally:
+            capture.release()
+        return
+    raise ImportError(
+        f"Decoding {path.name} needs PyAV (pip install simulusion[lerobot]) "
+        "or OpenCV (pip install simulusion[viz])."
+    )
+
+
+def video_fps(path: str | Path) -> Optional[float]:
+    """A video's average frame rate, or ``None`` when it cannot be read."""
+    if importlib.util.find_spec("av") is not None:
+        import av
+
+        with av.open(str(path)) as container:
+            rate = container.streams.video[0].average_rate
+            return float(rate) if rate else None
+    if importlib.util.find_spec("cv2") is not None:
+        import cv2
+
+        capture = cv2.VideoCapture(str(path))
+        try:
+            fps = float(capture.get(cv2.CAP_PROP_FPS))
+        finally:
+            capture.release()
+        return fps or None
+    return None
 
 
 def write_video(path: str | Path, frames: np.ndarray, fps: float = 30.0) -> Path:
@@ -119,4 +172,4 @@ def _read_cv2(path: Path) -> np.ndarray:
     return np.stack(frames)
 
 
-__all__ = ["VIDEO_SUFFIXES", "read_video", "write_video"]
+__all__ = ["VIDEO_SUFFIXES", "iter_video", "read_video", "video_fps", "write_video"]

@@ -10,6 +10,13 @@
 * :class:`LeRobotEpisodes` - local LeRobot datasets (v2.x and v3.0).
 * :func:`episode_from_rlds` - RLDS episodes (the Open X-Embodiment format)
   given as Python / NumPy values.
+* :func:`record_retro` / :func:`import_retro_movies` - retro console games
+  (Street Fighter II, Super Mario Bros., Sonic, ...) played or replayed in
+  stable-retro.
+* :func:`import_gameplay` - captured gameplay video with input logs, for games
+  without an emulator (Terraria).
+* :class:`FramePipeline` / :class:`GamePreset` - how a game's frames are
+  cropped, resized and skipped, and the named presets that bundle it.
 """
 
 from typing import Any
@@ -23,6 +30,8 @@ from simulusion.data.folder import (
     read_meta,
     write_meta,
 )
+from simulusion.data.games import GamePreset, get_game, list_games, register_game
+from simulusion.data.preprocess import FramePipeline
 from simulusion.data.sequence import (
     SequenceDataset,
     collate_sequences,
@@ -37,6 +46,10 @@ _LAZY = {
     "episode_from_rlds": "simulusion.data.rlds",
     "read_video": "simulusion.data.video_io",
     "write_video": "simulusion.data.video_io",
+    "episode_from_movie": "simulusion.data.retro",
+    "import_retro_movies": "simulusion.data.retro",
+    "record_retro": "simulusion.data.retro",
+    "import_gameplay": "simulusion.data.gameplay",
 }
 
 
@@ -53,18 +66,27 @@ __all__ = [
     "Episode",
     "EpisodeFolder",
     "EpisodeWriter",
+    "FramePipeline",
+    "GamePreset",
     "LeRobotEpisodes",
     "RLDSKeys",
     "SequenceDataset",
     "as_uint8_frames",
     "collate_sequences",
+    "episode_from_movie",
     "episode_from_rlds",
     "frames_to_float",
+    "get_game",
+    "import_gameplay",
     "import_lerobot",
+    "import_retro_movies",
+    "list_games",
     "load_episode",
     "one_hot_actions",
     "read_meta",
     "read_video",
+    "record_retro",
+    "register_game",
     "write_meta",
     "write_video",
 ]
