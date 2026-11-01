@@ -2,34 +2,37 @@ import importlib.util
 
 import pytest
 
-if importlib.util.find_spec("gymnasium") is None and importlib.util.find_spec("gym") is None:
+if (
+    importlib.util.find_spec("gymnasium") is None
+    and importlib.util.find_spec("gym") is None
+):
     pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
 
 import torch
 import numpy as np
-from world_models.utils.gym_compat import gym
+from simulusion.utils.gym_compat import gym
 from unittest.mock import MagicMock, patch
 
-from world_models.configs.diamond_config import (
+from simulusion.configs.diamond_config import (
     DiamondConfig,
     ATARI_100K_GAMES,
     HUMAN_SCORES,
     RANDOM_SCORES,
 )
-from world_models.envs.diamond_atari import DiamondAtariWrapper, make_diamond_atari_env
-from world_models.datasets.diamond_dataset import ReplayBuffer
-from world_models.models.diffusion.diamond_diffusion import (
+from simulusion.envs.diamond_atari import DiamondAtariWrapper, make_diamond_atari_env
+from simulusion.datasets.diamond_dataset import ReplayBuffer
+from simulusion.models.diffusion.diamond_diffusion import (
     DiffusionUNet,
     EDMPreconditioner,
     EulerSampler,
     AdaptiveGroupNorm,
     TimestepEmbedding,
 )
-from world_models.models.diffusion.reward_termination import (
+from simulusion.models.diffusion.reward_termination import (
     RewardTerminationModel,
     RewardTerminationLoss,
 )
-from world_models.models.diffusion.actor_critic import (
+from simulusion.models.diffusion.actor_critic import (
     ActorCriticNetwork,
     RLLoss,
 )
@@ -141,7 +144,11 @@ class TestDiamondAtariWrapper:
         assert reward == 1.0
 
     def test_make_diamond_atari_env(self):
-        with patch("world_models.envs.diamond_atari.gym.make") as mock_make:
+        # `make_diamond_atari_env` imports `gym` locally via
+        # `from simulusion.utils.gym_compat import gym`, so patch `gym.make`
+        # where it is actually looked up rather than on the env module (which
+        # has no module-level `gym` attribute).
+        with patch("simulusion.utils.gym_compat.gym.make") as mock_make:
             mock_make.return_value = MagicMock()
             mock_make.return_value.__class__ = gym.Env
             env = make_diamond_atari_env("Breakout-v5", seed=42)
@@ -256,7 +263,9 @@ class TestEulerSampler:
             )
 
         assert result.shape == shape
-        assert (result >= 0).all() and (result <= 1).all()
+        # Frames live in [-1, 1]: that is the domain EDM's sigma_data = 0.5
+        # (Appendix C) is calibrated for.
+        assert (result >= -1).all() and (result <= 1).all()
 
 
 class TestDiffusionUNet:
@@ -529,17 +538,21 @@ class TestIntegration:
             action_dim=18,
         ).to("cuda")
 
+        # The conv trunk is flattened into the LSTM (Appendix D), so the frame
+        # size determines the cell's input width and has to be declared.
         reward_model = RewardTerminationModel(
             obs_channels=3,
             action_dim=18,
             lstm_dim=64,
             cond_dim=32,
+            frame_size=config.obs_size,
         ).to("cuda")
 
         actor_critic = ActorCriticNetwork(
             obs_channels=3,
             action_dim=18,
             lstm_dim=64,
+            frame_size=config.obs_size,
         ).to("cuda")
 
         B = 2
@@ -569,4 +582,3 @@ class TestIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

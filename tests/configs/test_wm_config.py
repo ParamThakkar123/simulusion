@@ -1,7 +1,7 @@
 """Tests for World Models configuration classes."""
 
 import pytest
-from world_models.configs.wm_config import (
+from simulusion.configs.wm_config import (
     WMVAEConfig,
     WMMDNRNNConfig,
     WMControllerConfig,
@@ -90,7 +90,7 @@ class TestWMControllerConfig:
         assert config.latent_size == 32
         assert config.hidden_size == 200
         assert config.action_size == 3
-        assert config.env_name == "CarRacing-v2"
+        assert config.env_name == "CarRacing-v3"
 
     def test_custom_values(self):
         config = WMControllerConfig(

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Training script for Genie on TinyWorlds HDF5 dataset."""
 
+import dataclasses
 import os
 import torch
 from omegaconf import OmegaConf
 
-from world_models.configs.genie_config import GenieSmallConfig
-from world_models.training.train_genie import create_genie_trainer
-from world_models.datasets import create_tinyworlds_dataloader
+from simulusion.configs.genie_config import GenieSmallConfig
+from simulusion.training.train_genie import create_genie_trainer
+from simulusion.datasets import create_tinyworlds_dataloader
 
 
 def main():
@@ -35,25 +36,91 @@ def main():
 
     print(f"Using device: {device}")
 
+    early_stopping = bool(cli_cfg.get("early_stopping", False))
+    patience = int(cli_cfg.get("patience", 10))
+    min_delta = float(cli_cfg.get("min_delta", 1e-4))
+    val_split = float(cli_cfg.get("val_split", 0.1 if early_stopping else 0.0))
+
+    checkpoint_interval = int(cli_cfg.get("checkpoint_interval", 0))
+
     config = GenieSmallConfig()
     config.num_frames = num_frames
     config.image_size = image_size
     config.batch_size = batch_size
     config.max_steps = max_steps
     config.learning_rate = learning_rate
+    config.early_stopping = early_stopping
+    config.patience = patience
+    config.min_delta = min_delta
+    config.val_split = val_split
+
+    # Every remaining GenieSmallConfig field is settable from the CLI, so the
+    # architecture can be shrunk as well as the schedule. Without this the
+    # smallest run possible was still the full 462M-parameter model, which does
+    # not fit on a small GPU no matter how low batch_size goes.
+    handled = {
+        "dataset",
+        "num_frames",
+        "image_size",
+        "batch_size",
+        "num_workers",
+        "max_steps",
+        "log_interval",
+        "val_interval",
+        "learning_rate",
+        "cache_dir",
+        "data_file",
+        "checkpoint_dir",
+        "checkpoint_interval",
+        "device",
+        "early_stopping",
+        "patience",
+        "min_delta",
+        "val_split",
+    }
+    fields = {f.name: f.type for f in dataclasses.fields(config)}
+    for key, value in cli_cfg.items():
+        if key in handled:
+            continue
+        if key not in fields:
+            raise SystemExit(
+                f"unknown option '{key}'. GenieSmallConfig fields: "
+                + ", ".join(sorted(fields))
+            )
+        current = getattr(config, key)
+        # OmegaConf hands back str for everything on the CLI; coerce to the
+        # type the field already holds so the dataclass stays well typed.
+        if isinstance(current, bool):
+            value = str(value).lower() in ("1", "true", "yes")
+        elif isinstance(current, int):
+            value = int(value)
+        elif isinstance(current, float):
+            value = float(value)
+        setattr(config, key, value)
+        print(f"  config override: {key}={value}")
 
     print(f"Loading {dataset} dataset...")
-    train_dataset, train_loader = create_tinyworlds_dataloader(
+    loader_kwargs = dict(
         dataset_name=dataset,
         num_frames=num_frames,
         image_size=image_size,
         batch_size=batch_size,
         num_workers=num_workers,
-        shuffle=True,
         cache_dir=cache_dir,
         download=not data_file,
         data_file=data_file,
+        val_split=val_split,
     )
+    train_dataset, train_loader = create_tinyworlds_dataloader(
+        shuffle=True, split="train", **loader_kwargs
+    )
+
+    val_loader = None
+    if early_stopping:
+        # Same val_split and seed, so this is the disjoint other half.
+        _, val_loader = create_tinyworlds_dataloader(
+            shuffle=False, split="val", **loader_kwargs
+        )
 
     print(f"Dataset: {len(train_dataset)} samples, {len(train_loader)} batches")
 
@@ -65,10 +132,12 @@ def main():
     print("Starting training...")
     trainer.train(
         train_dataloader=train_loader,
-        val_dataloader=None,
+        val_dataloader=val_loader,
         num_steps=max_steps,
         log_interval=log_interval,
         val_interval=val_interval,
+        checkpoint_dir=checkpoint_dir,
+        checkpoint_interval=checkpoint_interval,
     )
 
     os.makedirs(checkpoint_dir, exist_ok=True)

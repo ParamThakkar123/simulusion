@@ -1,0 +1,105 @@
+# IRIS on a small consumer GPU (~4-8GB).
+#
+#   simulusion train iris --config simulusion/configs/experiments/iris_small_gpu.yaml
+#
+# The paper's configuration (iris.yaml) was trained on A100 40GB cards -- see
+# Appendix G, which reports 8x A100 and ~3.5 days per environment. Its batch
+# sizes will OOM on a laptop GPU.
+#
+# What is reduced here, and what it costs:
+#
+#   * Batch sizes. The main lever, and the cheapest one: smaller batches mean
+#     noisier gradients, not a different algorithm. Raise these first if you
+#     have headroom.
+#   * Per-epoch gradient steps. The paper takes 200 steps per component per
+#     epoch. Imagination rollouts are the expensive part (each one runs the
+#     Transformer H * K times), so actor-critic steps are cut hardest. This
+#     directly slows learning -- it is a wall-clock/quality tradeoff, not a
+#     free win.
+#   * total_epochs. Fewer epochs after collection ends.
+#
+# What is NOT reduced, because it changes the method rather than its scale:
+# tokens_per_frame, vocab_size, imagination_horizon, burn_in_length,
+# transformer_timesteps, and every loss weight are left at the paper's values.
+#
+# Expect worse returns than the published Pong number (14.6). The point of this
+# preset is a run that trains at all on limited hardware.
+
+# Model architecture: unchanged from the paper except transformer depth.
+frame_height: 64
+frame_width: 64
+frame_channels: 3
+vocab_size: 512
+tokens_per_frame: 16
+token_embedding_dim: 512
+encoder_channels: 64
+encoder_residual_blocks: 2
+decoder_depth: 64
+reconstruction_weight: 1.0
+commitment_weight: 1.0
+perceptual_weight: 1.0
+perceptual_blocks: 5
+quantizer: gradient
+
+transformer_timesteps: 20
+transformer_embed_dim: 256
+transformer_layers: 6        # paper: 10
+transformer_heads: 4
+transformer_dropout: 0.1
+weight_decay: 0.01
+gradient_checkpointing: true
+use_amp: true
+
+# Actor-critic: paper values.
+imagination_horizon: 20
+burn_in_length: 20
+discount: 0.995
+td_lambda: 0.95
+entropy_coef: 0.001
+
+# Training loop: same 100k env-step budget, smaller batches and fewer steps.
+# Collection runs for the first `collection_epochs` epochs, so total_epochs must
+# stay above it or the run is cut short mid-collection: at total_epochs=300 the
+# loop stopped after 300 * 200 = 60k env steps, silently training on 60% of the
+# Atari 100k budget the comment below claims. 550 keeps the full 100k and cuts
+# only the post-collection epochs (paper: 600, i.e. 100 of them).
+total_epochs: 550            # paper: 600
+collection_epochs: 500       # 500 * 200 = 100k env steps (unchanged budget)
+env_steps_per_epoch: 200
+training_steps_per_epoch: 100        # paper: 200 (autoencoder)
+transformer_steps_per_epoch: 40      # paper: 200
+actor_critic_steps_per_epoch: 10     # paper: 200 -- the expensive one
+# Measured peak allocation on a 4GB card (RTX 3050 laptop), with the
+# paper-faithful autoencoder (64-channel decoder, 2 residual blocks per layer in
+# both halves) and the 5-block LPIPS perceptual loss:
+#
+#     ae=128 tf=32 ac=32  ->  3.05 GB   (fits, but little headroom)
+#     ae= 64 tf=16 ac=16  ->  1.70 GB   <- default
+#     ae= 32 tf= 8 ac= 8  ->  0.99 GB
+#     ae= 16 tf= 4 ac= 4  ->  0.64 GB
+#
+# Allocator overhead pushes reserved memory well above the allocated figure, so
+# the default leaves room for that plus evaluation. Move up a row if you have
+# a larger card -- batch size is the cheapest quality lever here.
+autoencoder_batch_size: 64           # paper: 256
+transformer_batch_size: 16           # paper: 64
+actor_critic_batch_size: 16          # paper: 64
+start_autoencoder_after: 5
+start_transformer_after: 25
+start_actor_critic_after: 50
+model_learning_rate: 0.0001
+actor_learning_rate: 0.0001
+value_learning_rate: 0.0001
+grad_clip_norm: 10.0
+collect_epsilon: 0.01
+eval_temperature: 0.5
+
+env_backend: gym
+env: ALE/Pong-v5
+action_repeat: 4
+repeat_action_probability: 0.0
+
+# 100 eval episodes of Pong takes many minutes; keep periodic evals cheap and
+# run a full 100-episode evaluation once at the end for a comparable number.
+eval_episodes: 10
+checkpoint_interval: 50

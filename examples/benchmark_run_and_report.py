@@ -7,8 +7,8 @@ Usage:
     python examples/benchmark_run_and_report.py
 """
 
-from world_models.benchmarks.runner import BenchmarkRunner
-from world_models.benchmarks import adapters, metrics
+from simulusion.benchmarks.runner import BenchmarkRunner
+from simulusion.benchmarks import adapters, metrics
 
 
 def main():

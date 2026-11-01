@@ -1,5 +1,5 @@
 import pytest
-from world_models.models.genie import Genie
+from simulusion.models.genie import Genie
 
 
 @pytest.mark.integration

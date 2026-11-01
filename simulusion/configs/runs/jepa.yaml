@@ -1,0 +1,13 @@
+# I-JEPA (ViT-B/16) on ImageNet; the paper's masks and schedules.
+#   simulusion train --config jepa model.root_path=/data/imagenet
+task: jepa
+trainer:
+  precision: bf16
+  log_every: 50
+  checkpoint_every: 5000
+model:                     # JEPAConfig
+  dataset: imagenet
+  model_name: vit_base
+  batch_size: 128          # lr scales with the effective batch
+  epochs: 300
+val_batches: 0

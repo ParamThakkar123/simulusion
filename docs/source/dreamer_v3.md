@@ -16,9 +16,9 @@ Based on: [Mastering Diverse Domains through World Models](https://arxiv.org/abs
 ## Quick start
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "dreamer-v3",
     env="Pendulum-v1",
     env_backend="gym",
@@ -30,7 +30,7 @@ agent.train()
 Scaling up is a single argument — every other hyperparameter stays fixed:
 
 ```python
-agent = torchwm.create_model("dreamer-v3", env="walker-walk", model_size="200m")
+agent = simulusion.create_model("dreamer-v3", env="walker-walk", model_size="200m")
 ```
 
 ## What changed from DreamerV2
@@ -197,7 +197,7 @@ score higher **and** need less environment interaction.
 | 400M | 1536 | 12288 | 96 | 96 |
 
 ```python
-from world_models.configs import DreamerV3Config
+from simulusion.configs import DreamerV3Config
 
 config = DreamerV3Config(model_size="200m")   # widths filled in automatically
 config = DreamerV3Config(model_size="200m", hidden_size=896)  # override one field
@@ -269,10 +269,10 @@ Both observation kinds and both action kinds are handled automatically:
 ### From the top-level API
 
 ```python
-import torchwm
+import simulusion
 
-config = torchwm.create_config("dreamer-v3", env="walker-walk", seed=0)
-agent = torchwm.create_model("dreamer-v3", config)
+config = simulusion.create_config("dreamer-v3", env="walker-walk", seed=0)
+agent = simulusion.create_model("dreamer-v3", config)
 agent.train()
 rewards, videos, latents = agent.evaluate()
 ```
@@ -280,8 +280,8 @@ rewards, videos, latents = agent.evaluate()
 ### Direct construction
 
 ```python
-from world_models.models.dreamer_v3 import DreamerV3
-from world_models.configs import DreamerV3Config
+from simulusion.models.dreamer_v3 import DreamerV3
+from simulusion.configs import DreamerV3Config
 
 model = DreamerV3(
     DreamerV3Config(actor_dist="normal"),
@@ -307,10 +307,10 @@ resumes exactly rather than restarting the normalization statistics.
 Every piece is usable on its own:
 
 ```python
-from world_models.models import CategoricalRSSM
-from world_models.optim import LaProp, adaptive_grad_clip_
-from world_models.layers import BlockGRUCell
-from world_models.utils.dreamer_v3_utils import ReturnNormalizer, SymexpTwoHotDist
+from simulusion.models import CategoricalRSSM
+from simulusion.optim import LaProp, adaptive_grad_clip_
+from simulusion.layers import BlockGRUCell
+from simulusion.utils.dreamer_v3_utils import ReturnNormalizer, SymexpTwoHotDist
 ```
 
 ## Diagnostics

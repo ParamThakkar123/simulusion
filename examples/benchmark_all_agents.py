@@ -10,8 +10,8 @@ from omegaconf import OmegaConf
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from world_models.benchmarks.runner import MultiAgentBenchmarkRunner
-from world_models.benchmarks import adapters
+from simulusion.benchmarks.runner import MultiAgentBenchmarkRunner
+from simulusion.benchmarks import adapters
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
     print(f"Seeds: {seeds}, Episodes per seed: {episodes}")
     print(f"Output directory: {out_dir}")
 
-    runner = MultiAgentBenchmarkRunner(adapters=all_adapters, out_dir=out_dir)
+    runner = MultiAgentBenchmarkRunner(adapter_classes=all_adapters, out_dir=out_dir)
 
     results = runner.run_all(
         env_spec={"game": game},

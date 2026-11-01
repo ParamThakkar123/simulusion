@@ -2,7 +2,7 @@
 
 For the full environment backend reference — including installation, factory
 functions, observation/action contracts, and troubleshooting — see the
-{ref}`environments/index:Environment Backends` page.
+{doc}`environments/index` page.
 
 ```{toctree}
 :maxdepth: 1
@@ -14,7 +14,7 @@ Environment Backends <environments/index>
 ## Quick start
 
 ```python
-from torchwm import DreamerConfig
+from simulusion import DreamerConfig
 
 cfg = DreamerConfig()
 cfg.env_backend = "dmc"
@@ -27,7 +27,7 @@ cfg.time_limit = 1000
 For direct environment construction, use the top-level factories:
 
 ```python
-from torchwm import (
+from simulusion import (
     DeepMindControlEnv,
     make_atari_env,
     make_brax_env,

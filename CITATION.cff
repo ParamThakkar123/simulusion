@@ -1,10 +1,26 @@
+cff-version: 1.2.0
+message: "If you use Simulusion in your research, please cite it as below."
+type: software
+title: "Simulusion: A Modular PyTorch Library for World Models"
+abstract: >-
+  Simulusion (formerly TorchWM) brings world-model algorithms - Dreamer, PlaNet,
+  IRIS, DIAMOND, JEPA, DiT and Genie - together under one PyTorch API for
+  training, evaluating and deploying them across environments.
+authors:
+  - family-names: Thakkar
+    given-names: Param
+license: MIT
+repository-code: "https://github.com/paramthakkar123/simulusion"
+url: "https://paramthakkar123.github.io/simulusion/"
+keywords:
+  - world models
+  - model-based reinforcement learning
+  - pytorch
 preferred-citation:
-  type: misc
+  type: software
+  title: "Simulusion: A Modular PyTorch Library for World Models"
   authors:
     - family-names: Thakkar
       given-names: Param
-  title: "GitHub - ParamThakkar123/torchwm: A modular PyTorch library designed for learning, training, and deploying world models across various environments."
   year: 2025
-  url: "https://github.com/ParamThakkar123/torchwm"
-  publisher: "GitHub"
-  journal: "GitHub"
+  url: "https://github.com/paramthakkar123/simulusion"

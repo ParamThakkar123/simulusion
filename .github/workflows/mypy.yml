@@ -23,11 +23,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install mypy
+        # Pinned: an unpinned linter turns someone else's release into a red
+        # build. Bump deliberately, with the fixes in the same commit.
+        pip install 'mypy==1.20.0'
         # Install common type stubs to reduce import-untyped noise
         pip install types-PyYAML
 
     - name: Run mypy
       run: |
-        # Run mypy directly against the actual package directory
-        mypy world_models torchwm tools evals
+        # ``mypy.ini`` already sets ``files = simulusion``. Passing the same
+        # package twice makes mypy 1.20 report a duplicate ``simulusion`` module
+        # (the ``__init__.pyi`` stub colliding with itself).
+        mypy simulusion

@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from world_models.memory.dreamer_v3_memory import DreamerV3ReplayBuffer
+from simulusion.memory.dreamer_v3_memory import DreamerV3ReplayBuffer
 
 
 def make_buffer(size=64, seq_len=4, batch_size=3, online_fraction=0.0):

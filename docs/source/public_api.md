@@ -1,20 +1,20 @@
 # Public API Quick Reference
 
-TorchWM exposes `torchwm` as the friendly public namespace for both
+Simulusion exposes `simulusion` as the friendly public namespace for both
 application code and direct component imports. Use it for factory helpers,
-operators, model classes, config classes, and environment constructors.
+model classes, config classes, and environment constructors.
 
 ## Common Workflow
 
 ```python
-import torchwm
+import simulusion
 
 # Discover supported factories.
-models = torchwm.list_models()
-backends = torchwm.list_env_backends()
+models = simulusion.list_models()
+backends = simulusion.list_env_backends()
 
 # Configure and create a model in one step.
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "dreamer",
     env_backend="dmc",
     env="walker-walk",
@@ -22,10 +22,7 @@ agent = torchwm.create_model(
 )
 
 # Create standalone environments through a consistent backend selector.
-env = torchwm.make_env("CartPole-v1", backend="gym")
-
-# Build preprocessing operators without importing deep modules.
-op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
+env = simulusion.make_env("CartPole-v1", backend="gym")
 ```
 
 ## Factory Helpers
@@ -42,10 +39,10 @@ op = torchwm.get_operator("dreamer", image_size=64, action_dim=6)
 ## Direct Imports Still Work
 
 The factory API is a convenience layer. Advanced and research workflows can keep
-using direct imports from `torchwm`:
+using direct imports from `simulusion`:
 
 ```python
-from torchwm import DreamerAgent, DreamerConfig, RSSM
+from simulusion import DreamerAgent, DreamerConfig, RSSM
 
 cfg = DreamerConfig()
 cfg.env = "walker-walk"
@@ -54,3 +51,16 @@ agent = DreamerAgent(cfg)
 
 Use direct imports when you are composing custom modules, subclassing internals,
 or need access to implementation-specific constructors.
+
+## 1.0 scope
+
+These names stay in the 1.x public surface, with the following documented
+limits:
+
+- There is no DreamerV3 implementation in 1.0, and no `dreamer-v3` registry
+  name: the Dreamer family is `dreamer-v1` and `dreamer-v2`.
+- `agent.train()` with a step budget is the Dreamer-family path. Other
+  registered models train through their dedicated trainers or CLI commands.
+- Genie `VideoDataset` loads `.npy` / `.pt` clips, or video files when the
+  `viz` extra (OpenCV) is installed. TinyWorlds training still goes through
+  `scripts/train_genie_tinyworlds.py`.

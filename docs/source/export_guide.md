@@ -1,8 +1,11 @@
 # Exporting Models for Deployment
 
-TorchWM provides a unified export system that converts trained models and agents
-into deployable formats — ONNX, TorchScript, and TensorRT — without requiring
-each model to implement its own export logic.
+Simulusion provides a unified export system that converts trained models and agents
+into deployable formats — `torch.export` programs, AOTInductor packages, ONNX,
+TensorRT and (legacy) TorchScript — without requiring each model to implement
+its own export logic. For making inference fast, choosing what to export for
+a recurrent world model, and packaging it with its config, see
+{doc}`deployment_guide`.
 
 ```{contents} Contents
 :depth: 3
@@ -14,7 +17,7 @@ The export system is built around three levels of API:
 
 | Level | Function / Method | When to use |
 |---|---|---|
-| **Module method** | `module.export(path, format, ...)` | Any `torch.nn.Module` — works automatically after importing `world_models.export` |
+| **Module method** | `module.export(path, format, ...)` | Every `nn.Module` class exported from the top-level `simulusion` namespace (`Genie`, `VisionTransformer`, `RSSM`, ...) |
 | **Agent method** | `agent.export(path, format, ...)` | High-level agents (`DreamerAgent`, `JEPAAgent`, `IRISAgent`) that inherit `ExportableAgentMixin` |
 | **Standalone** | `export_any(obj, path, ...)` / `export_model(module, path, ...)` | When you need explicit control over which submodule is exported or want to bypass automatic target resolution |
 
@@ -22,20 +25,43 @@ The export system is built around three levels of API:
 
 | Format | Extension | Use case |
 |---|---|---|
+| `"exported_program"` (aliases: `"export"`, `"pt2"`, `"ep"`) | `.pt2` | **Recommended.** `torch.export` graph; loadable without the model's source, and the input to AOTInductor, ExecuTorch and TensorRT |
+| `"aoti"` (aliases: `"aotinductor"`) | `.pt2` | Ahead-of-time compiled package, runnable from Python or C++ (LibTorch) without the model's Python code; needs a C++ toolchain at export time |
 | `"onnx"` | `.onnx` | Cross-platform inference, mobile, edge devices, TensorRT conversion |
-| `"torchscript"` (aliases: `"jit"`, `"ts"`, `"pt"`, `"script"`) | `.pt` | Serving via LibTorch (C++), no Python dependency at inference time |
-| `"tensorrt"` (aliases: `"trt"`) | `.pt` | NVIDIA GPU-optimized inference (requires `torch_tensorrt` package) |
+| `"tensorrt"` (aliases: `"trt"`) | `.ep` | NVIDIA GPU-optimized inference (requires `torch_tensorrt`). Compiles through `ir="dynamo"` by default; pass `ir="ts"` for the legacy TorchScript path |
+| `"torchscript"` (aliases: `"jit"`, `"ts"`, `"pt"`, `"script"`) | `.pt` | Legacy. TorchScript is in maintenance mode upstream; prefer `"exported_program"` or `"aoti"` |
+
+`torch.export` options pass straight through, for example
+`dynamic_shapes={"x": {0: torch.export.Dim("batch")}}` to keep the batch size
+symbolic.
+
+### Loading and verifying artifacts
+
+```python
+from simulusion import export_model, load_exported, verify_export
+
+path = export_model(module, "step.pt2", format="exported_program", example_inputs=x)
+max_err = verify_export(module, path, x)  # raises AssertionError on mismatch
+runner = load_exported(path)  # format inferred from the suffix
+runner = load_exported("step_aoti.pt2", format="aoti")
+```
+
+`load_exported` returns a plain callable for every format. ONNX artifacts run
+through ONNX Runtime when it is installed.
 
 ## Quick start
 
 ### Exporting any `nn.Module`
 
-Importing `world_models.export` installs the `.export()` method on every
-`torch.nn.Module` instance once:
+`simulusion.export_model(module, path, ...)` exports any `torch.nn.Module`,
+including your own. Simulusion does not add methods to `torch.nn.Module`; its
+public model classes get `.export()` from `ExportableAgentMixin`, which you can
+also inherit in your own classes (see [Custom agents](#custom-agents)).
 
 ```python
 import torch
-import world_models.export  # installs nn.Module.export
+from simulusion import export_model
+
 
 class MyModel(torch.nn.Module):
     def __init__(self):
@@ -45,24 +71,30 @@ class MyModel(torch.nn.Module):
     def forward(self, x):
         return self.linear(x)
 
+
 model = MyModel()
 model.eval()
 
-# TorchScript (scripted — works without example_inputs)
-model.export("model.pt", format="torchscript")
+# torch.export program (recommended)
+export_model(
+    model, "model.pt2", format="exported_program", example_inputs=torch.zeros(1, 64)
+)
 
 # ONNX (requires example_inputs)
-model.export("model.onnx", format="onnx", example_inputs=torch.zeros(1, 64))
+export_model(model, "model.onnx", format="onnx", example_inputs=torch.zeros(1, 64))
 ```
+
+Simulusion's own models (for example `simulusion.create_model("genie-small")`) can
+call the same thing as a method: `genie.export("genie.pt2", format="exported_program", example_inputs=video)`.
 
 ### Exporting a trained agent
 
 High-level agents support the same `.export()` method directly:
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model("dreamer", env="walker-walk", total_steps=1000)
+agent = simulusion.create_model("dreamer", env="walker-walk", total_steps=1000)
 # ... train the agent ...
 
 # Export the policy to ONNX
@@ -127,7 +159,7 @@ agent.export(
     input_names=["latent"],
     output_names=["action"],
     dynamic_axes={"latent": {0: "batch"}, "action": {0: "batch"}},
-    opset_version=17,        # default
+    opset_version=17,  # default
 )
 ```
 
@@ -170,11 +202,12 @@ agent.export(
 
 ## Custom agents
 
-If you build a custom agent that is not an `nn.Module`, inherit
-`ExportableAgentMixin` to get the `.export()` method:
+Inherit `ExportableAgentMixin` to give a custom agent (or your own
+`nn.Module`) the `.export()` method:
 
 ```python
-from torchwm import ExportableAgentMixin
+from simulusion import ExportableAgentMixin
+
 
 class MyAgent(ExportableAgentMixin):
     def __init__(self):
@@ -199,14 +232,14 @@ agent.export(
 ```
 
 Or add inference support by implementing a matching pattern in
-`_infer_example_inputs` in `world_models/export.py`.
+`_infer_example_inputs` in `simulusion/export.py`.
 
 ## Low-level API
 
 For scripting or batch export, use the standalone functions directly:
 
 ```python
-from torchwm import export_any, export_model
+from simulusion import export_any, export_model
 
 # export_any resolves the target module from any object
 export_any(agent, "policy.onnx", format="onnx")
@@ -235,5 +268,4 @@ export_model(agent.policy, "policy.pt", format="torchscript")
 ## See Also
 
 - {doc}`inference_guide` — running exported models in production
-- {doc}`operators_guide` — preprocessing inputs for exported models
 - {doc}`public_api` — `export_any` and `export_model` factory functions

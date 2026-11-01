@@ -9,11 +9,12 @@ repos:
         args: ['--maxkb=1000']
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.6
+    rev: v0.16.8
     hooks:
       - id: ruff
         args: ["--fix"]
         files: ^.*\.py$
+      - id: ruff-format
 
   # Formatting is handled by `ruff format` (via Makefile); black is removed to
   # avoid conflict.

@@ -1,6 +1,6 @@
 # Plugin Registry
 
-TorchWM's plugin registry lets you register custom world models and environment
+Simulusion's plugin registry lets you register custom world models and environment
 backends so they are discoverable through the standard factory API alongside
 built-in models.
 
@@ -20,7 +20,8 @@ built-in models.
 Use `register_world_model` as a decorator on your model class:
 
 ```python
-from torchwm import register_world_model
+from simulusion import register_world_model
+
 
 @register_world_model(
     "my-agent",
@@ -37,16 +38,16 @@ class MyAgent:
 After registration:
 
 ```python
-import torchwm
+import simulusion
 
 # Standard factory API works:
-cfg = torchwm.create_config("my-agent", learning_rate=1e-4)
-agent = torchwm.create_model("my-agent", cfg)
+cfg = simulusion.create_config("my-agent", learning_rate=1e-4)
+agent = simulusion.create_model("my-agent", cfg)
 
 # Discovery:
-print(torchwm.list_models())       # includes "my-agent"
-spec = torchwm.get_model_spec("my-agent")
-print(spec.description)            # "My custom world model agent"
+print(simulusion.list_models())  # includes "my-agent"
+spec = simulusion.get_model_spec("my-agent")
+print(spec.description)  # "My custom world model agent"
 ```
 
 ### Without a config class
@@ -55,15 +56,14 @@ If your model does not need a config object, omit `config_path`:
 
 ```python
 @register_world_model("simple-model", import_path="my_package.models:create_simple")
-class SimpleModel:
-    ...
+class SimpleModel: ...
 ```
 
 `create_config("simple-model")` returns `None`; keyword overrides are forwarded
 directly to the factory:
 
 ```python
-model = torchwm.create_model("simple-model", hidden_size=128)
+model = simulusion.create_model("simple-model", hidden_size=128)
 ```
 
 ### Without a class (direct registration)
@@ -71,7 +71,7 @@ model = torchwm.create_model("simple-model", hidden_size=128)
 Passing a Python import-path string skips the decorator pattern entirely:
 
 ```python
-from torchwm import register_world_model
+from simulusion import register_world_model
 
 register_world_model(
     "my-agent",
@@ -93,17 +93,16 @@ Aliases let users refer to your model by multiple names:
     import_path="...",
     aliases=("my_agent", "custom", "ma"),
 )
-class MyAgent:
-    ...
+class MyAgent: ...
 ```
 
 All of the following resolve to the same model:
 
 ```python
-torchwm.create_model("my-agent")
-torchwm.create_model("my_agent")
-torchwm.create_model("custom")
-torchwm.create_model("ma")
+simulusion.create_model("my-agent")
+simulusion.create_model("my_agent")
+simulusion.create_model("custom")
+simulusion.create_model("ma")
 ```
 
 ### Overriding an existing model
@@ -117,8 +116,7 @@ built-in models — use with caution):
     import_path="my_package.models:MyDreamer",
     override=True,
 )
-class MyDreamer:
-    ...
+class MyDreamer: ...
 ```
 
 This shadows the built-in `dreamer` spec. All existing scripts calling
@@ -129,7 +127,7 @@ This shadows the built-in `dreamer` spec. All existing scripts calling
 The same registry pattern works for environment backends:
 
 ```python
-from torchwm import register_env_backend
+from simulusion import register_env_backend
 
 register_env_backend(
     "custom-env",
@@ -145,20 +143,20 @@ Registered backends appear in `list_env_backends()` and work with
 ## Discovering registered models
 
 ```python
-import torchwm
+import simulusion
 
 # All models (built-in + registered):
-all_models = torchwm.list_models()
+all_models = simulusion.list_models()
 
 # Only externally registered models:
-ext_models = torchwm.list_registered_models()
+ext_models = simulusion.list_registered_models()
 
 # Spec lookup:
-spec = torchwm.get_model_spec("my-agent")
+spec = simulusion.get_model_spec("my-agent")
 print(spec.name, spec.import_path, spec.config_path, spec.description)
 
 # Remove a registration:
-torchwm.deregister_world_model("my-agent")
+simulusion.deregister_world_model("my-agent")
 ```
 
 ## Deprecating a model
@@ -167,12 +165,12 @@ Use the `deprecated_class` decorator to mark an older model as deprecated and
 point users to its replacement:
 
 ```python
-from torchwm import deprecated_class
+from simulusion import deprecated_class
+
 
 @deprecated_class(version="0.6.0", alternative="MyNewAgent")
 @register_world_model("old-agent", import_path="my_package.models:OldAgent")
-class OldAgent:
-    ...
+class OldAgent: ...
 ```
 
 Instantiating `OldAgent` (or using `create_model("old-agent")`) emits a
@@ -183,10 +181,10 @@ DeprecationWarning: 'OldAgent' is deprecated since v0.6.0 — Use MyNewAgent ins
 ```
 
 Lower-level `deprecated_function` and generic `deprecated` decorators are also
-available from `torchwm`:
+available from `simulusion`:
 
 ```python
-from torchwm import deprecated, deprecated_function
+from simulusion import deprecated, deprecated_function
 ```
 
 ## Complete example
@@ -194,8 +192,8 @@ from torchwm import deprecated, deprecated_function
 ```python
 """my_package/models.py"""
 
-import torchwm
-from torchwm import register_world_model, deprecated_class
+import simulusion
+from simulusion import register_world_model, deprecated_class
 
 
 class MyConfig:
@@ -215,18 +213,17 @@ class ResearchModel:
     def __init__(self, config):
         self.config = config
 
-    def forward(self, obs):
-        ...
+    def forward(self, obs): ...
 ```
 
 Usage in any experiment script:
 
 ```python
-import torchwm
+import simulusion
 
-model = torchwm.create_model(
+model = simulusion.create_model(
     "research-model",
-    learning_rate=3e-4,    # overrides the default in MyConfig
+    learning_rate=3e-4,  # overrides the default in MyConfig
 )
 ```
 

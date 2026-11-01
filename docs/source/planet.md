@@ -9,6 +9,19 @@ dynamics model to select the best action.
 PlaNet introduced the **RSSM** (Recurrent State-Space Model) that later became
 the backbone of Dreamer and other latent-dynamics agents.
 
+## See it in action
+
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/planet_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>Left: the real environment. Right: PlaNet's latent model predicting open loop from the actions its CEM planner chooses.</figcaption>
+</figure>
+```
+
+Trained from scratch in one to two hours on a 4 GB laptop GPU with
+`python demos/planet_demo.py train`, then recorded with `python demos/planet_demo.py record`.
+More clips are in the {ref}`gallery <gallery-planet>`.
+
 ```{contents} Contents
 ```
 
@@ -84,9 +97,9 @@ posterior and prior are within 3 nats, no further gradient pressure is applied.
 PlaNet stores **complete episodes** rather than individual transitions:
 
 ```python
-from torchwm import Memory, Episode
+from simulusion import Memory, Episode
 
-memory = Memory(size=100)           # keep at most 100 episodes
+memory = Memory(size=100)  # keep at most 100 episodes
 episode = Episode()
 episode.append(obs, action, reward, done)
 episode.terminate(final_obs)
@@ -103,32 +116,32 @@ sequences, lengths = memory.sample(batch_size=32, tracelen=50)
 | **Eviction** | FIFO per-episode (deque-based) |
 | **Time-major** | Optional via `time_first=True` |
 
-## Usage in TorchWM
+## Usage in Simulusion
 
 ### Direct construction
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model("planet", env="CartPole-v1")
+agent = simulusion.create_model("planet", env="CartPole-v1")
 agent.train(epochs=100, steps_per_epoch=150)
 ```
 
 PlaNet takes parameters directly in its constructor (no separate config class):
 
 ```python
-from torchwm import Planet
+from simulusion import Planet
 
 agent = Planet(
     env="CartPole-v1",
-    bit_depth=5,              # image bit depth for preprocessing
-    state_size=200,           # deterministic GRU state dimension
-    latent_size=30,           # stochastic latent dimension
-    embedding_size=1024,      # encoder output dimension
-    memory_size=100,          # number of episodes to keep
+    bit_depth=5,  # image bit depth for preprocessing
+    state_size=200,  # deterministic GRU state dimension
+    latent_size=30,  # stochastic latent dimension
+    embedding_size=1024,  # encoder output dimension
+    memory_size=100,  # number of episodes to keep
     action_repeats=1,
     max_episode_steps=1000,
-    headless=False,           # set True for headless servers
+    headless=False,  # set True for headless servers
 )
 ```
 
@@ -139,11 +152,11 @@ results_dir = agent.train(
     epochs=100,
     steps_per_epoch=150,
     batch_size=32,
-    H=50,                     # sequence length for training
-    beta=1.0,                 # KL weight
+    H=50,  # sequence length for training
+    beta=1.0,  # KL weight
     save_every=25,
     record_grads=False,
-    scheduler_type="step",    # LR scheduler: "step", "cosine", "exponential", "plateau", None
+    scheduler_type="step",  # LR scheduler: "step", "cosine", "exponential", "plateau", None
     scheduler_kwargs={"step_size": 50, "gamma": 0.5},
 )
 ```
@@ -174,26 +187,6 @@ agent = Planet(
         "top_candidates": 100,
     },
 )
-```
-
-### Preprocessing operator
-
-```python
-from torchwm import get_operator, PlaNetOperator
-
-op = get_operator("planet", state_dim=32, action_dim=4)
-
-# Or directly:
-op = PlaNetOperator(state_dim=32, action_dim=4)
-
-result = op.process({
-    "obs": torch.randn(32),
-    "action": [0.1, 0.2, 0.3, 0.4],
-    "reward": 1.0,
-    "done": False,
-})
-print(result["obs"].shape)     # (1, 32)
-print(result["action"].shape)  # (1, 4)
 ```
 
 ## See Also

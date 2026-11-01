@@ -1,0 +1,16 @@
+# DiT on CIFAR-10 (downloads into ROOT_PATH). Progress is optimizer steps;
+# the default budget is EPOCHS x batches per epoch.
+#   simulusion train --config dit model.EPOCHS=100
+task: dit
+trainer:
+  precision: auto
+  log_every: 100
+  eval_every: 2000
+  checkpoint_every: 10000
+model:                     # DiTConfig (UPPER_CASE fields, as train_dit takes them)
+  DATASET: cifar10
+  ROOT_PATH: ./data
+  BATCH: 256
+  EPOCHS: 100
+  NUM_WORKERS: 4
+val_batches: 8

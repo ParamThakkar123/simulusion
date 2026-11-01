@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import torch
 
-from world_models.utils.dreamer_utils import symexp, symlog
-from world_models.utils.dreamer_v3_utils import (
+from simulusion.utils.dreamer_utils import symexp, symlog
+from simulusion.utils.dreamer_v3_utils import (
     ReturnNormalizer,
     SymexpTwoHotDist,
     free_bits,

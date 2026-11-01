@@ -1,0 +1,19 @@
+# IRIS's world model (discrete autoencoder + transformer) from recorded
+# episodes with discrete actions, e.g. ones RecordingWrapper or
+# `simulusion collect` wrote:
+#   simulusion train --config iris-wm data.path=data/pong
+task: iris-wm
+trainer:
+  max_steps: 50000
+  precision: auto
+  log_every: 100
+  eval_every: 2000
+  checkpoint_every: 5000
+  early_stopping_metric: val_token_loss
+model: {}                  # IRISConfig: architecture and optimizer
+action_dim: null           # from the dataset's meta.json when null
+data:
+  path: null               # required
+  batch_size: 64
+  num_workers: 2
+  val_fraction: 0.05

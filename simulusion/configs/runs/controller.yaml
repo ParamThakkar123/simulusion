@@ -1,0 +1,18 @@
+# World Models, stage 3 (C): a linear controller evolved with CMA-ES. One step
+# is one generation. mode=dream trains it inside the V + M world model.
+#   simulusion train --config controller world_model=runs/<mdrnn run>/world_model
+task: controller
+trainer:
+  max_steps: 100
+  log_every: 1
+  eval_every: 10
+model:
+  env_name: CarRacing-v3
+  pop_size: 16
+  n_samples: 4
+  time_limit: 1000
+  target_return: 900
+world_model: null          # required
+mode: env
+env_kwargs:
+  continuous: true

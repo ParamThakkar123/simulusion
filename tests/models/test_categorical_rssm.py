@@ -3,8 +3,8 @@
 import pytest
 import torch
 
-from world_models.layers.block_gru import BlockGRUCell, BlockLinear
-from world_models.models.categorical_rssm import CategoricalRSSM
+from simulusion.layers.block_gru import BlockGRUCell, BlockLinear
+from simulusion.models.categorical_rssm import CategoricalRSSM
 
 
 class TestBlockLinear:

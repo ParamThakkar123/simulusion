@@ -1,12 +1,12 @@
 import pytest
 import numpy as np
 import torch
-from unittest.mock import Mock, patch, MagicMock
-from world_models.controller.rssm_policy import RSSMPolicy
+from unittest.mock import Mock, patch
+from simulusion.controller.rssm_policy import RSSMPolicy
 
 pytest.importorskip("cv2")
-from world_models.controller.rollout_generator import RolloutGenerator
-from world_models.memory.planet_memory import Episode
+from simulusion.controller.rollout_generator import RolloutGenerator
+from simulusion.memory.planet_memory import Episode
 
 
 class TestRSSMPolicy:
@@ -152,7 +152,7 @@ class TestRolloutGenerator:
 
         assert gen.episode_gen == Episode
 
-    @patch("world_models.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_once_random_policy(self, mock_trange, mock_env):
         mock_trange.return_value = range(5)
 
@@ -161,12 +161,12 @@ class TestRolloutGenerator:
         )
 
         with patch.object(gen, "episode_gen", return_value=Mock()):
-            episode = gen.rollout_once(random_policy=True)
+            gen.rollout_once(random_policy=True)
 
             mock_env.sample_random_action.assert_called()
             mock_env.reset.assert_called_once()
 
-    @patch("world_models.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_n(self, mock_trange, mock_env):
         mock_trange.return_value = [0, 1, 2]
 
@@ -180,7 +180,7 @@ class TestRolloutGenerator:
 
         assert len(episodes) == 3
 
-    @patch("world_models.controller.rollout_generator.trange")
+    @patch("simulusion.controller.rollout_generator.trange")
     def test_rollout_eval_n(self, mock_trange, mock_env, mock_policy):
         mock_trange.return_value = range(5)
 
@@ -191,9 +191,14 @@ class TestRolloutGenerator:
             max_episode_steps=5,
         )
 
+        # Four values, matching the real rollout_eval: (episode, frames,
+        # metrics, latents). The mock previously returned three, so this test
+        # passed while every real caller raised ValueError.
         with patch.object(
-            gen, "rollout_eval", return_value=(Mock(), np.zeros((5, 3, 64, 64)), {})
-        ) as mock_eval:
+            gen,
+            "rollout_eval",
+            return_value=(Mock(), np.zeros((5, 3, 64, 64)), {}, None),
+        ):
             episodes, frames, metrics = gen.rollout_eval_n(n=2)
 
             assert len(episodes) == 2

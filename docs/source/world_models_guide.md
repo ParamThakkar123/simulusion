@@ -1,6 +1,6 @@
 # World Models Study Guide
 
-This page is a conceptual and practical map of the model families implemented in TorchWM. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use the API reference for exact constructor and method details.
+This page is a conceptual and practical map of the model families implemented in Simulusion. It is written as a study guide: start with the shared vocabulary, then compare the model families, then use the API reference for exact constructor and method details.
 
 ## What is a world model?
 
@@ -35,13 +35,13 @@ graph LR
 
 | If you want to study or build... | Start with | Core files |
 |---|---|---|
-| Latent-dynamics model-based RL from pixels | Dreamer | `world_models.models.dreamer`, `world_models.models.dreamer_rssm` |
-| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `world_models.models.planet`, `world_models.models.rssm` |
-| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `world_models.models.modular_rssm` |
-| Self-supervised visual representations | JEPA + ViT | `world_models.models.jepa_agent`, `world_models.models.vit` |
-| Sample-efficient Atari with discrete token imagination | IRIS | `world_models.models.iris_agent`, `world_models.models.iris_transformer` |
-| Unsupervised controllable video-world modeling | Genie | `world_models.models.genie`, `world_models.models.latent_action_model`, `world_models.models.dynamics_model` |
-| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `world_models.models.diffusion.*` |
+| Latent-dynamics model-based RL from pixels | Dreamer | `simulusion.models.dreamer`, `simulusion.models.dreamer_rssm` |
+| Classical latent planning with CEM-style imagination | PlaNet / RSSM | `simulusion.models.planet`, `simulusion.models.rssm` |
+| Swappable encoders, decoders, and recurrent backbones | Modular RSSM | `simulusion.models.modular_rssm` |
+| Self-supervised visual representations | JEPA + ViT | `simulusion.models.jepa_agent`, `simulusion.models.vit` |
+| Sample-efficient Atari with discrete token imagination | IRIS | `simulusion.models.iris_agent`, `simulusion.models.iris_transformer` |
+| Unsupervised controllable video-world modeling | Genie | `simulusion.models.genie`, `simulusion.models.latent_action_model`, `simulusion.models.dynamics_model` |
+| Diffusion world models and image/video generation | DDPM, DiT, DIAMOND | `simulusion.models.diffusion.*` |
 
 ## Shared concepts
 
@@ -110,7 +110,7 @@ Use Dreamer when your environment has image observations, actions are known, and
 
 ## PlaNet and RSSM
 
-PlaNet also learns latent dynamics from pixels, but it is usually associated with online planning rather than fully training an actor in imagination. In TorchWM, `Planet` is the high-level entry point and `RecurrentStateSpaceModel` is the PlaNet-style state-space component.
+PlaNet also learns latent dynamics from pixels, but it is usually associated with online planning rather than fully training an actor in imagination. In Simulusion, `Planet` is the high-level entry point and `RecurrentStateSpaceModel` is the PlaNet-style state-space component.
 
 ### Study focus
 
@@ -140,11 +140,11 @@ JEPA (Joint Embedding Predictive Architecture) learns by predicting representati
 
 Here, `sg` denotes stop-gradient, `f` is an encoder, `g` is a predictor, and `m` represents masks or target metadata.
 
-### TorchWM pieces
+### Simulusion pieces
 
 - `JEPAAgent` coordinates representation learning.
 - `VisionTransformer` and ViT helper constructors provide patch-based encoders.
-- `world_models.masks.*` contains masking/collation strategies for context-target prediction.
+- `simulusion.masks.*` contains masking/collation strategies for context-target prediction.
 
 ### When to use it
 
@@ -172,7 +172,7 @@ graph TD
 - **Token dynamics:** The transformer predicts the next discrete visual tokens conditioned on previous tokens and actions.
 - **Imagination:** Policy learning uses sampled token futures, decoded states, rewards, and termination predictions.
 
-### TorchWM pieces
+### Simulusion pieces
 
 - `IRISAgent` combines model and policy behavior.
 - `IRISTransformer` and `IRISWorldModel` implement token dynamics.
@@ -205,7 +205,7 @@ q(x_t \mid x_0)
 \end{aligned}
 ```
 
-### TorchWM pieces
+### Simulusion pieces
 
 - `DDPM` implements a denoising diffusion probabilistic model.
 - `DiT` implements a diffusion transformer with patch embedding, time conditioning, and transformer blocks.
@@ -247,9 +247,9 @@ graph LR
 
 | Stage | Component | Training | File |
 |---|---|---|---|
-| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `world_models.vision.VAE.ConvVAE` |
-| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `world_models.models.mdrnn` |
-| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `world_models.models.controller` |
+| 1 | **V — Vision (ConvVAE)** | Unsupervised reconstruction on random rollouts. Encodes 64×64 RGB frames → latent `z` (typically 32-d). | `simulusion.vision.VAE.ConvVAE` |
+| 2 | **M — Memory (MDN-RNN)** | Predicts next latent `z_{t+1}` as a Gaussian mixture conditioned on `(a_t, z_t, h_t)`. Also predicts rewards and terminal flags. | `simulusion.models.mdrnn` |
+| 3 | **C — Controller (Linear)** | Maps `(z_t, h_t)` → `a_t`. Trained with CMA-ES (not backprop) to maximize cumulative reward. | `simulusion.models.controller` |
 
 ### Key ideas
 
@@ -265,63 +265,82 @@ Use the Ha & Schmidhuber world model when you want:
 - To quickly train a policy on a continuous-control task without GPU-heavy RL backprop
 - A baseline to compare model-based RL (Dreamer/PlaNet) with evolution-based controller training
 
-### TorchWM pieces
+### Simulusion pieces
 
 | Component | Module | Key classes |
 |---|---|---|
-| VAE | `world_models.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
-| Dynamics | `world_models.models.mdrnn` | `MDRNN`, `MDRNNCell` |
-| Policy | `world_models.models.controller` | `Controller` |
-| Configs | `world_models.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
-| Datasets | `world_models.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
-| Losses | `world_models.losses.convae_loss` | `conv_vae_loss_fn` |
-| | `world_models.losses.gmm_loss` | `gmm_loss` |
-| Training | `world_models.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
-| | `world_models.training.train_convvae` | `train_convae` |
-| | `world_models.training.train_mdn_rnn` | `train_mdn_rnn` |
-| | `world_models.training.train_controller` | `train_controller` |
+| VAE | `simulusion.vision.VAE.ConvVAE` | `ConvVAE`, `ConvVAEEncoder`, `ConvVAEDecoder` |
+| Dynamics | `simulusion.models.mdrnn` | `MDRNN`, `MDRNNCell` |
+| Policy | `simulusion.models.controller` | `Controller` |
+| Configs | `simulusion.configs.wm_config` | `WMVAEConfig`, `WMMDNRNNConfig`, `WMControllerConfig` |
+| Datasets | `simulusion.datasets.wm_dataset` | `RolloutDataset`, `ObservationDataset`, `SequenceDataset`, `LatentSequenceDataset` |
+| Losses | `simulusion.losses.convae_loss` | `conv_vae_loss_fn` |
+| | `simulusion.losses.gmm_loss` | `gmm_loss` |
+| Training | `simulusion.training.train_world_model` | `run_training_pipeline`, `generate_rollouts`, `test_trained_model` |
+| | `simulusion.training.train_convvae` | `train_convae` |
+| | `simulusion.training.train_mdn_rnn` | `train_mdn_rnn` |
+| | `simulusion.training.train_controller` | `train_controller` |
 
 ### Quick-start example
 
 ```python
-from world_models.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
-from world_models.training.train_convvae import train_convae
-from world_models.training.train_mdn_rnn import train_mdn_rnn
-from world_models.training.train_controller import train_controller
+from simulusion.configs.wm_config import WMVAEConfig, WMMDNRNNConfig, WMControllerConfig
+from simulusion.training.train_convvae import train_convae
+from simulusion.training.train_mdn_rnn import train_mdn_rnn
+from simulusion.training.train_controller import train_controller
 
 # Stage 1: Train VAE
-vae_config = WMVAEConfig({
-    "height": 64, "width": 64, "latent_size": 32,
-    "data_dir": "./data/carracing", "logdir": "./results/carracing",
-    "num_epochs": 10, "learning_rate": 1e-3,
-})
+vae_config = WMVAEConfig(
+    {
+        "height": 64,
+        "width": 64,
+        "latent_size": 32,
+        "data_dir": "./data/carracing",
+        "logdir": "./results/carracing",
+        "num_epochs": 10,
+        "learning_rate": 1e-3,
+    }
+)
 train_convae(vae_config)
 
 # Stage 2: Train MDN-RNN
-mdrnn_config = WMMDNRNNConfig({
-    "latent_size": 32, "action_size": 3, "hidden_size": 256,
-    "gmm_components": 5, "data_dir": "./data/carracing",
-    "logdir": "./results/carracing", "num_epochs": 30,
-})
+mdrnn_config = WMMDNRNNConfig(
+    {
+        "latent_size": 32,
+        "action_size": 3,
+        "hidden_size": 256,
+        "gmm_components": 5,
+        "data_dir": "./data/carracing",
+        "logdir": "./results/carracing",
+        "num_epochs": 30,
+    }
+)
 train_mdn_rnn(vae_config, mdrnn_config)
 
 # Stage 3: Train Controller with CMA-ES
-ctrl_config = WMControllerConfig({
-    "latent_size": 32, "hidden_size": 256, "action_size": 3,
-    "env_name": "CarRacing-v2", "logdir": "./results/carracing",
-    "pop_size": 10, "n_samples": 4, "target_return": 950.0,
-})
+ctrl_config = WMControllerConfig(
+    {
+        "latent_size": 32,
+        "hidden_size": 256,
+        "action_size": 3,
+        "env_name": "CarRacing-v3",
+        "logdir": "./results/carracing",
+        "pop_size": 10,
+        "n_samples": 4,
+        "target_return": 950.0,
+    }
+)
 train_controller(ctrl_config)
 ```
 
 ### Testing a trained model
 
 ```python
-from world_models.training.train_world_model import test_trained_model
+from simulusion.training.train_world_model import test_trained_model
 
 test_trained_model(
     logdir="./results/carracing",
-    env_name="CarRacing-v2",
+    env_name="CarRacing-v3",
     action_size=3,
     num_episodes=5,
 )
@@ -336,7 +355,7 @@ test_trained_model(
 5. **Study token world models:** IRIS and Genie show how discrete visual tokens enable transformer dynamics.
 6. **Study representation-only prediction:** JEPA clarifies why not every useful world model must reconstruct pixels.
 7. **Study diffusion:** compare likelihood-style denoising rollouts against autoregressive and RSSM rollouts.
-8. **Read the API reference:** map each concept to the exact TorchWM class or function.
+8. **Read the API reference:** map each concept to the exact Simulusion class or function.
 
 ## Common failure modes
 

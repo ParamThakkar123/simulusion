@@ -1,0 +1,24 @@
+{
+  "ppo": {
+    "pre_loss": 0.12020242214202881,
+    "reward_sum": 1.875,
+    "post_logits_mean": -0.0017883889377117157,
+    "post_values_mean": 0.06977157294750214,
+    "_tolerances": {
+      "pre_loss": 1e-6,
+      "reward_sum": 1e-7,
+      "post_logits_mean": 1e-6,
+      "post_values_mean": 1e-6
+    }
+  },
+  "dreamer_rssm": {
+    "loss": 0.5829974412918091,
+    "kl_loss": 0.49302515387535095,
+    "posterior_stoch_mean": 0.4101625978946686,
+    "_tolerances": {
+      "loss": 1e-6,
+      "kl_loss": 1e-6,
+      "posterior_stoch_mean": 1e-6
+    }
+  }
+}

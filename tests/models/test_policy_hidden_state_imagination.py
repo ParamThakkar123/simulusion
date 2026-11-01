@@ -2,7 +2,7 @@ import pytest
 
 import torch
 
-from world_models.models.diffusion.actor_critic import ActorCriticNetwork
+from simulusion.models.diffusion.actor_critic import ActorCriticNetwork
 
 pytestmark = [pytest.mark.integration]
 

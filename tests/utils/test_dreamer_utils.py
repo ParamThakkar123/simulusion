@@ -1,7 +1,5 @@
-import pytest
 import torch
-from unittest.mock import Mock, patch, MagicMock
-from world_models.utils.dreamer_utils import (
+from simulusion.utils.dreamer_utils import (
     get_parameters,
     FreezeParameters,
 )
@@ -26,33 +24,33 @@ class TestFreezeParameters:
     def test_freeze_parameters_context(self):
         model = torch.nn.Linear(10, 5)
 
-        assert model.weight.requires_grad == True
+        assert model.weight.requires_grad
 
         with FreezeParameters([model]):
-            assert model.weight.requires_grad == False
+            assert not model.weight.requires_grad
 
-        assert model.weight.requires_grad == True
+        assert model.weight.requires_grad
 
     def test_freeze_parameters_nested(self):
         model = torch.nn.Linear(10, 5)
 
         with FreezeParameters([model]):
-            assert model.weight.requires_grad == False
+            assert not model.weight.requires_grad
 
             with FreezeParameters([model]):
-                assert model.weight.requires_grad == False
+                assert not model.weight.requires_grad
 
-            assert model.weight.requires_grad == False
+            assert not model.weight.requires_grad
 
-        assert model.weight.requires_grad == True
+        assert model.weight.requires_grad
 
     def test_freeze_multiple_modules(self):
         model1 = torch.nn.Linear(10, 5)
         model2 = torch.nn.Linear(5, 3)
 
         with FreezeParameters([model1, model2]):
-            assert model1.weight.requires_grad == False
-            assert model2.weight.requires_grad == False
+            assert not model1.weight.requires_grad
+            assert not model2.weight.requires_grad
 
-        assert model1.weight.requires_grad == True
-        assert model2.weight.requires_grad == True
+        assert model1.weight.requires_grad
+        assert model2.weight.requires_grad

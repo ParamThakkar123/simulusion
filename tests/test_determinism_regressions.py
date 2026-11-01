@@ -7,6 +7,7 @@ import os
 import random
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any, ClassVar
 
 import pytest
 
@@ -16,15 +17,14 @@ if (
 ):
     pytest.skip("gym/gymnasium is not installed", allow_module_level=True)
 
-from world_models.utils.gym_compat import gym
 import numpy as np
 import torch
 from torch.distributions import Categorical
 
-from world_models.envs.gym_env import GymImageEnv
-from world_models.models.dreamer_rssm import RSSM
-from world_models.training.rl_harness import PPOTrainer
-
+from simulusion.envs.gym_env import GymImageEnv
+from simulusion.models.dreamer_rssm import RSSM
+from simulusion.training.rl_harness import PPOTrainer
+from simulusion.utils.gym_compat import gym
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
 _GOLDEN_PATH = _DATA_DIR / "regression_baselines.json"
@@ -94,7 +94,7 @@ def test_same_seed_same_wrapped_episode_same_trajectory():
 class _FixedVecEnv:
     total_envs = 2
     action_space = gym.spaces.Discrete(3)
-    observation_space = {
+    observation_space: ClassVar[dict[str, Any]] = {
         "image": gym.spaces.Box(low=0.0, high=1.0, shape=(3, 64, 64), dtype=np.float32)
     }
 
@@ -193,6 +193,10 @@ _GENERATORS: dict[str, Callable[[], dict[str, float]]] = {
 
 
 def _load_golden_cases() -> list:
+    # A missing baseline file must not take down collection for the whole
+    # suite; the parametrized test then reports as skipped instead.
+    if not _GOLDEN_PATH.exists():
+        return []
     with open(_GOLDEN_PATH) as f:
         raw = json.load(f)
     cases = []
@@ -206,11 +210,13 @@ def _load_golden_cases() -> list:
     return cases
 
 
-_UPDATE_GOLDEN = os.environ.get("TORCHWM_UPDATE_GOLDEN")
+_UPDATE_GOLDEN = os.environ.get("SIMULUSION_UPDATE_GOLDEN")
 
 if _UPDATE_GOLDEN:
-    with open(_GOLDEN_PATH) as f:
-        current = json.load(f)
+    current = {}
+    if _GOLDEN_PATH.exists():
+        with open(_GOLDEN_PATH) as f:
+            current = json.load(f)
     for name, gen_fn in _GENERATORS.items():
         metrics = gen_fn()
         tolerances = current.get(name, {}).get("_tolerances", {})

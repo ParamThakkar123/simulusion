@@ -3,7 +3,7 @@
 import pytest
 import torch
 
-from world_models.optim import LaProp, adaptive_grad_clip_
+from simulusion.optim import LaProp, adaptive_grad_clip_
 
 
 class TestAdaptiveGradClip:

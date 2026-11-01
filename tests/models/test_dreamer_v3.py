@@ -7,15 +7,15 @@ import numpy as np
 import pytest
 import torch
 
-from world_models.configs.dreamer_v3_config import MODEL_SIZES, DreamerV3Config
-from world_models.models.dreamer_v3 import (
+from simulusion.configs.dreamer_v3_config import MODEL_SIZES, DreamerV3Config
+from simulusion.models.dreamer_v3 import (
     DreamerV3,
     DreamerV3Agent,
     _is_true_termination,
     _resolve_actor_dist,
     coerce_dreamer_v3_config,
 )
-from world_models.vision.dreamer_v3_nets import (
+from simulusion.vision.dreamer_v3_nets import (
     DreamerV3Actor,
     DreamerV3Decoder,
     DreamerV3Encoder,
@@ -634,7 +634,7 @@ class TestDreamerV3Core:
         values = torch.zeros(horizon + 1, 4)
         continues = torch.ones(horizon + 1, 4)
 
-        from world_models.utils.dreamer_v3_utils import lambda_return
+        from simulusion.utils.dreamer_v3_utils import lambda_return
 
         returns = lambda_return(
             rewards=rewards[:-1],
@@ -725,7 +725,7 @@ class TestCheckpointing:
 
 
 class FakeEnv:
-    """Minimal image environment with the TorchWM four-tuple step API."""
+    """Minimal image environment with the Simulusion four-tuple step API."""
 
     def __init__(self, action_size=2, episode_length=5, discrete=False):
         self.action_size = action_size
@@ -862,8 +862,8 @@ class TestActorDistResolution:
 
 
 class TestDreamerV3Agent:
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_builds_a_v3_core_and_config(self, _logger, mock_make_env, tmp_path):
         env = FakeEnv()
         env.observation_space = {"image": Mock(shape=IMAGE_SHAPE)}
@@ -875,8 +875,8 @@ class TestDreamerV3Agent:
         assert isinstance(agent.dreamer, DreamerV3)
         assert isinstance(agent.args, DreamerV3Config)
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_resolves_the_actor_distribution_from_the_env(
         self, _logger, mock_make_env, tmp_path
     ):
@@ -892,10 +892,10 @@ class TestDreamerV3Agent:
         assert agent.args.actor_dist == "onehot"
         assert agent.dreamer.discrete_actions
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_upgrades_a_base_dreamer_config(self, _logger, mock_make_env, tmp_path):
-        from world_models.configs.dreamer_config import DreamerConfig
+        from simulusion.configs.dreamer_config import DreamerConfig
 
         env = FakeEnv()
         env.observation_space = {"image": Mock(shape=IMAGE_SHAPE)}
@@ -913,12 +913,12 @@ class TestDreamerV3Agent:
         assert agent.args.discount == pytest.approx(0.997)
         assert agent.args.batch_size == 16
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_explicit_base_config_overrides_are_respected(
         self, _logger, mock_make_env, tmp_path
     ):
-        from world_models.configs.dreamer_config import DreamerConfig
+        from simulusion.configs.dreamer_config import DreamerConfig
 
         env = FakeEnv()
         env.observation_space = {"image": Mock(shape=IMAGE_SHAPE)}
@@ -936,7 +936,7 @@ class TestDreamerV3Agent:
 
 class TestPublicApi:
     def test_registered_under_both_names(self):
-        from world_models.api import get_model_spec
+        from simulusion.api import get_model_spec
 
         for name in ("dreamer-v3", "dreamerv3"):
             spec = get_model_spec(name)
@@ -944,20 +944,20 @@ class TestPublicApi:
             assert spec.config_path.endswith("DreamerV3Config")
 
     def test_create_config_returns_a_v3_config(self):
-        from world_models.api import create_config
+        from simulusion.api import create_config
 
         config = create_config("dreamer-v3", seed=5)
         assert isinstance(config, DreamerV3Config)
         assert config.seed == 5
 
     def test_exported_from_the_package_root(self):
-        import world_models
+        import simulusion
 
-        assert world_models.DreamerV3 is DreamerV3
-        assert world_models.DreamerV3Agent is DreamerV3Agent
-        assert world_models.DreamerV3Config is DreamerV3Config
+        assert simulusion.DreamerV3 is DreamerV3
+        assert simulusion.DreamerV3Agent is DreamerV3Agent
+        assert simulusion.DreamerV3Config is DreamerV3Config
 
     def test_listed_in_the_environment_catalog(self):
-        from world_models.api import list_envs
+        from simulusion.api import list_envs
 
         assert len(list_envs("dreamerv3")) > 0

@@ -2,11 +2,11 @@ import pytest
 import numpy as np
 from unittest.mock import Mock, patch
 
-gym = pytest.importorskip("gym")
+gym = pytest.importorskip("gymnasium")
 
-from world_models.models.dreamer import DreamerAgent  # noqa: E402
-from world_models.models.dreamer_rssm import RSSM  # noqa: E402
-from world_models.configs.dreamer_config import DreamerConfig  # noqa: E402
+from simulusion.models.dreamer import DreamerAgent  # noqa: E402
+from simulusion.models.dreamer_rssm import RSSM  # noqa: E402
+from simulusion.configs.dreamer_config import DreamerConfig  # noqa: E402
 
 
 class TestDreamerAgent:
@@ -22,8 +22,8 @@ class TestDreamerAgent:
         config.buffer_size = 10
         return config
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_initialization(self, mock_logger, mock_make_env, config):
         mock_env = Mock()
         mock_obs_space = Mock()
@@ -43,34 +43,28 @@ class TestDreamerAgent:
         assert agent.test_env == mock_env
         assert agent.logger == mock_logger.return_value
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_evaluate(self, mock_logger, mock_make_env, config):
-        mock_env = Mock()
-        mock_obs_space = Mock()
-        mock_obs_space.shape = (3, 64, 64)
-        mock_env.observation_space = {"image": mock_obs_space}
-        mock_action_space = Mock()
-        mock_action_space.shape = (2,)
-        mock_env.action_space = mock_action_space
-        mock_make_env.return_value = mock_env
+        # Runs the real Dreamer.evaluate(render=True) on a tiny fake env; it
+        # used to be mocked out, which hid a KeyError on its first step.
+        mock_make_env.return_value = _ShortImageEnv()
 
         config.buffer_size = 10  # Reduce for test
+        config.test_episodes = 2
         agent = DreamerAgent(config)
-        agent.dreamer.evaluate = Mock(
-            return_value=(np.array([4.0, 5.0]), np.array([[]]), None)
-        )
 
         agent.evaluate()
 
-        agent.dreamer.evaluate.assert_called_once_with(
-            agent.test_env, config.test_episodes, render=True
-        )
         mock_logger.return_value.dump_scalars_to_pickle.assert_called_once()
+        logged = mock_logger.return_value.dump_scalars_to_pickle.call_args[0][0]
+        assert logged["test_avg_reward"] == 3.0
         mock_logger.return_value.log_videos.assert_called_once()
+        videos = mock_logger.return_value.log_videos.call_args[0][0]
+        assert np.asarray(videos).shape[:2] == (2, 3)
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_initialization_with_invalid_arg(self, mock_logger, mock_make_env, config):
         mock_env = Mock()
         mock_obs_space = Mock()
@@ -83,6 +77,26 @@ class TestDreamerAgent:
 
         with pytest.raises(ValueError, match="Invalid argument: invalid_arg"):
             DreamerAgent(config, invalid_arg="test")
+
+
+class _ShortImageEnv:
+    """Three-step episodes with Dreamer's ``{"image": ...}`` observations."""
+
+    def __init__(self):
+        self.observation_space = {
+            "image": gym.spaces.Box(0, 255, (3, 64, 64), np.uint8)
+        }
+        self.action_space = gym.spaces.Box(-1.0, 1.0, (2,), np.float32)
+        self.t = 0
+
+    def reset(self):
+        self.t = 0
+        return {"image": np.zeros((3, 64, 64), dtype=np.uint8)}
+
+    def step(self, action):
+        self.t += 1
+        obs = {"image": np.full((3, 64, 64), self.t * 60, dtype=np.uint8)}
+        return obs, 1.0, self.t >= 3, {}
 
 
 def _mock_image_env():
@@ -143,7 +157,7 @@ class TestDreamerEnvConfig:
 
 
 class TestDreamerFrameStackIntegration:
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.Logger")
     def test_collect_random_episodes_uses_stacked_frames_end_to_end(
         self, mock_logger, tmp_path
     ):
@@ -161,7 +175,6 @@ class TestDreamerFrameStackIntegration:
         config.use_amp = False
         config.logdir = str(tmp_path / "run")
         config.restore = False
-        config.to_yaml = Mock(return_value="")
 
         agent = DreamerAgent(config)
         rewards = agent.dreamer.collect_random_episodes(agent.train_env, seed_steps=3)
@@ -204,8 +217,8 @@ class TestDreamerConfigSerialization:
 
 
 class TestDreamerUXConstructors:
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_agent_from_config_yaml_and_summary(
         self, mock_logger, mock_make_env, tmp_path
     ):
@@ -226,8 +239,8 @@ class TestDreamerUXConstructors:
         assert "rssm" in summary["modules"]
         mock_logger.assert_called_once()
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_agent_save_and_from_pretrained_local_dir(
         self, mock_logger, mock_make_env, tmp_path
     ):
@@ -249,12 +262,12 @@ class TestDreamerUXConstructors:
             loaded.summary()["total_parameters"] == agent.summary()["total_parameters"]
         )
 
-    @patch("world_models.models.dreamer.make_env")
-    @patch("world_models.models.dreamer.Logger")
+    @patch("simulusion.models.dreamer.make_env")
+    @patch("simulusion.models.dreamer.Logger")
     def test_export_uses_dreamer_actor_default(
         self, mock_logger, mock_make_env, monkeypatch, tmp_path
     ):
-        import world_models.export as export_utils
+        import simulusion.export as export_utils
 
         mock_env = Mock()
         mock_obs_space = Mock()

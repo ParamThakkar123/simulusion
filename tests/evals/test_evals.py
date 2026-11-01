@@ -5,16 +5,42 @@ import pytest
 import torch
 import numpy as np
 
-from evals.fid import FID, _frechet_distance, _compute_statistics
-from evals.fvd import FVD, _sample_clips
-from evals.lpips import LPIPS, VGGFeatureExtractor
-from evals.psnr import PSNR
+from simulusion.evals.fid import FID, _frechet_distance, _compute_statistics
+from simulusion.evals.fvd import FVD, _sample_clips
+from simulusion.evals.lpips import LPIPS, VGGFeatureExtractor
+from simulusion.evals.psnr import PSNR
+
+# End-to-end FID/FVD tests download a pretrained backbone (InceptionV3 is
+# 104 MB) on a cold cache and run it on CPU, which does not fit the suite-wide
+# 30 s timeout on a shared CI runner.
+_PRETRAINED_BACKBONE_TIMEOUT = pytest.mark.timeout(180)
 
 
 class TestFIDInternals:
-    @pytest.fixture(autouse=True)
-    def _require_scipy(self):
-        pytest.importorskip("scipy")
+    def test_frechet_distance_matches_closed_form(self):
+        """Diagonal covariances have a closed-form Fréchet distance."""
+        mu1, mu2 = np.array([0.0, 1.0, 2.0]), np.array([1.0, 1.0, 0.0])
+        v1, v2 = np.array([1.0, 4.0, 9.0]), np.array([4.0, 1.0, 0.25])
+        expected = np.sum((mu1 - mu2) ** 2) + np.sum(v1 + v2 - 2.0 * np.sqrt(v1 * v2))
+        dist = _frechet_distance(mu1, np.diag(v1), mu2, np.diag(v2))
+        assert dist == pytest.approx(expected, rel=1e-9)
+
+    def test_frechet_distance_matches_sqrtm_on_full_covariances(self):
+        """Agrees with the textbook ``trace(sqrtm(S1 @ S2))`` formulation."""
+        linalg = pytest.importorskip("scipy.linalg")
+        rng = np.random.default_rng(0)
+        a, b = rng.normal(size=(64, 8)), rng.normal(size=(64, 8)) * 2.0 + 1.0
+        mu1, s1 = a.mean(0), np.cov(a, rowvar=False)
+        mu2, s2 = b.mean(0), np.cov(b, rowvar=False)
+        covmean = linalg.sqrtm(s1 @ s2).real
+        expected = np.sum((mu1 - mu2) ** 2) + np.trace(s1 + s2 - 2.0 * covmean)
+        assert _frechet_distance(mu1, s1, mu2, s2) == pytest.approx(expected, rel=1e-6)
+
+    def test_frechet_distance_rank_deficient_inception_sized(self):
+        """16 samples of 2048-dim features: the case that hung scipy's sqrtm."""
+        rng = np.random.default_rng(0)
+        mu, sigma = _compute_statistics(torch.from_numpy(rng.random((16, 2048))))
+        assert abs(_frechet_distance(mu, sigma, mu, sigma)) < 1e-3
 
     def test_frechet_distance_identical(self):
         """Fréchet distance of identical distributions should be 0."""
@@ -39,6 +65,7 @@ class TestFIDInternals:
         assert mu.shape == (64,)
         assert sigma.shape == (64, 64)
 
+    @_PRETRAINED_BACKBONE_TIMEOUT
     def test_fid_identical_images(self):
         """FID on identical sets should be ~0."""
         images = torch.rand(16, 3, 64, 64)
@@ -46,6 +73,7 @@ class TestFIDInternals:
         score = fid(images, images)
         assert score < 10.0, f"FID on identical images should be near 0, got {score}"
 
+    @_PRETRAINED_BACKBONE_TIMEOUT
     def test_fid_different_images(self):
         """FID on different distributions should be non-zero."""
         real = torch.rand(16, 3, 64, 64)
@@ -69,6 +97,7 @@ class TestFVDInternals:
         assert clips.shape[0] == 3  # 3 clips
         assert clips.shape[-3] == 16
 
+    @_PRETRAINED_BACKBONE_TIMEOUT
     def test_fvd_identical_videos(self):
         """FVD on identical video sets should be ~0."""
         B, C, T, H, W = 8, 3, 16, 64, 64
@@ -81,6 +110,7 @@ class TestFVDInternals:
             # R3D-18 might not be available on all systems
             pytest.skip(f"FVD test skipped (model unavailable): {e}")
 
+    @_PRETRAINED_BACKBONE_TIMEOUT
     def test_fvd_different_videos(self):
         """FVD on different video distributions."""
         real = torch.rand(8, 3, 16, 64, 64)
@@ -190,13 +220,13 @@ class TestPSNR:
 class TestEvalUtils:
     def test_generate_trajectories_imports(self):
         """Tests that evals.diamond_utils imports correctly."""
-        from evals.diamond_utils import generate_trajectories
+        from simulusion.evals.diamond_utils import generate_trajectories
 
         assert callable(generate_trajectories)
 
     def test_evals_package_imports(self):
         """Tests that the evals package exposes named exports."""
-        from evals import FID, FVD, LPIPS, PSNR
+        from simulusion.evals import FID, FVD, LPIPS, PSNR
 
         assert FID is not None
         assert FVD is not None

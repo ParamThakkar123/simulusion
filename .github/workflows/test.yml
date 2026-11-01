@@ -5,7 +5,10 @@ permissions:
 
 on:
   pull_request:
+  # Only the default branch on push - a PR branch would otherwise run the whole
+  # matrix twice for every commit.
   push:
+    branches: [main]
 
 jobs:
   test:
@@ -31,12 +34,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-        pip install -e .
+        # box2d-py (pulled in by gymnasium[box2d]) builds from source and needs SWIG.
+        pip install swig
+        # Install the extras the unit tests import. A base-only install made 14
+        # test files (Dreamer, env adapters, datasets, controller) skip at
+        # import, so CI never ran them.
+        pip install -e '.[gym,viz,worldmodels,genie,dev]'
         pip install pytest pytest-randomly pytest-mock pytest-timeout
 
     - name: Run tests
       run: |
-        pytest tests/ --ignore=tests/selenium --tb=short --timeout=30 --maxfail=5
+        pytest tests/ --tb=short --timeout=30 --maxfail=5
 
   integration:
     runs-on: ${{ matrix.os }}
@@ -61,12 +69,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-        pip install -e .
+        # box2d-py (pulled in by gymnasium[box2d]) builds from source and needs SWIG.
+        pip install swig
+        # Install the extras the unit tests import. A base-only install made 14
+        # test files (Dreamer, env adapters, datasets, controller) skip at
+        # import, so CI never ran them.
+        pip install -e '.[gym,viz,worldmodels,genie,dev]'
         pip install pytest pytest-randomly pytest-mock pytest-timeout
 
     - name: Run integration tests
       run: |
-        pytest tests/ -m integration --ignore=tests/selenium --tb=short --timeout=120 --maxfail=3
+        pytest tests/ -m integration --tb=short --timeout=120 --maxfail=3
 
   optional-backends-real:
     runs-on: ubuntu-latest
@@ -100,6 +113,61 @@ jobs:
       run: |
         pytest tests/test_optional_backends_real.py -q --tb=short --timeout=240
 
+  # The main `test` job installs only the extras the unit tests import, so the
+  # heavy simulator backends skip; `optional-backends-real` installs them but
+  # runs a single file. Neither exercises what a contributor following CONTRIBUTING.md gets:
+  # the full suite with every extra installed, which is where torch + jax +
+  # brax + ml-agents accumulate until the process dies. Run that combination.
+  full-suite-all-extras:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      MUJOCO_GL: egl
+      PYOPENGL_PLATFORM: egl
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+        cache-dependency-path: |
+          pyproject.toml
+
+    - name: Install MuJoCo rendering system libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1 libgles2
+
+    - name: Install every optional backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        pip install swig
+        # ``dmc`` is included now: on cp313 that extra installs the pure-Python
+        # ``labmaze-new`` and leaves dm-control out, so nothing builds with
+        # Bazel. ``python -m simulusion.install_dmc`` adds dm-control itself.
+        pip install -e '.[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,dev]'
+        python -m simulusion.install_dmc
+
+    - name: Report memory before the run
+      run: free -m
+
+    # `--dist loadfile` keeps each file's tests on one worker, so a file that
+    # imports a heavy backend loads it once. Workers still persist for the whole
+    # session, so this bounds the growth rather than eliminating it - a run that
+    # dies here without a summary line is the OOM signature, not a flaky test.
+    - name: Run the full suite
+      run: |
+        pytest tests/ -q --tb=short \
+          -p no:randomly -n 2 --dist loadfile --max-worker-restart 0 \
+          --timeout=300 --durations=25
+
+    - name: Report memory after the run
+      if: always()
+      run: free -m
+
   build-artifact-smoke:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -127,14 +195,14 @@ jobs:
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        python -m venv "$RUNNER_TEMP/torchwm-wheel-smoke"
-        source "$RUNNER_TEMP/torchwm-wheel-smoke/bin/activate"
+        python -m venv "$RUNNER_TEMP/simulusion-wheel-smoke"
+        source "$RUNNER_TEMP/simulusion-wheel-smoke/bin/activate"
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        wheels=(dist/torchwm-*.whl)
+        wheels=(dist/simulusion-*.whl)
         if [ "${#wheels[@]}" -ne 1 ]; then
-          echo "Expected exactly one torchwm wheel in dist/, found ${#wheels[@]}"
+          echo "Expected exactly one simulusion wheel in dist/, found ${#wheels[@]}"
           ls -la dist
           exit 1
         fi
@@ -142,22 +210,31 @@ jobs:
         pip install "${wheels[0]}"
 
         pushd "$RUNNER_TEMP" >/dev/null
-        python -c "import torchwm"
-        torchwm version
+        python -c "import simulusion"
+        simulusion version
+        popd >/dev/null
+
+        # Resolve the gym extra fresh, as `pip install simulusion[gym]` does, and
+        # render the README's quick-start env. A dependency clash (pygame and
+        # pygame-ce in one environment) once crashed exactly here, while the
+        # locked dev environment and the unit tests looked fine.
+        pip install "${wheels[0]}[gym]"
+        pushd "$RUNNER_TEMP" >/dev/null
+        python -X faulthandler -c "import gymnasium as gym; e = gym.make('Pendulum-v1', render_mode='rgb_array'); e.reset(seed=0); print(e.render().shape)"
         popd >/dev/null
 
     - name: Install sdist into a clean virtualenv and smoke test it (Unix)
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        python -m venv "$RUNNER_TEMP/torchwm-sdist-smoke"
-        source "$RUNNER_TEMP/torchwm-sdist-smoke/bin/activate"
+        python -m venv "$RUNNER_TEMP/simulusion-sdist-smoke"
+        source "$RUNNER_TEMP/simulusion-sdist-smoke/bin/activate"
         python -m pip install --upgrade pip
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        sdists=(dist/torchwm-*.tar.gz)
+        sdists=(dist/simulusion-*.tar.gz)
         if [ "${#sdists[@]}" -ne 1 ]; then
-          echo "Expected exactly one torchwm sdist in dist/, found ${#sdists[@]}"
+          echo "Expected exactly one simulusion sdist in dist/, found ${#sdists[@]}"
           ls -la dist
           exit 1
         fi
@@ -165,52 +242,59 @@ jobs:
         pip install "${sdists[0]}"
 
         pushd "$RUNNER_TEMP" >/dev/null
-        python -c "import torchwm"
-        torchwm version
+        python -c "import simulusion"
+        simulusion version
         popd >/dev/null
 
     - name: Install wheel into a clean virtualenv and smoke test it (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        python -m venv "$env:RUNNER_TEMP\torchwm-wheel-smoke"
-        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\python.exe" -m pip install --upgrade pip
-        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        python -m venv "$env:RUNNER_TEMP\simulusion-wheel-smoke"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        $wheels = Get-ChildItem dist\torchwm-*.whl
+        $wheels = Get-ChildItem dist\simulusion-*.whl
         if ($wheels.Count -ne 1) {
-          Write-Host "Expected exactly one torchwm wheel in dist/, found $($wheels.Count)"
+          Write-Host "Expected exactly one simulusion wheel in dist/, found $($wheels.Count)"
           Get-ChildItem dist
           exit 1
         }
 
-        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\pip.exe" install $wheels[0].FullName
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install $wheels[0].FullName
 
         Push-Location $env:RUNNER_TEMP
-        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\python.exe" -c "import torchwm"
-        & "$env:RUNNER_TEMP\torchwm-wheel-smoke\Scripts\torchwm.exe" version
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -c "import simulusion"
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\simulusion.exe" version
+        Pop-Location
+
+        # See the Unix step: render the quick-start env from a fresh gym extra.
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\pip.exe" install "$($wheels[0].FullName)[gym]"
+        Push-Location $env:RUNNER_TEMP
+        & "$env:RUNNER_TEMP\simulusion-wheel-smoke\Scripts\python.exe" -X faulthandler -c "import gymnasium as gym; e = gym.make('Pendulum-v1', render_mode='rgb_array'); e.reset(seed=0); print(e.render().shape)"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Pop-Location
 
     - name: Install sdist into a clean virtualenv and smoke test it (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        python -m venv "$env:RUNNER_TEMP\torchwm-sdist-smoke"
-        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\python.exe" -m pip install --upgrade pip
-        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+        python -m venv "$env:RUNNER_TEMP\simulusion-sdist-smoke"
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\python.exe" -m pip install --upgrade pip
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\pip.exe" install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-        $sdists = Get-ChildItem dist\torchwm-*.tar.gz
+        $sdists = Get-ChildItem dist\simulusion-*.tar.gz
         if ($sdists.Count -ne 1) {
-          Write-Host "Expected exactly one torchwm sdist in dist/, found $($sdists.Count)"
+          Write-Host "Expected exactly one simulusion sdist in dist/, found $($sdists.Count)"
           Get-ChildItem dist
           exit 1
         }
 
-        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\pip.exe" install $sdists[0].FullName
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\pip.exe" install $sdists[0].FullName
 
         Push-Location $env:RUNNER_TEMP
-        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\python.exe" -c "import torchwm"
-        & "$env:RUNNER_TEMP\torchwm-sdist-smoke\Scripts\torchwm.exe" version
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\python.exe" -c "import simulusion"
+        & "$env:RUNNER_TEMP\simulusion-sdist-smoke\Scripts\simulusion.exe" version
         Pop-Location
 
   # mypy type checks were moved to a dedicated workflow: .github/workflows/mypy.yml

@@ -10,42 +10,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-          cache: 'pip'
 
+      # Same version as the `dev` extra and .pre-commit-config.yaml. An
+      # unpinned install picks up whatever Ruff released last, whose defaults
+      # and formatter style can change between releases.
       - name: Install Ruff
         run: |
           python -m pip install --upgrade pip
-          pip install ruff
+          pip install ruff==0.16.8
 
-      - name: Get changed Python files
-        id: changed_files
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE="${{ github.event.pull_request.base.sha }}"
-            HEAD="${{ github.event.pull_request.head.sha }}"
-          else
-            BASE="${{ github.event.before }}"
-            HEAD="${{ github.sha }}"
-          fi
-          git fetch --no-tags --prune --depth=1 origin $BASE $HEAD || true
-          FILES=$(git diff --name-only $BASE $HEAD | grep -E '\.py$' || true)
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      # The whole repository, not just the files a push touched: checking only
+      # changed files let existing violations accumulate unseen.
+      - name: Ruff lint
+        run: ruff check . --output-format=github
 
-      - name: Run Ruff on changed files
-        run: |
-          files="${{ steps.changed_files.outputs.files }}"
-          if [ -z "$files" ]; then
-            echo "No Python files changed; skipping Ruff."
-            exit 0
-          fi
-          printf "%s\n" "$files"
-          echo "$files" | xargs -r ruff check --output-format=github
+      - name: Ruff format
+        run: ruff format --check .

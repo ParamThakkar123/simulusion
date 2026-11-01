@@ -8,24 +8,24 @@ The NuPlan dataset backend provides a PyTorch interface to the [Motional NuPlan]
 pip install nuplan-devkit
 ```
 
-NuPlan is not part of TorchWM's minimal dependencies. You also need a local copy of the NuPlan dataset. Download it from [nuplan.org](https://www.nuplan.org/nuplan) and unpack it to `~/nuplan/dataset` (or set `$NUPLAN_DATA_ROOT`).
+NuPlan is not part of Simulusion's minimal dependencies. You also need a local copy of the NuPlan dataset. Download it from [nuplan.org](https://www.nuplan.org/nuplan) and unpack it to `~/nuplan/dataset` (or set `$NUPLAN_DATA_ROOT`).
 
 The dataset is ~1.8 TB for the full split. For prototyping, use the mini split (`~/nuplan/dataset/mini`, ~13 GB).
 
 ## Main API
 
 ```python
-from world_models.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
+from simulusion.datasets.nuplan import NuPlanDataset, make_nuplan_dataloader
 
 # Build a dataset over the mini split.
 dataset = NuPlanDataset(
     split="train",
-    planning_horizon=80,   # 8 seconds at 10 Hz
-    past_horizon=20,       # 2 seconds at 10 Hz
+    planning_horizon=80,  # 8 seconds at 10 Hz
+    past_horizon=20,  # 2 seconds at 10 Hz
     map_extent=(100.0, 100.0),
     map_resolution=0.1,
     max_agents=32,
-    limit_scenarios=100,   # remove for full dataset
+    limit_scenarios=100,  # remove for full dataset
 )
 
 sample = dataset[0]
@@ -63,7 +63,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Sample structure
 
 ```{eval-rst}
-.. autoclass:: world_models.datasets.nuplan.NuPlanSample
+.. autoclass:: simulusion.datasets.nuplan.NuPlanSample
    :members:
    :noindex:
 ```
@@ -71,7 +71,7 @@ dataset, loader = make_nuplan_dataloader(
 ## Dataset class
 
 ```{eval-rst}
-.. autoclass:: world_models.datasets.nuplan.NuPlanDataset
+.. autoclass:: simulusion.datasets.nuplan.NuPlanDataset
    :members:
    :noindex:
 ```
@@ -79,7 +79,7 @@ dataset, loader = make_nuplan_dataloader(
 ## DataLoader factory
 
 ```{eval-rst}
-.. autofunction:: world_models.datasets.nuplan.make_nuplan_dataloader
+.. autofunction:: simulusion.datasets.nuplan.make_nuplan_dataloader
    :noindex:
 ```
 
@@ -107,10 +107,10 @@ dataset, loader = make_nuplan_dataloader(split="train", batch_size=32)
 for epoch in range(num_epochs):
     for batch in loader:
         # batch is a dict with keys matching the NuPlanSample fields.
-        map_raster = batch["map_raster"]         # (B, 3, H, W)
-        ego_past = batch["ego_past"]             # (B, T_past, 6)
-        agents_past = batch["agents_past"]       # (B, N, T_past, 6)
-        agents_mask = batch["agents_mask"]       # (B, N)
+        map_raster = batch["map_raster"]  # (B, 3, H, W)
+        ego_past = batch["ego_past"]  # (B, T_past, 6)
+        agents_past = batch["agents_past"]  # (B, N, T_past, 6)
+        agents_mask = batch["agents_mask"]  # (B, N)
         planning_target = batch["planning_target"]  # (B, T_future, 2)
 
         # forward through a world model ...

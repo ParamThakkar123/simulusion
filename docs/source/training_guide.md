@@ -1,13 +1,17 @@
 # Training Guide
 
-This guide covers how to train world models in TorchWM.
+This guide covers each family's own training entrypoints. Every family also
+trains on the shared {py:class}`~simulusion.training.Trainer` from one YAML run
+config, with resuming, data parallelism and reproducible run directories:
+see {doc}`trainer_guide`, and {doc}`episodes_guide` for training world models
+from your own or LeRobot data.
 
 ```{contents} Contents
 ```
 
 ## Overview
 
-TorchWM supports training multiple world model algorithms with a unified interface.
+Simulusion supports training multiple world model algorithms with a unified interface.
 
 ## Basic Training Flow
 
@@ -16,12 +20,12 @@ TorchWM supports training multiple world model algorithms with a unified interfa
 3. Initialize the agent
 4. Call `train()` and monitor logs/checkpoints
 
-The simplest path is the top-level `torchwm` API:
+The simplest path is the top-level `simulusion` API:
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "dreamer",
     env_backend="dmc",
     env="walker-walk",
@@ -37,9 +41,9 @@ For research code, the lower-level config and agent classes remain available.
 Preferred application API:
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "dreamer",
     env_backend="dmc",
     env="walker-walk",
@@ -51,7 +55,7 @@ agent.train()
 Equivalent direct API:
 
 ```python
-from torchwm import DreamerAgent, DreamerConfig
+from simulusion import DreamerAgent, DreamerConfig
 
 cfg = DreamerConfig()
 cfg.env_backend = "dmc"
@@ -65,9 +69,9 @@ agent.train()
 ## JEPA Training
 
 ```python
-import torchwm
+import simulusion
 
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "jepa",
     dataset="imagenet",
     batch_size=64,
@@ -83,9 +87,9 @@ addition to its config, so pass those as constructor overrides:
 
 ```python
 import torch
-import torchwm
+import simulusion
 
-agent = torchwm.create_model(
+agent = simulusion.create_model(
     "iris",
     env="ALE/Pong-v5",
     total_epochs=100,
@@ -99,7 +103,7 @@ agent = torchwm.create_model(
 For advanced users, implement custom training:
 
 ```python
-from torchwm import DreamerAgent, ReplayBuffer
+from simulusion import DreamerAgent, ReplayBuffer
 
 agent = DreamerAgent(cfg)
 memory = ReplayBuffer(
@@ -152,13 +156,13 @@ All training is controlled via config objects:
 ### Starter YAML configs
 
 DIAMOND, IRIS, and JEPA include starter experiment YAML files in
-`world_models/configs/experiments/`. Use them with the unified CLI and optional
+`simulusion/configs/experiments/`. Use them with the unified CLI and optional
 OmegaConf/Hydra-style dot-list overrides:
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml preset=small seed=1
-torchwm train iris --config world_models/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
-torchwm train jepa --config world_models/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml preset=small seed=1
+simulusion train iris --config simulusion/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
+simulusion train jepa --config simulusion/configs/experiments/jepa.yaml optimization.epochs=50 data.batch_size=128
 ```
 
 Add `--print-config` to inspect the composed configuration without launching a run.
@@ -207,7 +211,7 @@ tensorboard --logdir runs
 ### Weights & Biases
 ```python
 cfg.enable_wandb = True
-cfg.wandb_project = "torchwm"
+cfg.wandb_project = "simulusion"
 cfg.wandb_entity = "your-entity"
 ```
 
@@ -219,15 +223,6 @@ Models are automatically saved:
 # Resume training
 cfg.restore = True
 cfg.checkpoint_path = "path/to/checkpoint"
-```
-
-## Distributed Training
-
-For multi-GPU training:
-
-```python
-cfg.num_gpus = 4
-# TorchWM handles distributed setup automatically
 ```
 
 ## Best Practices

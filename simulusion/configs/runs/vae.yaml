@@ -1,0 +1,18 @@
+# World Models, stage 1 (V): a ConvVAE on the frames of an episode folder.
+#   simulusion train --config vae data.path=data/car
+task: vae
+trainer:
+  max_steps: 20000
+  log_every: 100
+  eval_every: 1000
+  early_stopping_metric: val_loss
+model:
+  height: 64
+  width: 64
+  latent_size: 32
+  learning_rate: 1.0e-3
+data:
+  path: null               # required
+  batch_size: 32
+  val_fraction: 0.05
+flip: true

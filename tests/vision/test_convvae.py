@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from world_models.vision.VAE.ConvVAE import ConvVAEEncoder, ConvVAEDecoder, ConvVAE
+from simulusion.vision.VAE.ConvVAE import ConvVAEEncoder, ConvVAEDecoder, ConvVAE
 
 
 class TestConvVAEEncoder:

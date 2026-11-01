@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import Mock
 
-from world_models.training.rl_harness import ActorCritic, PPOTrainer
+from simulusion.training.rl_harness import ActorCritic, PPOTrainer
 
 
 class TestActorCritic:

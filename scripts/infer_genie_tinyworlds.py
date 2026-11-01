@@ -18,8 +18,8 @@ from PIL import Image
 import numpy as np
 from omegaconf import OmegaConf
 
-from world_models.training.train_genie import create_genie_trainer
-from world_models.datasets import create_tinyworlds_dataloader
+from simulusion.training.train_genie import create_genie_trainer
+from simulusion.datasets import create_tinyworlds_dataloader
 
 
 def tensor_to_uint8_img(t: torch.Tensor) -> np.ndarray:
@@ -68,7 +68,7 @@ def main():
         trainer.load_checkpoint(str(ckpt_path))
         print(f"Loaded full trainer checkpoint from {ckpt_path}")
     except Exception:
-        state = torch.load(str(ckpt_path), map_location=device)
+        state = torch.load(str(ckpt_path), map_location=device, weights_only=True)
         if "model_state_dict" in state:
             model.load_state_dict(state["model_state_dict"])
             print(f"Loaded model_state_dict from checkpoint {ckpt_path}")

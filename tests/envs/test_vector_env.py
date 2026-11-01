@@ -1,12 +1,14 @@
+import sys
+
 import numpy as np
 import pytest
 import torch
 
-pytest.importorskip("gym")
-from gym import spaces
+pytest.importorskip("gymnasium")
+from gymnasium import spaces
 
-from world_models.envs.vector_env import SimWorker, TorchVectorizedEnv
-from world_models.training.rl_harness import PPOTrainer
+from simulusion.envs.vector_env import SimWorker, TorchVectorizedEnv
+from simulusion.training.rl_harness import PPOTrainer
 
 
 import queue as _queue
@@ -101,10 +103,13 @@ class TestSimWorker:
         assert second_step[1]["done"] is False
         assert second_step[1]["info"]["step"] == 2
 
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_run_assigns_zero_seed_to_first_env(self):
         import multiprocessing as mp
@@ -145,10 +150,13 @@ class TestSimWorker:
 
 
 class TestTorchVectorizedEnv:
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_reset_batch_returns_normalized_images_in_worker_order(self, vec_env):
         batch = vec_env.reset_batch()
@@ -159,10 +167,13 @@ class TestTorchVectorizedEnv:
         observed = batch["obs"]["image"][:, 0, 0, 0]
         torch.testing.assert_close(observed, expected)
 
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_step_batch_preserves_batch_shapes_rewards_dones_and_infos(self, vec_env):
         vec_env.reset_batch()
@@ -193,10 +204,13 @@ class TestTorchVectorizedEnv:
             torch.tensor([10, 11, 12, 13], dtype=torch.float32) / 255.0,
         )
 
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_render_batch_returns_one_frame_per_env(self, vec_env):
         frames = vec_env.render_batch()
@@ -207,10 +221,13 @@ class TestTorchVectorizedEnv:
 
 
 class TestPPOTrainerVectorizedHarness:
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_collect_trajectories_uses_vectorized_reset_and_step_contract(
         self, vec_env
@@ -234,10 +251,13 @@ class TestPPOTrainerVectorizedHarness:
         assert trajectories["dones"][0].tolist() == [False, False, False, False]
         assert trajectories["dones"][1].tolist() == [True, True, True, True]
 
-    @pytest.mark.xfail(
-        "sys.platform == 'win32'",
-        reason="Multiprocessing spawn overhead on Windows makes this flaky",
-        strict=False,
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason=(
+            "Spawned workers re-import torch, which on Windows regularly "
+            "outruns the suite timeout. xfail does not help: the worker hangs "
+            "rather than fails, and pytest-timeout then kills the whole run."
+        ),
     )
     def test_train_step_updates_policy_parameters(self, vec_env):
         torch.manual_seed(0)

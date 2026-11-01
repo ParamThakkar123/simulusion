@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from world_models.experiments import (
+from simulusion.experiments import (
     dotlist_to_dict,
     instantiate_dataclass,
     load_experiment_config,

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from world_models.testing import MockBoxSpace, MockDiscreteSpace, MockImageEnv
+from simulusion.testing import MockBoxSpace, MockDiscreteSpace, MockImageEnv
 
 
 def test_mock_discrete_space_is_deterministic_and_validates_membership():

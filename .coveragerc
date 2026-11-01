@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = world_models, torchwm, tools
+source = simulusion, tools
 
 [report]
 show_missing = True

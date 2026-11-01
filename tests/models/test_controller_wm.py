@@ -2,7 +2,7 @@
 
 import torch
 import pytest
-from world_models.models.controller import Controller
+from simulusion.models.controller import Controller
 
 
 class TestController:

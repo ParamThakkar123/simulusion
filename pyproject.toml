@@ -1,17 +1,35 @@
 [project]
-name = "torchwm"
+name = "simulusion"
 dynamic = ["version"]
-description = "A Modular Pytorch Based library for training world models"
+description = "A modular PyTorch library for world models: Dreamer, PlaNet, DIAMOND, IRIS, Genie, DiT and I-JEPA behind one API"
 readme = "README.md"
 authors = [
     { name = "Param Thakkar" },
 ]
 requires-python = ">=3.11"
 license = "MIT"
-keywords = ["world-models", "pytorch", "mbrl"]
+keywords = [
+    "world-models",
+    "pytorch",
+    "mbrl",
+    "model-based-reinforcement-learning",
+    "reinforcement-learning",
+    "dreamer",
+    "planet",
+    "diamond",
+    "iris",
+    "genie",
+    "diffusion",
+    "jepa",
+]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 dependencies = [
@@ -24,78 +42,161 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/paramthakkar123/torchwm"
-Documentation = "https://paramthakkar123.github.io/torchwm/"
-Issues = "https://github.com/paramthakkar123/torchwm/issues"
-Changelog = "https://github.com/paramthakkar123/torchwm/releases"
+Homepage = "https://github.com/paramthakkar123/simulusion"
+Documentation = "https://paramthakkar123.github.io/simulusion/"
+Issues = "https://github.com/paramthakkar123/simulusion/issues"
+Changelog = "https://github.com/paramthakkar123/simulusion/releases"
 
 [project.scripts]
-torchwm = "torchwm.cli:run"
-torchwm-train = "torchwm.cli:run_train"
+simulusion = "simulusion.cli:run"
+simulusion-train = "simulusion.cli:run_train"
 
 [project.optional-dependencies]
 gym = [
+    # No direct pygame requirement: gymnasium's box2d extra brings its own
+    # renderer, which is `pygame` up to gymnasium 1.2 and `pygame-ce` from 1.3.
+    # Both install the same `pygame` package directory, so also requiring
+    # `pygame` here installed the two over each other on gymnasium 1.3, and
+    # rendering any classic-control env (the README's Pendulum quick start)
+    # crashed the interpreter with an access violation.
     "gymnasium[box2d]>=1.2.2",
     "huggingface-hub>=0.23.0",
-    "pygame>=2.6.1",
+    # ALE itself, not just the ROM installer. `autorom` alone leaves
+    # `gym.make("ALE/Breakout-v5")` raising NamespaceNotFound, because the
+    # namespace is registered by `ale_py`, which every Atari path here
+    # (DIAMOND and IRIS) imports. ale-py >= 0.10 bundles the ROMs.
+    "ale-py>=0.10.1",
     "autorom>=0.6.1",
 ]
+# `protobuf` is deliberately *not* capped below 3.21 here. mlagents-envs 0.28
+# ships gencode from protoc 3.x, and the upstream pin it implies (`<3.21`) is
+# stuck on protobuf 3.20.3, which carries unpatched advisories with no fix in
+# the 3.x line. Newer mlagents-envs releases do not help: 1.1.0 still caps
+# `protobuf<3.21` and requires Python <= 3.10.12, so it cannot be installed on
+# the Python versions Simulusion supports. Simulusion therefore resolves a patched
+# protobuf, against which `mlagents_envs.environment` cannot be imported: the
+# default backend raises "Descriptors cannot be created directly", and
+# `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python` only trades that for an
+# AttributeError on protobuf >= 4. To drive a Unity binary, pin
+# `protobuf<3.21` yourself, accepting that pin's known CVEs.
 ml-agents = [
     "mlagents-envs>=0.28.0,<0.29.0",
-    "protobuf>=3.20,<3.21",
+    "protobuf>=5.29.6",
 ]
+# dm-control requires the `labmaze` distribution, whose newest release (1.0.6)
+# publishes wheels only up to CPython 3.12. On 3.13 pip therefore builds it from
+# source, which needs Bazel and a C++ toolchain. `labmaze-new` is the same
+# package with the Bazel extension made opt-in (LABMAZE_BUILD_BAZEL_EXTENSIONS=1),
+# so it installs as pure Python and provides the `labmaze` module that
+# `dm_control` imports. `dm_control.suite` -- everything Simulusion's dmc backend
+# uses -- does not need the compiled extension; only `dm_control.locomotion`
+# maze generation does.
+#
+# pip cannot tell that `labmaze-new` satisfies dm-control's `labmaze`
+# requirement, so on 3.13 install with `make install-dmc` (see the Makefile) or
+# with uv, which honours the override below. See docs/source/environments/dmc.md.
 dmc = [
-    "dm-control>=1.0.0",
+    # Scoped below 3.13: declaring dm-control there makes pip resolve its
+    # `labmaze` pin and fail the whole install on the Bazel build. On 3.13 this
+    # extra installs the pure-Python `labmaze-new` instead, and dm-control is
+    # added with --no-deps by `make install-dmc` / `python -m simulusion.install_dmc`.
+    "dm-control>=1.0.0; python_version < '3.13'",
+    "labmaze-new>=0.0.2; python_version >= '3.13'",
     "gymnasium>=1.2.2",
+]
+# uv-only variant: dm-control unconditionally, relying on the
+# `override-dependencies` entry below to drop its unbuildable `labmaze` pin on
+# 3.13. pip has no equivalent to that override, so pip users on 3.13 use
+# `python -m simulusion.install_dmc` instead.
+dmc-uv = [
+    "dm-control>=1.0.0",
+    "labmaze-new>=0.0.2; python_version >= '3.13'",
+    "gymnasium>=1.2.2",
+]
+# Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
+# these, `simulusion.datasets.tinyworlds` imports fine but raises as soon as a
+# dataset is actually loaded, so Genie has no training data.
+genie = [
+    "h5py>=3.11.0",
+    "huggingface-hub>=0.23.0",
+    # scripts/train_genie_tinyworlds.py parses its key=value CLI with
+    # OmegaConf and imports it at module scope, so it cannot start without it.
+    "omegaconf>=2.3.0",
 ]
 mujoco = [
     "mujoco>=3.2.0",
 ]
 robotics = [
     "gymnasium-robotics>=1.3.0",
+    # From mujoco 3.12, on Linux, the numpy ints in `model.jnt_type` no longer
+    # compare equal to `mujoco.mjtJoint` members, so gymnasium-robotics' own
+    # `set_joint_qpos` assertion rejects the Fetch slide joints and every Fetch
+    # environment fails to construct. pip ignores the uv constraint below, so
+    # the cap has to live on the extra itself.
+    "mujoco>=3.2.0,<3.12",
 ]
 brax = [
     "brax>=0.13.0",
     "jax>=0.10.1",
 ]
-# Upstream Procgen wheels currently publish support through Python 3.10.
-procgen = [
-    "procgen>=0.10.7; python_version < '3.11'",
-]
+# No `procgen` extra: upstream Procgen wheels stop at Python 3.10, and Simulusion
+# requires >= 3.11, so the extra could only ever resolve to nothing. The
+# `simulusion.envs.procgen_env` adapter still works with a manual install on an
+# interpreter procgen supports.
 bsuite = [
     "bsuite>=0.3.5",
 ]
+# No `minerl` / `minedojo` extras: neither is installable on the Python versions
+# Simulusion supports. MineRL 1.x has no release compatible with Python >= 3.11,
+# and MineDojo pins `gym==0.21.0`, whose sdist no longer builds under modern
+# setuptools. Declaring them made `uv lock` unresolvable for the whole project.
+# `simulusion.envs.minecraft_env` still works - see docs/source/iris.md for the
+# manual, Python <= 3.10 install path.
 viz = [
     "opencv-python>=4.12.0.88",
+    # H.264 MP4 output (simulusion.utils.Mp4Writer). OpenCV's pip wheels cannot
+    # encode H.264 on Linux, and its mp4v fallback does not play in browsers.
+    "imageio-ffmpeg>=0.5.1",
     "umap-learn>=0.5.11",
     "scikit-learn>=1.8.0",
     "plotly>=6.5.0",
-    "fastapi[standard]>=0.116.0",
-    "uvicorn>=0.35.0",
-    "myst-parser>=2.0.0,<5.0.0",
-    "nbsphinx>=0.9.8",
-    "python-multipart>=0.0.27",
-    "starlette>=1.0.1",
+    # simulusion.datasets.video_datasets reads HDF5 clips.
+    "h5py>=3.11.0",
+]
+# Classic World Models (Ha & Schmidhuber): ConvVAE augmentations and the CMA-ES
+# controller search.
+worldmodels = [
+    "albumentations>=2.0.0",
+    "cma>=4.0.0",
+    "opencv-python>=4.12.0.88",
+    "imageio-ffmpeg>=0.5.1",
 ]
 ml = [
     "torchaudio>=0.13.0",
+    # `python -m simulusion.benchmarks.cli` and the example scripts parse configs
+    # with Hydra/OmegaConf.
+    "hydra-core>=1.3.2",
+    "omegaconf>=2.3.0",
     "wandb>=0.16.0",
     "tensorboard>=2.20.0",
+    # NVML bindings for the `system/gpu_utilization_percent` metric. Without
+    # them that counter is skipped (never fatal); `pynvml` is the deprecated
+    # spelling torch warns about.
+    "nvidia-ml-py>=12.535.77",
     "tensorboardx>=2.6.4",
 ]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "pytest-timeout>=2.3.1",
+    "pytest-xdist>=3.6.0",
     "pre-commit>=4.5.0",
     "mypy>=1.19.1",
-    "gitpython>=3.1.49",
-]
-selenium = [
-    "selenium>=4.30.0",
+    "gitpython>=3.2.1",
+    "ruff==0.16.8",
 ]
 all = [
-    "torchwm[gym,dmc,viz,ml,ml-agents,mujoco,robotics,brax,procgen,bsuite,selenium,dev,docs]",
+    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,lerobot,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",
@@ -107,33 +208,100 @@ docs = [
     "sphinxcontrib-mermaid>=0.9.0",
     "sphinx-thebe>=0.3.0",
     "sphinxext-opengraph>=0.13.0",
+    "sphinx-sitemap>=2.6.0",
     "myst-parser>=2.0.0,<5.0.0",
     "nbsphinx>=0.9.8",
-    "mistune>=3.2.1",
-    "nbconvert>=7.17.1",
+    "mistune>=3.3.0",
+    "nbconvert>=7.17.2",
+]
+# Reading LeRobot datasets (simulusion.data.LeRobotEpisodes): Parquet tables
+# and AV1/H.264 camera streams.
+lerobot = [
+    "av>=12.0.0",
+    "pyarrow>=17.0.0",
 ]
 
 [tool.setuptools.packages.find]
-include = ["world_models", "world_models.*", "torchwm", "torchwm.*", "tools", "tools.*"]
+# `tools/` is repository tooling (stub generation, docs checks). Shipping it
+# installed a top-level package literally named `tools` into site-packages.
+include = ["simulusion", "simulusion.*"]
 
 [tool.setuptools.package-data]
-torchwm = ["py.typed", "__init__.pyi"]
+# PEP 561: ship the marker and the explicit stub for the lazy public surface.
+# The run configs `simulusion train --config <name>` resolves by name.
+simulusion = [
+    "py.typed",
+    "__init__.pyi",
+    "configs/runs/*.yaml",
+    "configs/experiments/*.yaml",
+]
+
+# Simulusion resolves from PyPI, whose torch wheels work on every supported
+# platform. Making a CUDA-specific PyTorch index the default (as this used to)
+# routed *every* package through it and pinned contributors to one CUDA
+# version regardless of their hardware.
+#
+# To build against a specific CUDA/ROCm/CPU wheel set, add the index for your
+# platform from https://pytorch.org/get-started/locally/ , for example:
+#
+#     uv add torch torchvision torchaudio --index https://download.pytorch.org/whl/cu121
 
 [tool.uv]
-index-url = "https://download.pytorch.org/whl/cu121"
-extra-index-url = ["https://pypi.org/simple"]
-index-strategy = "unsafe-best-match"
+# Security floors for packages Simulusion pulls in only transitively. Without
+# these, a future `uv lock` could resolve back onto a version with a published
+# advisory, because nothing in our own dependency tree requires the fixed
+# release. Each entry is the first patched version for the advisories GitHub
+# reports against `uv.lock`; raise an entry when a new advisory lands, and drop
+# one only once no dependency can select a vulnerable version any more.
+# dm-control pins `labmaze`, which has no wheel for CPython 3.13 and builds with
+# Bazel. Drop that requirement on 3.13 and let the `dmc` extra's `labmaze-new`
+# provide the module instead; on 3.12 and below the real wheel still installs.
+override-dependencies = [
+    "labmaze ; python_version < '3.13'",
+]
 
-[[tool.uv.index]]
-url = "https://download.pytorch.org/whl/cu121"
-default = true
+constraint-dependencies = [
+    # mujoco 3.13 removed `mjtEnableBit.mjENBL_MULTICCD`, which mujoco-mjx (and
+    # therefore brax) still references, so importing brax against it raises
+    # AttributeError. Cap mujoco below 3.13 so the `brax` and `dmc` extras can
+    # live in one environment; dm-control then resolves to 1.0.45.
+    "mujoco<3.13",
+    "bleach>=6.4.0",
+    "certifi>=2026.10.19",
+    "filelock>=4.2.1",
+    "fsspec>=2026.6.0",
+    "gitpython>=3.2.1",
+    "mistune>=3.3.0",
+    "msgpack>=1.2.1",
+    "nbconvert>=7.17.2",
+    "opentelemetry-api>=1.45.1",
+    "pillow>=13.0.0",
+    "protobuf>=5.29.6",
+    "pygments>=2.20.0",
+    "setuptools>=84.1.0",
+    "soupsieve>=2.8.4",
+    "tornado>=6.5.7",
+    "virtualenv>=21.14.9",
+    "werkzeug>=3.1.9",
+]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
-version = {attr = "world_models._version.__version__"}
+version = {attr = "simulusion._version.__version__"}
+
+[tool.ruff.format]
+# Generated by `python -m tools.gen_type_stub`, which CI checks byte for byte;
+# reformatting it would make that check fail.
+exclude = ["simulusion/__init__.pyi"]
+
+[tool.ruff.lint]
+# Pin the rule set. With no explicit selection the repository inherits Ruff's
+# default, which grew from these four families to ~400 rules in Ruff 0.16, so
+# a Ruff upgrade alone turned every touched file red.
+select = ["E4", "E7", "E9", "F"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -141,6 +309,5 @@ markers = [
     "slow: tests that are expensive enough to skip in the default fast subset",
     "gpu: tests that require a CUDA-capable GPU",
     "integration: tests that exercise external services, optional backends, or cross-package workflows",
-    "selenium: tests that require Selenium WebDriver and a running web stack",
 ]
 

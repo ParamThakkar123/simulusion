@@ -2,7 +2,7 @@ import pytest
 
 import torch
 
-from world_models.models.diffusion.diamond_diffusion import (
+from simulusion.models.diffusion.diamond_diffusion import (
     EDMPreconditioner,
     DiffusionUNet,
     EulerSampler,
@@ -51,7 +51,7 @@ def test_preconditioner_consistency():
     sampler.t_next = torch.tensor([0.0])
 
     model2 = DummyModel()
-    out = sampler.sample(model2, (B, 3, 64, 64), device=torch.device("cpu"))
+    sampler.sample(model2, (B, 3, 64, 64), device=torch.device("cpu"))
     # in the sampling path the model should have been called with c_noise too
     assert model2.last_t.shape == t_train.shape
     # match values

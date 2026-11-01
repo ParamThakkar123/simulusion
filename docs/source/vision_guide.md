@@ -1,6 +1,6 @@
 # Vision Components
 
-TorchWM provides a family of reusable vision modules — encoders, decoders,
+Simulusion provides a family of reusable vision modules — encoders, decoders,
 tokenizers, quantization layers, and distribution transforms — that serve as
 building blocks for world models and representation learning.
 
@@ -10,15 +10,15 @@ building blocks for world models and representation learning.
 
 ## Overview
 
-All components live under `world_models.vision` and are accessible from the
+All components live under `simulusion.vision` and are accessible from the
 top-level package:
 
 ```python
-import torchwm
+import simulusion
 
 # Imports
-from torchwm import ConvEncoder, ConvDecoder, VideoTokenizer
-from torchwm import VectorQuantizer, VectorQuantizerEMA
+from simulusion import ConvEncoder, ConvDecoder, VideoTokenizer
+from simulusion import VectorQuantizer, VectorQuantizerEMA
 ```
 
 | Category | Component | Used by |
@@ -44,17 +44,17 @@ from torchwm import VectorQuantizer, VectorQuantizerEMA
 ### `ConvEncoder` — Dreamer convolutional encoder
 
 ```python
-from torchwm import ConvEncoder
+from simulusion import ConvEncoder
 
 encoder = ConvEncoder(
     input_shape=(3, 64, 64),  # (C, H, W)
-    embed_size=256,           # output dimension
-    activation="elu",         # see below
-    depth=32,                 # base channel count
+    embed_size=256,  # output dimension
+    activation="elu",  # see below
+    depth=32,  # base channel count
 )
 
 obs = torch.randn(4, 3, 64, 64)
-embedding = encoder(obs)     # (4, 256)
+embedding = encoder(obs)  # (4, 256)
 ```
 
 Architecture: 4 convolutional layers (kernel 4, stride 2) with channel
@@ -64,7 +64,7 @@ Input values in `[-0.5, 0.5]`.
 ### `CNNEncoder` — PlaNet encoder
 
 ```python
-from torchwm import CNNEncoder
+from simulusion import CNNEncoder
 
 encoder = CNNEncoder(embedding_size=256, activation_function="relu")
 ```
@@ -75,11 +75,11 @@ channels and no configurable depth parameter.
 ### `IRISEncoder` — IRIS discrete encoder
 
 ```python
-from torchwm import IRISEncoder
+from simulusion import IRISEncoder
 
 encoder = IRISEncoder(
-    vocab_size=512,           # codebook size
-    tokens_per_frame=16,      # 4×4 grid of tokens
+    vocab_size=512,  # codebook size
+    tokens_per_frame=16,  # 4×4 grid of tokens
     embedding_dim=512,
     in_channels=3,
     frame_shape=(3, 64, 64),
@@ -95,20 +95,20 @@ discrete token indices. Input should be 64×64 images.
 ### `ConvDecoder` — Dreamer convolutional decoder
 
 ```python
-from torchwm import ConvDecoder
+from simulusion import ConvDecoder
 
 decoder = ConvDecoder(
-    stoch_size=30,            # stochastic latent dimension
-    deter_size=200,           # deterministic latent dimension
-    output_shape=(3, 64, 64), # (C, H, W)
+    stoch_size=30,  # stochastic latent dimension
+    deter_size=200,  # deterministic latent dimension
+    output_shape=(3, 64, 64),  # (C, H, W)
     activation="elu",
     depth=32,
 )
 
 features = torch.randn(4, 230)  # stoch + deter concatenated
-dist = decoder(features)        # Independent(Normal(mean, 1), 3)
-reconstruction = dist.mean      # (4, 3, 64, 64)
-loss = -dist.log_prob(target)   # reconstruction loss
+dist = decoder(features)  # Independent(Normal(mean, 1), 3)
+reconstruction = dist.mean  # (4, 3, 64, 64)
+loss = -dist.log_prob(target)  # reconstruction loss
 ```
 
 Architecture: linear projection from `(stoch+deter)` to `32×depth`, then
@@ -119,28 +119,41 @@ compute `log_prob` directly.
 ### `DenseDecoder` — reward/value/discount head
 
 ```python
-from torchwm import DenseDecoder
+from simulusion import DenseDecoder
 
 # Regression (reward, value)
 decoder = DenseDecoder(
-    stoch_size=30, deter_size=200,
-    output_shape=(1,), n_layers=2, units=400,
-    activation="elu", dist="normal",
+    stoch_size=30,
+    deter_size=200,
+    output_shape=(1,),
+    n_layers=2,
+    units=400,
+    activation="elu",
+    dist="normal",
 )
 
 # Binary classification (discount)
 decoder = DenseDecoder(
-    stoch_size=30, deter_size=200,
-    output_shape=(1,), n_layers=2, units=400,
-    activation="elu", dist="binary",
+    stoch_size=30,
+    deter_size=200,
+    output_shape=(1,),
+    n_layers=2,
+    units=400,
+    activation="elu",
+    dist="binary",
 )
 
 # Symlog two-hot (DreamerV2)
 decoder = DenseDecoder(
-    stoch_size=30, deter_size=200,
-    output_shape=(1,), n_layers=2, units=400,
-    activation="elu", dist="symlog_twohot",
-    num_buckets=255, symlog_range=10.0,
+    stoch_size=30,
+    deter_size=200,
+    output_shape=(1,),
+    n_layers=2,
+    units=400,
+    activation="elu",
+    dist="symlog_twohot",
+    num_buckets=255,
+    symlog_range=10.0,
 )
 ```
 
@@ -154,18 +167,22 @@ decoder = DenseDecoder(
 ### `ActionDecoder` — Dreamer policy head
 
 ```python
-from torchwm import ActionDecoder
+from simulusion import ActionDecoder
 
 actor = ActionDecoder(
     action_size=6,
-    stoch_size=30, deter_size=200,
-    n_layers=2, units=400,
+    stoch_size=30,
+    deter_size=200,
+    n_layers=2,
+    units=400,
     activation="elu",
-    min_std=1e-4, init_std=5, mean_scale=5,
+    min_std=1e-4,
+    init_std=5,
+    mean_scale=5,
 )
 
 features = torch.randn(4, 230)
-action = actor(features)          # stochastic sample
+action = actor(features)  # stochastic sample
 action = actor(features, deter=True)  # deterministic mode
 ```
 
@@ -178,15 +195,17 @@ deployment; the stochastic mode is used during training.
 ### `VectorQuantizer` and `VectorQuantizerEMA`
 
 ```python
-from torchwm import VectorQuantizer, VectorQuantizerEMA
+from simulusion import VectorQuantizer, VectorQuantizerEMA
 
 # Standard VQ (gradient-based codebook updates)
 vq = VectorQuantizer(vocab_size=512, embedding_dim=64, commitment_weight=0.25)
 
 # EMA VQ (more stable codebook learning)
 vq = VectorQuantizerEMA(
-    vocab_size=512, embedding_dim=64,
-    commitment_weight=0.25, ema_decay=0.99,
+    vocab_size=512,
+    embedding_dim=64,
+    commitment_weight=0.25,
+    ema_decay=0.99,
 )
 
 z = torch.randn(4, 64, 8, 8)  # (B, C, H, W)
@@ -205,17 +224,22 @@ descent, which typically produces higher codebook utilization.
 ### `VideoTokenizer` — Genie-style VQ-VAE
 
 ```python
-from torchwm import VideoTokenizer
+from simulusion import VideoTokenizer
 
 tokenizer = VideoTokenizer(
     num_frames=16,
     image_size=64,
     in_channels=3,
-    encoder_dim=512, decoder_dim=1024,
-    encoder_depth=12, decoder_depth=20,
-    num_heads=16, patch_size=4,
-    vocab_size=1024, embedding_dim=32,
-    use_ema=True, ema_decay=0.99,
+    encoder_dim=512,
+    decoder_dim=1024,
+    encoder_depth=12,
+    decoder_depth=20,
+    num_heads=16,
+    patch_size=4,
+    vocab_size=1024,
+    embedding_dim=32,
+    use_ema=True,
+    ema_decay=0.99,
 )
 
 video = torch.randn(2, 3, 16, 64, 64)  # (B, C, T, H, W)
@@ -245,7 +269,8 @@ embeddings = tokenizer.decode_indices(indices)  # (B, T, 16, 16, 32)
 recon = tokenizer.decode(z_q)
 
 # Factory shortcut
-from world_models.vision.video_tokenizer import create_video_tokenizer
+from simulusion.vision.video_tokenizer import create_video_tokenizer
+
 tokenizer = create_video_tokenizer(num_frames=16, image_size=64)
 ```
 
@@ -258,7 +283,7 @@ internally by `ActionDecoder`.
 
 ```python
 from torch.distributions import TransformedDistribution, Normal
-from torchwm import TanhBijector
+from simulusion import TanhBijector
 
 dist = TransformedDistribution(Normal(mean, std), TanhBijector())
 action = dist.sample()  # bounded to [-1, 1]
@@ -277,17 +302,17 @@ encodes targets into a categorical distribution over `num_buckets` evenly
 spaced bins within `[-symlog_range, symlog_range]`, then decodes via symexp.
 
 ```python
-from world_models.vision.dreamer_decoder import _TwoHotDistribution
+from simulusion.vision.dreamer_decoder import _TwoHotDistribution
 
 dist = _TwoHotDistribution(logits, num_buckets=255, symlog_range=10.0)
 dist.log_prob(target)  # categorical cross-entropy in symlog space
-dist.mean()            # expectation decoded via symexp
+dist.mean()  # expectation decoded via symexp
 ```
 
 ## ConvVAE
 
 ```python
-from world_models.vision.VAE.ConvVAE import ConvVAE
+from simulusion.vision.VAE.ConvVAE import ConvVAE
 
 vae = ConvVAE(
     latent_dim=32,

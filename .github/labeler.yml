@@ -1,50 +1,50 @@
 config:
-  - world_models/configs/**
+  - simulusion/configs/**
 
 # Add 'environment' to any changes to environment files
 environment:
-  - world_models/envs/**
+  - simulusion/envs/**
 
 trainer:
-  - world_models/training/**
+  - simulusion/training/**
 
 controller:
-  - world_models/controller/**
+  - simulusion/controller/**
 
 helpers:
-  - world_models/helpers/**
+  - simulusion/helpers/**
 
 tokenizers:
-  - world_models/vision/video_tokenizer.py
-  - world_models/vision/vq_layer.py
+  - simulusion/vision/video_tokenizer.py
+  - simulusion/vision/vq_layer.py
 
 tests:
   - tests/**
-  - world_models/testing/**
+  - simulusion/testing/**
 
 models:
-  - world_models/models/**
+  - simulusion/models/**
 
 memory:
-  - world_models/memory/**
+  - simulusion/memory/**
 
 masks:
-  - world_models/masks/**
+  - simulusion/masks/**
 
 reward_functions:
-  - world_models/reward/**
+  - simulusion/reward/**
 
 observation_wrappers:
-  - world_models/observations/**
+  - simulusion/observations/**
 
 utilities:
-  - world_models/utils/**
+  - simulusion/utils/**
 
 vision:
-  - world_models/vision/**
+  - simulusion/vision/**
 
 transforms:
-  - world_models/transforms/**
+  - simulusion/transforms/**
 
 # Add 'CI/CD' to any changes to GitHub workflows and automation config
 CI/CD:

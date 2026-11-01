@@ -1,6 +1,6 @@
-# Contributing to TorchWM
+# Contributing to Simulusion
 
-We welcome contributions to TorchWM! This document outlines the guidelines for contributing to the project.
+We welcome contributions to Simulusion! This document outlines the guidelines for contributing to the project.
 
 ## Ways to Contribute
 
@@ -12,8 +12,8 @@ We welcome contributions to TorchWM! This document outlines the guidelines for c
 
 1. Fork the repository and clone your fork:
    ```bash
-   git clone https://github.com/your-username/torchwm.git
-   cd torchwm
+   git clone https://github.com/your-username/simulusion.git
+   cd simulusion
    ```
 
 2. Install dependencies with development extras:
@@ -37,7 +37,7 @@ pre-commit install
 
 - Follow PEP 8 style guidelines.
 - Use type hints where possible.
-- Format code with Black: `uv run black .`
+- Format code with Ruff: `uv run ruff format .`
 - Lint code with Ruff: `uv run ruff check .`
 - Type-check code with MyPy where practical: `uv run mypy .`
 - Run all configured hooks with: `uv run pre-commit run --all-files`
@@ -49,6 +49,28 @@ pre-commit install
 - The repository pins Python bytecode caches outside the source tree with `PYTHONPYCACHEPREFIX=build/__pycache__`; keep this set when running ad-hoc Python commands so `__pycache__` directories are not created beside source files.
 - Ensure all tests pass before submitting a PR.
 - Add tests for new features or bug fixes.
+
+### Running the full suite with every backend installed
+
+With `simulusion[all]` installed, a single `pytest` process ends up holding torch,
+jax, brax, and the Unity SDK resident at the same time. On a machine with
+limited RAM the run dies partway through with allocation errors — or, worse,
+with no summary line at all, because the process was killed rather than a test
+failing.
+
+If you hit that, run the suite in file-sized chunks so memory is reclaimed
+between files instead of accumulating for the whole session:
+
+```bash
+# POSIX: a fresh process per test, memory reclaimed each time
+uv run pytest tests/ --forked
+
+# Any platform: one process per test file
+for f in tests/**/test_*.py; do uv run pytest "$f" -q || break; done
+```
+
+`-n`/`--dist loadfile` alone does *not* help here — xdist workers persist
+across files, and each additional worker is another full copy of torch.
 
 ## Pull Request Process
 
@@ -74,6 +96,6 @@ Write the body in imperative mood ("fix bug" not "fixed bug" or "fixes bug"). If
 
 ## Code of Conduct
 
-Please be respectful and inclusive. Harassment or discriminatory behavior will not be tolerated.
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). Please be respectful and inclusive; harassment or discriminatory behavior will not be tolerated.
 
 For questions, reach out via GitHub issues.

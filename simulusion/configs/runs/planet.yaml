@@ -1,0 +1,17 @@
+# PlaNet: an RSSM learned online, acting by CEM planning. Progress is epochs
+# (gradient steps, then one exploration and one evaluation episode).
+#   simulusion train --config planet model.env=Pendulum-v1
+task: planet
+trainer:
+  max_steps: 100
+  log_every: 1
+  checkpoint_every: 10
+model:
+  env: Pendulum-v1
+  bit_depth: 5
+  steps_per_epoch: 150
+  batch_size: 32
+  chunk_length: 50
+  planning_horizon: 20
+  num_candidates: 1000
+  scheduler_type: step

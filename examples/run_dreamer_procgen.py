@@ -9,9 +9,9 @@ Usage examples:
 import logging
 from omegaconf import OmegaConf
 
-from world_models.configs.dreamer_config import DreamerConfig
-from world_models.envs.procgen_env import list_procgen_envs
-from world_models.models.dreamer import DreamerAgent
+from simulusion.configs.dreamer_config import DreamerConfig
+from simulusion.envs.procgen_env import list_procgen_envs
+from simulusion.models.dreamer import DreamerAgent
 
 
 def make_config(cli_cfg) -> DreamerConfig:
@@ -47,7 +47,7 @@ def main():
         return
 
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger("world_models").setLevel(logging.INFO)
+    logging.getLogger("simulusion").setLevel(logging.INFO)
 
     cfg = make_config(cli_cfg)
     logging.info(

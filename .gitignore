@@ -3,21 +3,27 @@ __pycache__/
 results/
 dist/
 pytorch_world.egg-info/
-world_models/models/data/
+simulusion/models/data/
 cifar
 .pylintrc
-torchwm.egg-info/
+simulusion.egg-info/
 node_modules/
 .vite/
 docs/build/
-torchwm_ui/playwright-report/
-torchwm_ui/test-results/
+simulusion_ui/playwright-report/
+simulusion_ui/test-results/
 .env.example
 .env.production
 # uv.lock intentionally tracked for deterministic installs
 data/
+# Test fixtures live under tests/data/ and must be committed.
+!tests/data/
+# The simulusion.data package is source code, not a dataset.
+!simulusion/data/
 checkpoints/
 runs/
+# Shipped run configs, not training output.
+!simulusion/configs/runs/
 server.log
 .mypy_cache/
 mypy_out.txt
@@ -25,7 +31,5 @@ mypy_out.txt
 coverage_report.json
 htmlcov/
 .benchmarks/
-# Stray artifacts (Windows reserved name; mis-joined test paths)
+# Stray artifacts (Windows reserved name)
 /nul
-/testsdata/
-/testsdataregression_baselines/

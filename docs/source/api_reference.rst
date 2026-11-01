@@ -10,41 +10,133 @@ Public package surface
 
 These modules expose the most common imports and lazy constructors.
 
-**Primary module:** ``torchwm``. Implementation modules are documented below for API completeness.
+Use ``simulusion`` for common workflows::
 
-Use ``torchwm`` for common workflows::
+   import simulusion
+   agent = simulusion.create_model("dreamer", env="walker-walk")
 
-   import torchwm
-   agent = torchwm.create_model("dreamer", env="walker-walk")
+**Primary modules:** ``simulusion``, ``simulusion.models``, ``simulusion.configs``, ``simulusion.catalog``, and ``simulusion.envs``.
 
-.. automodule:: torchwm
+.. automodule:: simulusion
+   :no-index:
+
+.. automodule:: simulusion.api
    :members:
    :undoc-members:
    :show-inheritance:
 
-**Primary modules:** ``world_models``, ``world_models.models``, ``world_models.configs``, ``world_models.catalog``, ``world_models.envs``, and ``world_models.inference``.
-
-.. automodule:: world_models
+.. automodule:: simulusion.export
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.api
+.. automodule:: simulusion.inference.runtime
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.export
+.. automodule:: simulusion.inference.precision
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models
+.. automodule:: simulusion.inference.steppers
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.catalog
+.. automodule:: simulusion.inference.benchmark
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: simulusion.inference.quantize
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: simulusion.inference.bundle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model
+   :members: as_world_model, load_world_model, list_world_model_families, world_model_class
+
+.. automodule:: simulusion.world_model.protocol
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.dreamer
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.planet
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.iris
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.diamond
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.genie
+   :members:
+   :show-inheritance:
+
+.. automodule:: simulusion.world_model.vae_mdrnn
+   :members:
+   :show-inheritance:
+
+Training
+--------
+
+.. automodule:: simulusion.training.trainer
+   :members: Trainer, TrainerConfig, TrainResult, latest_checkpoint
+
+.. automodule:: simulusion.training.task
+   :members: TrainingTask, register_task, get_task, list_tasks
+
+.. automodule:: simulusion.training.precision
+   :members: MixedPrecision, GradientUpdate
+
+.. automodule:: simulusion.training.run
+   :members: run, resolve_run_config, run_config_dict
+
+.. automodule:: simulusion.training.tasks.common
+   :members: SequenceDataConfig
+
+Data
+----
+
+.. automodule:: simulusion.data.episode
+   :members: Episode
+
+.. automodule:: simulusion.data.folder
+   :members: DatasetMeta, EpisodeFolder, EpisodeWriter, load_episode
+
+.. automodule:: simulusion.data.sequence
+   :members: SequenceDataset, frames_to_float, one_hot_actions
+
+.. automodule:: simulusion.data.lerobot
+   :members: LeRobotEpisodes, import_lerobot
+
+.. automodule:: simulusion.data.rlds
+   :members: RLDSKeys, episode_from_rlds
+
+Agents
+------
+
+.. automodule:: simulusion.agents.planning
+   :members: CEMPlanner, PlanningAgent, run_episode
+
+.. automodule:: simulusion.models
+   :no-index:
+
+.. automodule:: simulusion.catalog
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,72 +149,72 @@ Core model families
 
 **Key classes:** ``Dreamer``, ``DreamerAgent``, ``RSSM``, ``RecurrentStateSpaceModel``, ``Planet``, ``ModularRSSM``, ``JEPAAgent``, ``VisionTransformer``, ``IRISAgent``, ``IRISTransformer``, ``IRISWorldModel``, ``Genie``, ``LatentActionModel``, and ``DynamicsModel``.
 
-.. automodule:: world_models.models.dreamer
+.. automodule:: simulusion.models.dreamer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.dreamer_rssm
+.. automodule:: simulusion.models.dreamer_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.rssm
+.. automodule:: simulusion.models.rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.planet
+.. automodule:: simulusion.models.planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.mdrnn
+.. automodule:: simulusion.models.mdrnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.controller
+.. automodule:: simulusion.models.controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.modular_rssm
+.. automodule:: simulusion.models.modular_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.jepa_agent
+.. automodule:: simulusion.models.jepa_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.vit
+.. automodule:: simulusion.models.vit
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.iris_agent
+.. automodule:: simulusion.models.iris_agent
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.iris_transformer
+.. automodule:: simulusion.models.iris_transformer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.genie
+.. automodule:: simulusion.models.genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.latent_action_model
+.. automodule:: simulusion.models.latent_action_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.dynamics_model
+.. automodule:: simulusion.models.dynamics_model
    :members:
    :undoc-members:
    :show-inheritance:
@@ -132,34 +224,34 @@ Diffusion and DIAMOND components
 
 **Key classes:** ``DiamondAgent``, ``DDPM``, ``DiT``, ``DiffusionUNet``, ``EDMPreconditioner``, ``EulerSampler``, ``RewardTerminationModel``, and ``ActorCriticNetwork``.
 
-DIAMOND exposes ``DiamondAgent`` from ``world_models.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
+DIAMOND exposes ``DiamondAgent`` from ``simulusion.training.train_diamond``; there is no separate ``DIAMONDAgent`` class name in the package.
 
-.. automodule:: world_models.models.diffusion
+.. automodule:: simulusion.models.diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.DDPM
+.. automodule:: simulusion.models.diffusion.DDPM
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.DiT
+.. automodule:: simulusion.models.diffusion.DiT
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.diamond_diffusion
+.. automodule:: simulusion.models.diffusion.diamond_diffusion
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.reward_termination
+.. automodule:: simulusion.models.diffusion.reward_termination
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.models.diffusion.actor_critic
+.. automodule:: simulusion.models.diffusion.actor_critic
    :members:
    :undoc-members:
    :show-inheritance:
@@ -169,62 +261,62 @@ Vision, tokenization, and layers
 
 **Key classes:** ``ConvEncoder``, ``ConvDecoder``, ``DenseDecoder``, ``ActionDecoder``, ``CNNEncoder``, ``CNNDecoder``, ``IRISEncoder``, ``IRISDecoder``, ``DiscreteAutoencoder``, ``VectorQuantizer``, ``VectorQuantizerEMA``, ``VideoTokenizer``, ``MultiHeadSelfAttention``, and ``STTransformer``.
 
-.. automodule:: world_models.vision.VAE.ConvVAE
+.. automodule:: simulusion.vision.VAE.ConvVAE
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.dreamer_encoder
+.. automodule:: simulusion.vision.dreamer_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.dreamer_decoder
+.. automodule:: simulusion.vision.dreamer_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.planet_encoder
+.. automodule:: simulusion.vision.planet_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.planet_decoder
+.. automodule:: simulusion.vision.planet_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.iris_encoder
+.. automodule:: simulusion.vision.iris_encoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.iris_decoder
+.. automodule:: simulusion.vision.iris_decoder
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.vq_layer
+.. automodule:: simulusion.vision.vq_layer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.vision.video_tokenizer
+.. automodule:: simulusion.vision.video_tokenizer
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks
+.. automodule:: simulusion.blocks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks.mhsa
+.. automodule:: simulusion.blocks.mhsa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.blocks.st_transformer
+.. automodule:: simulusion.blocks.st_transformer
    :members:
    :undoc-members:
    :show-inheritance:
@@ -232,42 +324,40 @@ Vision, tokenization, and layers
 Configuration objects
 ---------------------
 
-.. automodule:: world_models.configs
+.. automodule:: simulusion.configs
+   :no-index:
+
+.. automodule:: simulusion.configs.wm_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.wm_config
+.. automodule:: simulusion.configs.dreamer_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.dreamer_config
+.. automodule:: simulusion.configs.jepa_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.jepa_config
+.. automodule:: simulusion.configs.iris_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.iris_config
+.. automodule:: simulusion.configs.genie_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.genie_config
+.. automodule:: simulusion.configs.dit_config
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.configs.dit_config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.configs.diamond_config
+.. automodule:: simulusion.configs.diamond_config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -277,126 +367,95 @@ Training entry points
 
 **Key classes and functions:** ``DiamondAgent``, ``train_diamond``, ``train_dreamer``, ``GenieTrainer``, ``IRISTrainer``, and related training entry points.
 
-.. automodule:: world_models.training
+.. automodule:: simulusion.training
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_world_model
+.. automodule:: simulusion.training.train_world_model
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_convvae
+.. automodule:: simulusion.training.train_convvae
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_mdn_rnn
+.. automodule:: simulusion.training.train_mdn_rnn
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_controller
+.. automodule:: simulusion.training.train_controller
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_jepa
+.. automodule:: simulusion.training.train_jepa
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_iris
+.. automodule:: simulusion.training.train_iris
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_genie
+.. automodule:: simulusion.training.train_genie
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_planet
+.. automodule:: simulusion.training.train_planet
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_rssm
+.. automodule:: simulusion.training.train_rssm
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.train_diamond
+.. automodule:: simulusion.training.train_diamond
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.training.rl_harness
+.. automodule:: simulusion.training.rl_harness
    :members:
    :undoc-members:
    :show-inheritance:
 
-Memory, controllers, and inference operators
---------------------------------------------
+Memory and controllers
+----------------------
 
-.. automodule:: world_models.memory.dreamer_memory
+.. automodule:: simulusion.memory.dreamer_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.memory.planet_memory
+.. automodule:: simulusion.memory.planet_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.memory.iris_memory
+.. automodule:: simulusion.memory.iris_memory
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.rssm_policy
+.. automodule:: simulusion.controller.rssm_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.iris_policy
+.. automodule:: simulusion.controller.iris_policy
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.controller.rollout_generator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
-
-.. automodule:: world_models.inference.operators.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.dreamer_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.planet_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.iris_operator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.inference.operators.jepa_operator
+.. automodule:: simulusion.controller.rollout_generator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -413,62 +472,60 @@ DIAMOND-style Atari support is intentionally not listed as an environment
 adapter because it is Atari preprocessing rather than a separate environment
 family.
 
-.. automodule:: world_models.envs
+.. automodule:: simulusion.envs
+   :no-index:
+
+.. automodule:: simulusion.envs.dmc
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.dmc
+.. automodule:: simulusion.envs.dmlab
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.dmlab
+.. automodule:: simulusion.envs.gym_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.gym_env
+.. automodule:: simulusion.envs.ale_atari_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.ale_atari_env
+.. automodule:: simulusion.envs.ale_atari_vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.ale_atari_vector_env
+.. automodule:: simulusion.envs.procgen_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.procgen_env
+.. automodule:: simulusion.envs.mujoco_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.mujoco_env
+.. automodule:: simulusion.envs.robotics_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.robotics_env
+.. automodule:: simulusion.envs.unity_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.unity_env
+.. automodule:: simulusion.envs.vector_env
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.envs.vector_env
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.envs.wrappers
+.. automodule:: simulusion.envs.wrappers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -479,7 +536,7 @@ Atari preprocessing helpers
 These helpers wrap Atari environments for specific training recipes. They are
 not separate environment families.
 
-.. automodule:: world_models.envs.diamond_atari
+.. automodule:: simulusion.envs.diamond_atari
    :members:
    :undoc-members:
    :show-inheritance:
@@ -487,42 +544,42 @@ not separate environment families.
 Datasets and transforms
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: world_models.datasets.wm_dataset
+.. automodule:: simulusion.datasets.wm_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.video_datasets
+.. automodule:: simulusion.datasets.video_datasets
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.tinyworlds
+.. automodule:: simulusion.datasets.tinyworlds
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.diamond_dataset
+.. automodule:: simulusion.datasets.diamond_dataset
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.cifar10
+.. automodule:: simulusion.datasets.cifar10
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.imagenet1k
+.. automodule:: simulusion.datasets.imagenet1k
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.datasets.nuplan
+.. automodule:: simulusion.datasets.nuplan
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.transforms.image
+.. automodule:: simulusion.transforms.image
    :members:
    :undoc-members:
    :show-inheritance:
@@ -530,27 +587,27 @@ Datasets and transforms
 Masking and JEPA helpers
 ------------------------
 
-.. automodule:: world_models.masks
+.. automodule:: simulusion.masks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.default
+.. automodule:: simulusion.masks.default
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.multiblock
+.. automodule:: simulusion.masks.multiblock
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.masks.random
+.. automodule:: simulusion.masks.random
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.helpers.jepa_helper
+.. automodule:: simulusion.helpers.jepa_helper
    :members:
    :undoc-members:
    :show-inheritance:
@@ -558,27 +615,27 @@ Masking and JEPA helpers
 Benchmarks and reports
 ----------------------
 
-.. automodule:: world_models.benchmarks
+.. automodule:: simulusion.benchmarks
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.runner
+.. automodule:: simulusion.benchmarks.runner
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.adapters
+.. automodule:: simulusion.benchmarks.adapters
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.metrics
+.. automodule:: simulusion.benchmarks.metrics
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.benchmarks.reporting
+.. automodule:: simulusion.benchmarks.reporting
    :members:
    :undoc-members:
    :show-inheritance:
@@ -586,52 +643,47 @@ Benchmarks and reports
 Utilities
 ---------
 
-.. automodule:: world_models.losses.convae_loss
+.. automodule:: simulusion.losses.convae_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.losses.gmm_loss
+.. automodule:: simulusion.losses.gmm_loss
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.train_utils
+.. automodule:: simulusion.utils.train_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.dreamer_utils
+.. automodule:: simulusion.utils.dreamer_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.jepa_utils
+.. automodule:: simulusion.utils.jepa_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.data_utils
+.. automodule:: simulusion.utils.data_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.jit_utils
+.. automodule:: simulusion.utils.memory_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.memory_utils
+.. automodule:: simulusion.utils.logging_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: world_models.utils.logging_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: world_models.utils.utils
+.. automodule:: simulusion.utils.utils
    :members:
    :undoc-members:
    :show-inheritance:

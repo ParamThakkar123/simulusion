@@ -1,6 +1,6 @@
 # DiT: Diffusion Transformer and Diffusion Models
 
-This page covers the diffusion-based models in TorchWM: DDPM for image generation,
+This page covers the diffusion-based models in Simulusion: DDPM for image generation,
 DiT for scalable transformer-based diffusion, and DIAMOND for diffusion world models
 in reinforcement learning.
 
@@ -9,6 +9,19 @@ Based on papers:
 - [Scalable Diffusion Models with Transformers](https://arxiv.org/abs/2212.09748) (Peebles & Xie, 2023)
 - [DIAMOND: Diffusion as a Model of Environment Dreams](https://arxiv.org/abs/2403.05187) (Alonso et al., 2024)
 
+## See it in action
+
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/dit_denoising.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>A class-conditional DiT-S/4 denoising CIFAR-10 samples from pure noise, one row per class.</figcaption>
+</figure>
+```
+
+Trained from scratch in one to two hours on a 4 GB laptop GPU with
+`python demos/dit_demo.py train`, then recorded with `python demos/dit_demo.py record`.
+More clips are in the {ref}`gallery <gallery-dit>`.
+
 ```{contents} Contents
 :depth: 3
 ```
@@ -16,7 +29,7 @@ Based on papers:
 ## Overview
 
 Diffusion models learn to generate data by reversing a gradual noising process.
-In TorchWM, diffusion models serve two purposes:
+In Simulusion, diffusion models serve two purposes:
 
 1. **Image/video generation** (DDPM, DiT): High-quality unconditional or conditional sample generation.
 2. **World models for RL** (DIAMOND): Diffusion-based dynamics models that predict future observations.
@@ -77,25 +90,25 @@ The simplified DDPM loss trains the model to predict the noise `ε` at each time
 ```
 
 ```python
-x0 = batch                       # clean images
-t = randint(0, T)                # random timestep
-eps = randn_like(x0)             # random noise
+x0 = batch  # clean images
+t = randint(0, T)  # random timestep
+eps = randn_like(x0)  # random noise
 xt = sqrt(alpha_bar[t]) * x0 + sqrt(1 - alpha_bar[t]) * eps
-eps_pred = model(xt, t)          # predict noise
-loss = mse(eps_pred, eps)        # simple noise-prediction loss
+eps_pred = model(xt, t)  # predict noise
+loss = mse(eps_pred, eps)  # simple noise-prediction loss
 loss.backward()
 ```
 
 ### Sampling
 
 ```python
-x = torch.randn(shape)           # pure noise
+x = torch.randn(shape)  # pure noise
 for t in reversed(range(T)):
-    eps_pred = model(x, t)       # predict noise
+    eps_pred = model(x, t)  # predict noise
     x = (x - sqrt(1 - alpha_bar[t]) * eps_pred) / sqrt(alpha_bar[t])
     if t > 0:
         x += sigma[t] * torch.randn_like(x)
-return x                         # generated image
+return x  # generated image
 ```
 
 ## DiT: Diffusion Transformer
@@ -111,15 +124,72 @@ providing better scalability and global context.
 
 ```{mermaid}
 graph TD
-    A["Noisy image x_t"] --> B["Patchify: (C,H,W) → (N,D)"]
-    C["Timestep t"] --> D["Timestep embedding"]
-    D --> E["AdaLN modulation"]
-    B --> F["DiT Block × depth"]
-    E --> F
-    F --> G["..."]
-    G --> H["Output head: (N,D) → (C,H,W)"]
-    H --> I["Predicted noise ε_θ"]
+    A["Noisy latent x_t"] --> B["Patchify + fixed sin-cos pos embed"]
+    C["Timestep t"] --> D["Timestep embedder"]
+    Y["Class label y"] --> Z["Label embedder (+ null token)"]
+    D --> E["c = t_emb + y_emb"]
+    Z --> E
+    E --> F["DiT Block × depth (adaLN-Zero)"]
+    B --> F
+    F --> H["Final layer: adaLN + linear → p·p·2C"]
+    E --> H
+    H --> I["Predicted noise ε_θ and covariance Σ_θ"]
 ```
+
+### adaLN-Zero conditioning
+
+Conditioning is the **sum** of the timestep and class embeddings. A single
+`SiLU → Linear` per block regresses six vectors from it — shift, scale and
+**gate** for each of the attention and MLP sub-layers (`6 × hidden`; vanilla
+adaLN uses `4 ×` because it has no gates).
+
+The gates are zero-initialised, so every block begins as the identity function.
+Figure 5 of the paper shows this is not a detail: adaLN-Zero reaches roughly half
+the FID of in-context conditioning at 400K steps, and clearly beats vanilla
+adaLN, which is otherwise the same block.
+
+### Model presets
+
+Table 1 configs, selected by name and patch size:
+
+```python
+from simulusion import DiT, dit_preset_config
+
+model = DiT.from_config(dit_preset_config("DiT-XL", patch_size=2))
+```
+
+| Preset | Layers | Hidden | Heads | Params (/2) |
+|---|---|---|---|---|
+| `DiT-S` | 12 | 384 | 6 | 33M |
+| `DiT-B` | 12 | 768 | 12 | 130M |
+| `DiT-L` | 24 | 1024 | 16 | 458M |
+| `DiT-XL` | 28 | 1152 | 16 | 675M |
+
+Patch size is the other axis of the design space (2, 4, 8). Halving it quadruples
+the token count and so the Gflops, which Figure 8 identifies — not parameter
+count — as what actually drives FID.
+
+### Classifier-free guidance
+
+The label embedder holds `num_classes + 1` rows; the extra one is a learned null
+token that `class_dropout_prob` randomly substitutes during training. At sampling
+time:
+
+```python
+out = model.forward_with_cfg(x_t, t, y, cfg_scale=1.5)
+```
+
+which computes `ε(x,∅) + s·(ε(x,y) − ε(x,∅))`. Guidance is what takes DiT-XL/2
+from FID 9.62 to 2.27 in Table 2. Pass `guided_channels=3` to reproduce the
+appendix's subset-of-channels variant.
+
+### Output channels
+
+With `learn_sigma=True` (the default, paper 3.1) the model emits `2C` channels:
+the predicted noise followed by the diagonal covariance parameterisation. The
+built-in training loop applies `L_simple` to the noise half only — training
+`Σ_θ` needs the full variational bound, which is not implemented here. Set
+`learn_sigma=False` for a strictly ε-only model.
 
 ### Patch Embedding
 
@@ -162,7 +232,7 @@ No cross-attention — DiT is typically unconditional or class-conditional via A
 ### Training
 
 ```python
-from torchwm import DiTConfig, get_dit_config
+from simulusion import DiTConfig, get_dit_config
 
 cfg = get_dit_config(
     DATASET="CIFAR10",
@@ -252,12 +322,12 @@ for sigma in sigmas[:-1]:
 return denoised
 ```
 
-## Usage in TorchWM
+## Usage in Simulusion
 
 ### DiT quick start
 
 ```python
-from torchwm import DiTConfig, get_dit_config
+from simulusion import DiTConfig, get_dit_config
 
 cfg = get_dit_config(DATASET="CIFAR10", BATCH=128, EPOCHS=100, IMG_SIZE=32)
 ```
@@ -265,7 +335,7 @@ cfg = get_dit_config(DATASET="CIFAR10", BATCH=128, EPOCHS=100, IMG_SIZE=32)
 ### DIAMOND quick start
 
 ```python
-from torchwm import DiamondConfig
+from simulusion import DiamondConfig
 
 cfg = DiamondConfig(preset="small")  # small, medium, large
 cfg.game = "Breakout-v5"
@@ -275,14 +345,14 @@ cfg.obs_size = 64
 ### DIAMOND CLI
 
 ```bash
-torchwm train diamond --config world_models/configs/experiments/diamond.yaml \
+simulusion train diamond --config simulusion/configs/experiments/diamond.yaml \
     preset=small seed=1
 ```
 
 Or directly:
 
 ```bash
-python -m world_models.training.train_diamond --game Breakout-v5 --preset small
+python -m simulusion.training.train_diamond --game Breakout-v5 --preset small
 ```
 
 ### DIAMOND Training Loop

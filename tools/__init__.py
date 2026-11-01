@@ -1,7 +1,7 @@
-"""Tooling helpers for TorchWM.
+"""Tooling helpers for Simulusion.
 
-All heavyweight or optional helpers are exposed lazily so ``python -m torchwm.cli``
-and the installed ``torchwm`` command do not import documentation/browser tooling
+All heavyweight or optional helpers are exposed lazily so ``python -m simulusion.cli``
+and the installed ``simulusion`` command do not import documentation/browser tooling
 or pre-import the CLI module during package initialization.
 """
 
@@ -58,4 +58,3 @@ def __getattr__(name: str) -> Any:
 
     globals()[name] = value
     return value
-

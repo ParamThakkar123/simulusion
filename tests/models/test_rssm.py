@@ -1,7 +1,6 @@
 import pytest
-import numpy as np
 import torch
-from world_models.models.rssm import RecurrentStateSpaceModel
+from simulusion.models.rssm import RecurrentStateSpaceModel
 
 
 class TestRecurrentStateSpaceModel:

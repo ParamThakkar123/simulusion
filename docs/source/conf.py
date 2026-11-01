@@ -1,4 +1,4 @@
-"""Sphinx configuration for TorchWM documentation."""
+"""Sphinx configuration for Simulusion documentation."""
 
 from __future__ import annotations
 
@@ -8,15 +8,15 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../.."))
 
-project = "TorchWM"
+project = "Simulusion"
 copyright = f"{datetime.now().year}, Param Thakkar"
 author = "Param Thakkar"
 
-# Auto-read version from the public torchwm package
+# Auto-read version from the public simulusion package
 
-import torchwm
+import simulusion  # noqa: E402  (must follow the sys.path insertion above)
 
-release = torchwm.__version__
+release = simulusion.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -26,6 +26,7 @@ extensions = [
     "myst_parser",
     "sphinx_copybutton",
     "sphinxext.opengraph",
+    "sphinx_sitemap",
     "sphinxcontrib.mermaid",
     "nbsphinx",
 ]
@@ -48,6 +49,11 @@ autodoc_default_options = {
 
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
+# Render "Attributes:" docstring sections as :ivar: fields inside the class
+# description rather than as standalone py:attribute directives. Without this,
+# every attribute a class both annotates and documents (each dataclass config,
+# for one) is registered twice and Sphinx warns about a duplicate description.
+napoleon_use_ivar = True
 
 myst_enable_extensions = [
     "colon_fence",
@@ -119,17 +125,32 @@ autodoc_mock_imports = [
 ]
 
 html_theme = "pydata_sphinx_theme"
+# Suffix of every page's browser/search-result title ("Dreamer - Simulusion").
+# Sphinx's default ("<project> <release> documentation") is long and repeats
+# the name; the searchable terms belong in each page's own heading.
+html_title = "Simulusion"
+html_favicon = "_static/simulusion-favicon.svg"
 html_theme_options = {
-    "github_url": "https://github.com/paramthakkar123/torchwm",
+    "github_url": "https://github.com/paramthakkar123/simulusion",
     "navigation_depth": 3,
     "show_nav_level": 2,
-    # Keep the top navbar intentionally minimal: project title/logo,
-    # documentation search, and the GitHub redirect link only.
+    "logo": {
+        "image_light": "simulusion-logo-light.svg",
+        "image_dark": "simulusion-logo-dark.svg",
+        # The logo image is the wordmark, so no separate text label.
+        "alt_text": "Simulusion",
+    },
+    # Keep the top navbar intentionally minimal: logo, documentation search,
+    # the light/dark switch (the docs open in dark mode), and the GitHub link.
     "navbar_start": ["navbar-logo"],
     "navbar_center": [],
-    "navbar_end": ["search-field", "navbar-icon-links"],
+    "navbar_end": ["search-field", "theme-switcher", "navbar-icon-links"],
     "navbar_persistent": [],
 }
+
+# Open in dark mode. Readers can still switch with the theme toggle, and their
+# choice is remembered by the browser.
+html_context = {"default_mode": "dark"}
 
 # Include client-side assets. MathJax itself is loaded by sphinx.ext.mathjax;
 # adding custom MathJax bootstrap files here can race with Sphinx's runtime and
@@ -150,11 +171,15 @@ html_css_files = [
 # Canonical docs URL. Overridden in CI for PR previews.
 html_baseurl = os.getenv(
     "SPHINX_HTML_BASEURL",
-    "https://paramthakkar123.github.io/torchwm/",
+    "https://paramthakkar123.github.io/simulusion/",
 )
 
 # Open Graph metadata for social sharing cards/link previews.
 ogp_site_url = html_baseurl
-ogp_site_name = "TorchWM Documentation"
+ogp_site_name = "Simulusion Documentation"
 ogp_description_length = 200
 ogp_enable_meta_description = True
+
+# sitemap.xml for search engines. html_baseurl already carries the full docs
+# root, so each entry is just the page link (no language/version segments).
+sitemap_url_scheme = "{link}"

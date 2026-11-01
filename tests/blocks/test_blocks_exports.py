@@ -2,7 +2,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-import world_models.blocks as blocks
+import simulusion.blocks as blocks  # noqa: E402  (guarded by importorskip above)
 
 
 def test_blocks_all_exports_are_resolvable():

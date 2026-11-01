@@ -1,4 +1,4 @@
-"""Regression tests for the Dreamer RSSM (`world_models.models.dreamer_rssm`).
+"""Regression tests for the Dreamer RSSM (`simulusion.models.dreamer_rssm`).
 
 These tests guard against the GRU input-size mismatch bug that previously caused
 ``RuntimeError: input has inconsistent input_size: got 36 expected 200`` at
@@ -21,7 +21,7 @@ input always has shape ``(B, deter_size)``. These tests verify that:
 
 import pytest
 import torch
-from world_models.models.dreamer_rssm import RSSM
+from simulusion.models.dreamer_rssm import RSSM
 
 
 class TestDreamerRSSM:

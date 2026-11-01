@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import torch
-from world_models.models.vit import (
+from simulusion.models.vit import (
     get_2d_sincos_pos_embed,
     get_2d_sincos_pos_embed_from_grid,
     get_1d_sincos_pos_embed,
@@ -11,8 +11,6 @@ from world_models.models.vit import (
     MLP,
     Attention,
     Block,
-    PatchEmbed,
-    VisionTransformer,
 )
 
 

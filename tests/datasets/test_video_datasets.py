@@ -1,17 +1,14 @@
 import pytest
-import torch
 import numpy as np
 import tempfile
-import os
 from pathlib import Path
 
 pytest.importorskip("cv2")
 pytest.importorskip("h5py")
-from world_models.datasets import (
+from simulusion.datasets import (
     VideoFolderDataset,
     ImageFolderDataset,
     NumPyDataset,
-    RLEnvironmentDataset,
     create_video_dataloader,
     DatasetConfig,
     VideoDatasetConfig,

@@ -1,0 +1,76 @@
+# IRIS experiment defaults, matching "Transformers are Sample-Efficient World
+# Models" (Micheli et al., ICLR 2023), Appendix A Tables 2-6.
+#
+# Override any key with `key=value`, e.g.:
+#   simulusion train iris --config simulusion/configs/experiments/iris.yaml total_epochs=100 env=ALE/Breakout-v5
+#
+# NOTE ON MEMORY: these are the paper's batch sizes, which were run on A100 40GB
+# GPUs (Appendix G: 8x A100, ~3.5 days per environment). They will not fit on a
+# small consumer GPU -- use iris_small_gpu.yaml for those.
+
+# === Discrete autoencoder (Tables 2, 3) ===
+frame_height: 64
+frame_width: 64
+frame_channels: 3
+vocab_size: 512
+tokens_per_frame: 16
+token_embedding_dim: 512
+encoder_channels: 64
+encoder_layers: 4
+encoder_residual_blocks: 2   # per layer, in both encoder and decoder
+decoder_depth: 64            # "the same ones apply for the decoder"
+# A.1: L1 + commitment + perceptual, equally weighted.
+reconstruction_weight: 1.0
+commitment_weight: 1.0
+perceptual_weight: 1.0
+perceptual_blocks: 5         # LPIPS compares all five VGG16 blocks
+quantizer: gradient
+
+# === Transformer (Table 4) ===
+transformer_timesteps: 20
+transformer_embed_dim: 256
+transformer_layers: 10
+transformer_heads: 4
+transformer_dropout: 0.1
+weight_decay: 0.01
+
+# === Actor-critic (Table 6, A.3) ===
+imagination_horizon: 20
+burn_in_length: 20
+discount: 0.995
+td_lambda: 0.95
+entropy_coef: 0.001
+actor_hidden_size: 512
+
+# === Training loop (Table 5) ===
+total_epochs: 600
+collection_epochs: 500      # 500 * 200 = 100k env steps
+env_steps_per_epoch: 200
+training_steps_per_epoch: 200
+transformer_steps_per_epoch: 200
+actor_critic_steps_per_epoch: 200
+autoencoder_batch_size: 256
+transformer_batch_size: 64
+actor_critic_batch_size: 64
+start_autoencoder_after: 5
+start_transformer_after: 25
+start_actor_critic_after: 50
+model_learning_rate: 0.0001
+actor_learning_rate: 0.0001
+value_learning_rate: 0.0001
+grad_clip_norm: 10.0
+collect_epsilon: 0.01       # fixed, not decayed (Table 5)
+eval_temperature: 0.5
+# Appendix H lowers this to 0.01 for Freeway; train_iris applies that
+# automatically when the value is left at 1.0.
+collect_temperature: 1.0
+
+# === Environment ===
+env_backend: gym
+env: ALE/Pong-v5
+action_repeat: 4
+repeat_action_probability: 0.0   # Atari 100k uses no sticky actions
+
+# === Logging ===
+eval_episodes: 100
+checkpoint_interval: 50

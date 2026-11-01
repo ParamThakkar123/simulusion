@@ -7,10 +7,10 @@ model size. Everything else is left at the paper defaults.
 
 Usage::
 
-    # Runs on a base `pip install torchwm[gym]`.
+    # Runs on a base `pip install simulusion[gym]`.
     python examples/dreamer_v3_example.py env=Pendulum-v1 env_backend=gym
 
-    # DeepMind Control, larger model (requires `pip install torchwm[dmc]`).
+    # DeepMind Control, larger model (requires `pip install simulusion[dmc]`).
     python examples/dreamer_v3_example.py env=walker-walk model_size=200m
 
     # Atari, discrete actions handled automatically.
@@ -21,8 +21,8 @@ import logging
 
 from omegaconf import OmegaConf
 
-from world_models.configs.dreamer_v3_config import MODEL_SIZES, DreamerV3Config
-from world_models.models.dreamer_v3 import DreamerV3Agent
+from simulusion.configs.dreamer_v3_config import MODEL_SIZES, DreamerV3Config
+from simulusion.models.dreamer_v3 import DreamerV3Agent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

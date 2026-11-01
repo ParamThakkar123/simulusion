@@ -1,10 +1,10 @@
 import re
 
 import pytest
-import torchwm
+import simulusion
 
 try:
-    import torchwm.cli as cli
+    import simulusion.cli as cli
 except ImportError:
     pytest.skip("click not installed", allow_module_level=True)
 
@@ -25,7 +25,7 @@ def test_version_shows_package_version():
     res = runner.invoke(cli.app, ["version"])
     assert res.exit_code == 0
     assert re.search(r"\d+\.\d+\.\d+", res.output)
-    assert torchwm.__version__ in res.output
+    assert simulusion.__version__ in res.output
 
 
 def test_envs_list_outputs_backends():
@@ -151,12 +151,12 @@ def test_console_entrypoint_run_is_exported():
 
 
 def test_train_lists_diamond_entrypoint():
-    assert cli.TRAINING_MODULES["diamond"] == "world_models.training.train_diamond"
+    assert cli.TRAINING_MODULES["diamond"] == "simulusion.training.train_diamond"
 
 
 def test_dmlab_registered_in_backend_specs():
-    from world_models.api import ENV_BACKEND_SPECS, EnvBackendSpec
-    from world_models.catalog import ENV_BACKENDS
+    from simulusion.api import ENV_BACKEND_SPECS, EnvBackendSpec
+    from simulusion.catalog import ENV_BACKENDS
 
     dmlab_spec = ENV_BACKEND_SPECS["dmlab"]
 
@@ -167,8 +167,38 @@ def test_dmlab_registered_in_backend_specs():
 
 
 def test_dmlab_backend_specs_are_public_api():
-    import world_models
+    import simulusion
 
-    assert world_models.EnvBackendSpec is not None
-    assert "dmlab" in world_models.ENV_BACKEND_SPECS
+    assert simulusion.EnvBackendSpec is not None
+    assert "dmlab" in simulusion.ENV_BACKEND_SPECS
 
+
+def test_play_supports_dreamer_as_well_as_diamond():
+    assert set(cli.PLAY_MODULES) == {"diamond", "dreamer"}
+    assert cli.PLAY_MODULES["dreamer"] == "simulusion.inference.play_dreamer"
+    assert set(cli.PLAY_DEFAULT_GAMES) == set(cli.PLAY_MODULES)
+
+
+def test_play_defaults_game_per_model(monkeypatch):
+    # ``--game`` means an Atari ROM for DIAMOND and a control task for Dreamer,
+    # so omitting it must not hand Breakout-v5 to Dreamer.
+    calls = {}
+
+    class FakeModule:
+        @staticmethod
+        def run_play(**kwargs):
+            calls.update(kwargs)
+
+    monkeypatch.setattr(cli.importlib, "import_module", lambda path: FakeModule)
+
+    runner = _runner()
+    res = runner.invoke(cli.app, ["play", "-m", "dreamer", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "walker-walk"
+
+    calls.clear()
+    res = runner.invoke(cli.app, ["play", "-m", "diamond", "-c", "ckpt.pt"])
+
+    assert res.exit_code == 0, res.output
+    assert calls["game"] == "Breakout-v5"

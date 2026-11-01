@@ -23,9 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
       el.remove();
     });
 
-    // PyData may inject theme/version controls depending on the installed
-    // theme version. Keep only search and icon-link controls at navbar end.
-    header.querySelectorAll('.theme-switch-button, .navbar-version, .pst-navbar-icon').forEach(function(el) {
+    // PyData may inject version controls depending on the installed theme
+    // version. Keep only search, the light/dark switch and icon links.
+    header.querySelectorAll('.navbar-version, .pst-navbar-icon').forEach(function(el) {
+      // The light/dark switch carries .pst-navbar-icon too; keep it.
+      if (el.closest('.theme-switch-button, .theme-switcher')) {
+        return;
+      }
       var link = el.closest('a');
       if (!link || !/github\.com/.test(link.href || '')) {
         el.remove();

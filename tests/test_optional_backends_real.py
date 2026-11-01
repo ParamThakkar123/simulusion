@@ -1,10 +1,19 @@
 import os
 import sys
+from importlib import metadata
 
 import numpy as np
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.slow]
+
+
+def _protobuf_version() -> tuple[int, int]:
+    try:
+        major, minor = metadata.version("protobuf").split(".")[:2]
+        return int(major), int(minor)
+    except (metadata.PackageNotFoundError, ValueError):
+        return (0, 0)
 
 
 def _assert_image_observation(
@@ -19,7 +28,7 @@ def _assert_image_observation(
 
 def test_real_brax_image_env_smoke():
     pytest.importorskip("brax")
-    from world_models.envs.brax_env import BraxImageEnv
+    from simulusion.envs.brax_env import BraxImageEnv
 
     env = BraxImageEnv(
         "inverted_pendulum",
@@ -52,7 +61,7 @@ def test_real_brax_image_env_smoke():
 
 def test_real_robotics_env_smoke():
     pytest.importorskip("gymnasium_robotics")
-    from world_models.envs.robotics_env import (
+    from simulusion.envs.robotics_env import (
         list_gymnasium_robotics_envs,
         make_robotics_env,
     )
@@ -89,6 +98,16 @@ def test_real_robotics_env_smoke():
         env.close()
 
 
+# The `ml-agents` extra deliberately resolves protobuf >= 5.29.6 (see the
+# comment above it in pyproject.toml). mlagents-envs 0.28's gencode predates
+# protoc 3.19 and cannot load on any protobuf >= 3.21: the C++/upb backends
+# raise TypeError and the pure-Python backend raises AttributeError.
+@pytest.mark.xfail(
+    _protobuf_version() >= (3, 21),
+    reason="mlagents-envs 0.28 gencode is incompatible with protobuf >= 3.21",
+    raises=(TypeError, AttributeError),
+    strict=True,
+)
 def test_real_mlagents_sdk_importable():
     sdk = pytest.importorskip("mlagents_envs")
     from mlagents_envs.environment import UnityEnvironment
@@ -107,7 +126,7 @@ def test_real_mlagents_sdk_importable():
 )
 def test_real_procgen_backend_if_supported_python():
     pytest.importorskip("procgen")
-    from world_models.envs.procgen_env import ProcgenImageEnv
+    from simulusion.envs.procgen_env import ProcgenImageEnv
 
     env = ProcgenImageEnv("coinrun", seed=0, size=(16, 16), num_levels=1)
     try:
@@ -123,15 +142,16 @@ def test_real_procgen_backend_if_supported_python():
 
 
 @pytest.mark.skipif(
-    not os.getenv("TORCHWM_UNITY_BINARY") or not os.getenv("TORCHWM_UNITY_BEHAVIOR"),
-    reason="Set TORCHWM_UNITY_BINARY and TORCHWM_UNITY_BEHAVIOR to run against a real Unity build.",
+    not os.getenv("SIMULUSION_UNITY_BINARY")
+    or not os.getenv("SIMULUSION_UNITY_BEHAVIOR"),
+    reason="Set SIMULUSION_UNITY_BINARY and SIMULUSION_UNITY_BEHAVIOR to run against a real Unity build.",
 )
 def test_real_unity_backend_if_binary_provided():
-    from world_models.envs.unity_env import UnityMLAgentsEnv
+    from simulusion.envs.unity_env import UnityMLAgentsEnv
 
     env = UnityMLAgentsEnv(
-        file_name=os.environ["TORCHWM_UNITY_BINARY"],
-        behavior_name=os.environ["TORCHWM_UNITY_BEHAVIOR"],
+        file_name=os.environ["SIMULUSION_UNITY_BINARY"],
+        behavior_name=os.environ["SIMULUSION_UNITY_BEHAVIOR"],
         seed=0,
         size=(32, 32),
         no_graphics=True,
@@ -150,3 +170,46 @@ def test_real_unity_backend_if_binary_provided():
         assert "action" in info
     finally:
         env.close()
+
+
+def test_real_dmc_backend_smoke():
+    """DeepMind Control through the dmc backend, when it is installed.
+
+    `pip install simulusion[dmc]` covers Python <= 3.12; on 3.13 the backend is
+    installed by `python -m simulusion.install_dmc`, which supplies the `labmaze`
+    module through the pure-Python `labmaze-new`.
+    """
+    pytest.importorskip("dm_control")
+
+    import simulusion
+
+    env = simulusion.make_env("walker-walk", backend="dmc", seed=0, size=(32, 32))
+    obs = env.reset()
+    _assert_image_observation(obs, (3, 32, 32))
+    # A rendered frame, not a blank one: offscreen GL actually worked.
+    assert int(obs["image"].max()) > 0
+
+    next_obs, reward, done, info = env.step(
+        np.zeros(env.action_space.shape, dtype=np.float32)
+    )
+    _assert_image_observation(next_obs, (3, 32, 32))
+    assert isinstance(float(reward), float)
+    assert done is False
+    assert {"discount", "terminated", "truncated"} <= set(info)
+
+
+def test_dmc_installer_never_resolves_upstream_labmaze():
+    from simulusion.install_dmc import DM_CONTROL_DEPS, install_steps
+
+    steps = install_steps()
+    assert any("labmaze-new" in arg for step in steps for arg in step)
+    dm_control_step = next(
+        step for step in steps if any("dm-control" in a for a in step)
+    )
+    assert "--no-deps" in dm_control_step
+    # Upstream `labmaze` must never be requested: it has no CPython 3.13 wheel
+    # and its sdist builds with Bazel.
+    for step in steps:
+        for arg in step:
+            assert not arg.startswith("labmaze>") and arg != "labmaze"
+    assert not any(dep.startswith("labmaze") for dep in DM_CONTROL_DEPS)

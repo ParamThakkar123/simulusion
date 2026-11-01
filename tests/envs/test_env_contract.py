@@ -3,12 +3,12 @@ import pytest
 import numpy as np
 
 
-gym = pytest.importorskip("gym")
+gym = pytest.importorskip("gymnasium")
 
-from world_models.envs.dmc import DeepMindControlEnv  # noqa: E402
-from world_models.envs.gym_env import GymImageEnv  # noqa: E402
-from world_models.envs.mujoco_env import MuJoCoImageEnv  # noqa: E402
-from world_models.envs.wrappers import FrameStack, NormalizeActions, TimeLimit  # noqa: E402
+from simulusion.envs.dmc import DeepMindControlEnv  # noqa: E402
+from simulusion.envs.gym_env import GymImageEnv  # noqa: E402
+from simulusion.envs.mujoco_env import MuJoCoImageEnv  # noqa: E402
+from simulusion.envs.wrappers import FrameStack, NormalizeActions, TimeLimit  # noqa: E402
 
 
 class _ContractFiveTupleEnv:
