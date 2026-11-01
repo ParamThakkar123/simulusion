@@ -76,7 +76,9 @@ Commands
 - `play --model <NAME> --checkpoint <PATH> [options]` - Interactively play
   inside a trained world model. Two modes toggled by `TAB`: **REAL** (env
   stepping) and **DREAM** (model imagination). Press arrow keys / WASD to
-  override the agent's actions.
+  override the agent's actions. With `diamond`, press `S` in DREAM mode to
+  save the last dream frames as `dream_<timestamp>.mp4` in the current
+  directory, with the actions and predicted rewards in `dream_<timestamp>.json`.
 
   Key options:
   - `--model`, `-m` — model type (currently `diamond`)
@@ -85,6 +87,8 @@ Commands
   - `--deterministic` / `--stochastic` — action selection (default deterministic)
   - `--record PATH` — save gameplay video
   - `--record-fps` — video framerate (default 20)
+  - `--dream-buffer N` — dream frames `S` saves (`diamond` only; default 50,
+    0 turns it off)
 
 - `models list` - Print the known training entrypoints and (when available)
   exported model names from `simulusion.models`.

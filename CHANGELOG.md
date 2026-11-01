@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Proprioceptive DeepMind Control observations.** `DeepMindControlEnv` takes
+  `obs_type="state"` (Dreamer configs: `dmc_obs_type="state"`), which returns
+  the task's state flattened into `obs["state"]` and skips rendering, for the
+  Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
+
+### Fixed
+- DeepMind Control episodes that end at the time limit (discount 1) are
+  reported as truncations rather than terminations, so learners bootstrap the
+  value of the last state. Every DMC task ends this way.
 - The trained demo checkpoints for Dreamer, DreamerV2, PlaNet, IRIS, DiT and
   I-JEPA are on the Hugging Face Hub, in the
   [Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
@@ -44,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`reward_layers`, `cont_layers`), the replay ratio counts policy steps
   (action repeat divided out, matching the paper's worked example), and replay
   capacity defaults to 5M (Table 4).
+- `simulusion play -m diamond`: press `S` in DREAM mode to save the last
+  `--dream-buffer` dream frames (default 50) as `dream_<timestamp>.mp4`, with
+  the actions and predicted rewards in `dream_<timestamp>.json`. Before, the
+  only way to keep a dream was `--record` from the start.
 
 ### Changed
 - `DreamerAgent` subclasses can pick their configuration class (`_config_cls`)
