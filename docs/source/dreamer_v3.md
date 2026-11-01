@@ -49,7 +49,7 @@ robustness machinery that removes the need for per-domain tuning.
 | Optimizer | Adam + norm clipping | LaProp + adaptive gradient clipping |
 | Normalization | None | RMSNorm + SiLU throughout |
 | Sequence model | Dense GRU | Block-diagonal GRU (8 blocks) |
-| Replay | Rejects episode-spanning windows | `is_first` flags plus an online queue |
+| Replay | Rejects episode-spanning windows | `is_first` flags, an online queue, stored latent states |
 
 ## Theory
 
@@ -199,7 +199,7 @@ score higher **and** need less environment interaction.
 ```python
 from simulusion.configs import DreamerV3Config
 
-config = DreamerV3Config(model_size="200m")   # widths filled in automatically
+config = DreamerV3Config(model_size="200m")  # widths filled in automatically
 config = DreamerV3Config(model_size="200m", hidden_size=896)  # override one field
 ```
 
@@ -235,18 +235,48 @@ unchanged.
 | `learning_rate` | 4e-5 | Shared across all three optimizers |
 | `agc_clip` | 0.3 | Adaptive gradient clipping fraction |
 | `batch_size` / `train_seq_len` | 16 / 64 | Minibatch shape |
-| `replay_ratio` | 32 | Time steps trained per env step collected |
+| `replay_ratio` | 32 | Time steps trained per policy step collected |
+| `buffer_size` | 5M | Replay capacity, lowered to fit available RAM |
+| `online_fraction` | 1.0 | Share of each batch the online queue may fill |
+| `replay_latents` | True | Store model states in replay and start sequences from them |
+| `mlp_layers` / `reward_layers` / `cont_layers` | 3 / 1 / 1 | Hidden layers of the actor, critic and vector encoder/decoder; of the reward predictor; of the continue predictor |
 
 ### Replay ratio
 
 `update_steps` is derived from `replay_ratio` rather than set directly:
 
+The replay ratio counts policy steps, so action repeat is divided out
+(`collect_steps` counts environment frames):
+
 ```
-update_steps = round(collect_steps * replay_ratio / (batch_size * train_seq_len))
+update_steps = round(collect_steps / action_repeat * replay_ratio / (batch_size * train_seq_len))
 ```
 
-Higher replay ratios trade compute for data efficiency, predictably. Set
+This reproduces the paper's example: a ratio of 32 with action repeat 4 and 16x64
+batches is one gradient step per 128 frames. Higher replay ratios trade compute for
+data efficiency, predictably. The paper picks the ratio per benchmark to fit its step
+budget (Table 2: 32 for Atari, DMLab and Minecraft, 64 for ProcGen, 128 for
+Atari100k, 512 for the control suites, 1024 for BSuite). The default of 32 is the
+cheapest of these; use 512 to match the paper's control-suite runs. Set
 `auto_update_steps=False` to control `update_steps` yourself.
+
+### Replay layout
+
+Replay holds one record per observation, in the indexing of the world model
+equations. Record `t` stores `x_t`, the action `a_{t-1}` that led to it, the reward
+`r_t` received on arriving at it, and `is_first` / `is_last` / `is_terminal`. The
+reward and continue predictors at `s_t = (h_t, z_t)` are trained on `r_t` and
+`c_t = 1 - is_terminal_t`, which `s_t` can predict because `h_t` has already seen
+`a_{t-1}`. The last observation of each episode gets its own record, so the continue
+predictor sees terminal states. In imagination, the reward and continuation for
+acting in `s_t` are therefore read off at `s_{t+1}`.
+
+Collection stores the model state `(h_t, z_t)` with each record. A replayed sequence
+starts from the stored state of the record before it rather than from zeros, and
+after each world-model update the fresh states of the trained sequences are written
+back. Each minibatch is filled first from chunks the model has not trained on yet
+(the online queue), then topped up uniformly. Collection also continues the open
+episode across calls, so the environment is only reset when an episode ends.
 
 ## Observations and actions
 
@@ -295,7 +325,7 @@ model_loss, actor_loss, value_loss = model.train_one_batch()
 ### Checkpoints
 
 ```python
-model.save("checkpoints/dreamer_v3.pt")           # writes config.yaml alongside
+model.save("checkpoints/dreamer_v3.pt")  # writes config.yaml alongside
 restored = DreamerV3.from_pretrained("checkpoints")
 ```
 
@@ -359,8 +389,12 @@ lowering `model_size`, since sequence length costs less in final performance.
 
 Documented here so results can be compared fairly:
 
-- `buffer_size` defaults to 1M transitions rather than 5M, and shrinks further based
-  on available RAM. Set it explicitly for long runs.
+- `buffer_size` is 5M as in the paper, but shrinks to fit the available RAM (each
+  record also holds its stored model state).
+- The default `replay_ratio` of 32 is the paper's Atari/DMLab setting; its control
+  suite runs use 512 (see Replay ratio above).
+- Replayed latent states are stored compactly: `h` as float16 and `z` as one class
+  index per categorical.
 - The critic replay loss uses the imagination return at each replay start state as
   the value annotation, then accumulates `λ`-returns over the replayed rewards. The
   paper describes this mechanism without fixing an implementation.

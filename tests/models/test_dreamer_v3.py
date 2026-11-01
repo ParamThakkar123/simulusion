@@ -70,19 +70,59 @@ def build(config=None, obs_shape=IMAGE_SHAPE, action_size=2):
 
 
 def fill(model, steps=40, episode_length=13, image=True):
+    """Write ``steps`` replay records in the paper layout.
+
+    Episodes are ``episode_length`` records long: a first record, then
+    observations each with the action and reward that led to it, ending in a
+    terminal record.
+    """
+    position = 0
+    prev_action = np.zeros(model.action_size, np.float32)
     for step in range(steps):
         if image:
             obs = {"image": np.random.randint(0, 255, IMAGE_SHAPE, dtype=np.uint8)}
         else:
             obs = {"obs": np.random.randn(model.obs_shape[0]).astype(np.float32)}
-        if model.discrete_actions:
-            action = np.zeros(model.action_size, np.float32)
-            action[step % model.action_size] = 1.0
-        else:
-            action = np.random.randn(model.action_size).astype(np.float32)
+        last = position == episode_length - 1
         model.data_buffer.add(
-            obs, action, float(step % 3), (step + 1) % episode_length == 0
+            obs,
+            prev_action,
+            float(step % 3),
+            is_first=position == 0,
+            is_last=last,
+            is_terminal=last,
         )
+        if model.discrete_actions:
+            prev_action = np.zeros(model.action_size, np.float32)
+            prev_action[step % model.action_size] = 1.0
+        else:
+            prev_action = np.random.randn(model.action_size).astype(np.float32)
+        position = 0 if last else position + 1
+
+
+def wm_loss(model):
+    """Sample a replay batch and run the world model loss on it."""
+    batch = {
+        key: torch.as_tensor(value)
+        for key, value in model.data_buffer.sample().items()
+        if key != "indices"
+    }
+    batch = {
+        key: value if key == "observations" else value.float()
+        for key, value in batch.items()
+    }
+    init = model.initial_state(
+        batch["observations"].shape[1], batch["init_deter"], batch["init_stoch"]
+    )
+    loss, posterior = model.world_model_loss(
+        batch["observations"],
+        batch["prev_actions"],
+        batch["rewards"],
+        batch["is_terminal"],
+        batch["is_first"],
+        init,
+    )
+    return loss, posterior, batch
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +144,16 @@ class TestDreamerV3Config:
         assert config.critic_ema_decay == pytest.approx(0.98)
         assert config.critic_replay_loss_scale == pytest.approx(0.3)
         assert (config.batch_size, config.train_seq_len) == (16, 64)
+        assert config.buffer_size == 5_000_000
+        assert config.return_norm_limit == pytest.approx(1.0)
+        assert config.return_norm_decay == pytest.approx(0.99)
+        assert (config.agc_clip, config.opt_eps) == (0.3, 1e-20)
+        # Actor and critic are 3-layer MLPs, reward and continue 1-layer.
+        assert config.mlp_layers == 3
+        assert (config.reward_layers, config.cont_layers) == (1, 1)
+        # The online queue fills each minibatch first, then uniform replay.
+        assert config.online_fraction == pytest.approx(1.0)
+        assert config.replay_latents
 
     def test_model_size_presets_are_resolved(self):
         config = DreamerV3Config(model_size="200m")
@@ -148,10 +198,28 @@ class TestDreamerV3Config:
             DreamerV3Config(recurrent_units=100, gru_blocks=8)
 
     def test_update_steps_follow_the_replay_ratio(self):
+        # 1000 frames at action repeat 2 are 500 policy steps; a replay ratio of
+        # 32 trains on 16000 of them, i.e. 15.6 batches of 16x64.
         config = DreamerV3Config(
-            replay_ratio=32, collect_steps=1000, batch_size=16, train_seq_len=64
+            replay_ratio=32,
+            collect_steps=1000,
+            action_repeat=2,
+            batch_size=16,
+            train_seq_len=64,
         )
-        assert config.update_steps == 31
+        assert config.update_steps == 16
+
+    def test_replay_ratio_matches_the_papers_worked_example(self):
+        # "A replay ratio of 32 on Atari with action repeat of 4 and batch shape
+        # 16 x 64 corresponds to 1 gradient step every 128 env steps."
+        config = DreamerV3Config(
+            replay_ratio=32,
+            collect_steps=128 * 10,
+            action_repeat=4,
+            batch_size=16,
+            train_seq_len=64,
+        )
+        assert config.update_steps == 10
 
     def test_auto_update_steps_can_be_disabled(self):
         config = DreamerV3Config(auto_update_steps=False, update_steps=7)
@@ -365,14 +433,7 @@ class TestDreamerV3Core:
     def test_world_model_loss_is_finite(self):
         model = build()
         fill(model)
-        obs, actions, rewards, terminal, first = model.data_buffer.sample()
-        loss, posterior = model.world_model_loss(
-            torch.as_tensor(obs),
-            torch.as_tensor(actions),
-            torch.as_tensor(rewards),
-            torch.as_tensor(terminal),
-            torch.as_tensor(first),
-        )
+        loss, posterior, batch = wm_loss(model)
         assert torch.isfinite(loss)
         assert posterior["deter"].shape[0] == model.args.train_seq_len
 
@@ -495,15 +556,8 @@ class TestDreamerV3Core:
         # The critic loss must actually move predictions towards the returns.
         model = build()
         fill(model)
-        obs, actions, rewards, terminal, first = model.data_buffer.sample()
-        _, posterior = model.world_model_loss(
-            torch.as_tensor(obs),
-            torch.as_tensor(actions),
-            torch.as_tensor(rewards),
-            torch.as_tensor(terminal),
-            torch.as_tensor(first),
-        )
-        imagined = model._imagine(posterior)
+        _, posterior, batch = wm_loss(model)
+        imagined = model._imagine(posterior, batch["is_terminal"])
         imagined["returns"] = torch.full_like(imagined["returns"], 5.0)
 
         def error():
@@ -586,15 +640,8 @@ class TestDreamerV3Core:
     def test_imagination_shapes(self):
         model = build()
         fill(model)
-        obs, actions, rewards, terminal, first = model.data_buffer.sample()
-        _, posterior = model.world_model_loss(
-            torch.as_tensor(obs),
-            torch.as_tensor(actions),
-            torch.as_tensor(rewards),
-            torch.as_tensor(terminal),
-            torch.as_tensor(first),
-        )
-        imagined = model._imagine(posterior)
+        _, posterior, batch = wm_loss(model)
+        imagined = model._imagine(posterior, batch["is_terminal"])
         horizon = model.args.imagine_horizon
         flat = model.args.train_seq_len * model.args.batch_size
         assert imagined["features"].shape == (
@@ -605,61 +652,134 @@ class TestDreamerV3Core:
         assert imagined["returns"].shape == (horizon, flat)
         assert imagined["weights"].shape == (horizon, flat)
 
-    def test_imagination_weights_start_at_one_and_decay(self):
+    def test_imagination_weights_start_at_the_start_state_continue_flag(self):
         model = build()
         fill(model)
-        obs, actions, rewards, terminal, first = model.data_buffer.sample()
-        _, posterior = model.world_model_loss(
-            torch.as_tensor(obs),
-            torch.as_tensor(actions),
-            torch.as_tensor(rewards),
-            torch.as_tensor(terminal),
-            torch.as_tensor(first),
-        )
-        weights = model._imagine(posterior)["weights"]
-        assert torch.allclose(weights[0], torch.ones_like(weights[0]))
+        _, posterior, batch = wm_loss(model)
+        weights = model._imagine(posterior, batch["is_terminal"])["weights"]
+        # Acting from a replayed start state counts fully unless it is terminal.
+        alive = 1.0 - batch["is_terminal"].reshape(-1)
+        assert torch.allclose(weights[0], alive)
         assert float(weights[-1].max()) <= 1.0
+        assert torch.all(weights[1:] <= weights[:-1] + 1e-6)
 
-    def test_imagined_return_credits_the_state_that_was_acted_from(self):
-        # Pins the reward/state alignment. The reward head is trained so that
-        # its prediction at a state is the reward for *leaving* that state, so
-        # the return at s_0 must include the reward predicted at s_0. Consuming
-        # rewards[1:] instead would drop it and shift all credit by one step.
-        model = build(tiny_config(discount=1.0, td_lambda=1.0, actor_entropy=0.0))
+    def test_imagined_rewards_are_predicted_at_the_state_reached(self):
+        # Eq. 1: the reward predictor p(r_t | h_t, z_t) is trained on the reward
+        # that arrived with x_t, so the reward for acting in s_t is read off at
+        # s_{t+1}. The return from s_0 is then the sum of the rewards predicted
+        # at s_1 .. s_H, and the reward head is never queried at s_0.
+        model = build(tiny_config(discount=1.0, td_lambda=1.0, imagine_horizon=3))
         horizon = model.args.imagine_horizon
+        seen = []
 
-        # A reward head that always predicts 1, a critic that always predicts 0,
-        # and no termination make the exact return analytically known.
-        rewards = torch.ones(horizon + 1, 4)
-        values = torch.zeros(horizon + 1, 4)
-        continues = torch.ones(horizon + 1, 4)
+        class ConstantReward(torch.nn.Module):
+            def forward(self, features):
+                seen.append(features.shape[0])
+                return Mock(mean=torch.ones(features.shape[:-1]))
 
-        from simulusion.utils.dreamer_v3_utils import lambda_return
+        model.reward_model = ConstantReward()
+        model.continue_model.model[-1].bias.data.fill_(100.0)  # always alive
 
-        returns = lambda_return(
-            rewards=rewards[:-1],
-            values=values[1:],
-            continues=continues[:-1],
-            bootstrap=values[-1],
-            lambda_=1.0,
+        posterior = {
+            key: value.unsqueeze(0)
+            for key, value in model.rssm.init_state(4, model.device).items()
+        }
+        imagined = model._imagine(posterior, torch.zeros(1, 4))
+        assert seen == [horizon]
+        # The zero-initialized critic predicts 0, so R_0 = 3 rewards, R_2 = 1.
+        assert torch.allclose(imagined["returns"][0], torch.full((4,), 3.0))
+        assert torch.allclose(imagined["returns"][-1], torch.full((4,), 1.0))
+
+    def test_world_model_learns_the_reward_that_arrived_with_each_observation(self):
+        # The reward predictor is trained on r_t at s_t: the reward stored with
+        # x_t, not the next record's reward.
+        model = build()
+        fill(model)
+        _, posterior, batch = wm_loss(model)
+        features = model.rssm.get_feat(posterior)
+        with torch.no_grad():
+            expected = -model.reward_model(features).log_prob(batch["rewards"])
+        assert model.last_metrics["wm/reward_loss"] == pytest.approx(
+            float(expected.mean()), rel=1e-5
         )
-        # Undiscounted sum of the `horizon` rewards collected from s_0 onwards.
-        assert float(returns[0, 0]) == pytest.approx(float(horizon))
-        # And one fewer reward remains from the next state.
-        assert float(returns[1, 0]) == pytest.approx(float(horizon - 1))
+
+    def test_reward_and_continue_heads_have_one_hidden_layer(self):
+        model = build(tiny_config(mlp_layers=3))
+
+        def linears(module):
+            return sum(isinstance(m, torch.nn.Linear) for m in module.model)
+
+        assert linears(model.reward_model) == 2  # 1 hidden + output
+        assert linears(model.continue_model) == 2
+        assert linears(model.value_model) == 4  # 3 hidden + output
+        assert linears(model.actor) == 4
+
+    def test_replay_targets_bootstrap_at_episode_ends(self):
+        model = build(tiny_config(discount=0.5, td_lambda=1.0))
+        seq_len = 4
+        posterior = {
+            key: value.unsqueeze(0).expand(seq_len, *value.shape).contiguous()
+            for key, value in model.rssm.init_state(1, model.device).items()
+        }
+        imagined = {"returns": torch.tensor([[10.0, 20.0, 30.0, 40.0]])}
+        rewards = torch.tensor([[0.0], [1.0], [2.0], [0.0]])
+        # Record 2 ends a truncated episode; record 3 starts a new one.
+        is_last = torch.tensor([[0.0], [0.0], [1.0], [0.0]])
+        is_first = torch.tensor([[0.0], [0.0], [0.0], [1.0]])
+        targets = model._replay_value_targets(
+            posterior, rewards, torch.zeros(seq_len, 1), is_first, is_last, imagined
+        )
+        returns = targets["returns"][:, 0]
+        assert returns.shape == (seq_len - 1,)
+        # R_2 = A_2 at the boundary; R_1 = r_2 + 0.5 R_2; R_0 = r_1 + 0.5 R_1.
+        assert float(returns[2]) == pytest.approx(30.0)
+        assert float(returns[1]) == pytest.approx(2.0 + 0.5 * 30.0)
+        assert float(returns[0]) == pytest.approx(1.0 + 0.5 * 17.0)
+
+    def test_replay_targets_stop_at_a_terminal_state(self):
+        model = build(tiny_config(discount=0.5, td_lambda=1.0))
+        seq_len = 3
+        posterior = {
+            key: value.unsqueeze(0).expand(seq_len, *value.shape).contiguous()
+            for key, value in model.rssm.init_state(1, model.device).items()
+        }
+        imagined = {"returns": torch.tensor([[10.0, 20.0, 30.0]])}
+        rewards = torch.tensor([[0.0], [1.0], [5.0]])
+        terminal = torch.tensor([[0.0], [0.0], [1.0]])
+        targets = model._replay_value_targets(
+            posterior, rewards, terminal, torch.zeros(3, 1), terminal.clone(), imagined
+        )
+        # Reaching the terminal state pays r_2 = 5 and nothing after it.
+        assert float(targets["returns"][1, 0]) == pytest.approx(5.0)
+        assert float(targets["weights"][1, 0]) == 1.0
+
+    def test_training_starts_replayed_sequences_from_stored_latents(self):
+        model = build()
+        fill(model, steps=60, episode_length=30)
+        model.train_one_batch()
+        # Training wrote fresh states back for every sampled record.
+        assert model.data_buffer.has_latent.sum() > 0
+        for _ in range(5):
+            sample = model.data_buffer.sample()
+            has_state = sample["init_valid"] == 1
+            # Only mid-episode starts are given a stored state.
+            assert not np.any(has_state & (sample["is_first"][0] == 1))
+            if np.any(has_state):
+                break
+        assert np.any(has_state)
+        assert np.allclose(sample["init_stoch"][has_state].sum(-1), 1.0)
+
+    def test_latent_storage_can_be_disabled(self):
+        model = build(tiny_config(replay_latents=False))
+        assert not model.data_buffer.stores_latents
+        fill(model)
+        assert all(np.isfinite(value) for value in model.train_one_batch())
 
     def test_imagined_returns_grow_with_predicted_reward(self):
         model = build()
         fill(model)
-        obs, actions, rewards, terminal, first = model.data_buffer.sample()
-        _, posterior = model.world_model_loss(
-            torch.as_tensor(obs),
-            torch.as_tensor(actions),
-            torch.as_tensor(rewards),
-            torch.as_tensor(terminal),
-            torch.as_tensor(first),
-        )
-        imagined = model._imagine(posterior)
+        _, posterior, batch = wm_loss(model)
+        imagined = model._imagine(posterior, batch["is_terminal"])
         # Returns accumulate several imagined rewards, so with non-negative
         # rewards they must not be smaller than a single step's reward.
         assert (
@@ -727,11 +847,13 @@ class TestCheckpointing:
 class FakeEnv:
     """Minimal image environment with the Simulusion four-tuple step API."""
 
-    def __init__(self, action_size=2, episode_length=5, discrete=False):
+    def __init__(self, action_size=2, episode_length=5, discrete=False, truncate=False):
         self.action_size = action_size
         self.episode_length = episode_length
         self.discrete = discrete
+        self.truncate = truncate
         self.steps = 0
+        self.resets = 0
         self.action_space = Mock()
         self.action_space.shape = (action_size,)
         self.action_space.sample = self._sample
@@ -748,12 +870,18 @@ class FakeEnv:
 
     def reset(self):
         self.steps = 0
+        self.resets += 1
         return self._obs()
 
     def step(self, action):
         self.steps += 1
         done = self.steps % self.episode_length == 0
-        return self._obs(), 1.0, done, {"action": np.asarray(action)}
+        info = {
+            "action": np.asarray(action),
+            "terminated": done and not self.truncate,
+            "truncated": done and self.truncate,
+        }
+        return self._obs(), 1.0, done, info
 
 
 class TestInteraction:
@@ -773,6 +901,47 @@ class TestInteraction:
         model = build()
         model.act_and_collect_data(FakeEnv(episode_length=4), 16)
         assert model.data_buffer.is_first[:16].sum() >= 3
+
+    def test_records_follow_the_paper_layout(self):
+        # Each observation is stored with the action and reward that led to it;
+        # the final observation gets its own terminal record.
+        model = build()
+        model.act_and_collect_data(FakeEnv(episode_length=3), 3)
+        buffer = model.data_buffer
+        assert len(buffer) == 4  # x_0, x_1, x_2 and the final x_3
+        assert buffer.is_first[:4].tolist() == [1, 0, 0, 0]
+        assert buffer.is_last[:4].tolist() == [0, 0, 0, 1]
+        assert buffer.is_terminal[:4].tolist() == [0, 0, 0, 1]
+        assert buffer.rewards[:4].tolist() == [0.0, 1.0, 1.0, 1.0]
+        assert np.all(buffer.prev_actions[0] == 0.0)
+        assert np.any(buffer.prev_actions[1] != 0.0)
+        assert buffer.has_latent[:4].all()
+
+    def test_truncation_is_not_recorded_as_a_terminal(self):
+        model = build()
+        model.act_and_collect_data(FakeEnv(episode_length=3, truncate=True), 3)
+        assert model.data_buffer.is_last[3] == 1
+        assert model.data_buffer.is_terminal[3] == 0
+
+    def test_collection_continues_the_open_episode_across_calls(self):
+        model = build()
+        env = FakeEnv(episode_length=10)
+        model.act_and_collect_data(env, 4)
+        model.act_and_collect_data(env, 4)
+        assert env.resets == 1
+        assert model.data_buffer.is_first[: len(model.data_buffer)].sum() == 1
+
+    def test_random_episode_is_closed_before_policy_collection(self):
+        # Random actions leave no model state to continue from, so the policy
+        # ends that episode as a truncation and starts a fresh one.
+        model = build()
+        env = FakeEnv(episode_length=10)
+        model.collect_random_episodes(env, 4)
+        model.act_and_collect_data(env, 2)
+        buffer = model.data_buffer
+        assert buffer.is_last[3] == 1 and buffer.is_terminal[3] == 0
+        assert buffer.is_first[4] == 1
+        assert env.resets == 2
 
     def test_evaluate_returns_rewards_and_frames(self):
         model = build()
@@ -819,6 +988,11 @@ class TestInteraction:
 class TestTerminationDetection:
     def test_not_done_is_not_terminal(self):
         assert _is_true_termination({}, False) == 0.0
+
+    def test_environment_contract_flags_are_used(self):
+        assert _is_true_termination({"terminated": True}, True) == 1.0
+        info = {"terminated": False, "truncated": True}
+        assert _is_true_termination(info, True) == 0.0
 
     def test_plain_done_is_terminal(self):
         assert _is_true_termination({}, True) == 1.0

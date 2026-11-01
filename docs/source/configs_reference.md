@@ -171,17 +171,19 @@ class DreamerV3Config(DreamerConfig):
     algo: str = "DreamerV3"
 
     # Architecture. Width fields left as None are filled in from model_size.
-    model_size: str = "12m"          # 12m | 25m | 50m | 100m | 200m | 400m
+    model_size: str = "12m"  # 12m | 25m | 50m | 100m | 200m | 400m
     hidden_size: Optional[int] = None
     recurrent_units: Optional[int] = None
     cnn_depth: Optional[int] = None
     latent_classes: Optional[int] = None
     latent_dim: int = 32
     gru_blocks: int = 8
-    mlp_layers: int = 3
+    mlp_layers: int = 3  # actor, critic, vector encoder/decoder
+    reward_layers: int = 1
+    cont_layers: int = 1
     activation: str = "silu"
     unimix: float = 0.01
-    actor_dist: str = "auto"         # auto | normal | onehot
+    actor_dist: str = "auto"  # auto | normal | onehot
     actor_min_std: float = 0.1
     actor_max_std: float = 1.0
 
@@ -210,7 +212,7 @@ class DreamerV3Config(DreamerConfig):
     symlog_range: float = 20.0
 
     # Optimization
-    learning_rate: float = 4e-5      # shared by all three optimizers
+    learning_rate: float = 4e-5  # shared by all three optimizers
     agc_clip: float = 0.3
     agc_eps: float = 1e-3
     opt_eps: float = 1e-20
@@ -219,10 +221,11 @@ class DreamerV3Config(DreamerConfig):
     weight_decay: float = 0.0
     batch_size: int = 16
     train_seq_len: int = 64
-    replay_ratio: int = 32
+    replay_ratio: int = 32  # per policy step, without action repeat
     auto_update_steps: bool = True
-    online_fraction: float = 0.5
-    buffer_size: int = 1_000_000
+    online_fraction: float = 1.0
+    buffer_size: int = 5_000_000
+    replay_latents: bool = True
     use_amp: bool = False
 ```
 
@@ -231,7 +234,8 @@ Two fields behave differently from the rest:
 - Width fields (`hidden_size`, `recurrent_units`, `cnn_depth`, `latent_classes`)
   resolve from `model_size` at construction time when left as `None`. Setting one
   explicitly overrides the preset for that field only.
-- `update_steps` is derived from `replay_ratio` unless `auto_update_steps=False`.
+- `update_steps` is derived from `replay_ratio` unless `auto_update_steps=False`:
+  `collect_steps / action_repeat * replay_ratio / (batch_size * train_seq_len)`.
 
 Passing a plain `DreamerConfig` to `DreamerV3Agent` upgrades it, carrying over only
 the fields you actually changed. Fields left at their base defaults keep DreamerV3's

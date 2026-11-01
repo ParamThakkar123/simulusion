@@ -113,13 +113,19 @@ class DreamerV3:
         self.is_image_obs = len(self.obs_shape) == 3
         self.discrete_actions = str(getattr(args, "actor_dist", "auto")) == "onehot"
         self.last_metrics: dict[str, float] = {}
+        # Per-environment collection state, so successive collection calls
+        # continue the same episode instead of resetting the environment.
+        self._carry: dict[int, dict[str, Any]] = {}
 
         obs_dtype = np.uint8 if self.is_image_obs else np.float32
-        bytes_per_obs = int(np.prod(self.obs_shape)) * np.dtype(obs_dtype).itemsize
-        # actions + reward + is_terminal + is_first
-        bytes_per_sample = bytes_per_obs + self.action_size * 4 + 12
+        store_latents = bool(getattr(args, "replay_latents", True))
+        deter_size = args.resolved_recurrent_units if store_latents else 0
+        latent_dim = int(args.latent_dim) if store_latents else 0
+        bytes_per_record = DreamerV3ReplayBuffer.bytes_per_record(
+            self.obs_shape, obs_dtype, self.action_size, deter_size, latent_dim
+        )
         max_buffer_size = int(
-            (get_available_memory() * 0.8) // max(1, bytes_per_sample)
+            (get_available_memory() * 0.8) // max(1, bytes_per_record)
         )
         buffer_size = min(int(args.buffer_size), max_buffer_size)
         if buffer_size < int(args.buffer_size):
@@ -136,7 +142,10 @@ class DreamerV3:
             seq_len=int(args.train_seq_len),
             batch_size=int(args.batch_size),
             obs_dtype=obs_dtype,
-            online_fraction=float(getattr(args, "online_fraction", 0.5)),
+            online_fraction=float(getattr(args, "online_fraction", 1.0)),
+            deter_size=deter_size,
+            latent_dim=latent_dim,
+            latent_classes=args.resolved_latent_classes if store_latents else 0,
         )
 
         self.use_amp = bool(
@@ -193,20 +202,34 @@ class DreamerV3:
         ).to(self.device)
 
         head_kwargs: dict[str, Any] = dict(
-            layers=int(args.mlp_layers),
             units=hidden,
             num_bins=int(args.num_buckets),
             symlog_range=float(args.symlog_range),
             activation=str(args.activation),
         )
+        # The reward and continue predictors are 1-layer MLPs, the critic a
+        # 3-layer MLP. Reward and critic outputs start at zero so the agent does
+        # not hallucinate rewards and values at initialization.
         self.reward_model = DreamerV3Head(
-            feature_size, dist="symexp_twohot", zero_init_output=True, **head_kwargs
+            feature_size,
+            layers=int(getattr(args, "reward_layers", 1)),
+            dist="symexp_twohot",
+            zero_init_output=True,
+            **head_kwargs,
         ).to(self.device)
         self.continue_model = DreamerV3Head(
-            feature_size, dist="binary", zero_init_output=False, **head_kwargs
+            feature_size,
+            layers=int(getattr(args, "cont_layers", 1)),
+            dist="binary",
+            zero_init_output=False,
+            **head_kwargs,
         ).to(self.device)
         self.value_model = DreamerV3Head(
-            feature_size, dist="symexp_twohot", zero_init_output=True, **head_kwargs
+            feature_size,
+            layers=int(args.mlp_layers),
+            dist="symexp_twohot",
+            zero_init_output=True,
+            **head_kwargs,
         ).to(self.device)
         # Slow-moving copy of the critic used as a regularization target. It is
         # never optimized directly, so its gradients stay disabled.
@@ -436,23 +459,51 @@ class DreamerV3:
     # World model
     # ------------------------------------------------------------------
 
+    def initial_state(
+        self,
+        batch_size: int,
+        deter: torch.Tensor | None = None,
+        stoch: torch.Tensor | None = None,
+    ) -> dict:
+        """Model state to start a replayed sequence from.
+
+        Zeros, unless the stored state of the record before the sequence is
+        given (``deter``: ``(B, deter_size)``, ``stoch``: ``(B, latent_dim,
+        latent_classes)`` one-hot). Rows without a stored state are all zeros,
+        which is the same as the zero initial state.
+        """
+        state = self.rssm.init_state(batch_size, self.device)
+        if deter is not None and stoch is not None:
+            state["deter"] = deter.to(self.device, torch.float32)
+            state["stoch"] = stoch.to(self.device, torch.float32)
+        return state
+
     @assert_finite
     def world_model_loss(
         self,
         obs: torch.Tensor,
-        actions: torch.Tensor,
+        prev_actions: torch.Tensor,
         rewards: torch.Tensor,
         is_terminal: torch.Tensor,
         is_first: torch.Tensor,
+        init_state: dict | None = None,
     ) -> tuple[torch.Tensor, dict]:
-        """Compute the world model loss over a batch of replayed sequences.
+        """World model loss (Eq. 2-3) over a batch of replayed sequences.
+
+        The inputs follow the replay layout: entry ``t`` is observation ``x_t``
+        together with the action ``a_{t-1}`` and reward ``r_t`` that led to it.
+        So the sequence model advances on ``a_{t-1}``, and the reward and
+        continue predictors at ``s_t = (h_t, z_t)`` are trained on ``r_t`` and
+        ``c_t = 1 - is_terminal_t`` -- quantities ``s_t`` can actually predict,
+        since ``h_t`` has seen ``a_{t-1}``.
 
         Args:
-            obs: ``(T, B, *obs_shape)`` raw observations.
-            actions: ``(T, B, action_size)`` actions taken at each observation.
-            rewards: ``(T, B)`` rewards received for those actions.
-            is_terminal: ``(T, B)`` true-termination flags.
-            is_first: ``(T, B)`` episode-start flags.
+            obs: ``(T, B, *obs_shape)`` raw observations ``x_t``.
+            prev_actions: ``(T, B, action_size)`` actions ``a_{t-1}``.
+            rewards: ``(T, B)`` rewards ``r_t``.
+            is_terminal: ``(T, B)`` whether ``x_t`` is a terminal state.
+            is_first: ``(T, B)`` whether ``x_t`` starts an episode.
+            init_state: Model state before ``x_0``; zeros when omitted.
 
         Returns:
             ``(loss, posterior)`` where ``posterior`` holds the ``(T, B, ...)``
@@ -462,11 +513,8 @@ class DreamerV3:
         processed = self.preprocess(obs)
         embed = self.obs_encoder(processed)
 
-        # The sequence model consumes a_{t-1}, so shift the action sequence and
-        # pad the first step with zeros.
-        prev_actions = torch.cat([torch.zeros_like(actions[:1]), actions[:-1]], dim=0)
-
-        init_state = self.rssm.init_state(obs.shape[1], self.device)
+        if init_state is None:
+            init_state = self.rssm.init_state(obs.shape[1], self.device)
         posterior, prior = self.rssm.observe_rollout(
             embed, prev_actions, is_first.unsqueeze(-1), init_state
         )
@@ -475,11 +523,8 @@ class DreamerV3:
         reconstruction = self.obs_decoder(features)
         recon_loss = self.obs_decoder.loss(reconstruction, processed)
 
-        reward_dist = self.reward_model(features)
-        reward_loss = -reward_dist.log_prob(rewards)
-
-        continue_dist = self.continue_model(features)
-        continue_loss = -continue_dist.log_prob(1.0 - is_terminal)
+        reward_loss = -self.reward_model(features).log_prob(rewards)
+        continue_loss = -self.continue_model(features).log_prob(1.0 - is_terminal)
 
         # Dynamics loss trains the prior towards the posterior; representation
         # loss trains the posterior towards the prior. Free bits switch each off
@@ -516,24 +561,32 @@ class DreamerV3:
     # ------------------------------------------------------------------
 
     @torch.no_grad()
-    def _imagine(self, posterior: dict) -> dict:
+    def _imagine(
+        self, posterior: dict, is_terminal: torch.Tensor | None = None
+    ) -> dict:
         """Roll the world model forward under the current policy.
 
         Everything here is computed without gradients: DreamerV3 uses the
         Reinforce estimator, so the actor learns through ``log_prob`` of detached
         actions rather than by backpropagating through the dynamics.
 
-        Indexing follows the replay buffer's convention throughout: the reward
-        and continuation heads are trained so that their prediction at a state
-        describes *leaving* that state. So for imagined states ``s_0 .. s_H``,
-        the reward for action ``a_t`` is ``rewards[t]`` and the episode survives
-        that transition with probability ``continues[t]`` -- both indexed by the
-        state acted from, not the state arrived at. Mixing the two conventions
-        shifts credit by one step and quietly corrupts every value estimate.
+        Imagination starts from every replayed model state ``s_0`` and produces
+        ``s_0 .. s_H`` with actions ``a_0 .. a_{H-1}``. As in the world model,
+        the reward and continuation for taking ``a_t`` in ``s_t`` are predicted
+        at the state it leads to, ``s_{t+1}``, so the lambda-return (Eq. 5) is
+
+            R_t = r_{t+1} + gamma c_{t+1} ((1 - lambda) v_{t+1} + lambda R_{t+1}),
+            R_H = v_H.
+
+        Args:
+            posterior: ``(T, B, ...)`` replayed model states.
+            is_terminal: ``(T, B)`` terminal flags of those states. A terminal
+                start state has nothing to act on, so it gets zero weight.
 
         Returns:
-            A dict with the imagined features, returns, values, and the
-            discounted weights used to average the actor and critic objectives.
+            A dict with the imagined features, actions, returns, values, the
+            predicted rewards, and the weights used to average the actor and
+            critic objectives.
         """
         args = self.args
         horizon = int(args.imagine_horizon)
@@ -545,28 +598,27 @@ class DreamerV3:
                 lambda feat: self.actor(feat), start, horizon
             )
             features = self.rssm.get_feat(states)
-            rewards = self.reward_model(features).mean
-            continues = self.continue_model(features).probs
+            rewards = self.reward_model(features[1:]).mean
+            continues = self.continue_model(features[1:]).probs
             values = self.value_model(features).mean
 
-        discounts = discount * continues
-
         returns = lambda_return(
-            rewards=rewards[:-1],
+            rewards=rewards,
             values=values[1:],
-            continues=discounts[:-1],
+            continues=discount * continues,
             bootstrap=values[-1],
             lambda_=float(args.td_lambda),
         )
 
-        # Probability of reaching each imagined state and acting from it. The
-        # first state is a real replayed state, so it is reached with certainty.
-        weights = torch.cumprod(
-            torch.cat(
-                [torch.ones_like(discounts[:1]), discounts[: horizon - 1]], dim=0
-            ),
-            dim=0,
-        )
+        # Weight of acting from s_t: the discounted probability of reaching it,
+        # gamma^t * c_0 * ... * c_t, where c_0 says whether the replayed start
+        # state is alive and c_1.. are predicted.
+        if is_terminal is None:
+            start_continue = torch.ones_like(continues[0])
+        else:
+            start_continue = 1.0 - is_terminal.reshape(-1).to(continues.dtype)
+        alive = torch.cat([start_continue[None], continues[: horizon - 1]], dim=0)
+        weights = torch.cumprod(discount * alive, dim=0) / discount
 
         return {
             "features": features,
@@ -579,7 +631,7 @@ class DreamerV3:
 
     @assert_finite
     def actor_loss(self, imagined: dict) -> torch.Tensor:
-        """Reinforce objective with normalized returns and an entropy bonus."""
+        """Reinforce objective with normalized returns and an entropy bonus (Eq. 6)."""
         args = self.args
         features = imagined["features"][:-1]
         actions = imagined["actions"]
@@ -607,40 +659,43 @@ class DreamerV3:
         )
         return loss
 
+    def _critic_terms(self, features: torch.Tensor, targets: torch.Tensor) -> Any:
+        """Two-hot loss on ``targets`` plus the slow-critic regularizer."""
+        dist = self.value_model(features)
+        loss = -dist.log_prob(targets)
+        scale = float(self.args.critic_ema_regularizer)
+        if scale > 0.0:
+            with torch.no_grad():
+                slow_dist = self.slow_value_model(features)
+            loss = loss + scale * dist.cross_entropy_to(slow_dist)
+        return loss
+
     @assert_finite
     def value_loss(
         self,
         imagined: dict,
         replay: dict | None = None,
     ) -> torch.Tensor:
-        """Two-hot critic loss on imagined returns, plus regularizers.
+        """Critic loss on imagined returns, plus the replay loss.
 
-        The critic is regularized towards an exponential moving average of its
-        own weights, and optionally also fit to lambda-returns computed over
-        replayed rewards.
+        Both terms regress the critic's two-hot distribution onto lambda-returns
+        and regularize it towards an exponential moving average of its own
+        weights. The imagination term has scale ``critic_loss_scale`` (1), the
+        replay term ``critic_replay_loss_scale`` (0.3).
         """
         args = self.args
         features = imagined["features"][:-1].detach()
         targets = imagined["returns"].detach()
         weights = imagined["weights"]
 
-        dist = self.value_model(features)
-        loss = -dist.log_prob(targets)
-
-        if float(args.critic_ema_regularizer) > 0.0:
-            with torch.no_grad():
-                slow_dist = self.slow_value_model(features)
-            loss = loss + float(args.critic_ema_regularizer) * dist.cross_entropy_to(
-                slow_dist
-            )
-
+        loss = self._critic_terms(features, targets)
         total = float(args.critic_loss_scale) * (weights * loss).mean()
 
         if replay is not None and float(args.critic_replay_loss_scale) > 0.0:
-            replay_dist = self.value_model(replay["features"])
-            replay_loss = -replay_dist.log_prob(replay["returns"])
-            total = total + float(args.critic_replay_loss_scale) * replay_loss.mean()
-            self.last_metrics["critic/replay_loss"] = float(replay_loss.mean().detach())
+            replay_loss = self._critic_terms(replay["features"], replay["returns"])
+            replay_loss = (replay["weights"] * replay_loss).mean()
+            total = total + float(args.critic_replay_loss_scale) * replay_loss
+            self.last_metrics["critic/replay_loss"] = float(replay_loss.detach())
 
         self.last_metrics.update(
             {
@@ -656,31 +711,43 @@ class DreamerV3:
         posterior: dict,
         rewards: torch.Tensor,
         is_terminal: torch.Tensor,
+        is_first: torch.Tensor,
+        is_last: torch.Tensor,
         imagined: dict,
     ) -> dict:
-        """Build lambda-return targets over the replayed rewards.
+        """Lambda-return targets over the replayed rewards.
 
-        The imagination returns at the start states act as on-policy value
-        annotations for the replayed states; lambda-returns are then accumulated
-        over the actual replayed rewards.
+        The imagination returns at the start states, ``A_t = R^lambda_0(s_t)``,
+        serve as on-policy value annotations for the replayed states, and the
+        returns are accumulated over the actual replayed rewards:
 
-        Indexing matches :meth:`_imagine`: ``rewards[t]`` and ``is_terminal[t]``
-        describe leaving replayed state ``t``, so they pair with the value
-        annotation of state ``t + 1``.
+            R_t = r_{t+1} + gamma c_{t+1} ((1 - lambda) A_{t+1} + lambda R_{t+1}).
+
+        Where an episode ends at ``t`` (``is_last``, or the next record starts a
+        new episode) there is no next transition and ``R_t = A_t``. Terminal
+        states are excluded from the loss. Only ``t < T - 1`` is trained, since
+        the last step has no replayed transition to learn from.
         """
         seq_len, batch = rewards.shape
         features = self.rssm.get_feat(self.rssm.detach_state(posterior))
         annotations = imagined["returns"][0].reshape(seq_len, batch)
-        discounts = float(self.args.discount) * (1.0 - is_terminal)
+        gamma = float(self.args.discount)
+        lam = float(self.args.td_lambda)
+        alive = 1.0 - is_terminal
 
-        returns = lambda_return(
-            rewards=rewards[:-1],
-            values=annotations[1:],
-            continues=discounts[:-1],
-            bootstrap=annotations[-1],
-            lambda_=float(self.args.td_lambda),
-        )
-        return {"features": features[:-1].detach(), "returns": returns.detach()}
+        returns = [annotations[-1]]
+        for t in range(seq_len - 2, -1, -1):
+            boundary = torch.maximum(is_last[t], is_first[t + 1])
+            step = rewards[t + 1] + gamma * alive[t + 1] * (
+                (1.0 - lam) * annotations[t + 1] + lam * returns[-1]
+            )
+            returns.append(boundary * annotations[t] + (1.0 - boundary) * step)
+        stacked = torch.flip(torch.stack(returns, dim=0), dims=(0,))
+        return {
+            "features": features[:-1].detach(),
+            "returns": stacked[:-1].detach(),
+            "weights": alive[:-1],
+        }
 
     # ------------------------------------------------------------------
     # Optimization
@@ -720,6 +787,21 @@ class DreamerV3:
 
         return self.last_metrics
 
+    def _batch_to_tensors(self, batch: dict[str, np.ndarray]) -> dict[str, Any]:
+        def as_float(name: str) -> torch.Tensor:
+            return torch.as_tensor(batch[name], dtype=torch.float32, device=self.device)
+
+        return {
+            "obs": torch.as_tensor(batch["observations"], device=self.device),
+            "prev_actions": as_float("prev_actions"),
+            "rewards": as_float("rewards"),
+            "is_first": as_float("is_first"),
+            "is_last": as_float("is_last"),
+            "is_terminal": as_float("is_terminal"),
+            "init_deter": as_float("init_deter"),
+            "init_stoch": as_float("init_stoch"),
+        }
+
     def train_one_batch(self) -> list[float]:
         """Run one world model, actor, and critic update.
 
@@ -730,19 +812,24 @@ class DreamerV3:
         if not self.data_buffer.can_sample:
             return [0.0, 0.0, 0.0]
 
-        obs, actions, rewards, is_terminal, is_first = self.data_buffer.sample()
-        obs_t = torch.as_tensor(obs, device=self.device)
-        actions_t = torch.as_tensor(actions, dtype=torch.float32, device=self.device)
-        rewards_t = torch.as_tensor(rewards, dtype=torch.float32, device=self.device)
-        terminal_t = torch.as_tensor(
-            is_terminal, dtype=torch.float32, device=self.device
-        )
-        first_t = torch.as_tensor(is_first, dtype=torch.float32, device=self.device)
+        batch = self.data_buffer.sample()
+        data = self._batch_to_tensors(batch)
+        batch_size = data["obs"].shape[1]
+        init_state = None
+        if self.data_buffer.stores_latents:
+            init_state = self.initial_state(
+                batch_size, data["init_deter"], data["init_stoch"]
+            )
 
         device_type = self.device.type
         with torch.amp.autocast(device_type=device_type, enabled=self.use_amp):
             model_loss, posterior = self.world_model_loss(
-                obs_t, actions_t, rewards_t, terminal_t, first_t
+                data["obs"],
+                data["prev_actions"],
+                data["rewards"],
+                data["is_terminal"],
+                data["is_first"],
+                init_state,
             )
         self._optimize(
             model_loss,
@@ -751,8 +838,13 @@ class DreamerV3:
             self.world_model_params,
             "world_model",
         )
+        # Replay keeps the freshest model states, so the next time one of these
+        # sequences' successors is sampled it starts from an up-to-date state.
+        self.data_buffer.update_latents(
+            batch["indices"], posterior["deter"], posterior["stoch"]
+        )
 
-        imagined = self._imagine(posterior)
+        imagined = self._imagine(posterior, data["is_terminal"])
 
         with torch.amp.autocast(device_type=device_type, enabled=self.use_amp):
             actor_loss = self.actor_loss(imagined)
@@ -767,7 +859,12 @@ class DreamerV3:
         replay_targets = None
         if float(self.args.critic_replay_loss_scale) > 0.0:
             replay_targets = self._replay_value_targets(
-                posterior, rewards_t, terminal_t, imagined
+                posterior,
+                data["rewards"],
+                data["is_terminal"],
+                data["is_first"],
+                data["is_last"],
+                imagined,
             )
         with torch.amp.autocast(device_type=device_type, enabled=self.use_amp):
             value_loss = self.value_loss(imagined, replay_targets)
@@ -797,6 +894,22 @@ class DreamerV3:
         tensor = torch.as_tensor(np.asarray(array).copy(), device=self.device)
         return tensor.unsqueeze(0)
 
+    def observe(
+        self,
+        obs: Any,
+        prev_state: dict,
+        prev_action: torch.Tensor,
+        is_first: bool = False,
+    ) -> dict:
+        """Update the model state with a new observation ``x_t``."""
+        obs_t = self.preprocess(self._obs_to_tensor(obs))
+        embed = self.obs_encoder(obs_t)
+        first = torch.full(
+            (1, 1), float(is_first), device=self.device, dtype=torch.float32
+        )
+        posterior, _ = self.rssm.observe_step(prev_state, prev_action, embed, first)
+        return posterior
+
     def act_with_world_model(
         self,
         obs: Any,
@@ -805,13 +918,12 @@ class DreamerV3:
         explore: bool = False,
         is_first: bool = False,
     ) -> tuple[dict, torch.Tensor]:
-        """Update the model state with a new observation and choose an action."""
-        obs_t = self.preprocess(self._obs_to_tensor(obs))
-        embed = self.obs_encoder(obs_t)
-        first = torch.full(
-            (1, 1), float(is_first), device=self.device, dtype=torch.float32
-        )
-        posterior, _ = self.rssm.observe_step(prev_state, prev_action, embed, first)
+        """Update the model state with a new observation and choose an action.
+
+        While collecting, actions are sampled from the actor (``explore``); the
+        paper uses no lookahead planning and no injected noise.
+        """
+        posterior = self.observe(obs, prev_state, prev_action, is_first)
         features = self.rssm.get_feat(posterior)
         action = self.actor(features, deterministic=not explore)
         if explore:
@@ -823,76 +935,150 @@ class DreamerV3:
     def _initial_action(self) -> torch.Tensor:
         return torch.zeros(1, self.action_size, device=self.device)
 
-    def act_and_collect_data(self, env: Any, collect_steps: int) -> np.ndarray:
-        """Interact with ``env`` under the current policy, filling the buffer."""
-        obs = env.reset()
-        prev_state = self.rssm.init_state(1, self.device)
-        prev_action = self._initial_action()
-        is_first = True
-        episode_rewards = [0.0]
+    @staticmethod
+    def _latent(state: dict) -> dict:
+        return {"deter": state["deter"][0], "stoch": state["stoch"][0]}
 
-        for step in range(collect_steps):
-            with torch.no_grad():
-                posterior, action = self.act_with_world_model(
-                    obs, prev_state, prev_action, explore=True, is_first=is_first
-                )
-            action_np = action[0].cpu().numpy()
-            next_obs, reward, done, info = env.step(action_np)
-            executed = (
+    def _start_episode(self, env: Any) -> dict[str, Any]:
+        """Reset ``env`` and close whatever episode the buffer had open."""
+        self.data_buffer.end_episode()
+        return {
+            "obs": env.reset(),
+            "prev_action": np.zeros(self.action_size, dtype=np.float32),
+            "reward": 0.0,
+            "is_first": True,
+            "state": None,
+            "episode_return": 0.0,
+        }
+
+    def _resume(self, env: Any, need_state: bool) -> dict[str, Any]:
+        """Continue the episode left open in ``env`` by the last collection call.
+
+        An episode collected with random actions has no model state to continue
+        from, so policy collection ends it (as a truncation) and resets.
+        """
+        carry = self._carry.get(id(env))
+        if carry is None:
+            return self._start_episode(env)
+        if carry["is_first"]:
+            return carry  # Freshly reset; nothing recorded for it yet.
+        if not self.data_buffer.episode_open:
+            # Something closed the episode since (evaluation, a replay restore).
+            return self._start_episode(env)
+        if need_state and carry["state"] is None:
+            return self._start_episode(env)
+        return carry
+
+    def _collect(self, env: Any, steps: int, policy: bool) -> np.ndarray:
+        """Step ``env`` ``steps`` times, writing one replay record per observation.
+
+        Every observation is recorded with the action and reward that led to it
+        and, when acting with the policy, the model state computed from it. The
+        final observation of an episode gets its own record (``is_last``, and
+        ``is_terminal`` if the environment terminated) so the continue
+        predictor learns what terminal states look like.
+
+        Returns:
+            Returns of the episodes finished during this call, or the return so
+            far of the open episode if none finished.
+        """
+        carry = self._resume(env, need_state=policy)
+        finished: list[float] = []
+
+        for _ in range(steps):
+            obs = carry["obs"]
+            latent = None
+            if policy:
+                prev_state = carry["state"] or self.rssm.init_state(1, self.device)
+                prev_action = torch.as_tensor(
+                    carry["prev_action"], dtype=torch.float32, device=self.device
+                ).reshape(1, self.action_size)
+                with torch.no_grad():
+                    state, action_t = self.act_with_world_model(
+                        obs, prev_state, prev_action, True, carry["is_first"]
+                    )
+                action = action_t[0].cpu().numpy()
+                latent = self._latent(state)
+            else:
+                state = None
+                action = env.action_space.sample()
+
+            self.data_buffer.add(
+                obs,
+                carry["prev_action"],
+                carry["reward"],
+                is_first=carry["is_first"],
+                latent=latent,
+            )
+
+            next_obs, reward, done, info = env.step(action)
+            executed = np.asarray(
                 info["action"]
                 if isinstance(info, dict) and "action" in info
-                else action_np
-            )
-            terminal = _is_true_termination(info, done)
-            self.data_buffer.add(obs, executed, reward, done, is_terminal=terminal)
-            episode_rewards[-1] += reward
+                else action,
+                dtype=np.float32,
+            ).reshape(self.action_size)
+            episode_return = carry["episode_return"] + float(reward)
 
             if done:
-                obs = env.reset()
-                prev_state = self.rssm.init_state(1, self.device)
-                prev_action = self._initial_action()
-                is_first = True
-                if step != collect_steps - 1:
-                    episode_rewards.append(0.0)
+                final_latent = None
+                if policy and state is not None:
+                    with torch.no_grad():
+                        final_state = self.observe(
+                            next_obs,
+                            state,
+                            torch.as_tensor(executed, device=self.device).reshape(
+                                1, self.action_size
+                            ),
+                        )
+                    final_latent = self._latent(final_state)
+                self.data_buffer.add(
+                    next_obs,
+                    executed,
+                    float(reward),
+                    is_first=False,
+                    is_last=True,
+                    is_terminal=bool(_is_true_termination(info, done)),
+                    latent=final_latent,
+                )
+                finished.append(episode_return)
+                carry = self._start_episode(env)
             else:
-                obs = next_obs
-                prev_state = posterior
-                prev_action = torch.as_tensor(
-                    np.asarray(executed, dtype=np.float32), device=self.device
-                ).reshape(1, self.action_size)
-                is_first = False
+                carry = {
+                    "obs": next_obs,
+                    "prev_action": executed,
+                    "reward": float(reward),
+                    "is_first": False,
+                    "state": state,
+                    "episode_return": episode_return,
+                }
 
-        return np.array(episode_rewards)
+        self._carry[id(env)] = carry
+        if not finished:
+            finished.append(carry["episode_return"])
+        return np.asarray(finished, dtype=np.float64)
+
+    def act_and_collect_data(self, env: Any, collect_steps: int) -> np.ndarray:
+        """Interact with ``env`` under the current policy, filling the buffer.
+
+        Collection continues the episode the previous call left open, so the
+        environment is only reset when an episode actually ends.
+        """
+        return self._collect(env, int(collect_steps), policy=True)
 
     def collect_random_episodes(self, env: Any, seed_steps: int) -> np.ndarray:
         """Fill the buffer with uniformly random actions before training starts."""
-        obs = env.reset()
-        episode_rewards = [0.0]
-
-        for step in range(seed_steps):
-            action = env.action_space.sample()
-            next_obs, reward, done, info = env.step(action)
-            executed = (
-                info["action"]
-                if isinstance(info, dict) and "action" in info
-                else action
-            )
-            terminal = _is_true_termination(info, done)
-            self.data_buffer.add(obs, executed, reward, done, is_terminal=terminal)
-            episode_rewards[-1] += reward
-            if done:
-                obs = env.reset()
-                if step != seed_steps - 1:
-                    episode_rewards.append(0.0)
-            else:
-                obs = next_obs
-
-        return np.array(episode_rewards)
+        return self._collect(env, int(seed_steps), policy=False)
 
     def evaluate(
         self, env: Any, eval_episodes: int, render: bool = False
     ) -> tuple[np.ndarray, np.ndarray, Any]:
         """Run greedy evaluation episodes and optionally capture frames."""
+        if id(env) in self._carry:
+            # Evaluation resets the environment, so a collection episode open
+            # in it cannot be continued afterwards.
+            self._carry.pop(id(env))
+            self.data_buffer.end_episode()
         episode_rewards = np.zeros(eval_episodes)
         video_images: list[list[Any]] = [[] for _ in range(eval_episodes)]
         latents: list[Any] | None = [] if render else None
@@ -1010,6 +1196,11 @@ def _is_true_termination(info: Any, done: bool | float) -> float:
     if not done:
         return 0.0
     if isinstance(info, dict):
+        # The environment contract (`finalize_step_info`) reports both flags.
+        if "terminated" in info:
+            return 1.0 if bool(info["terminated"]) else 0.0
+        if info.get("truncated"):
+            return 0.0
         if info.get("time_limit") or info.get("TimeLimit.truncated"):
             return 0.0
         if "discount" in info:

@@ -32,6 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   discrete action space are wrapped with `OneHotAction` instead of failing in
   `NormalizeActions`.
 - `examples/dreamer_v3_example.py` and the {doc}`dreamer_v3` documentation page.
+- DreamerV3 replay follows the paper's Methods section. Each record holds an
+  observation with the action and reward that led to it, and the final
+  observation of every episode gets its own record, so the reward and continue
+  predictors at `s_t` learn `r_t` and `c_t` as in Eq. 1, and imagined rewards
+  are read off at the state reached. Model states are stored in replay,
+  replayed sequences start from them, and training writes fresh states back.
+  Each minibatch is filled from the online queue first. Collection continues
+  the open episode across calls instead of resetting the environment.
+- DreamerV3's reward and continue predictors are 1-layer MLPs
+  (`reward_layers`, `cont_layers`), the replay ratio counts policy steps
+  (action repeat divided out, matching the paper's worked example), and replay
+  capacity defaults to 5M (Table 4).
 
 ### Changed
 - `DreamerAgent` subclasses can pick their configuration class (`_config_cls`)

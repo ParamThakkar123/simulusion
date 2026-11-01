@@ -87,7 +87,11 @@ class DreamerV3Config(DreamerConfig):
     latent_classes: int | None = None
     latent_dim: int = 32
     gru_blocks: int = 8
+    # Encoder/decoder (vector inputs), actor and critic are 3-layer MLPs; the
+    # reward and continue predictors are 1-layer MLPs (paper, Methods).
     mlp_layers: int = 3
+    reward_layers: int = 1
+    cont_layers: int = 1
     activation: str = "silu"
     # Uniform mixture for world model latents and the discrete policy, which
     # keeps categorical distributions from becoming deterministic.
@@ -149,12 +153,21 @@ class DreamerV3Config(DreamerConfig):
 
     batch_size: int = 16
     train_seq_len: int = 64
-    # Time steps trained on per environment step collected, before action
+    # Time steps trained on per time step collected, counted without action
     # repeat. `update_steps` is derived from this unless auto_update_steps=False.
+    # The paper picks it per benchmark to fit the step budget (Table 2: 32 for
+    # Atari/DMLab/Minecraft, 64 ProcGen, 128 Atari100k, 512 for the control
+    # suites, 1024 BSuite); 32 is the cheapest of those.
     replay_ratio: int = 32
     auto_update_steps: bool = True
-    online_fraction: float = 0.5
-    buffer_size: int = 1_000_000
+    # Each minibatch is filled first from trajectories not trained on yet (the
+    # online queue), then topped up uniformly. 1.0 lets the queue fill the batch.
+    online_fraction: float = 1.0
+    # Table 4. The agent lowers it to fit the available memory.
+    buffer_size: int = 5_000_000
+    # Store each record's model state in replay, start replayed sequences from
+    # it, and write fresh states back after training (paper, Methods).
+    replay_latents: bool = True
 
     use_amp: bool = False
     grad_clip_norm: float = 0.0  # Superseded by adaptive gradient clipping.
@@ -190,9 +203,14 @@ class DreamerV3Config(DreamerConfig):
             )
 
         if self.auto_update_steps:
+            # `collect_steps` counts environment frames; the replay ratio counts
+            # policy steps, so divide out the action repeat. With a ratio of 32,
+            # action repeat 4 and 16x64 batches this is one gradient step per
+            # 128 frames, the paper's worked example.
             steps_per_batch = max(1, self.batch_size * self.train_seq_len)
+            policy_steps = self.collect_steps / max(1, int(self.action_repeat))
             self.update_steps = max(
-                1, round(self.collect_steps * self.replay_ratio / steps_per_batch)
+                1, round(policy_steps * self.replay_ratio / steps_per_batch)
             )
         return self
 
