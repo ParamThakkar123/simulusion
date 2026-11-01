@@ -777,6 +777,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">mlp_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">reward_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">cont_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Observations to encode and reconstruct, e.g. ["image", "instr"] or</span>
+    <span class="c1"># "state". Images are stacked into one CNN, vectors into one symlog MLP.</span>
+    <span class="c1"># None picks "image" if the environment has one, else "state", plus</span>
+    <span class="c1"># "instr" when present.</span>
+    <span class="n">obs_keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"silu"</span>
     <span class="c1"># Uniform mixture for world model latents and the discrete policy, which</span>
     <span class="c1"># keeps categorical distributions from becoming deterministic.</span>

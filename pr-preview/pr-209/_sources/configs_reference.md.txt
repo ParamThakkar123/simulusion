@@ -179,6 +179,7 @@ class DreamerV3Config(DreamerConfig):
     latent_classes: Optional[int] = None
     latent_dim: int = 32
     gru_blocks: int = 8
+    obs_keys: Optional[list[str]] = None  # None: image, else state; plus instr
     mlp_layers: int = 3  # actor, critic, vector encoder/decoder
     reward_layers: int = 1
     cont_layers: int = 1

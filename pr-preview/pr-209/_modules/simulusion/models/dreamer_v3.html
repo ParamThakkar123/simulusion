@@ -712,6 +712,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
 
@@ -740,15 +741,93 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.logging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">assert_finite</span><span class="p">,</span> <span class="n">get_package_logger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.vision.dreamer_v3_nets</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DreamerV3Actor</span><span class="p">,</span>
-    <span class="n">DreamerV3Decoder</span><span class="p">,</span>
-    <span class="n">DreamerV3Encoder</span><span class="p">,</span>
     <span class="n">DreamerV3Head</span><span class="p">,</span>
+    <span class="n">DreamerV3MultiDecoder</span><span class="p">,</span>
+    <span class="n">DreamerV3MultiEncoder</span><span class="p">,</span>
     <span class="n">preprocess_image</span><span class="p">,</span>
+    <span class="n">split_obs_space</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">get_package_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"DreamerV3"</span><span class="p">,</span> <span class="s2">"DreamerV3Agent"</span><span class="p">,</span> <span class="s2">"coerce_dreamer_v3_config"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"DreamerV3"</span><span class="p">,</span>
+    <span class="s2">"DreamerV3Agent"</span><span class="p">,</span>
+    <span class="s2">"coerce_dreamer_v3_config"</span><span class="p">,</span>
+    <span class="s2">"select_obs_space"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Keys tried, in order, when a single-input model is given an observation dict</span>
+<span class="c1"># that does not use the key it was built with.</span>
+<span class="n">_SINGLE_INPUT_ALIASES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"image"</span><span class="p">,</span> <span class="s2">"obs"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">select_obs_space</span><span class="p">(</span>
+    <span class="n">observation_space</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">obs_keys</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Choose which observations DreamerV3 encodes, and their shapes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        observation_space: A Gym ``Dict`` space (or a single ``Box``, which is</span>
+<span class="sd">            treated as ``"image"`` if rank 3 and ``"state"`` otherwise).</span>
+<span class="sd">        obs_keys: Keys to encode, as a list or a comma-separated string. ``None``</span>
+<span class="sd">            picks ``"image"`` if the environment has one, else ``"state"`` (or</span>
+<span class="sd">            ``"obs"``), plus ``"instr"`` when present. That matches the paper's</span>
+<span class="sd">            benchmarks: pixels for Visual Control, the state vector for Proprio</span>
+<span class="sd">            Control, and image plus instruction for DMLab language levels.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Observation key -&gt; shape, in encoding order.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If a requested key is missing, or nothing usable is found.</span>
+<span class="sd">    """</span>
+    <span class="n">space</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">observation_space</span>
+    <span class="n">spaces</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s2">"spaces"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spaces</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">spaces</span> <span class="o">=</span> <span class="n">space</span>  <span class="c1"># a plain dict of spaces</span>
+    <span class="k">if</span> <span class="n">spaces</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">))</span>
+        <span class="n">spaces</span> <span class="o">=</span> <span class="p">{(</span><span class="s2">"image"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="s2">"state"</span><span class="p">):</span> <span class="n">space</span><span class="p">}</span>
+    <span class="n">available</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_keys</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">obs_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">obs_keys</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">if</span> <span class="n">obs_keys</span><span class="p">:</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">obs_keys</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"obs_keys </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> are not observations of this environment; "</span>
+                <span class="sa">f</span><span class="s2">"it has </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">available</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">obs_keys</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">next</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"image"</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">,</span> <span class="s2">"obs"</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">available</span><span class="p">),</span>
+                <span class="s2">""</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Could not pick an observation to encode from "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">available</span><span class="p">)</span><span class="si">}</span><span class="s2">; set obs_keys."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"instr"</span> <span class="ow">in</span> <span class="n">available</span> <span class="ow">and</span> <span class="s2">"instr"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"instr"</span><span class="p">)</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">available</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">}</span>
+    <span class="n">split_obs_space</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>  <span class="c1"># validates ranks and image sizes</span>
+    <span class="k">return</span> <span class="n">selected</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_as_obs_space</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Normalize a single shape or a key -&gt; shape mapping."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">obs_shape</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">obs_shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{(</span><span class="s2">"image"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="s2">"state"</span><span class="p">):</span> <span class="n">shape</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">coerce_dreamer_v3_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DreamerV3Config</span><span class="p">:</span>
@@ -775,7 +854,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    Args:</span>
 <span class="sd">        args: A :class:`DreamerV3Config` (or any object exposing the same</span>
 <span class="sd">            attributes).</span>
-<span class="sd">        obs_shape: Observation shape, ``(C, H, W)`` or ``(D,)``.</span>
+<span class="sd">        obs_shape: Observation shape, ``(C, H, W)`` or ``(D,)``, or a mapping</span>
+<span class="sd">            from observation key to shape to encode several inputs (see</span>
+<span class="sd">            :func:`select_obs_space`).</span>
 <span class="sd">        action_size: Number of discrete actions, or continuous action dimension.</span>
 <span class="sd">        device: Torch device to place the modules on.</span>
 <span class="sd">        restore: Whether to restore from ``args.checkpoint_path`` after building.</span>
@@ -790,24 +871,31 @@ window.runMermaid = runMermaid;</script>
         <span class="n">restore</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">obs_shape</span><span class="p">)</span>
+        <span class="c1">#: Encoded observations: key -&gt; shape.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span> <span class="o">=</span> <span class="n">_as_obs_space</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_single_input</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span> <span class="o">=</span> <span class="n">split_obs_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span>
+        <span class="c1"># The single input's shape, kept for code written against one input.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="p">()</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">action_size</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">restore</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">restore</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">restore_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"checkpoint_path"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_image_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_image_obs</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discrete_actions</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"actor_dist"</span><span class="p">,</span> <span class="s2">"auto"</span><span class="p">))</span> <span class="o">==</span> <span class="s2">"onehot"</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># Per-environment collection state, so successive collection calls</span>
         <span class="c1"># continue the same episode instead of resetting the environment.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_carry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="n">obs_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_image_obs</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+        <span class="n">obs_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
         <span class="n">store_latents</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"replay_latents"</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
         <span class="n">deter_size</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">resolved_recurrent_units</span> <span class="k">if</span> <span class="n">store_latents</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="n">latent_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">latent_dim</span><span class="p">)</span> <span class="k">if</span> <span class="n">store_latents</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="n">bytes_per_record</span> <span class="o">=</span> <span class="n">DreamerV3ReplayBuffer</span><span class="o">.</span><span class="n">bytes_per_record</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">obs_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">deter_size</span><span class="p">,</span> <span class="n">latent_dim</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">,</span> <span class="n">obs_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">deter_size</span><span class="p">,</span> <span class="n">latent_dim</span>
         <span class="p">)</span>
         <span class="n">max_buffer_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
             <span class="p">(</span><span class="n">get_available_memory</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">)</span> <span class="o">//</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">bytes_per_record</span><span class="p">)</span>
@@ -822,7 +910,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">data_buffer</span> <span class="o">=</span> <span class="n">DreamerV3ReplayBuffer</span><span class="p">(</span>
             <span class="n">size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span>
-            <span class="n">obs_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span>
+            <span class="n">obs_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">,</span>
             <span class="n">action_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span>
             <span class="n">seq_len</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">train_seq_len</span><span class="p">),</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">batch_size</span><span class="p">),</span>
@@ -855,8 +943,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">classes</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">resolved_latent_classes</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">resolved_cnn_depth</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span> <span class="o">=</span> <span class="n">DreamerV3Encoder</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span> <span class="o">=</span> <span class="n">DreamerV3MultiEncoder</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">,</span>
             <span class="n">cnn_depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span>
             <span class="n">mlp_layers</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">mlp_layers</span><span class="p">),</span>
@@ -876,9 +964,8 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="n">feature_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">feature_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span> <span class="o">=</span> <span class="n">DreamerV3Decoder</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span> <span class="o">=</span> <span class="n">DreamerV3MultiDecoder</span><span class="p">(</span>
             <span class="n">feature_size</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span>
             <span class="n">encoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span><span class="p">,</span>
             <span class="n">cnn_depth</span><span class="o">=</span><span class="n">depth</span><span class="p">,</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span>
@@ -980,7 +1067,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">obs_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">restore</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -999,7 +1086,9 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">obs_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obs_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">obs_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">select_obs_space</span><span class="p">(</span>
+                    <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"obs_keys"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">if</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">action_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">actor_dist</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
@@ -1075,15 +1164,20 @@ window.runMermaid = runMermaid;</script>
             <span class="n">args</span> <span class="o">=</span> <span class="n">DreamerV3Config</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
         <span class="n">args</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="p">,</span> <span class="n">_apply_config_overrides</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">overrides</span><span class="p">))</span>
 
-        <span class="n">obs_shape</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"obs_shape"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
+        <span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"obs_space"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">obs_shape</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s2">"obs_space"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span>
+            <span class="k">elif</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"obs_shape"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">obs_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s2">"obs_shape"</span><span class="p">])</span>
         <span class="n">action_size</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action_size"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
             <span class="n">args</span><span class="p">,</span>
-            <span class="n">obs_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">obs_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">obs_shape</span><span class="o">=</span><span class="n">obs_shape</span><span class="p">,</span>
             <span class="n">action_size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">action_size</span><span class="p">)</span> <span class="k">if</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">device</span><span class="o">=</span><span class="n">map_location</span><span class="p">,</span>
             <span class="n">restore</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -1146,13 +1240,54 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Observation handling</span>
     <span class="c1"># ------------------------------------------------------------------</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_as_obs_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Observations keyed like :attr:`obs_space`.</span>
+
+<span class="sd">        A single-input model also accepts a bare array, or a dict that stores</span>
+<span class="sd">        its input under one of the usual names (``image``, ``obs``, ``state``).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"This model encodes </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span><span class="si">}</span><span class="s2">; pass a dict."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)):</span> <span class="n">obs</span><span class="p">}</span>
+        <span class="n">selected</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">obs</span><span class="p">:</span>
+                <span class="n">selected</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">continue</span>
+            <span class="n">alias</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_input</span><span class="p">:</span>
+                <span class="n">alias</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">name</span>
+                        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_SINGLE_INPUT_ALIASES</span>
+                        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">obs</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+                    <span class="p">),</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">alias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Observation has no </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">; it has </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="n">selected</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">alias</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">selected</span>
+
 <div class="viewcode-block" id="DreamerV3.preprocess">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3.preprocess">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Map raw observations into the model's input space."""</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_image_obs</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">preprocess_image</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Map raw observations into the model's input space.</span>
+
+<span class="sd">        Images go to ``[0, 1]``; vectors are cast to float32 (the encoder applies</span>
+<span class="sd">        symlog). Returns a dict keyed like :attr:`obs_space`.</span>
+<span class="sd">        """</span>
+        <span class="n">processed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_obs_dict</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">:</span>
+                <span class="n">processed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">preprocess_image</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">processed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">processed</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
@@ -1203,7 +1338,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        since ``h_t`` has seen ``a_{t-1}``.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            obs: ``(T, B, *obs_shape)`` raw observations ``x_t``.</span>
+<span class="sd">            obs: ``(T, B, *shape)`` raw observations ``x_t``: a dict keyed like</span>
+<span class="sd">                :attr:`obs_space`, or a single array for a single-input model.</span>
 <span class="sd">            prev_actions: ``(T, B, action_size)`` actions ``a_{t-1}``.</span>
 <span class="sd">            rewards: ``(T, B)`` rewards ``r_t``.</span>
 <span class="sd">            is_terminal: ``(T, B)`` whether ``x_t`` is a terminal state.</span>
@@ -1219,14 +1355,15 @@ window.runMermaid = runMermaid;</script>
         <span class="n">embed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span><span class="p">(</span><span class="n">processed</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">init_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">init_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">init_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">init_state</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">posterior</span><span class="p">,</span> <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">observe_rollout</span><span class="p">(</span>
             <span class="n">embed</span><span class="p">,</span> <span class="n">prev_actions</span><span class="p">,</span> <span class="n">is_first</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">init_state</span>
         <span class="p">)</span>
         <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">get_feat</span><span class="p">(</span><span class="n">posterior</span><span class="p">)</span>
 
         <span class="n">reconstruction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
-        <span class="n">recon_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">reconstruction</span><span class="p">,</span> <span class="n">processed</span><span class="p">)</span>
+        <span class="n">recon_terms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">(</span><span class="n">reconstruction</span><span class="p">,</span> <span class="n">processed</span><span class="p">)</span>
+        <span class="n">recon_loss</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">recon_terms</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rewards</span><span class="p">))</span>
 
         <span class="n">reward_loss</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">rewards</span><span class="p">)</span>
         <span class="n">continue_loss</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">continue_model</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">is_terminal</span><span class="p">)</span>
@@ -1259,6 +1396,9 @@ window.runMermaid = runMermaid;</script>
                 <span class="s2">"wm/rep_loss"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">rep_loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()),</span>
             <span class="p">}</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">recon_terms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">recon_terms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">last_metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">"wm/recon_loss/</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">posterior</span></div>
 
 
@@ -1504,7 +1644,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"obs"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">"observations"</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+            <span class="s2">"obs"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_obs_dict</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">"observations"</span><span class="p">]),</span>
             <span class="s2">"prev_actions"</span><span class="p">:</span> <span class="n">as_float</span><span class="p">(</span><span class="s2">"prev_actions"</span><span class="p">),</span>
             <span class="s2">"rewards"</span><span class="p">:</span> <span class="n">as_float</span><span class="p">(</span><span class="s2">"rewards"</span><span class="p">),</span>
             <span class="s2">"is_first"</span><span class="p">:</span> <span class="n">as_float</span><span class="p">(</span><span class="s2">"is_first"</span><span class="p">),</span>
@@ -1528,7 +1668,7 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_to_tensors</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
-        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"obs"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">"rewards"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">init_state</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_buffer</span><span class="o">.</span><span class="n">stores_latents</span><span class="p">:</span>
             <span class="n">init_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_state</span><span class="p">(</span>
@@ -1604,10 +1744,12 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Environment interaction</span>
     <span class="c1"># ------------------------------------------------------------------</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_obs_to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">obs</span>
-        <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_obs_to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""One environment observation as a batch of one, per encoded input."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)[</span><span class="kc">None</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_as_obs_dict</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
 
 <div class="viewcode-block" id="DreamerV3.observe">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3.observe">[docs]</a>
@@ -1834,11 +1976,9 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">episode_rewards</span><span class="p">[</span><span class="n">episode</span><span class="p">]</span> <span class="o">+=</span> <span class="n">reward</span>
 
                 <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
-                    <span class="n">image</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">obs</span>
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                        <span class="n">video_images</span><span class="p">[</span><span class="n">episode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                        <span class="p">)</span>
+                    <span class="n">frame</span> <span class="o">=</span> <span class="n">_video_frame</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">video_images</span><span class="p">[</span><span class="n">episode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">latents</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">latents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">get_feat</span><span class="p">(</span><span class="n">posterior</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
 
@@ -1873,6 +2013,9 @@ window.runMermaid = runMermaid;</script>
             <span class="p">{</span>
                 <span class="s2">"config"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
                 <span class="s2">"obs_shape"</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">),</span>
+                <span class="s2">"obs_space"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">},</span>
                 <span class="s2">"action_size"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">),</span>
                 <span class="s2">"rssm"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
                 <span class="s2">"obs_encoder"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
@@ -1921,6 +2064,21 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_updates</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"updates"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span></div>
 </div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_video_frame</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An HWC frame for evaluation videos: the image observation, else a render."""</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"image"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="n">obs</span>
+    <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">render</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"render"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">render</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">render</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span> <span class="k">else</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_true_termination</span><span class="p">(</span><span class="n">info</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -1979,6 +2137,12 @@ window.runMermaid = runMermaid;</script>
 
     <span class="n">core_cls</span> <span class="o">=</span> <span class="n">DreamerV3</span>  <span class="c1"># type: ignore[assignment]</span>
     <span class="n">_config_cls</span> <span class="o">=</span> <span class="n">DreamerV3Config</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_observation_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Every observation DreamerV3 encodes (``obs_keys``), not only the image."""</span>
+        <span class="k">return</span> <span class="n">select_obs_space</span><span class="p">(</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="s2">"obs_keys"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_core</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span>

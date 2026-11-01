@@ -239,6 +239,7 @@ unchanged.
 | `buffer_size` | 5M | Replay capacity, lowered to fit available RAM |
 | `online_fraction` | 1.0 | Share of each batch the online queue may fill |
 | `replay_latents` | True | Store model states in replay and start sequences from them |
+| `obs_keys` | `None` | Observations to encode; `None` picks `image`, else `state`, plus `instr` |
 | `mlp_layers` / `reward_layers` / `cont_layers` | 3 / 1 / 1 | Hidden layers of the actor, critic and vector encoder/decoder; of the reward predictor; of the continue predictor |
 
 ### Replay ratio
@@ -287,6 +288,26 @@ Both observation kinds and both action kinds are handled automatically:
 - **Vector observations** (`(D,)`) are symlog transformed and passed through an MLP,
   which prevents large inputs from producing reconstruction gradients that swamp the
   representation loss.
+- **Several observations at once.** As in the paper, every image input is stacked
+  along channels into one CNN, every vector input is concatenated into one MLP, and
+  the two embeddings are concatenated. The decoder reconstructs each input, and its
+  loss is the sum of the inputs' losses (logged per input as
+  `wm/recon_loss/<key>`). Image inputs must share a spatial size.
+
+`obs_keys` chooses which observations are encoded. Left at `None`, it takes
+`image` if the environment has one, otherwise `state`, plus `instr` when present:
+
+| Environment | Encoded by default |
+| --- | --- |
+| DMC, `dmc_obs_type="pixels"` (Visual Control) | `image` |
+| DMC, `dmc_obs_type="state"` (Proprio Control) | `state` |
+| DMLab `language_*` levels | `image`, `instr` |
+
+Name the keys to encode something else, such as `obs_keys=["image", "state"]`.
+Replay stores each encoded input in its own array (images as `uint8`, vectors as
+`float32`), and checkpoints record the inputs so `from_pretrained` rebuilds the same
+model. Evaluation videos use the `image` observation, or `env.render()` when there
+is none.
 - **Continuous actions** use a Normal with a `tanh`-squashed mean and a standard
   deviation bounded to `[0.1, 1.0]`.
 - **Discrete actions** are wrapped as one-hot vectors by `make_env` and modeled with a

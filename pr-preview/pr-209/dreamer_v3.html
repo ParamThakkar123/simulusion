@@ -817,7 +817,11 @@ unchanged.</p>
 <td><p>True</p></td>
 <td><p>Store model states in replay and start sequences from them</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mlp_layers</span></code> / <code class="docutils literal notranslate"><span class="pre">reward_layers</span></code> / <code class="docutils literal notranslate"><span class="pre">cont_layers</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">obs_keys</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Observations to encode; <code class="docutils literal notranslate"><span class="pre">None</span></code> picks <code class="docutils literal notranslate"><span class="pre">image</span></code>, else <code class="docutils literal notranslate"><span class="pre">state</span></code>, plus <code class="docutils literal notranslate"><span class="pre">instr</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mlp_layers</span></code> / <code class="docutils literal notranslate"><span class="pre">reward_layers</span></code> / <code class="docutils literal notranslate"><span class="pre">cont_layers</span></code></p></td>
 <td><p>3 / 1 / 1</p></td>
 <td><p>Hidden layers of the actor, critic and vector encoder/decoder; of the reward predictor; of the continue predictor</p></td>
 </tr>
@@ -867,6 +871,39 @@ a sigmoid decoder output, and targets in <code class="docutils literal notransla
 <li><p><strong>Vector observations</strong> (<code class="docutils literal notranslate"><span class="pre">(D,)</span></code>) are symlog transformed and passed through an MLP,
 which prevents large inputs from producing reconstruction gradients that swamp the
 representation loss.</p></li>
+<li><p><strong>Several observations at once.</strong> As in the paper, every image input is stacked
+along channels into one CNN, every vector input is concatenated into one MLP, and
+the two embeddings are concatenated. The decoder reconstructs each input, and its
+loss is the sum of the inputs’ losses (logged per input as
+<code class="docutils literal notranslate"><span class="pre">wm/recon_loss/&lt;key&gt;</span></code>). Image inputs must share a spatial size.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">obs_keys</span></code> chooses which observations are encoded. Left at <code class="docutils literal notranslate"><span class="pre">None</span></code>, it takes
+<code class="docutils literal notranslate"><span class="pre">image</span></code> if the environment has one, otherwise <code class="docutils literal notranslate"><span class="pre">state</span></code>, plus <code class="docutils literal notranslate"><span class="pre">instr</span></code> when present:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Environment</p></th>
+<th class="head"><p>Encoded by default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DMC, <code class="docutils literal notranslate"><span class="pre">dmc_obs_type=&quot;pixels&quot;</span></code> (Visual Control)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>DMC, <code class="docutils literal notranslate"><span class="pre">dmc_obs_type=&quot;state&quot;</span></code> (Proprio Control)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>DMLab <code class="docutils literal notranslate"><span class="pre">language_*</span></code> levels</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">instr</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Name the keys to encode something else, such as <code class="docutils literal notranslate"><span class="pre">obs_keys=[&quot;image&quot;,</span> <span class="pre">&quot;state&quot;]</span></code>.
+Replay stores each encoded input in its own array (images as <code class="docutils literal notranslate"><span class="pre">uint8</span></code>, vectors as
+<code class="docutils literal notranslate"><span class="pre">float32</span></code>), and checkpoints record the inputs so <code class="docutils literal notranslate"><span class="pre">from_pretrained</span></code> rebuilds the same
+model. Evaluation videos use the <code class="docutils literal notranslate"><span class="pre">image</span></code> observation, or <code class="docutils literal notranslate"><span class="pre">env.render()</span></code> when there
+is none.</p>
+<ul class="simple">
 <li><p><strong>Continuous actions</strong> use a Normal with a <code class="docutils literal notranslate"><span class="pre">tanh</span></code>-squashed mean and a standard
 deviation bounded to <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">1.0]</span></code>.</p></li>
 <li><p><strong>Discrete actions</strong> are wrapped as one-hot vectors by <code class="docutils literal notranslate"><span class="pre">make_env</span></code> and modeled with a

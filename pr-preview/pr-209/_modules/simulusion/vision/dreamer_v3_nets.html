@@ -703,6 +703,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -710,6 +711,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributions</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">distributions</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportableAgentMixin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.layers.rms_norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">RMSNorm</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.dreamer_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">symlog</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.utils.dreamer_v3_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymexpTwoHotDist</span>
@@ -718,6 +720,9 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"ChannelRMSNorm"</span><span class="p">,</span>
     <span class="s2">"DreamerV3Encoder"</span><span class="p">,</span>
     <span class="s2">"DreamerV3Decoder"</span><span class="p">,</span>
+    <span class="s2">"DreamerV3MultiEncoder"</span><span class="p">,</span>
+    <span class="s2">"DreamerV3MultiDecoder"</span><span class="p">,</span>
+    <span class="s2">"split_obs_space"</span><span class="p">,</span>
     <span class="s2">"DreamerV3Head"</span><span class="p">,</span>
     <span class="s2">"DreamerV3Actor"</span><span class="p">,</span>
     <span class="s2">"count_parameters"</span><span class="p">,</span>
@@ -756,7 +761,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">ChannelRMSNorm</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChannelRMSNorm</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""RMSNorm over the channel dimension of an ``(N, C, H, W)`` tensor."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -775,7 +780,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DreamerV3Encoder">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3Encoder">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Encoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Encoder</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Encode observations into the embedding consumed by the RSSM posterior.</span>
 
 <span class="sd">    Args:</span>
@@ -854,7 +859,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DreamerV3Decoder">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3Decoder">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Decoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Decoder</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Reconstruct observations from model states.</span>
 
 <span class="sd">    Returns the predicted mean rather than a distribution: DreamerV3 trains the</span>
@@ -986,7 +991,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DreamerV3Head">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3Head">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Head</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Head</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""MLP head for reward, value, and continuation prediction.</span>
 
 <span class="sd">    Args:</span>
@@ -1052,7 +1057,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DreamerV3Actor">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.DreamerV3Actor">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Actor</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Actor</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Policy head supporting one-hot discrete and continuous actions.</span>
 
 <span class="sd">    DreamerV3 uses the Reinforce estimator for both action types, so the head</span>
@@ -1159,6 +1164,197 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">noisy</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">split_obs_space</span><span class="p">(</span>
+    <span class="n">obs_space</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Split observation keys into image (rank 3) and vector (rank 1) keys.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: For other ranks, or images whose spatial sizes differ</span>
+<span class="sd">            (image inputs are stacked along channels into one CNN).</span>
+<span class="sd">    """</span>
+    <span class="n">images</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">vectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">obs_space</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Observation </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> has shape </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">; DreamerV3 encodes "</span>
+                <span class="s2">"images (C, H, W) and vectors (D,)."</span>
+            <span class="p">)</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">obs_space</span><span class="p">[</span><span class="n">key</span><span class="p">])[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">images</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Image observations </span><span class="si">{</span><span class="n">images</span><span class="si">}</span><span class="s2"> must share a spatial size; got </span><span class="si">{</span><span class="n">sizes</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">images</span><span class="p">,</span> <span class="n">vectors</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3MultiEncoder</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Encode a dict of observations into one embedding.</span>
+
+<span class="sd">    As in DreamerV3, image inputs are stacked along channels and encoded by one</span>
+<span class="sd">    CNN, vector inputs are concatenated, symlog transformed and encoded by one</span>
+<span class="sd">    MLP, and the two embeddings are concatenated.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs_space: Observation key -&gt; shape, ``(C, H, W)`` or ``(D,)``.</span>
+<span class="sd">        cnn_depth, hidden_size, mlp_layers, min_resolution, activation: As for</span>
+<span class="sd">            :class:`DreamerV3Encoder`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs_space</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">cnn_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">mlp_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">min_resolution</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"silu"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">obs_space</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"obs_space must name at least one observation"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span> <span class="o">=</span> <span class="n">split_obs_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">cnn_depth</span><span class="o">=</span><span class="n">cnn_depth</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">mlp_layers</span><span class="o">=</span><span class="n">mlp_layers</span><span class="p">,</span>
+            <span class="n">min_resolution</span><span class="o">=</span><span class="n">min_resolution</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_encoder</span><span class="p">:</span> <span class="n">DreamerV3Encoder</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vector_encoder</span><span class="p">:</span> <span class="n">DreamerV3Encoder</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">:</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_encoder</span> <span class="o">=</span> <span class="n">DreamerV3Encoder</span><span class="p">((</span><span class="n">channels</span><span class="p">,</span> <span class="o">*</span><span class="n">first</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vector_encoder</span> <span class="o">=</span> <span class="n">DreamerV3Encoder</span><span class="p">((</span><span class="n">size</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">encoder</span><span class="o">.</span><span class="n">embed_size</span>
+            <span class="k">for</span> <span class="n">encoder</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_encoder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_encoder</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Embed ``obs``: images in ``[0, 1]``, vectors raw (symlog is applied here).</span>
+
+<span class="sd">        Every tensor has shape ``(*batch, *obs_space[key])``.</span>
+<span class="sd">        """</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">image_encoder</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">obs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">],</span> <span class="o">-</span><span class="mi">3</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vector_encoder</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">obs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3MultiDecoder</span><span class="p">(</span><span class="n">ExportableAgentMixin</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reconstruct every encoded observation from the model state.</span>
+
+<span class="sd">    Mirrors :class:`DreamerV3MultiEncoder`: one transposed CNN emits all image</span>
+<span class="sd">    channels (sigmoid, compared with ``[0, 1]`` targets), one MLP emits all</span>
+<span class="sd">    vector entries (compared with symlog targets). Each input's squared error</span>
+<span class="sd">    is summed over its dimensions, and the inputs' errors are added.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        feature_size: Size of the model state ``(z, h)``.</span>
+<span class="sd">        encoder: The encoder whose inputs and resolution schedule to mirror.</span>
+<span class="sd">        cnn_depth, hidden_size, mlp_layers, activation: As for</span>
+<span class="sd">            :class:`DreamerV3Decoder`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">encoder</span><span class="p">:</span> <span class="n">DreamerV3MultiEncoder</span><span class="p">,</span>
+        <span class="n">cnn_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">mlp_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"silu"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">obs_space</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">image_keys</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">cnn_depth</span><span class="o">=</span><span class="n">cnn_depth</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">mlp_layers</span><span class="o">=</span><span class="n">mlp_layers</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_decoder</span><span class="p">:</span> <span class="n">DreamerV3Decoder</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vector_decoder</span><span class="p">:</span> <span class="n">DreamerV3Decoder</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">encoder</span><span class="o">.</span><span class="n">image_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_decoder</span> <span class="o">=</span> <span class="n">DreamerV3Decoder</span><span class="p">(</span>
+                <span class="n">feature_size</span><span class="p">,</span>
+                <span class="n">encoder</span><span class="o">.</span><span class="n">image_encoder</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span>
+                <span class="n">encoder</span><span class="o">=</span><span class="n">encoder</span><span class="o">.</span><span class="n">image_encoder</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">encoder</span><span class="o">.</span><span class="n">vector_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vector_decoder</span> <span class="o">=</span> <span class="n">DreamerV3Decoder</span><span class="p">(</span>
+                <span class="n">feature_size</span><span class="p">,</span> <span class="n">encoder</span><span class="o">.</span><span class="n">vector_encoder</span><span class="o">.</span><span class="n">obs_shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Predict each observation, keyed like the encoder's inputs."""</span>
+        <span class="n">out</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_decoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">]</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_decoder</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">,</span> <span class="n">images</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_decoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_space</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">]</span>
+            <span class="n">vectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_decoder</span><span class="p">(</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">,</span> <span class="n">vectors</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">loss_terms</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prediction</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Per-input reconstruction loss, each summed over that input's dimensions.</span>
+
+<span class="sd">        Image targets are expected in ``[0, 1]``; vector targets raw (they are</span>
+<span class="sd">        symlog transformed here, as the decoder predicts in symlog space).</span>
+<span class="sd">        """</span>
+        <span class="n">terms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_keys</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">prediction</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-</span> <span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">terms</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_keys</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">prediction</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">-</span> <span class="n">symlog</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">terms</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">terms</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">prediction</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Total reconstruction loss: the per-input losses added together."""</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">(</span><span class="n">prediction</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">+</span> <span class="n">term</span>
+        <span class="k">return</span> <span class="n">total</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">head_input_size</span><span class="p">(</span><span class="n">latent_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">latent_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">deter_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>

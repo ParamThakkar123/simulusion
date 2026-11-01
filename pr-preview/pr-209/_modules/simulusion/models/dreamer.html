@@ -1985,6 +1985,11 @@ window.runMermaid = runMermaid;</script>
             <span class="sa">f</span><span class="s2">"or None; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_observation_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""What the core is built to encode: the image, for Dreamer V1/V2."""</span>
+
+        <span class="k">return</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_core</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -2077,7 +2082,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
-        <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
+        <span class="n">obs_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
         <span class="n">action_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_core</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
 
