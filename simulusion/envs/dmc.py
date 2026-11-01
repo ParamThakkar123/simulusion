@@ -8,18 +8,35 @@ from simulusion.utils.gym_compat import gym
 import numpy as np
 
 
+#: Observation types the adapter can produce.
+OBS_TYPES = ("pixels", "state")
+
+
 class DeepMindControlEnv:
     """Gym-style adapter for DeepMind Control Suite tasks.
 
-    The wrapper exposes DMC observations and actions through Gym spaces and
-    adds a rendered RGB image to each observation dict so image-based world
-    model pipelines can train consistently across backends.
+    The wrapper exposes DMC observations and actions through Gym spaces. Every
+    observation dict carries the task's own state entries (``position``,
+    ``velocity``, ...) and ``"state"``: those entries flattened into one float32
+    vector in the order of the task's observation spec. That vector is the
+    proprioceptive input of the "Proprio Control" benchmark (Hafner et al.,
+    2023).
+
+    ``obs_type`` selects what else is produced:
+
+    * ``"pixels"`` (default) also renders an RGB ``"image"`` each step, for
+      image-based world models (the "Visual Control" benchmark).
+    * ``"state"`` does not render at all, which is much faster; the observation
+      space then has no ``"image"`` key. :meth:`render` still works, for videos.
+
+    Episode ends follow the task's discount. DMC tasks end at a time limit with
+    discount 1, which is reported as a truncation; only a discount of 0 is
+    reported as a termination.
 
     Features:
         - Parses domain-task names (e.g., "cheetah-run" -> domain="cheetah", task="run")
         - Automatically handles special cases like "cup" -> "ball_in_cup"
         - Renders RGB images at configurable resolution
-        - Returns observations as dict with both state vectors and images
 
     Args:
         name (str): Environment name in format "domain-task" (e.g., "cheetah-run").
@@ -27,15 +44,20 @@ class DeepMindControlEnv:
         size (tuple): Target image size as (height, width) (default: (64, 64)).
         camera (int, optional): Camera ID for rendering. Defaults to 0 for most
             domains, 2 for quadruped.
+        obs_type (str): ``"pixels"`` or ``"state"``.
 
     Attributes:
-        observation_space (gym.spaces.Dict): Dict space with state keys and "image".
+        observation_space (gym.spaces.Dict): Dict space with the state keys,
+            ``"state"`` and, for pixels, ``"image"``.
         action_space (gym.spaces.Box): Continuous action space from DMC spec.
 
     Example:
         >>> env = DeepMindControlEnv("cheetah-run", seed=0, size=(64, 64))
-        >>> obs = env.reset()
-        >>> print(obs.keys())  # dict_keys(['position', 'velocity', 'image'])
+        >>> sorted(env.reset())
+        ['image', 'position', 'state', 'velocity']
+        >>> env = DeepMindControlEnv("cheetah-run", seed=0, obs_type="state")
+        >>> env.reset()["state"].shape
+        (17,)
     """
 
     def __init__(
@@ -44,7 +66,14 @@ class DeepMindControlEnv:
         seed: int,
         size: tuple[int, int] = (64, 64),
         camera: int | None = None,
+        obs_type: str = "pixels",
     ) -> None:
+        obs_type = str(obs_type).lower()
+        if obs_type not in OBS_TYPES:
+            raise ValueError(
+                f"obs_type must be one of {', '.join(OBS_TYPES)}; got {obs_type!r}."
+            )
+        self._obs_type = obs_type
         if "-" not in name:
             raise ValueError(
                 f"DeepMind Control task names use 'domain-task' form, e.g. "
@@ -64,9 +93,22 @@ class DeepMindControlEnv:
         self._env = self._make_env(self._seed)
 
         spaces: dict[str, gym.spaces.Space[Any]] = {}
+        self._state_keys: list[str] = []
+        state_size = 0
         for key, value in self._env.observation_spec().items():
+            if key in ("state", "image"):
+                raise ValueError(
+                    f"DMC task {name!r} has an observation named {key!r}, which "
+                    "collides with a key the adapter adds."
+                )
             spaces[key] = gym.spaces.Box(-np.inf, np.inf, value.shape, dtype=np.float32)
-        spaces["image"] = gym.spaces.Box(0, 255, (3,) + self._size, dtype=np.uint8)
+            self._state_keys.append(key)
+            state_size += int(np.prod(value.shape, dtype=np.int64))
+        spaces["state"] = gym.spaces.Box(
+            -np.inf, np.inf, (state_size,), dtype=np.float32
+        )
+        if self._obs_type == "pixels":
+            spaces["image"] = gym.spaces.Box(0, 255, (3,) + self._size, dtype=np.uint8)
         self._observation_space = gym.spaces.Dict(spaces)
         spec = self._env.action_spec()
         self._action_space = gym.spaces.Box(
@@ -103,8 +145,24 @@ class DeepMindControlEnv:
                     pass
 
     @property
+    def obs_type(self) -> str:
+        return self._obs_type
+
+    @property
     def observation_space(self) -> gym.spaces.Dict:
         return self._observation_space
+
+    def _observation(self, time_step: Any) -> dict[str, np.ndarray]:
+        obs: dict[str, np.ndarray] = {}
+        for key in self._state_keys:
+            obs[key] = np.asarray(time_step.observation[key], dtype=np.float32)
+        parts = [obs[key].reshape(-1) for key in self._state_keys]
+        obs["state"] = (
+            np.concatenate(parts, axis=0) if parts else np.zeros(0, np.float32)
+        )
+        if self._obs_type == "pixels":
+            obs["image"] = self.render().transpose(2, 0, 1).copy()
+        return obs
 
     @property
     def action_space(self) -> gym.spaces.Box:
@@ -113,27 +171,24 @@ class DeepMindControlEnv:
     def step(self, action: np.ndarray) -> tuple[dict, float, bool, dict]:
         clipped = clip_box_action(action, self.action_space.low, self.action_space.high)
         time_step = self._env.step(clipped)
-        obs = dict(time_step.observation)
-        obs["image"] = self.render().transpose(2, 0, 1).copy()
+        obs = self._observation(time_step)
         reward = time_step.reward or 0
-        done = time_step.last()
-        vector_observation = np.concatenate(
-            [
-                np.asarray(value, dtype=np.float32).reshape(-1)
-                for value in time_step.observation.values()
-            ],
-            axis=0,
-        )
+        done = bool(time_step.last())
+        discount = 1.0 if time_step.discount is None else float(time_step.discount)
+        # dm_control ends every episode at the task's time limit with discount
+        # 1: that state is not terminal and its value should be bootstrapped.
+        # Only a discount of 0 means the episode genuinely terminated.
+        terminated = done and discount == 0.0
         info = finalize_step_info(
             {
-                "discount": np.array(time_step.discount, np.float32),
+                "discount": np.array(discount, np.float32),
                 "action": clipped.copy(),
                 "executed_action": clipped.copy(),
-                "vector_observation": vector_observation,
+                "vector_observation": obs["state"].copy(),
             },
             done=done,
-            terminated=done,
-            truncated=False,
+            terminated=terminated,
+            truncated=done and not terminated,
         )
         return obs, float(reward), done, info
 
@@ -142,10 +197,7 @@ class DeepMindControlEnv:
             self._seed = int(seed)
             self._env = self._make_env(self._seed)
             self._seed_spaces(self._seed)
-        time_step = self._env.reset()
-        obs = dict(time_step.observation)
-        obs["image"] = self.render().transpose(2, 0, 1).copy()
-        return obs
+        return self._observation(self._env.reset())
 
     def render(self, *args: Any, **kwargs: Any) -> np.ndarray:
         if kwargs.get("mode", "rgb_array") != "rgb_array":
@@ -158,6 +210,12 @@ def make_dmc_env(
     seed: int = 0,
     size: tuple[int, int] = (64, 64),
     camera: int | None = None,
+    obs_type: str = "pixels",
 ) -> DeepMindControlEnv:
-    """Create a DeepMind Control Suite task, e.g. ``make_dmc_env("walker-walk")``."""
-    return DeepMindControlEnv(env_id, seed=seed, size=size, camera=camera)
+    """Create a DeepMind Control Suite task, e.g. ``make_dmc_env("walker-walk")``.
+
+    Pass ``obs_type="state"`` for proprioceptive observations without rendering.
+    """
+    return DeepMindControlEnv(
+        env_id, seed=seed, size=size, camera=camera, obs_type=obs_type
+    )

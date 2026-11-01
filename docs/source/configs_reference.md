@@ -42,6 +42,7 @@ class DreamerConfig:
     env_instance: Optional[object] = None
     image_size: Tuple[int, int] = (64, 64)
     gym_render_mode: str = "rgb_array"
+    dmc_obs_type: str = "pixels"  # pixels | state (proprioceptive, no rendering)
 
     # DeepMind Lab (optional)
     dmlab_action_repeat: int = 4
