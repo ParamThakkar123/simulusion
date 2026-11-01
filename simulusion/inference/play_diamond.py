@@ -215,10 +215,12 @@ def run_play(
 
     def save_dream() -> None:
         nonlocal notice, notice_until
-        if len(dream) == 0:
-            notice = "Nothing to save"
-        else:
+        try:
             video, data = dream.save(fps=record_fps, game=game)
+        except (OSError, RuntimeError) as err:
+            notice = "Save failed"
+            print(f"Could not save the dream: {err}")
+        else:
             notice = "Saved"
             print(f"Saved {video.resolve()} and {data.resolve()}")
         notice_until = time.time() + NOTICE_SECONDS
@@ -238,7 +240,7 @@ def run_play(
         if key == ord("r"):
             reset_episode()
             print("Reset episode")
-        if dream_mode and key == ord("s"):
+        if dream_mode and dream_buffer > 0 and key == ord("s"):
             save_dream()
             key = -1
 
@@ -319,7 +321,7 @@ def run_play(
             f"Action: {action_name} ({action})"
             + (f"  |  AGENT: {agent_name}" if control == "versus" else ""),
             "[TAB] toggle  [R] reset  [arrows/WASD] drive  "
-            + ("[S] save  " if dream_mode else "")
+            + ("[S] save  " if dream_mode and dream_buffer > 0 else "")
             + "[Q] quit",
         ]
         for i, line in enumerate(info_lines):

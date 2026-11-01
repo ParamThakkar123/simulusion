@@ -64,6 +64,12 @@ def test_save_names_both_files_after_one_timestamp(tmp_path):
     assert video.stat().st_size > 0
 
 
+def test_saving_an_empty_buffer_writes_nothing(tmp_path):
+    with pytest.raises(ValueError):
+        DreamBuffer(3).save(tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_clear_empties_the_buffer():
     buffer = DreamBuffer(5)
     buffer.add(frame(0), action=1, reward=0.0)
@@ -251,9 +257,21 @@ def test_module_cli_rejects_a_negative_dream_buffer(monkeypatch, capsys):
     assert "--dream-buffer: must be >= 0" in capsys.readouterr().err
 
 
-def test_zero_buffer_turns_saving_off(play, tmp_path):
+def test_zero_buffer_turns_saving_off_and_s_steers_again(play, tmp_path):
     agent, texts = play([TAB, NONE, ord("s"), ord("q")], dream_buffer=0)
 
     assert saved_files(tmp_path) == []
     assert agent.reward_model.calls == []
-    assert "Nothing to save" in texts
+    assert agent.sampler.actions[-1][-1] == DOWN
+    assert not any("[S] save" in text for text in texts)
+
+
+def test_a_failed_save_keeps_playing(play, monkeypatch, tmp_path):
+    def disk_full(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(DreamBuffer, "save", disk_full)
+    agent, texts = play([TAB, ord("s"), NONE, ord("q")])
+
+    assert "Save failed" in texts
+    assert len(agent.sampler.actions) == 3

@@ -115,6 +115,9 @@ class DreamBuffer:
         """Write ``dream_<timestamp>.mp4`` and ``.json``; return both paths."""
         from simulusion.utils.utils import StreamingVideoWriter
 
+        if not self._steps:
+            raise ValueError("no dream steps to save")
+
         stem = "dream_" + datetime.now().strftime("%Y%m%d-%H%M%S-%f")[:-3]
         video = Path(directory) / f"{stem}.mp4"
         data = video.with_suffix(".json")
