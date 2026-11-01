@@ -475,7 +475,9 @@ belong to the other model are rejected rather than ignored. See
 <li><p><code class="docutils literal notranslate"><span class="pre">play</span> <span class="pre">--model</span> <span class="pre">&lt;NAME&gt;</span> <span class="pre">--checkpoint</span> <span class="pre">&lt;PATH&gt;</span> <span class="pre">[options]</span></code> - Interactively play
 inside a trained world model. Two modes toggled by <code class="docutils literal notranslate"><span class="pre">TAB</span></code>: <strong>REAL</strong> (env
 stepping) and <strong>DREAM</strong> (model imagination). Press arrow keys / WASD to
-override the agent’s actions.</p>
+override the agent’s actions. With <code class="docutils literal notranslate"><span class="pre">diamond</span></code>, press <code class="docutils literal notranslate"><span class="pre">S</span></code> in DREAM mode to
+save the last dream frames as <code class="docutils literal notranslate"><span class="pre">dream_&lt;timestamp&gt;.mp4</span></code> in the current
+directory, with the actions and predicted rewards in <code class="docutils literal notranslate"><span class="pre">dream_&lt;timestamp&gt;.json</span></code>.</p>
 <p>Key options:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--model</span></code>, <code class="docutils literal notranslate"><span class="pre">-m</span></code> — model type (currently <code class="docutils literal notranslate"><span class="pre">diamond</span></code>)</p></li>
@@ -484,6 +486,8 @@ override the agent’s actions.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">--deterministic</span></code> / <code class="docutils literal notranslate"><span class="pre">--stochastic</span></code> — action selection (default deterministic)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--record</span> <span class="pre">PATH</span></code> — save gameplay video</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--record-fps</span></code> — video framerate (default 20)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dream-buffer</span> <span class="pre">N</span></code> — dream frames <code class="docutils literal notranslate"><span class="pre">S</span></code> saves (<code class="docutils literal notranslate"><span class="pre">diamond</span></code> only; default 50,
+0 turns it off)</p></li>
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">models</span> <span class="pre">list</span></code> - Print the known training entrypoints and (when available)

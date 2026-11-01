@@ -718,6 +718,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">gym_render_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rgb_array"</span>
     <span class="n">frame_stack</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
+    <span class="c1"># DeepMind Control observations: "pixels" renders an image each step</span>
+    <span class="c1"># (Visual Control); "state" gives the proprioceptive vector under</span>
+    <span class="c1"># obs["state"] without rendering (Proprio Control). Dreamer V1/V2</span>
+    <span class="c1"># encode images only, so they need "pixels".</span>
+    <span class="n">dmc_obs_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pixels"</span>
     <span class="c1"># DeepMind Lab options. dmlab_action_repeat is native DMLab frame</span>
     <span class="c1"># repeat; Dreamer action_repeat is still applied by the shared wrapper</span>
     <span class="c1"># stack outside the backend adapter.</span>

@@ -826,7 +826,11 @@ window.runMermaid = runMermaid;</script>
     <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"dmc"</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.dmc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeepMindControlEnv</span>
 
-        <span class="n">env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">obs_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"dmc_obs_type"</span><span class="p">,</span> <span class="s2">"pixels"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">obs_type</span> <span class="o">==</span> <span class="s2">"pixels"</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">DeepMindControlEnv</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">obs_type</span><span class="o">=</span><span class="n">obs_type</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"dmlab"</span><span class="p">,</span> <span class="s2">"deepmind_lab"</span><span class="p">,</span> <span class="s2">"deepmindlab"</span><span class="p">}:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.dmlab</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMLabEnv</span>
 
@@ -939,6 +943,28 @@ window.runMermaid = runMermaid;</script>
     <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span><span class="p">)</span> <span class="o">//</span> <span class="n">repeat</span><span class="p">)</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">TimeLimit</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">env</span></div>
+
+
+
+<div class="viewcode-block" id="image_obs_shape">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.image_obs_shape">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">image_obs_shape</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shape of ``env``'s image observation, which Dreamer V1/V2 encode.</span>
+
+<span class="sd">    Raises a clear error for environments that produce no image, such as</span>
+<span class="sd">    DeepMind Control with ``dmc_obs_type="state"``.</span>
+<span class="sd">    """</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">image_space</span> <span class="o">=</span> <span class="n">space</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s2">"spaces"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Dreamer V1/V2 learn from image observations, but this environment "</span>
+            <span class="sa">f</span><span class="s2">"only produces </span><span class="si">{</span><span class="n">keys</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'unnamed observations'</span><span class="si">}</span><span class="s2">. For DeepMind "</span>
+            <span class="s2">"Control set dmc_obs_type='pixels'."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="k">return</span> <span class="n">image_space</span><span class="o">.</span><span class="n">shape</span></div>
 
 
 
@@ -1270,7 +1296,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">obs_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obs_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">obs_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">action_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">action_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">torch_device</span> <span class="o">=</span> <span class="p">(</span>
@@ -2051,7 +2077,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
-        <span class="n">obs_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
         <span class="n">action_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_core</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
 
