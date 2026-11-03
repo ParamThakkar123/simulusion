@@ -261,6 +261,42 @@ Atari100k, 512 for the control suites, 1024 for BSuite). The default of 32 is th
 cheapest of these; use 512 to match the paper's control-suite runs. Set
 `auto_update_steps=False` to control `update_steps` yourself.
 
+### Benchmark presets
+
+`benchmark_config` returns a config that follows one benchmark's protocol from
+Table 2 of the paper: the task, step budget, action repeat, replay ratio and
+model size, plus the environment settings the paper states.
+
+```python
+import simulusion
+from simulusion.configs import BENCHMARKS, benchmark_config
+
+cfg = benchmark_config("dmc-proprio", "cartpole-swingup")  # 500k steps, ratio 512, 12M
+cfg = benchmark_config("atari100k", "boxing", model_size="12m")  # fit a small GPU
+agent = simulusion.create_model("dreamer-v3", config=cfg)
+```
+
+| Preset | Steps | Action repeat | Replay ratio | Model | Environment settings |
+|---|---|---|---|---|---|
+| `dmc-proprio` | 500k | 2 | 512 | 12M | joint states, 18 tasks |
+| `dmc-visual` | 1M | 2 | 512 | 12M | 64x64 pixels, 20 tasks |
+| `atari` | 200M | 4 | 32 | 200M | 57 games, sticky actions, full action set |
+| `atari100k` | 400k | 4 | 128 | 200M | 26 games, no sticky actions, minimal action set |
+| `procgen` | 50M | 1 | 64 | 200M | 16 games, hard mode, unlimited levels |
+| `dmlab` | 100M | 4 | 32 | 200M | DMLab-30 levels |
+| `bsuite` | per task | 1 | 1024 | 200M | 23 environments |
+
+Keyword arguments override any field after the protocol is applied, for
+example `total_steps` for a shorter run or `model_size` for a smaller GPU.
+Atari presets create the ALE environment with `frameskip=1`, so the action
+repeat of 4 is not applied on top of ALE's own frame skip. The paper's
+parallel environment instances are recorded in `BENCHMARKS[...].env_instances`
+but not used: the agent collects from a single environment. There is no
+Minecraft preset.
+
+`demos/dreamer_v3_demo.py` trains from a preset and records the result; the
+{ref}`gallery <gallery-dreamer-v3>` shows its runs on cartpole swing-up.
+
 ### Replay layout
 
 Replay holds one record per observation, in the indexing of the world model
