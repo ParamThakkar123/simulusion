@@ -346,7 +346,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../dreamer_v3.html">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../planet.html">PlaNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
@@ -508,16 +507,20 @@ records the run with <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">bsuite.experiments.summary_analysis</span></code>. A benchmark score covers every setting of
 every environment; <code class="docutils literal notranslate"><span class="pre">list_bsuite_settings(&quot;catch&quot;)</span></code> lists one environment’s.</p>
 </section>
-<section id="bsuite-with-dreamerv3">
-<h2>BSuite with DreamerV3<a class="headerlink" href="#bsuite-with-dreamerv3" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_v3_benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_config</span>
+<section id="bsuite-in-a-dreamer-config">
+<h2>BSuite in a Dreamer config<a class="headerlink" href="#bsuite-in-a-dreamer-config" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerConfig</span>
 
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">benchmark_config</span><span class="p">(</span><span class="s2">"bsuite"</span><span class="p">,</span> <span class="s2">"catch/3"</span><span class="p">,</span> <span class="n">bsuite_results_dir</span><span class="o">=</span><span class="s2">"runs/bsuite"</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">(</span>
+    <span class="n">env_backend</span><span class="o">=</span><span class="s2">"bsuite"</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"catch/3"</span><span class="p">,</span>
+    <span class="n">bsuite_obs_type</span><span class="o">=</span><span class="s2">"state"</span><span class="p">,</span>
+    <span class="n">bsuite_results_dir</span><span class="o">=</span><span class="s2">"runs/bsuite"</span><span class="p">,</span>
+    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>The preset follows Table 2 of the paper: the observation vector as input
-(<code class="docutils literal notranslate"><span class="pre">bsuite_obs_type=&quot;state&quot;</span></code>), one environment instance, action repeat 1, replay
-ratio 1024 and the 200M model.</p>
+<p>Training stops once the setting’s episode budget is spent.</p>
 </section>
 <section id="actions">
 <h2>Actions<a class="headerlink" href="#actions" title="Link to this heading">#</a></h2>
@@ -626,7 +629,7 @@ ratio 1024 and the 200M model.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-determinism">Seed determinism</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observations">Observations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#episode-budget-and-scoring">Episode budget and scoring</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bsuite-with-dreamerv3">BSuite with DreamerV3</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bsuite-in-a-dreamer-config">BSuite in a Dreamer config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#actions">Actions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#info-contract">Info contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>

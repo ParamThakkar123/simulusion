@@ -10,12 +10,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-224/configs_reference.html" />
 <meta property="og:site_name" content="Simulusion Documentation" />
-<meta property="og:description" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, DreamerV3Config, JEPAConfig, IRISConfig, DiamondConfig, Usage Patt..." />
+<meta property="og:description" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, JEPAConfig, IRISConfig, DiamondConfig, Usage Patterns- Basic Confi..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-224/_images/social_previews/summary_configs_reference_c1f4e944.png" />
-<meta property="og:image:alt" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, DreamerV3Config, JEPAConfig, IRISConfig, DiamondConfig, Usage Patt..." />
-<meta name="description" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, DreamerV3Config, JEPAConfig, IRISConfig, DiamondConfig, Usage Patt..." />
+<meta property="og:image" content="https://paramthakkar123.github.io/simulusion/pr-preview/pr-224/_images/social_previews/summary_configs_reference_222f303f.png" />
+<meta property="og:image:alt" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, JEPAConfig, IRISConfig, DiamondConfig, Usage Patterns- Basic Confi..." />
+<meta name="description" content="This page documents all configuration classes in Simulusion. Contents: Configs Reference- Shared Serialization API, DreamerConfig, JEPAConfig, IRISConfig, DiamondConfig, Usage Patterns- Basic Confi..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Configs Reference &#8212; Simulusion</title>
@@ -329,7 +329,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dreamer_v3.html">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
@@ -416,20 +415,19 @@
 <ul>
 <li><p><a class="reference internal" href="#shared-serialization-api" id="id2">Shared Serialization API</a></p></li>
 <li><p><a class="reference internal" href="#dreamerconfig" id="id3">DreamerConfig</a></p></li>
-<li><p><a class="reference internal" href="#dreamerv3config" id="id4">DreamerV3Config</a></p></li>
-<li><p><a class="reference internal" href="#jepaconfig" id="id5">JEPAConfig</a></p></li>
-<li><p><a class="reference internal" href="#irisconfig" id="id6">IRISConfig</a></p></li>
-<li><p><a class="reference internal" href="#diamondconfig" id="id7">DiamondConfig</a></p></li>
-<li><p><a class="reference internal" href="#usage-patterns" id="id8">Usage Patterns</a></p>
+<li><p><a class="reference internal" href="#jepaconfig" id="id4">JEPAConfig</a></p></li>
+<li><p><a class="reference internal" href="#irisconfig" id="id5">IRISConfig</a></p></li>
+<li><p><a class="reference internal" href="#diamondconfig" id="id6">DiamondConfig</a></p></li>
+<li><p><a class="reference internal" href="#usage-patterns" id="id7">Usage Patterns</a></p>
 <ul>
-<li><p><a class="reference internal" href="#basic-configuration" id="id9">Basic Configuration</a></p></li>
-<li><p><a class="reference internal" href="#environment-specific-configs" id="id10">Environment-Specific Configs</a></p></li>
-<li><p><a class="reference internal" href="#training-configs" id="id11">Training Configs</a></p></li>
-<li><p><a class="reference internal" href="#advanced-configs" id="id12">Advanced Configs</a></p></li>
+<li><p><a class="reference internal" href="#basic-configuration" id="id8">Basic Configuration</a></p></li>
+<li><p><a class="reference internal" href="#environment-specific-configs" id="id9">Environment-Specific Configs</a></p></li>
+<li><p><a class="reference internal" href="#training-configs" id="id10">Training Configs</a></p></li>
+<li><p><a class="reference internal" href="#advanced-configs" id="id11">Advanced Configs</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#experiment-yaml-and-omegaconf-overrides" id="id13">Experiment YAML and OmegaConf overrides</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id14">See Also</a></p></li>
+<li><p><a class="reference internal" href="#experiment-yaml-and-omegaconf-overrides" id="id12">Experiment YAML and OmegaConf overrides</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id13">See Also</a></p></li>
 </ul>
 </li>
 </ul>
@@ -586,90 +584,8 @@ can be reproduced without guessing hyperparameters.</p>
 </pre></div>
 </div>
 </section>
-<section id="dreamerv3config">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">DreamerV3Config</a><a class="headerlink" href="#dreamerv3config" title="Link to this heading">#</a></h2>
-<p>Configuration for DreamerV3. It subclasses <code class="docutils literal notranslate"><span class="pre">DreamerConfig</span></code>, so every environment
-backend option above carries over unchanged; the fields below are either new or
-override a base default.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Config</span><span class="p">(</span><span class="n">DreamerConfig</span><span class="p">):</span>
-    <span class="n">algo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"DreamerV3"</span>
-
-    <span class="c1"># Architecture. Width fields left as None are filled in from model_size.</span>
-    <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"12m"</span>  <span class="c1"># 12m | 25m | 50m | 100m | 200m | 400m</span>
-    <span class="n">hidden_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">recurrent_units</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">cnn_depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">latent_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">latent_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
-    <span class="n">gru_blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
-    <span class="n">obs_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None: image, else state; plus instr</span>
-    <span class="n">mlp_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># actor, critic, vector encoder/decoder</span>
-    <span class="n">reward_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">cont_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"silu"</span>
-    <span class="n">unimix</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
-    <span class="n">actor_dist</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span>  <span class="c1"># auto | normal | onehot</span>
-    <span class="n">actor_min_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
-    <span class="n">actor_max_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-
-    <span class="c1"># World model losses</span>
-    <span class="n">beta_pred</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">beta_dyn</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">beta_rep</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
-    <span class="n">free_nats</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-
-    <span class="c1"># Actor critic</span>
-    <span class="n">discount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.997</span>
-    <span class="n">td_lambda</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span>
-    <span class="n">imagine_horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
-    <span class="n">actor_entropy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3e-4</span>
-    <span class="n">critic_loss_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">critic_replay_loss_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>
-    <span class="n">critic_ema_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.98</span>
-    <span class="n">critic_ema_regularizer</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">return_norm_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span>
-    <span class="n">return_norm_limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">return_norm_low</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
-    <span class="n">return_norm_high</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">95.0</span>
-
-    <span class="c1"># Prediction heads</span>
-    <span class="n">num_buckets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span>
-    <span class="n">symlog_range</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span>
-
-    <span class="c1"># Optimization</span>
-    <span class="n">learning_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4e-5</span>  <span class="c1"># shared by all three optimizers</span>
-    <span class="n">agc_clip</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span>
-    <span class="n">agc_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span>
-    <span class="n">opt_eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-20</span>
-    <span class="n">opt_beta1</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span>
-    <span class="n">opt_beta2</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span>
-    <span class="n">weight_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
-    <span class="n">train_seq_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span>
-    <span class="n">replay_ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>  <span class="c1"># per policy step, without action repeat</span>
-    <span class="n">auto_update_steps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">online_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-    <span class="n">buffer_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5_000_000</span>
-    <span class="n">replay_latents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">use_amp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</pre></div>
-</div>
-<p>Two fields behave differently from the rest:</p>
-<ul class="simple">
-<li><p>Width fields (<code class="docutils literal notranslate"><span class="pre">hidden_size</span></code>, <code class="docutils literal notranslate"><span class="pre">recurrent_units</span></code>, <code class="docutils literal notranslate"><span class="pre">cnn_depth</span></code>, <code class="docutils literal notranslate"><span class="pre">latent_classes</span></code>)
-resolve from <code class="docutils literal notranslate"><span class="pre">model_size</span></code> at construction time when left as <code class="docutils literal notranslate"><span class="pre">None</span></code>. Setting one
-explicitly overrides the preset for that field only.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">update_steps</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">replay_ratio</span></code> unless <code class="docutils literal notranslate"><span class="pre">auto_update_steps=False</span></code>:
-<code class="docutils literal notranslate"><span class="pre">collect_steps</span> <span class="pre">/</span> <span class="pre">action_repeat</span> <span class="pre">*</span> <span class="pre">replay_ratio</span> <span class="pre">/</span> <span class="pre">(batch_size</span> <span class="pre">*</span> <span class="pre">train_seq_len)</span></code>.</p></li>
-</ul>
-<p>Passing a plain <code class="docutils literal notranslate"><span class="pre">DreamerConfig</span></code> to <code class="docutils literal notranslate"><span class="pre">DreamerV3Agent</span></code> upgrades it, carrying over only
-the fields you actually changed. Fields left at their base defaults keep DreamerV3’s
-own tuned values, so the agent never silently trains with V1 hyperparameters.</p>
-<p>See <a class="reference internal" href="dreamer_v3.html"><span class="doc">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</span></a> for what each field does.</p>
-</section>
 <section id="jepaconfig">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">JEPAConfig</a><a class="headerlink" href="#jepaconfig" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">JEPAConfig</a><a class="headerlink" href="#jepaconfig" title="Link to this heading">#</a></h2>
 <p>Configuration for JEPA training.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">JEPAConfig</span><span class="p">:</span>
@@ -731,7 +647,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="irisconfig">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">IRISConfig</a><a class="headerlink" href="#irisconfig" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">IRISConfig</a><a class="headerlink" href="#irisconfig" title="Link to this heading">#</a></h2>
 <p>Configuration for IRIS training.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">IRISConfig</span><span class="p">:</span>
@@ -802,7 +718,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="diamondconfig">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">DiamondConfig</a><a class="headerlink" href="#diamondconfig" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">DiamondConfig</a><a class="headerlink" href="#diamondconfig" title="Link to this heading">#</a></h2>
 <p>Configuration for Diamond (Diffusion + RL) training.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DiamondConfig</span><span class="p">:</span>
@@ -871,9 +787,9 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="usage-patterns">
-<h2><a class="toc-backref" href="#id8" role="doc-backlink">Usage Patterns</a><a class="headerlink" href="#usage-patterns" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Usage Patterns</a><a class="headerlink" href="#usage-patterns" title="Link to this heading">#</a></h2>
 <section id="basic-configuration">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Basic Configuration</a><a class="headerlink" href="#basic-configuration" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Basic Configuration</a><a class="headerlink" href="#basic-configuration" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerConfig</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">()</span>
@@ -883,7 +799,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="environment-specific-configs">
-<h3><a class="toc-backref" href="#id10" role="doc-backlink">Environment-Specific Configs</a><a class="headerlink" href="#environment-specific-configs" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Environment-Specific Configs</a><a class="headerlink" href="#environment-specific-configs" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># DMC</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">=</span> <span class="s2">"dmc"</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="s2">"walker-walk"</span>
@@ -915,7 +831,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="training-configs">
-<h3><a class="toc-backref" href="#id11" role="doc-backlink">Training Configs</a><a class="headerlink" href="#training-configs" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Training Configs</a><a class="headerlink" href="#training-configs" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic training</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">model_learning_rate</span> <span class="o">=</span> <span class="mf">6e-4</span>
@@ -931,7 +847,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </div>
 </section>
 <section id="advanced-configs">
-<h3><a class="toc-backref" href="#id12" role="doc-backlink">Advanced Configs</a><a class="headerlink" href="#advanced-configs" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Advanced Configs</a><a class="headerlink" href="#advanced-configs" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Custom model sizes</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">obs_embed_size</span> <span class="o">=</span> <span class="mi">2048</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">num_units</span> <span class="o">=</span> <span class="mi">600</span>
@@ -948,7 +864,7 @@ own tuned values, so the agent never silently trains with V1 hyperparameters.</p
 </section>
 </section>
 <section id="experiment-yaml-and-omegaconf-overrides">
-<h2><a class="toc-backref" href="#id13" role="doc-backlink">Experiment YAML and OmegaConf overrides</a><a class="headerlink" href="#experiment-yaml-and-omegaconf-overrides" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Experiment YAML and OmegaConf overrides</a><a class="headerlink" href="#experiment-yaml-and-omegaconf-overrides" title="Link to this heading">#</a></h2>
 <p>Simulusion provides a shared experiment configuration layer in
 <code class="docutils literal notranslate"><span class="pre">simulusion.experiments</span></code>. Training entrypoints can compose their Python
 configuration defaults with a YAML file and Hydra/OmegaConf-style dot-list
@@ -974,7 +890,7 @@ runtime.</p>
 without launching a run.</p>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id14" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — DreamerConfig usage walkthrough</p></li>
 <li><p><a class="reference internal" href="jepa.html"><span class="doc">JEPA: Joint Embedding Predictive Architecture</span></a> — JEPAConfig usage walkthrough</p></li>
@@ -1034,7 +950,6 @@ without launching a run.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shared-serialization-api">Shared Serialization API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamerconfig">DreamerConfig</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamerv3config">DreamerV3Config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#jepaconfig">JEPAConfig</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#irisconfig">IRISConfig</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diamondconfig">DiamondConfig</a></li>

@@ -32,13 +32,11 @@ agent = DreamerAgent(cfg)
 | Category | Exports |
 |----------|--------|
 | **Friendly factories** | `create_config`, `create_model`, `make_env`, `list_models`, `list_env_backends`, `list_envs` |
-| **Models / Agents** | `Dreamer`, `DreamerV1`, `DreamerV2`, `DreamerV3`, `DreamerV3Agent`, `DreamerAgent`, `Planet`, `JEPAAgent`, `IRISAgent`, `Genie`, `create_genie`, `DiT`, `create_dit` |
-| **State-space models** | `RSSM`, `RecurrentStateSpaceModel`, `DreamerRSSM`, `CategoricalRSSM`, `ModularRSSM`, `create_modular_rssm` |
-| **Vision** | `ConvEncoder`, `CNNEncoder`, `IRISEncoder`, `ConvDecoder`, `CNNDecoder`, `DenseDecoder`, `ActionDecoder`, `IRISDecoder`, `DreamerV3Encoder`, `DreamerV3Decoder`, `DreamerV3Head`, `DreamerV3Actor`, `VideoTokenizer`, `create_video_tokenizer` |
+| **Models / Agents** | `Dreamer`, `DreamerV1`, `DreamerV2`, `DreamerAgent`, `Planet`, `JEPAAgent`, `IRISAgent`, `Genie`, `create_genie`, `DiT`, `create_dit` |
+| **State-space models** | `RSSM`, `RecurrentStateSpaceModel`, `DreamerRSSM`, `ModularRSSM`, `create_modular_rssm` |
+| **Vision** | `ConvEncoder`, `CNNEncoder`, `IRISEncoder`, `ConvDecoder`, `CNNDecoder`, `DenseDecoder`, `ActionDecoder`, `IRISDecoder`, `VideoTokenizer`, `create_video_tokenizer` |
 | **Quantization** | `VectorQuantizer`, `VectorQuantizerEMA` |
-| **Memory** | `ReplayBuffer`, `DreamerV3ReplayBuffer`, `Episode`, `IRISReplayBuffer`, `IRISOnPolicyBuffer` |
-| **Optimizers** | `LaProp`, `adaptive_grad_clip_` (from `world_models.optim`) |
-| **Configs** | `DreamerConfig`, `DreamerV3Config`, `JEPAConfig`, `DiTConfig`, `DiamondConfig`, `IRISConfig`, `GenieConfig`, `GenieSmallConfig`, `STTransformerConfig`, `VideoTokenizerConfig`, `LatentActionModelConfig`, `DynamicsModelConfig` |
+| **Configs** | `DreamerConfig`, `JEPAConfig`, `DiTConfig`, `DiamondConfig`, `IRISConfig`, `GenieConfig`, `GenieSmallConfig`, `STTransformerConfig`, `VideoTokenizerConfig`, `LatentActionModelConfig`, `DynamicsModelConfig` |
 | **Environments** | `make_atari_env`, `make_gym_env`, `make_mujoco_env`, `make_robotics_env`, `make_brax_env`, `make_procgen_env`, `GymImageEnv`, `ProcgenImageEnv`, `DeepMindControlEnv`, `DMLabEnv`, `make_dmlab_env`, `UnityMLAgentsEnv`, `TimeLimit`, `ActionRepeat`, wrappers, etc. |
 | **Memory** | `ReplayBuffer`, `Memory`, `Episode`, `IRISReplayBuffer`, `IRISOnPolicyBuffer` |
 | **Reward / Value** | `RewardModel`, `ValueModel`, `DreamerRewardModel`, `DreamerValueModel` |

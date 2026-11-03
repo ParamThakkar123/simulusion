@@ -35,11 +35,9 @@ generated from source, see {doc}`api_reference`.
 | `Dreamer` | `simulusion.models.dreamer` | Base Dreamer world model (RSSM-based, V1-style). |
 | `DreamerV1` | `simulusion.models.dreamer_v1` | DreamerV1 (alias for base Dreamer). |
 | `DreamerV2` | `simulusion.models.dreamer_v2` | DreamerV2 (symlog two-hot heads, balanced KL). |
-| `DreamerV3` | `simulusion.models.dreamer_v3` | DreamerV3 core model (categorical latents, free bits, return normalization). |
 | `DreamerAgent` | `simulusion.models.dreamer` | High-level Dreamer agent with train/evaluate helpers. |
 | `DreamerV1Agent` | `simulusion.models.dreamer_v1` | `DreamerAgent` that trains DreamerV1 (`create_model("dreamer-v1")`). |
 | `DreamerV2Agent` | `simulusion.models.dreamer_v2` | `DreamerAgent` that trains DreamerV2 (`create_model("dreamer-v2")`). |
-| `DreamerV3Agent` | `simulusion.models.dreamer_v3` | `DreamerAgent` that trains DreamerV3 (`create_model("dreamer-v3")`). |
 | `Planet` | `simulusion.models.planet` | PlaNet: Deep Planning Network. |
 | `JEPAAgent` | `simulusion.models.jepa_agent` | I-JEPA agent for self-supervised visual representation learning. |
 | `IRISAgent` | `simulusion.models.iris_agent` | IRIS agent for sample-efficient RL with Transformers. |
@@ -62,7 +60,6 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `RSSM` | `simulusion.models.rssm` | Recurrent State-Space Model (standalone). |
-| `CategoricalRSSM` | `simulusion.models.categorical_rssm` | DreamerV3 RSSM with straight-through categorical latents. |
 | `RecurrentStateSpaceModel` | `simulusion.models.rssm` | Alias for RSSM. |
 | `DreamerRSSM` | `simulusion.models.dreamer_rssm` | RSSM variant used in Dreamer training loop. |
 | `ModularRSSM` | `simulusion.models.modular_rssm` | Modular RSSM with swappable encoder/backbone/decoder. |
@@ -86,10 +83,6 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `ConvEncoder` | `simulusion.vision.dreamer_encoder` | Dreamer convolutional encoder (image → embedding). |
-| `DreamerV3Encoder` | `simulusion.vision.dreamer_v3_nets` | DreamerV3 encoder (CNN for images, MLP for vectors). |
-| `DreamerV3Decoder` | `simulusion.vision.dreamer_v3_nets` | DreamerV3 observation decoder. |
-| `DreamerV3Head` | `simulusion.vision.dreamer_v3_nets` | DreamerV3 MLP head (two-hot reward/critic, Bernoulli continue). |
-| `DreamerV3Actor` | `simulusion.vision.dreamer_v3_nets` | DreamerV3 actor for discrete and continuous actions. |
 | `CNNEncoder` | `simulusion.vision.planet_encoder` | PlaNet CNN encoder (image → embedding). |
 | `IRISEncoder` | `simulusion.vision.iris_encoder` | IRIS encoder (image → discrete tokens). |
 | `ConvDecoder` | `simulusion.vision.dreamer_decoder` | Dreamer convolutional decoder (latent → image distribution). |
@@ -109,7 +102,6 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `DreamerConfig` | `simulusion.configs.dreamer_config` | Dreamer hyperparameter config. |
-| `DreamerV3Config` | `simulusion.configs.dreamer_v3_config` | DreamerV3 hyperparameters with 12M-400M model-size presets. |
 | `JEPAConfig` | `simulusion.configs.jepa_config` | JEPA hyperparameter config. |
 | `DiTConfig` | `simulusion.configs.dit_config` | DiT hyperparameter config. |
 | `get_dit_config` | `simulusion.configs.dit_config` | Factory for DiTConfig with presets. |
@@ -137,7 +129,6 @@ generated from source, see {doc}`api_reference`.
 | Name | Source | Description |
 |---|---|---|
 | `ReplayBuffer` | `simulusion.memory.dreamer_memory` | Dreamer ring buffer (transitions → sequences). |
-| `DreamerV3ReplayBuffer` | `simulusion.memory.dreamer_v3_memory` | DreamerV3 ring buffer with an online queue mixed into each batch. |
 | `Memory` | `simulusion.memory.planet_memory` | Episode-based memory for PlaNet. |
 | `Episode` | `simulusion.memory.planet_memory` | Single episode recording. |
 | `IRISReplayBuffer` | `simulusion.memory.iris_memory` | Ring buffer for IRIS (uint8 images). |

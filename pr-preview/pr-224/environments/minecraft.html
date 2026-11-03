@@ -346,7 +346,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../dreamer_v3.html">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../planet.html">PlaNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
@@ -446,8 +445,8 @@ and a display (or <code class="docutils literal notranslate"><span class="pre">x
 setting. The <code class="docutils literal notranslate"><span class="pre">docker/envs</span></code> image installs all of it, with DeepMind Lab and BSuite:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>docker/envs/Dockerfile<span class="w"> </span>-t<span class="w"> </span>simulusion-envs<span class="w"> </span>.
 docker<span class="w"> </span>run<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/runs:/data/simulusion"</span><span class="w"> </span>simulusion-envs<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>python<span class="w"> </span>demos/dreamer_v3_demo.py<span class="w"> </span>train<span class="w"> </span>--benchmark<span class="w"> </span>minecraft<span class="w"> </span>--task<span class="w"> </span>diamond<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--run<span class="w"> </span>/data/simulusion/minecraft
+<span class="w">  </span>simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>dreamer<span class="w"> </span>model.env_backend<span class="o">=</span>minecraft<span class="w"> </span>model.env<span class="o">=</span>diamond<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>model.action_repeat<span class="o">=</span><span class="m">1</span><span class="w"> </span>model.time_limit<span class="o">=</span><span class="m">36000</span>
 </pre></div>
 </div>
 <p>Outside Docker, on Linux with Python 3.11:</p>
@@ -535,21 +534,22 @@ heart is worth 0.001; this environment follows the code.</p>
 </table>
 </div>
 <p>Actions are one-hot vectors over <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> (an integer index works too).
-The action space is marked <code class="docutils literal notranslate"><span class="pre">one_hot</span></code>, so DreamerV3’s <code class="docutils literal notranslate"><span class="pre">actor_dist=&quot;auto&quot;</span></code> picks a
-categorical policy. <code class="docutils literal notranslate"><span class="pre">info[&quot;achievements&quot;]</span></code> reports which milestone items the
-episode has reached.</p>
+The action space is marked <code class="docutils literal notranslate"><span class="pre">one_hot</span></code>, so agents that choose their policy from the
+action space can use a categorical one. <code class="docutils literal notranslate"><span class="pre">info[&quot;achievements&quot;]</span></code> reports which
+milestone items the episode has reached.</p>
 </section>
-<section id="dreamerv3-preset">
-<h2>DreamerV3 preset<a class="headerlink" href="#dreamerv3-preset" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_v3_benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_config</span>
+<section id="dreamer-config">
+<h2>Dreamer config<a class="headerlink" href="#dreamer-config" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerConfig</span>
 
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">benchmark_config</span><span class="p">(</span><span class="s2">"minecraft"</span><span class="p">)</span>  <span class="c1"># task "diamond"</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">(</span>
+    <span class="n">env_backend</span><span class="o">=</span><span class="s2">"minecraft"</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"diamond"</span><span class="p">,</span>
+    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">time_limit</span><span class="o">=</span><span class="mi">36000</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>The preset follows Table 2 of the paper: 100M environment steps, action repeat 1,
-replay ratio 32 and the 200M model, with <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;minecraft&quot;</span></code>, a time limit of
-36000 steps and <code class="docutils literal notranslate"><span class="pre">obs_keys</span></code> covering the image and every vector above. The paper
-steps 64 environments on remote CPU workers; Simulusion steps one.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Option</p></th>
@@ -622,7 +622,7 @@ steps 64 environments on remote CPU workers; Simulusion steps one.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install">Install</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-task">The task</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observations-and-actions">Observations and actions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamerv3-preset">DreamerV3 preset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamer-config">Dreamer config</a></li>
 </ul>
   </nav></div>
 

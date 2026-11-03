@@ -784,20 +784,6 @@ window.runMermaid = runMermaid;</script>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid image_size=</span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">. Expected int or (H, W)."</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_has_discrete_actions</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether an environment exposes a discrete action space.</span>
-
-<span class="sd">    Checked structurally rather than with ``isinstance`` so that this module</span>
-<span class="sd">    does not need to import Gym at call time.</span>
-<span class="sd">    """</span>
-    <span class="n">action_space</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"action_space"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">(</span>
-        <span class="n">action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">)</span>
-        <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">)</span>
-    <span class="p">)</span>
-
-
 <div class="viewcode-block" id="make_env">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.make_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -854,7 +840,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
             <span class="n">render_mode</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"gym_render_mode"</span><span class="p">,</span> <span class="s2">"rgb_array"</span><span class="p">),</span>
-            <span class="n">make_kwargs</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"gym_make_kwargs"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"mujoco"</span><span class="p">,</span> <span class="s2">"mjcf"</span><span class="p">,</span> <span class="s2">"native_mujoco"</span><span class="p">}:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.mujoco_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_mujoco_env_from_config</span>
@@ -944,14 +929,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">ActionRepeat</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">_has_discrete_actions</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
-        <span class="c1"># Discrete backends (Atari, Procgen, BSuite, DMLab) are exposed to the</span>
-        <span class="c1"># agent as one-hot vectors, which keeps a single continuous-looking</span>
-        <span class="c1"># action interface across every backend. Action normalization would</span>
-        <span class="c1"># remap the [0, 1] one-hot space and is skipped.</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">OneHotAction</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">NormalizeActions</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">NormalizeActions</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
     <span class="n">frame_stack</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"frame_stack"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
     <span class="k">if</span> <span class="n">frame_stack</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">FrameStack</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">frame_stack</span><span class="p">)</span>
@@ -1954,10 +1932,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    It builds environments from config, initializes seeds and logging,</span>
 <span class="sd">    instantiates `Dreamer`, and exposes simple `train()` / `evaluate()` methods.</span>
-
-<span class="sd">    Subclasses select a different algorithm by overriding `_config_cls` and</span>
-<span class="sd">    `_build_core`; everything else (environments, seeding, logging, checkpoint</span>
-<span class="sd">    cadence) is shared. See `simulusion.models.dreamer_v3.DreamerV3Agent`.</span>
 <span class="sd">    """</span>
 
     <span class="c1">#: The world model + actor-critic this agent trains. Versioned agents</span>
@@ -1965,58 +1939,9 @@ window.runMermaid = runMermaid;</script>
     <span class="n">core_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Dreamer</span><span class="p">]</span> <span class="o">=</span> <span class="n">Dreamer</span>
     <span class="c1">#: Run-folder name used when the config leaves ``algo`` at its default.</span>
     <span class="n">algo_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="c1">#: Config class the agent coerces its ``config`` argument to.</span>
-    <span class="n">_config_cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">DreamerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">DreamerConfig</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Normalize config inputs to this agent's configuration class."""</span>
-
-        <span class="n">config_cls</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_config_cls</span>
-        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">config_cls</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">config_cls</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">config</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">config_cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="n">config_cls</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">DreamerConfig</span><span class="p">):</span>
-            <span class="c1"># Upgrade a base config to the subclass. Only fields the caller</span>
-            <span class="c1"># actually changed are carried over: copying every shared field</span>
-            <span class="c1"># would silently overwrite the subclass's own tuned defaults with</span>
-            <span class="c1"># the base class's (for example dropping DreamerV3's discount of</span>
-            <span class="c1"># 0.997 back to 0.99), which is exactly what a versioned config is</span>
-            <span class="c1"># supposed to prevent.</span>
-            <span class="n">base_defaults</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-            <span class="n">changed</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_cls</span><span class="o">.</span><span class="n">__dataclass_fields__</span>
-                <span class="ow">and</span> <span class="n">base_defaults</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value</span>
-            <span class="p">}</span>
-            <span class="k">return</span> <span class="n">config_cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">changed</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"config must be a </span><span class="si">{</span><span class="n">config_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, dict, YAML path/string, "</span>
-            <span class="sa">f</span><span class="s2">"or None; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_observation_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""What the core is built to encode: the image, for Dreamer V1/V2."""</span>
-
-        <span class="k">return</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_core</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">obs_shape</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">action_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Instantiate the algorithm core that this agent drives."""</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_cls</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">obs_shape</span><span class="p">,</span> <span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">restore</span>
-        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">_coerce_dreamer_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algo_name</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">algo</span> <span class="o">==</span> <span class="n">DreamerConfig</span><span class="o">.</span><span class="n">algo</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">algo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algo_name</span>
 
@@ -2098,9 +2023,11 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
-        <span class="n">obs_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
+        <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
         <span class="n">action_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_core</span><span class="p">(</span><span class="n">obs_shape</span><span class="p">,</span> <span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dreamer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_cls</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">obs_shape</span><span class="p">,</span> <span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">restore</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">Logger</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logdir</span><span class="p">,</span>
@@ -2125,7 +2052,7 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DreamerAgent"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Build a high-level Dreamer agent from a config object, dict, or YAML file."""</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">_apply_config_overrides</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_coerce_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="n">overrides</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">_apply_config_overrides</span><span class="p">(</span><span class="n">_coerce_dreamer_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="n">overrides</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="DreamerAgent.from_pretrained">
@@ -2168,9 +2095,9 @@ window.runMermaid = runMermaid;</script>
             <span class="n">checkpoint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"config"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">checkpoint_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_coerce_config</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">_coerce_dreamer_config</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_coerce_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">_coerce_dreamer_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">config_path</span> <span class="o">=</span> <span class="n">_resolve_pretrained_file</span><span class="p">(</span>
                 <span class="n">pretrained_model_name_or_path</span><span class="p">,</span>
@@ -2183,7 +2110,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="s2">"No config was provided and no config YAML was found beside "</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pretrained_model_name_or_path</span><span class="si">!r}</span><span class="s2">."</span>
                 <span class="p">)</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_config_cls</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span>
         <span class="n">args</span> <span class="o">=</span> <span class="n">_apply_config_overrides</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">overrides</span><span class="p">)</span>
         <span class="n">args</span><span class="o">.</span><span class="n">restore</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">agent</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>

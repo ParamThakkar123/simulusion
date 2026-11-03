@@ -839,7 +839,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">class</span><span class="w"> </span><span class="nc">_OneHotActionSpace</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Box action space that samples normalized one-hot vectors."""</span>
 
-    <span class="c1"># Read by DreamerV3's ``actor_dist="auto"`` to choose a categorical policy.</span>
+    <span class="c1"># Marks the Box as a one-hot discrete choice (categorical, not Gaussian).</span>
     <span class="n">one_hot</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>

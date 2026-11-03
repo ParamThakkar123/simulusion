@@ -329,7 +329,6 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dreamer_v3.html">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
@@ -522,25 +521,17 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_v2</span></code></p></td>
 <td><p>DreamerV2 (symlog two-hot heads, balanced KL).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_v3</span></code></p></td>
-<td><p>DreamerV3 core model (categorical latents, free bits, return normalization).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer</span></code></p></td>
 <td><p>High-level Dreamer agent with train/evaluate helpers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV1Agent</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV1Agent</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_v1</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code> that trains DreamerV1 (<code class="docutils literal notranslate"><span class="pre">create_model(&quot;dreamer-v1&quot;)</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV2Agent</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV2Agent</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_v2</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code> that trains DreamerV2 (<code class="docutils literal notranslate"><span class="pre">create_model(&quot;dreamer-v2&quot;)</span></code>).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Agent</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_v3</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DreamerAgent</span></code> that trains DreamerV3 (<code class="docutils literal notranslate"><span class="pre">create_model(&quot;dreamer-v3&quot;)</span></code>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Planet</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.planet</span></code></p></td>
@@ -618,23 +609,19 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.rssm</span></code></p></td>
 <td><p>Recurrent State-Space Model (standalone).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CategoricalRSSM</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.categorical_rssm</span></code></p></td>
-<td><p>DreamerV3 RSSM with straight-through categorical latents.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RecurrentStateSpaceModel</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RecurrentStateSpaceModel</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.rssm</span></code></p></td>
 <td><p>Alias for RSSM.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerRSSM</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerRSSM</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.dreamer_rssm</span></code></p></td>
 <td><p>RSSM variant used in Dreamer training loop.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.modular_rssm</span></code></p></td>
 <td><p>Modular RSSM with swappable encoder/backbone/decoder.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_modular_rssm</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_modular_rssm</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.models.modular_rssm</span></code></p></td>
 <td><p>Factory for ModularRSSM.</p></td>
 </tr>
@@ -701,22 +688,6 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ConvEncoder</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.dreamer_encoder</span></code></p></td>
 <td><p>Dreamer convolutional encoder (image → embedding).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Encoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.dreamer_v3_nets</span></code></p></td>
-<td><p>DreamerV3 encoder (CNN for images, MLP for vectors).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Decoder</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.dreamer_v3_nets</span></code></p></td>
-<td><p>DreamerV3 observation decoder.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Head</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.dreamer_v3_nets</span></code></p></td>
-<td><p>DreamerV3 MLP head (two-hot reward/critic, Bernoulli continue).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Actor</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.dreamer_v3_nets</span></code></p></td>
-<td><p>DreamerV3 actor for discrete and continuous actions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CNNEncoder</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.vision.planet_encoder</span></code></p></td>
@@ -788,51 +759,47 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.dreamer_config</span></code></p></td>
 <td><p>Dreamer hyperparameter config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3Config</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.dreamer_v3_config</span></code></p></td>
-<td><p>DreamerV3 hyperparameters with 12M-400M model-size presets.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAConfig</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">JEPAConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.jepa_config</span></code></p></td>
 <td><p>JEPA hyperparameter config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DiTConfig</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiTConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.dit_config</span></code></p></td>
 <td><p>DiT hyperparameter config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_dit_config</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_dit_config</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.dit_config</span></code></p></td>
 <td><p>Factory for DiTConfig with presets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DiamondConfig</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiamondConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.diamond_config</span></code></p></td>
 <td><p>DIAMOND hyperparameter config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISConfig</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.iris_config</span></code></p></td>
 <td><p>IRIS hyperparameter config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GenieConfig</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GenieConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.genie_config</span></code></p></td>
 <td><p>Genie hyperparameter config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GenieSmallConfig</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GenieSmallConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.genie_config</span></code></p></td>
 <td><p>Genie-small preset config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STTransformerConfig</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STTransformerConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.st_transformer_config</span></code></p></td>
 <td><p>ST-Transformer config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizerConfig</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VideoTokenizerConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.video_tokenizer_config</span></code></p></td>
 <td><p>Video tokenizer config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LatentActionModelConfig</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LatentActionModelConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.lam_config</span></code></p></td>
 <td><p>Latent action model config.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DynamicsModelConfig</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DynamicsModelConfig</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.configs.dynamics_config</span></code></p></td>
 <td><p>Dynamics model config.</p></td>
 </tr>
@@ -882,23 +849,19 @@ generated from source, see <a class="reference internal" href="api_reference.htm
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.dreamer_memory</span></code></p></td>
 <td><p>Dreamer ring buffer (transitions → sequences).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DreamerV3ReplayBuffer</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.dreamer_v3_memory</span></code></p></td>
-<td><p>DreamerV3 ring buffer with an online queue mixed into each batch.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Memory</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Memory</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.planet_memory</span></code></p></td>
 <td><p>Episode-based memory for PlaNet.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Episode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Episode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.planet_memory</span></code></p></td>
 <td><p>Single episode recording.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISReplayBuffer</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.iris_memory</span></code></p></td>
 <td><p>Ring buffer for IRIS (uint8 images).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IRISOnPolicyBuffer</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.memory.iris_memory</span></code></p></td>
 <td><p>On-policy buffer for episode collection.</p></td>
 </tr>

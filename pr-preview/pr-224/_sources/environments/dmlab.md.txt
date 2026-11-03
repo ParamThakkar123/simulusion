@@ -44,8 +44,8 @@ list of native seven-element Lab actions, or the name of a fixed set:
 | `"impala"` | 9 | IMPALA |
 | `"popart"` | 15, with small and large turns and looking up/down | PopArt, R2D2, DreamerV3 on DMLab-30 |
 
-The action space is marked `one_hot`, so DreamerV3's `actor_dist="auto"` picks a
-categorical policy.
+The action space is marked `one_hot`, so agents that choose their policy from the
+action space can use a categorical one.
 
 ## Language levels
 
@@ -53,8 +53,7 @@ The `language_*` levels of DMLab-30 give a text instruction. `DMLabEnv` requests
 the `INSTR` observation for them and embeds it as in the DreamerV3 reference:
 lowercase word and punctuation tokens are hashed into 64K buckets with fixed random
 32-dimensional embeddings, padded to 32 tokens, and concatenated into a
-`(1024,)` float32 vector under `obs["instr"]`. DreamerV3 encodes `image` and
-`instr` together on these levels. `text=True/False` (`cfg.dmlab_text`) overrides
+`(1024,)` float32 vector under `obs["instr"]`. `text=True/False` (`cfg.dmlab_text`) overrides
 the automatic choice.
 
 ## Train and test levels
@@ -63,17 +62,19 @@ the automatic choice.
 `mode="eval"` keeps the level and enables DMLab's held-out level set
 (`allowHoldOutLevels`) with a fixed mixer seed, for DMLab-30 test scores.
 
-## DMLab-30 with DreamerV3
+## DMLab-30 in a Dreamer config
 
 ```python
-from simulusion.configs.dreamer_v3_benchmarks import benchmark_config
+from simulusion.configs.dreamer_config import DreamerConfig
 
-cfg = benchmark_config("dmlab", "explore_goal_locations_small")
+cfg = DreamerConfig(
+    env_backend="dmlab",
+    env="contributed/dmlab30/explore_goal_locations_small",
+    dmlab_action_set="popart",
+    dmlab_mode="train",
+    action_repeat=1,  # dmlab_action_repeat=4 repeats inside Lab
+)
 ```
-
-The preset follows Table 2 of the paper: the level gains its
-`contributed/dmlab30/` prefix, 100M frames, action repeat 4, replay ratio 32, the
-200M model, and the PopArt action set on training levels.
 
 ## Backend options
 

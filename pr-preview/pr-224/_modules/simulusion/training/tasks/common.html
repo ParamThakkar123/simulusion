@@ -854,21 +854,12 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">save_replay</span><span class="p">(</span><span class="n">buffer</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Write the filled part of a ring replay buffer, plus its write position."""</span>
     <span class="n">n</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">size</span> <span class="k">if</span> <span class="n">buffer</span><span class="o">.</span><span class="n">full</span> <span class="k">else</span> <span class="n">buffer</span><span class="o">.</span><span class="n">idx</span>
-    <span class="n">names</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"replay_arrays"</span><span class="p">,</span> <span class="n">_REPLAY_ARRAYS</span><span class="p">)</span>
     <span class="n">arrays</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">n</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_REPLAY_ARRAYS</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
     <span class="p">}</span>
-    <span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">buffer</span><span class="o">.</span><span class="n">idx</span><span class="p">,</span>
-            <span class="nb">int</span><span class="p">(</span><span class="n">buffer</span><span class="o">.</span><span class="n">full</span><span class="p">),</span>
-            <span class="n">buffer</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
-            <span class="n">buffer</span><span class="o">.</span><span class="n">episodes</span><span class="p">,</span>
-            <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"records"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">buffer</span><span class="o">.</span><span class="n">idx</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">buffer</span><span class="o">.</span><span class="n">full</span><span class="p">),</span> <span class="n">buffer</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">buffer</span><span class="o">.</span><span class="n">episodes</span><span class="p">])</span>
     <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="o">**</span><span class="n">arrays</span><span class="p">)</span></div>
 
 
@@ -883,19 +874,16 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"The saved replay holds </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> transitions; this buffer holds </span><span class="si">{</span><span class="n">buffer</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"replay_arrays"</span><span class="p">,</span> <span class="n">_REPLAY_ARRAYS</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_REPLAY_ARRAYS</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">files</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
                 <span class="nb">getattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">name</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]]</span>
-    <span class="n">idx</span><span class="p">,</span> <span class="n">full</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">episodes</span> <span class="o">=</span> <span class="n">state</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">idx</span><span class="p">,</span> <span class="n">full</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">episodes</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"state"</span><span class="p">])</span>
     <span class="n">buffer</span><span class="o">.</span><span class="n">idx</span><span class="p">,</span> <span class="n">buffer</span><span class="o">.</span><span class="n">full</span><span class="p">,</span> <span class="n">buffer</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span> <span class="n">buffer</span><span class="o">.</span><span class="n">episodes</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">idx</span><span class="p">,</span>
         <span class="nb">bool</span><span class="p">(</span><span class="n">full</span><span class="p">),</span>
         <span class="n">steps</span><span class="p">,</span>
         <span class="n">episodes</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"records"</span><span class="p">):</span>
-        <span class="n">buffer</span><span class="o">.</span><span class="n">records</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span></div>
+    <span class="p">)</span></div>
 
 
 

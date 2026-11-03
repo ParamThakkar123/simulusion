@@ -19,8 +19,8 @@ setting. The `docker/envs` image installs all of it, with DeepMind Lab and BSuit
 ```bash
 docker build -f docker/envs/Dockerfile -t simulusion-envs .
 docker run --gpus all --rm -v "$PWD/runs:/data/simulusion" simulusion-envs \
-  python demos/dreamer_v3_demo.py train --benchmark minecraft --task diamond \
-    --run /data/simulusion/minecraft
+  simulusion train --config dreamer model.env_backend=minecraft model.env=diamond \
+    model.action_repeat=1 model.time_limit=36000
 ```
 
 Outside Docker, on Linux with Python 3.11:
@@ -69,22 +69,22 @@ print(env.action_names[:4], info["achievements"]["log"])
 | `health`, `hunger`, `breath` | `(1,)` | Scaled to [0, 1] |
 
 Actions are one-hot vectors over `env.action_names` (an integer index works too).
-The action space is marked `one_hot`, so DreamerV3's `actor_dist="auto"` picks a
-categorical policy. `info["achievements"]` reports which milestone items the
-episode has reached.
+The action space is marked `one_hot`, so agents that choose their policy from the
+action space can use a categorical one. `info["achievements"]` reports which
+milestone items the episode has reached.
 
-## DreamerV3 preset
+## Dreamer config
 
 ```python
-from simulusion.configs.dreamer_v3_benchmarks import benchmark_config
+from simulusion.configs.dreamer_config import DreamerConfig
 
-cfg = benchmark_config("minecraft")  # task "diamond"
+cfg = DreamerConfig(
+    env_backend="minecraft",
+    env="diamond",
+    action_repeat=1,
+    time_limit=36000,
+)
 ```
-
-The preset follows Table 2 of the paper: 100M environment steps, action repeat 1,
-replay ratio 32 and the 200M model, with `env_backend="minecraft"`, a time limit of
-36000 steps and `obs_keys` covering the image and every vector above. The paper
-steps 64 environments on remote CPU workers; Simulusion steps one.
 
 | Option | Default | Description |
 | --- | --- | --- |

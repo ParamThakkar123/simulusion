@@ -718,10 +718,6 @@ window.runMermaid = runMermaid;</script>
     <span class="n">env_instance</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">"serialize"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
     <span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
     <span class="n">gym_render_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rgb_array"</span>
-    <span class="c1"># Extra keyword arguments for gym.make when `env` is an id, e.g.</span>
-    <span class="c1"># {"frameskip": 1, "repeat_action_probability": 0.25} for ALE games, whose</span>
-    <span class="c1"># v5 ids otherwise skip 4 frames before Dreamer's action repeat.</span>
-    <span class="n">gym_make_kwargs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">frame_stack</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="c1"># DeepMind Control observations: "pixels" renders an image each step</span>
