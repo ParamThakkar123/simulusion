@@ -240,6 +240,11 @@ ENV_BACKENDS: dict[str, dict[str, Any]] = {
         "description": "DeepMind Lab 3D navigation and puzzle tasks",
         "environments": _list_available_dmlab_levels(),
     },
+    "minecraft": {
+        "label": "Minecraft Diamond",
+        "description": "DreamerV3's Minecraft Diamond task on MineRL 0.4.4",
+        "environments": ["diamond", "wood"],
+    },
 }
 
 

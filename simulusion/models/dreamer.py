@@ -102,7 +102,7 @@ def make_env(args: Any) -> Any:
     """Construct a Dreamer-compatible environment from `DreamerConfig` options.
 
     Supports DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen,
-    Brax, BSuite, and Unity ML-Agents backends
+    Brax, BSuite, Minecraft Diamond, and Unity ML-Agents backends
     and applies the standard wrapper stack: action repeat, action normalization,
     and time limit.
     """
@@ -141,6 +141,8 @@ def make_env(args: Any) -> Any:
             observations=getattr(args, "dmlab_observations", None),
             config=getattr(args, "dmlab_config", None),
             renderer=getattr(args, "dmlab_renderer", "hardware"),
+            text=getattr(args, "dmlab_text", None),
+            mode=getattr(args, "dmlab_mode", None),
         )
     elif backend in {"gym", "gymnasium", "generic"}:
         from simulusion.envs.gym_env import GymImageEnv
@@ -183,6 +185,19 @@ def make_env(args: Any) -> Any:
             args.env,
             seed=args.seed,
             size=size,
+            obs_type=getattr(args, "bsuite_obs_type", "pixels"),
+            results_dir=getattr(args, "bsuite_results_dir", None),
+        )
+    elif backend in {"minecraft", "minecraft_diamond", "minerl"}:
+        from simulusion.envs.minecraft_diamond import MinecraftDiamondEnv
+
+        env = MinecraftDiamondEnv(
+            args.env,
+            seed=args.seed,
+            size=size,
+            break_speed=float(getattr(args, "minecraft_break_speed", 100.0)),
+            # The shared TimeLimit wrapper bounds the episode.
+            length=None,
         )
     elif backend in {"brax", "jax_brax"}:
         from simulusion.envs.brax_env import BraxImageEnv
@@ -222,7 +237,7 @@ def make_env(args: Any) -> Any:
     else:
         raise ValueError(
             f"Unknown env_backend='{backend}'. Use one of: dmc, dmlab, gym, mujoco, "
-            "robotics, procgen, bsuite, brax, unity_mlagents."
+            "robotics, procgen, bsuite, minecraft, brax, unity_mlagents."
         )
 
     env = env_wrapper.ActionRepeat(env, int(args.action_repeat))

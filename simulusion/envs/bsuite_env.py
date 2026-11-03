@@ -38,6 +38,34 @@ def list_available_bsuite_ids() -> list[str]:
     return list(ids)
 
 
+BSUITE_OBS_TYPES = ("pixels", "state", "both")
+
+
+def normalize_bsuite_id(bsuite_id: str) -> str:
+    """``"catch"`` -> ``"catch/0"``; full ids such as ``"catch/7"`` pass through.
+
+    A bare environment name means its first setting, as in the DreamerV3
+    reference implementation.
+    """
+    bsuite_id = str(bsuite_id).strip()
+    return bsuite_id if "/" in bsuite_id else f"{bsuite_id}/0"
+
+
+def list_bsuite_settings(environment: str) -> list[str]:
+    """Every sweep id of one BSuite environment, e.g. ``"catch/0"`` .. ``"catch/19"``.
+
+    The benchmark score of an environment aggregates all of its settings, so a
+    full BSuite run trains once per id returned here (468 ids over the 23
+    environments). Requires the ``bsuite`` package.
+    """
+    sweep = importlib.import_module("bsuite.sweep")
+    name = str(environment).split("/", 1)[0]
+    ids = [bsuite_id for bsuite_id in sweep.SWEEP if bsuite_id.split("/")[0] == name]
+    if not ids:
+        raise ValueError(f"Unknown BSuite environment {environment!r}.")
+    return ids
+
+
 def make_bsuite_env(bsuite_id: str, **kwargs: Any) -> "BSuiteImageEnv":
     """Create a Dreamer-compatible image wrapper around a BSuite task."""
     return BSuiteImageEnv(bsuite_id=bsuite_id, **kwargs)
@@ -45,6 +73,10 @@ def make_bsuite_env(bsuite_id: str, **kwargs: Any) -> "BSuiteImageEnv":
 
 class _BSuiteDiscreteActionSpace(gym.spaces.Box):
     """Box action space that samples normalized one-hot actions for BSuite."""
+
+    # Marks the Box as a one-hot discrete choice, so agents that pick their
+    # policy from the action space use a categorical one, not a Gaussian.
+    one_hot = True
 
     def __init__(self, n: int, seed: int | None = None):
         self.n = int(n)
@@ -73,6 +105,21 @@ class BSuiteImageEnv:
     pixel-based world models can train and evaluate on BSuite diagnostic tasks
     without requiring the base environment to implement rendering. When
     ``include_state=True``, observations also include a flattened ``"state"`` key.
+
+    Args:
+        bsuite_id: A sweep id such as ``"catch/0"``, or a bare environment name
+            (``"catch"``), which means its first setting.
+        obs_type: ``"pixels"`` (the default) renders the observation as an
+            image; ``"state"`` gives only the flattened observation vector under
+            ``"state"``, which is what DreamerV3 learns from on BSuite; ``"both"``
+            gives both keys.
+        results_dir: When set, BSuite records the run to CSV files there
+            (``bsuite.load_and_record_to_csv``), which ``bsuite.logging`` and
+            ``bsuite.experiments.summary_analysis`` turn into benchmark scores.
+        overwrite: Replace existing result CSVs in ``results_dir``.
+
+    BSuite fixes a budget in episodes, not steps: ``num_episodes`` reports it
+    and ``budget_exhausted`` turns true once that many episodes have finished.
     """
 
     def __init__(
@@ -82,14 +129,31 @@ class BSuiteImageEnv:
         size: tuple[int, int] = (64, 64),
         env: Any | None = None,
         include_state: bool = False,
+        obs_type: str | None = None,
+        results_dir: str | None = None,
+        overwrite: bool = False,
     ):
-        self.bsuite_id = bsuite_id
+        self.bsuite_id = normalize_bsuite_id(bsuite_id)
         self._seed = int(seed)
         self._size = (int(size[0]), int(size[1]))
-        self._env = env if env is not None else self._load_bsuite_env(bsuite_id)
-        self._include_state = bool(include_state)
+        if obs_type is None:
+            obs_type = "both" if include_state else "pixels"
+        obs_type = str(obs_type).lower()
+        if obs_type not in BSUITE_OBS_TYPES:
+            raise ValueError(
+                f"obs_type must be one of {BSUITE_OBS_TYPES}, got {obs_type!r}."
+            )
+        self._obs_type = obs_type
+        self._include_image = obs_type in ("pixels", "both")
+        self._include_state = obs_type in ("state", "both")
+        self._env = (
+            env
+            if env is not None
+            else self._load_bsuite_env(self.bsuite_id, results_dir, overwrite)
+        )
         self._discrete_n: int | None = None
         self._last_time_step: Any | None = None
+        self.episodes_completed = 0
         bootstrap_time_step = self._env.reset()
         self._action_space = self._make_action_space(self._env.action_spec())
         state_space = None
@@ -101,26 +165,53 @@ class BSuiteImageEnv:
                 shape=flattened.shape,
                 dtype=np.float32,
             )
-        self._observation_space = add_optional_state_space(
-            gym.spaces.Box(
-                low=0,
-                high=255,
-                shape=(3, self._size[0], self._size[1]),
-                dtype=np.uint8,
-            ),
-            state_space=state_space,
-        )
+        if self._include_image:
+            self._observation_space = add_optional_state_space(
+                gym.spaces.Box(
+                    low=0,
+                    high=255,
+                    shape=(3, self._size[0], self._size[1]),
+                    dtype=np.uint8,
+                ),
+                state_space=state_space,
+            )
+        else:
+            assert state_space is not None
+            self._observation_space = gym.spaces.Dict({"state": state_space})
         self._pending_reset_time_step = bootstrap_time_step
 
     @staticmethod
-    def _load_bsuite_env(bsuite_id: str) -> Any:
+    def _load_bsuite_env(
+        bsuite_id: str, results_dir: str | None = None, overwrite: bool = False
+    ) -> Any:
         if importlib.util.find_spec("bsuite") is None:
             raise ImportError(
                 "BSuite support requires the optional 'bsuite' package. "
                 "Install it with `pip install bsuite` or `pip install simulusion[bsuite]`."
             )
         bsuite = importlib.import_module("bsuite")
+        if results_dir:
+            return bsuite.load_and_record_to_csv(
+                bsuite_id, results_dir=str(results_dir), overwrite=bool(overwrite)
+            )
         return bsuite.load_from_id(bsuite_id)
+
+    @property
+    def num_episodes(self) -> int | None:
+        """The number of episodes BSuite's protocol runs this setting for."""
+        value = getattr(self._env, "bsuite_num_episodes", None)
+        if value is None:
+            # Recording wrappers keep the raw environment as `_env`.
+            value = getattr(
+                getattr(self._env, "_env", None), "bsuite_num_episodes", None
+            )
+        return None if value is None else int(value)
+
+    @property
+    def budget_exhausted(self) -> bool:
+        """True once ``num_episodes`` episodes have finished."""
+        budget = self.num_episodes
+        return budget is not None and self.episodes_completed >= budget
 
     @property
     def observation_space(self) -> gym.spaces.Dict:
@@ -132,7 +223,9 @@ class BSuiteImageEnv:
 
     @property
     def max_episode_steps(self) -> int:
-        return int(getattr(self._env, "bsuite_num_episodes", 0) or 1000)
+        # BSuite tasks end their own episodes (the longest, mountain_car, after
+        # 1000 steps); this bounds the step count of one episode, not the run.
+        return 1000
 
     def reset(self, seed: int | None = None) -> dict[str, np.ndarray]:
         # BSuite seeds are encoded in the bsuite_id/settings. Accepting seed keeps
@@ -158,6 +251,8 @@ class BSuiteImageEnv:
         obs = self._time_step_to_obs(time_step)
         reward = float(time_step.reward or 0.0)
         done = bool(time_step.last())
+        if done:
+            self.episodes_completed += 1
         info = finalize_step_info(
             {
                 "discount": np.asarray(
@@ -219,11 +314,11 @@ class BSuiteImageEnv:
         return out
 
     def _time_step_to_obs(self, time_step: Any) -> dict[str, np.ndarray]:
-        observation = {
-            "image": self._obs_to_hwc_image(time_step.observation)
-            .transpose(2, 0, 1)
-            .copy()
-        }
+        observation: dict[str, np.ndarray] = {}
+        if self._include_image:
+            observation["image"] = (
+                self._obs_to_hwc_image(time_step.observation).transpose(2, 0, 1).copy()
+            )
         if self._include_state:
             observation["state"] = self._flatten_observation(
                 time_step.observation

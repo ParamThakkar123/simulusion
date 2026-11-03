@@ -24,6 +24,8 @@ class DreamerConfig(SerializableConfigMixin):
     # procgen: Procgen procedurally generated benchmark games
     # unity_mlagents: Unity ML-Agents executable
     # brax: JAX/Brax continuous-control environments
+    # bsuite: DeepMind Behaviour Suite diagnostic tasks
+    # minecraft: DreamerV3's Minecraft Diamond (MineRL 0.4.4)
     env_backend: str = "dmc"
     env: str = "walker-walk"
     # A prebuilt environment object. Runtime-only: it is not written to the
@@ -46,6 +48,20 @@ class DreamerConfig(SerializableConfigMixin):
     dmlab_observations: Any = None
     dmlab_config: Any = None
     dmlab_renderer: str = "hardware"
+    # Embed the language instruction under obs["instr"]; None: language_* levels.
+    dmlab_text: Any = None
+    # "train" plays *_train for *_test levels; "eval" enables held-out levels.
+    dmlab_mode: Any = None
+
+    # BSuite options. bsuite_obs_type: "pixels" renders the observation as an
+    # image, "state" gives the flat vector (DreamerV3's input), "both" both.
+    # bsuite_results_dir records BSuite's CSV logs for scoring. Runs stop once
+    # BSuite's episode budget for the setting is reached.
+    bsuite_obs_type: str = "pixels"
+    bsuite_results_dir: Any = None
+
+    # Minecraft Diamond options (env: "diamond" or "wood").
+    minecraft_break_speed: float = 100.0
 
     # Procgen options. Use env values like "coinrun" or "procgen-coinrun-v0".
     procgen_distribution_mode: str = "easy"
