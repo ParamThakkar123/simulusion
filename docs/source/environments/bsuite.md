@@ -79,13 +79,15 @@ from simulusion.configs.dreamer_config import DreamerConfig
 cfg = DreamerConfig(
     env_backend="bsuite",
     env="catch/3",
-    bsuite_obs_type="state",
     bsuite_results_dir="runs/bsuite",
     action_repeat=1,
 )
 ```
 
-Training stops once the setting's episode budget is spent.
+Training stops once the setting's episode budget is spent. Only the training
+environment records results; evaluation episodes are not part of the BSuite
+score. Dreamer V1/V2 learn from images, so they need ``bsuite_obs_type="pixels"``
+(the default) or ``"both"``; ``"state"`` is for agents that encode vectors.
 
 ## Actions
 

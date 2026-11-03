@@ -112,13 +112,16 @@ def _has_discrete_actions(env: Any) -> bool:
     )
 
 
-def make_env(args: Any) -> Any:
+def make_env(args: Any, evaluation: bool = False) -> Any:
     """Construct a Dreamer-compatible environment from `DreamerConfig` options.
 
     Supports DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen,
     Brax, BSuite, Minecraft Diamond, and Unity ML-Agents backends
     and applies the standard wrapper stack: action repeat, action normalization,
     and time limit.
+
+    ``evaluation=True`` builds an evaluation environment: it does not record
+    BSuite results, which must contain the training episodes only.
     """
     import simulusion.envs.wrappers as env_wrapper
 
@@ -201,7 +204,11 @@ def make_env(args: Any) -> Any:
             seed=args.seed,
             size=size,
             obs_type=getattr(args, "bsuite_obs_type", "pixels"),
-            results_dir=getattr(args, "bsuite_results_dir", None),
+            # Train and test envs would otherwise write the same CSV file,
+            # each overwriting the other's episodes.
+            results_dir=(
+                None if evaluation else getattr(args, "bsuite_results_dir", None)
+            ),
         )
     elif backend in {"minecraft", "minecraft_diamond", "minerl"}:
         from simulusion.envs.minecraft_diamond import MinecraftDiamondEnv
@@ -287,7 +294,8 @@ def image_obs_shape(env: Any) -> Any:
         raise ValueError(
             "Dreamer V1/V2 learn from image observations, but this environment "
             f"only produces {keys or 'unnamed observations'}. For DeepMind "
-            "Control set dmc_obs_type='pixels'."
+            "Control set dmc_obs_type='pixels'; for BSuite, bsuite_obs_type="
+            "'pixels' or 'both'."
         ) from None
     return image_space.shape
 
@@ -1348,7 +1356,7 @@ class DreamerAgent(ExportableAgentMixin):
             print("WARNING: no GPU (CUDA or MPS) available, using CPU")
 
         self.train_env = make_env(self.args)
-        self.test_env = make_env(self.args)
+        self.test_env = make_env(self.args, evaluation=True)
 
         obs_shape = self._observation_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
