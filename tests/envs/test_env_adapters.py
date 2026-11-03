@@ -1255,6 +1255,8 @@ def test_make_env_dmlab_backend(
         observations=cfg.dmlab_observations,
         config=cfg.dmlab_config,
         renderer=cfg.dmlab_renderer,
+        text=cfg.dmlab_text,
+        mode=cfg.dmlab_mode,
     )
 
 
@@ -1320,7 +1322,13 @@ def test_make_env_bsuite_backend(
     out_env = make_env(cfg)
 
     assert out_env is env
-    mock_bsuite_env.assert_called_once_with(cfg.env, seed=cfg.seed, size=cfg.image_size)
+    mock_bsuite_env.assert_called_once_with(
+        cfg.env,
+        seed=cfg.seed,
+        size=cfg.image_size,
+        obs_type=cfg.bsuite_obs_type,
+        results_dir=cfg.bsuite_results_dir,
+    )
 
 
 class _FakeActionSpec:

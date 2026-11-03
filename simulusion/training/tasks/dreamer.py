@@ -117,6 +117,11 @@ class DreamerTask(TrainingTask):
     def progress(self) -> int:
         return int(self.dreamer.data_buffer.steps * self.config.model.action_repeat)
 
+    def should_stop(self) -> bool:
+        # BSuite budgets each setting in episodes; its adapter reports when
+        # that many have finished (through the wrappers' attribute forwarding).
+        return getattr(self.train_env, "budget_exhausted", False) is True
+
     def train_step(self) -> Metrics:
         args = self.config.model
         metrics: dict[str, float] = {}

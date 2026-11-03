@@ -5,9 +5,23 @@ native `deepmind_lab` Python module. It converts Lab RGB observations into the
 channel-first image dictionary used by Dreamer and other pixel-based world-model
 code.
 
-Install: `pip install dmlab-gym && dmlab-gym build` (or install `deepmind_lab` directly)
+Install: DeepMind Lab has no wheels and builds from source with Bazel on Linux,
+for Python 3.11 or older. The `docker/envs` image builds it (together with MineRL
+and BSuite):
 
-Dreamer uses `cfg.env_backend = "dmlab"` to select this backend. DMLab-specific fields (`dmlab_action_repeat`, `dmlab_observations`, `dmlab_action_set`, `dmlab_config`, `dmlab_renderer`) are forwarded from `DreamerConfig` to `DMLabEnv`. See {doc}`../dreamer` for the full Dreamer config reference.
+```bash
+docker build -f docker/envs/Dockerfile -t simulusion-envs .
+```
+
+Without a GPU (a CPU-only container, for example) set `renderer="software"`
+(`cfg.dmlab_renderer = "software"`); the default hardware renderer needs a GPU
+OpenGL context.
+
+On a Linux machine or in WSL, `sudo PYTHON=$(which python) bash docker/envs/install_dmlab.sh`
+builds and installs it into that interpreter, including the object images the
+`psychlab_*` levels need.
+
+Dreamer uses `cfg.env_backend = "dmlab"` to select this backend. DMLab-specific fields (`dmlab_action_repeat`, `dmlab_observations`, `dmlab_action_set`, `dmlab_config`, `dmlab_renderer`, `dmlab_text`, `dmlab_mode`) are forwarded from `DreamerConfig` to `DMLabEnv`. See {doc}`../dreamer` for the full Dreamer config reference.
 
 ## Direct usage
 
@@ -21,8 +35,46 @@ obs, reward, done, info = env.step(action)
 ```
 
 The default action space is a normalized one-hot `Box[-1, 1]` over a compact set
-of navigation actions. You can pass `action_set=` to `DMLabEnv` or set
-`cfg.dmlab_action_set` to use a custom list of native seven-element Lab actions.
+of navigation actions. `action_set=` (or `cfg.dmlab_action_set`) takes a custom
+list of native seven-element Lab actions, or the name of a fixed set:
+
+| Name | Actions | Used by |
+| --- | --- | --- |
+| `"default"` | 9, including a no-op | Simulusion's default |
+| `"impala"` | 9 | IMPALA |
+| `"popart"` | 15, with small and large turns and looking up/down | PopArt, R2D2, DreamerV3 on DMLab-30 |
+
+The action space is marked `one_hot`, so agents that choose their policy from the
+action space can use a categorical one.
+
+## Language levels
+
+The `language_*` levels of DMLab-30 give a text instruction. `DMLabEnv` requests
+the `INSTR` observation for them and embeds it as in the DreamerV3 reference:
+lowercase word and punctuation tokens are hashed into 64K buckets with fixed random
+32-dimensional embeddings, padded to 32 tokens, and concatenated into a
+`(1024,)` float32 vector under `obs["instr"]`. `text=True/False` (`cfg.dmlab_text`) overrides
+the automatic choice.
+
+## Train and test levels
+
+`mode="train"` (`cfg.dmlab_mode`) plays the `*_train` version of `*_test` levels.
+`mode="eval"` keeps the level and enables DMLab's held-out level set
+(`allowHoldOutLevels`) with a fixed mixer seed, for DMLab-30 test scores.
+
+## DMLab-30 in a Dreamer config
+
+```python
+from simulusion.configs.dreamer_config import DreamerConfig
+
+cfg = DreamerConfig(
+    env_backend="dmlab",
+    env="contributed/dmlab30/explore_goal_locations_small",
+    dmlab_action_set="popart",
+    dmlab_mode="train",
+    action_repeat=1,  # dmlab_action_repeat=4 repeats inside Lab
+)
+```
 
 ## Backend options
 
@@ -33,6 +85,8 @@ of navigation actions. You can pass `action_set=` to `DMLabEnv` or set
 | `cfg.dmlab_observations` | `None` | Additional native observation names. `RGB_INTERLEAVED` is always included. |
 | `cfg.dmlab_config` | `None` | Extra Lab config values. Width and height are derived from `cfg.image_size`. |
 | `cfg.dmlab_renderer` | `"hardware"` | Renderer argument forwarded to `deepmind_lab.Lab`. |
+| `cfg.dmlab_text` | `None` | Embed the language instruction as `obs["instr"]`; `None` turns it on for `language_*` levels. |
+| `cfg.dmlab_mode` | `None` | `"train"` maps `*_test` levels to `*_train`; `"eval"` enables held-out levels. |
 
 Simulusion's shared Dreamer wrapper stack still applies `cfg.action_repeat` outside
 the DMLab adapter. If you only want native Lab frame repeat, leave

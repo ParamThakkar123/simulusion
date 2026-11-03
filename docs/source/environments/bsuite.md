@@ -2,7 +2,11 @@
 
 The BSuite backend adapts DeepMind's Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to Simulusion's image-first interface. BSuite tasks provide compact ``dm_env`` observations and mostly discrete actions with known optimal reward profiles, making them useful for detecting fundamental issues in world-model training (e.g. credit assignment, memory, exploration).
 
-Install: ``pip install bsuite``
+Install: ``pip install "simulusion[bsuite]"`` (or ``pip install bsuite``). All 23
+environments and their 468 settings run on Linux, macOS and Windows.
+
+A task id names one setting of an environment, ``"<environment>/<setting>"``. A
+bare name such as ``"catch"`` means its first setting, ``"catch/0"``.
 
 ## Main API
 
@@ -40,13 +44,48 @@ action_b = env.action_space.sample()  # deterministic for seed=20
 - The canvas is resized to ``(H, W)`` using bilinear interpolation.
 - The result is returned as ``{"image": uint8 array with shape (3, H, W)}``.
 
-When ``include_state=True``, observations also include a ``"state"`` key with the flattened raw observation vector.
+``obs_type`` picks what the observation holds:
+
+| ``obs_type`` | Keys |
+| --- | --- |
+| ``"pixels"`` (default) | ``image`` |
+| ``"state"`` | ``state``: the flattened observation vector, ``float32``. DreamerV3 learns from this. |
+| ``"both"`` | ``image`` and ``state`` (the same as ``include_state=True``) |
 
 ```python
-env = make_bsuite_env("catch/0", include_state=True)
+env = make_bsuite_env("catch/0", obs_type="state")
 obs = env.reset()
-assert "image" in obs and "state" in obs
+assert set(obs) == {"state"} and obs["state"].shape == (50,)
 ```
+
+## Episode budget and scoring
+
+BSuite runs each setting for a fixed number of episodes
+(``env.num_episodes``, 1000 or 10000) rather than a step budget.
+``env.episodes_completed`` counts finished episodes and ``env.budget_exhausted``
+turns true at the budget; Dreamer training stops there on its own.
+
+BSuite scores come from its own logs. ``results_dir=`` (``cfg.bsuite_results_dir``)
+records the run with ``bsuite.load_and_record_to_csv``; load the CSVs with
+``bsuite.logging.csv_load`` and score them with
+``bsuite.experiments.summary_analysis``. A benchmark score covers every setting of
+every environment; ``list_bsuite_settings("catch")`` lists one environment's.
+
+## BSuite in a Dreamer config
+
+```python
+from simulusion.configs.dreamer_config import DreamerConfig
+
+cfg = DreamerConfig(
+    env_backend="bsuite",
+    env="catch/3",
+    bsuite_obs_type="state",
+    bsuite_results_dir="runs/bsuite",
+    action_repeat=1,
+)
+```
+
+Training stops once the setting's episode budget is spent.
 
 ## Actions
 
@@ -68,4 +107,4 @@ BSuite tasks expose discrete actions. ``BSuiteImageEnv`` maps them to a continuo
 
 - **``ImportError: No module named bsuite``**: install the optional dependency with ``pip install bsuite``.
 - **``"catch/0" not recognised``**: verify the task ID exists in your BSuite installation with ``list_available_bsuite_ids()``.
-- **Synthetic images are uninformative**: BSuite observations are small numeric vectors tiled onto a canvas; the synthetic image preserves all information but may look unfamiliar. Use ``include_state=True`` to access the raw vector alongside the image.
+- **Synthetic images are uninformative**: BSuite observations are small numeric vectors tiled onto a canvas; the synthetic image preserves all information but may look unfamiliar. Use ``obs_type="state"`` to learn from the raw vector.
