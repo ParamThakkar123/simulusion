@@ -300,3 +300,27 @@ def test_make_env_passes_the_bsuite_options(tmp_path):
     env = make_env(cfg)
     assert set(env.observation_space.spaces) == {"state"}
     assert set(env.reset()) == {"state"}
+
+
+def test_only_the_training_env_records_bsuite_results(tmp_path):
+    # Train and test envs writing one CSV would overwrite each other's episodes.
+    _require_bsuite()
+    from simulusion.models.dreamer import make_env
+
+    cfg = DreamerConfig(
+        env_backend="bsuite",
+        env="bandit",
+        action_repeat=1,
+        bsuite_results_dir=str(tmp_path),
+    )
+    train_env, test_env = make_env(cfg), make_env(cfg, evaluation=True)
+    for env, episodes in ((train_env, 3), (test_env, 2)):
+        for _ in range(episodes):
+            env.reset()
+            done = False
+            while not done:
+                _, _, done, _ = env.step(env.action_space.sample())
+    (csv,) = tmp_path.glob("*.csv")
+    import pandas as pd
+
+    assert pd.read_csv(csv)["episode"].max() == 3

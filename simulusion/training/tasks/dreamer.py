@@ -106,7 +106,7 @@ class DreamerTask(TrainingTask):
         args = self.config.model
         args.seed = trainer.config.seed
         self.train_env = make_env(args)
-        self.test_env = make_env(args)
+        self.test_env = make_env(args, evaluation=True)
         obs_shape = image_obs_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
         self.dreamer = _core_cls(self.variant)(
