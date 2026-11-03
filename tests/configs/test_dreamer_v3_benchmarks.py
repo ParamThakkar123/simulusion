@@ -18,6 +18,7 @@ TABLE_2 = {
     "atari": (57, 200_000_000, 4, 16, 32, "200m"),
     "atari100k": (26, 400_000, 4, 1, 128, "200m"),
     "bsuite": (23, None, 1, 1, 1024, "200m"),
+    "minecraft": (1, 100_000_000, 1, 64, 32, "200m"),
     "dmc-proprio": (18, 500_000, 2, 16, 512, "12m"),
     "dmc-visual": (20, 1_000_000, 2, 16, 512, "12m"),
 }
@@ -85,6 +86,37 @@ def test_dmlab_repeats_actions_once():
     assert cfg.env == "contributed/dmlab30/rooms_collect_good_objects_train"
 
 
+def test_dmlab_uses_the_fixed_popart_action_set_on_train_levels():
+    cfg = benchmark_config("dmlab", "language_select_described_object")
+    assert cfg.dmlab_action_set == "popart"
+    assert cfg.dmlab_mode == "train"
+
+
+def test_bsuite_learns_from_the_observation_vector_of_a_setting():
+    cfg = benchmark_config("bsuite", "catch")
+    assert cfg.env == "catch/0"
+    assert cfg.bsuite_obs_type == "state"
+    assert benchmark_config("bsuite", "deep_sea/7").env == "deep_sea/7"
+
+
+def test_minecraft_encodes_the_image_and_status_vectors():
+    cfg = benchmark_config("minecraft")
+    assert cfg.env == "diamond"
+    assert cfg.time_limit == 36_000
+    assert cfg.minecraft_break_speed == 100.0
+    assert cfg.obs_keys == [
+        "image",
+        "inventory",
+        "inventory_max",
+        "equipped",
+        "health",
+        "hunger",
+        "breath",
+    ]
+    cfg.obs_keys.append("x")
+    assert "x" not in BENCHMARKS["minecraft"].overrides["obs_keys"]
+
+
 def test_task_names():
     assert atari_env_id("ms_pacman") == "ALE/MsPacman-v5"
     assert atari_env_id("up_n_down") == "ALE/UpNDown-v5"
@@ -110,8 +142,9 @@ def test_presets_do_not_share_mutable_options():
 def test_aliases_and_errors():
     assert benchmark_config("Proprio").dmc_obs_type == "state"
     assert benchmark_config("dmlab30").action_repeat == 4
+    assert benchmark_config("minecraft-diamond").env_backend == "minecraft"
     with pytest.raises(ValueError, match="Unknown benchmark"):
-        benchmark_config("minecraft")
+        benchmark_config("crafter")
     with pytest.raises(ValueError, match="not_a_field"):
         benchmark_config("dmc-proprio", not_a_field=1)
 

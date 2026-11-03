@@ -1465,6 +1465,16 @@ def _resolve_actor_dist(env: Any) -> str:
     inner = getattr(env, "_env", None)
     if inner is not None and hasattr(getattr(inner, "action_space", None), "n"):
         return "onehot"
+    # Backends such as DMLab, BSuite and Minecraft expose a discrete choice as
+    # a one-hot Box (marked `one_hot`); wrappers may replace that space with a
+    # plain Box, so look through the whole wrapper chain.
+    layer: Any = env
+    for _ in range(32):
+        if layer is None:
+            break
+        if getattr(getattr(layer, "action_space", None), "one_hot", False):
+            return "onehot"
+        layer = layer.__dict__.get("_env") if hasattr(layer, "__dict__") else None
     return "normal"
 
 

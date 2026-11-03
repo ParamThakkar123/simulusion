@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   action sets by name, embeds the instruction of `language_*` levels as
   `obs["instr"]` as in the DreamerV3 reference, and has `train`/`eval` modes for
   `*_train`/held-out levels.
+- **DreamerV3 presets for BSuite, DMLab-30 and Minecraft Diamond.** A
+  `minecraft` preset follows Table 2 (100M steps, replay ratio 32); the `bsuite`
+  preset learns from the observation vector and `bsuite_settings` lists the 468
+  settings; the `dmlab` preset uses the PopArt action set on training levels.
 - **`docker/envs` image** with DeepMind Lab (built from source), the patched
   MineRL 0.4.4 and BSuite on Python 3.11, for the benchmarks that cannot be
   pip-installed on every platform.
@@ -38,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   or if capture fails), taking an update to 0.36 s from joint states and 0.80 s
   from pixels. LaProp and adaptive gradient clipping use foreach kernels, and
   training metrics reach the host in one copy per update.
+- DreamerV3's `actor_dist="auto"` chose a Gaussian policy for DMLab, BSuite and
+  Minecraft, whose discrete actions are one-hot `Box` spaces; it now picks the
+  categorical policy the paper uses.
 - `create_config("dreamer-v3", model_size=...)` kept the 12M layer widths.
 - Training DreamerV3 through `agent.train()` crashed at its first checkpoint,
   which expected DreamerV1/V2 update objects.
