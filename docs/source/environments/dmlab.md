@@ -13,6 +13,10 @@ and BSuite):
 docker build -f docker/envs/Dockerfile -t simulusion-envs .
 ```
 
+Without a GPU (a CPU-only container, for example) set `renderer="software"`
+(`cfg.dmlab_renderer = "software"`); the default hardware renderer needs a GPU
+OpenGL context.
+
 On a Linux machine or in WSL, `sudo PYTHON=$(which python) bash docker/envs/install_dmlab.sh`
 builds and installs it into that interpreter, including the object images the
 `psychlab_*` levels need.

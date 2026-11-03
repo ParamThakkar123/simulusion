@@ -33,7 +33,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Python 3.11, OpenJDK 8 for Minecraft, a virtual display, and OpenGL.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        software-properties-common ca-certificates curl wget git ffmpeg \
+        software-properties-common gpg-agent ca-certificates curl wget git ffmpeg \
         xvfb x11-xserver-utils libglew-dev libgl1 libglib2.0-0 openjdk-8-jdk \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update && apt-get install -y --no-install-recommends \
@@ -42,6 +42,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN python3.11 -m venv /venv --upgrade-deps
 ENV PATH="/venv/bin:$PATH"
+# deepmind_lab and MineRL 0.4.4 import pkg_resources, which setuptools 81
+# removed. The constraint keeps every later pip install from upgrading it.
+RUN echo "setuptools<81" > /etc/pip-constraints.txt \
+    && pip install -c /etc/pip-constraints.txt "setuptools<81"
+ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
 # install_dmlab.sh's Bazel rule calls `python3`; make it the venv's.
 RUN ln -sf /venv/bin/python /usr/local/bin/python3
 
@@ -57,6 +62,11 @@ RUN pip install "${MINERL_WHEEL}" \
 
 RUN pip install --index-url "${PYTORCH_INDEX_URL}" torch
 
+# xvfb-run waits for a signal from Xvfb that never arrives when it runs as
+# PID 1, so tini is the container's init.
+RUN apt-get update && apt-get install -y --no-install-recommends tini \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY pyproject.toml setup.py README.md ./
 COPY simulusion ./simulusion
@@ -64,5 +74,5 @@ RUN pip install --editable ".[gym,dmc,bsuite,viz]"
 COPY demos ./demos
 COPY scripts ./scripts
 
-ENTRYPOINT ["xvfb-run", "-a", "-s", "-screen 0 1024x768x24"]
+ENTRYPOINT ["tini", "--", "xvfb-run", "-a", "-s", "-screen 0 1024x768x24"]
 CMD ["python", "-c", "import deepmind_lab, minerl, bsuite, simulusion; print('simulusion-envs ready')"]
