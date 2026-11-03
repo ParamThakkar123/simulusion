@@ -514,13 +514,15 @@ every environment; <code class="docutils literal notranslate"><span class="pre">
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">(</span>
     <span class="n">env_backend</span><span class="o">=</span><span class="s2">"bsuite"</span><span class="p">,</span>
     <span class="n">env</span><span class="o">=</span><span class="s2">"catch/3"</span><span class="p">,</span>
-    <span class="n">bsuite_obs_type</span><span class="o">=</span><span class="s2">"state"</span><span class="p">,</span>
     <span class="n">bsuite_results_dir</span><span class="o">=</span><span class="s2">"runs/bsuite"</span><span class="p">,</span>
     <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Training stops once the setting’s episode budget is spent.</p>
+<p>Training stops once the setting’s episode budget is spent. Only the training
+environment records results; evaluation episodes are not part of the BSuite
+score. Dreamer V1/V2 learn from images, so they need <code class="docutils literal notranslate"><span class="pre">bsuite_obs_type=&quot;pixels&quot;</span></code>
+(the default) or <code class="docutils literal notranslate"><span class="pre">&quot;both&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code> is for agents that encode vectors.</p>
 </section>
 <section id="actions">
 <h2>Actions<a class="headerlink" href="#actions" title="Link to this heading">#</a></h2>

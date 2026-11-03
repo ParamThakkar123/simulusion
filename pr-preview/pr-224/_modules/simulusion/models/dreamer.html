@@ -786,13 +786,16 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="make_env">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.make_env">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Construct a Dreamer-compatible environment from `DreamerConfig` options.</span>
 
 <span class="sd">    Supports DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen,</span>
 <span class="sd">    Brax, BSuite, Minecraft Diamond, and Unity ML-Agents backends</span>
 <span class="sd">    and applies the standard wrapper stack: action repeat, action normalization,</span>
 <span class="sd">    and time limit.</span>
+
+<span class="sd">    ``evaluation=True`` builds an evaluation environment: it does not record</span>
+<span class="sd">    BSuite results, which must contain the training episodes only.</span>
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">simulusion.envs.wrappers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">env_wrapper</span>
 
@@ -874,7 +877,11 @@ window.runMermaid = runMermaid;</script>
             <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
             <span class="n">obs_type</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"bsuite_obs_type"</span><span class="p">,</span> <span class="s2">"pixels"</span><span class="p">),</span>
-            <span class="n">results_dir</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"bsuite_results_dir"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="c1"># Train and test envs would otherwise write the same CSV file,</span>
+            <span class="c1"># each overwriting the other's episodes.</span>
+            <span class="n">results_dir</span><span class="o">=</span><span class="p">(</span>
+                <span class="kc">None</span> <span class="k">if</span> <span class="n">evaluation</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"bsuite_results_dir"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">),</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"minecraft"</span><span class="p">,</span> <span class="s2">"minecraft_diamond"</span><span class="p">,</span> <span class="s2">"minerl"</span><span class="p">}:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.minecraft_diamond</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinecraftDiamondEnv</span>
@@ -956,7 +963,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">"Dreamer V1/V2 learn from image observations, but this environment "</span>
             <span class="sa">f</span><span class="s2">"only produces </span><span class="si">{</span><span class="n">keys</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'unnamed observations'</span><span class="si">}</span><span class="s2">. For DeepMind "</span>
-            <span class="s2">"Control set dmc_obs_type='pixels'."</span>
+            <span class="s2">"Control set dmc_obs_type='pixels'; for BSuite, bsuite_obs_type="</span>
+            <span class="s2">"'pixels' or 'both'."</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
     <span class="k">return</span> <span class="n">image_space</span><span class="o">.</span><span class="n">shape</span></div>
 
@@ -2021,7 +2029,7 @@ window.runMermaid = runMermaid;</script>
             <span class="nb">print</span><span class="p">(</span><span class="s2">"WARNING: no GPU (CUDA or MPS) available, using CPU"</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_env</span> <span class="o">=</span> <span class="n">make_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">evaluation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">obs_shape</span> <span class="o">=</span> <span class="n">image_obs_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="p">)</span>
         <span class="n">action_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_env</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
