@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
 
 ### Fixed
+- DreamerV3 updates were bound by kernel launches (about 90 small kernels per
+  recurrent step): 2.4 s per update on an RTX 3050 laptop with the GPU mostly
+  idle. The observe rollout (forward and backward) and imagination now replay
+  as CUDA graphs (`cuda_graphs=True`, falling back to eager on CPU, under AMP,
+  or if capture fails), taking an update to 0.36 s from joint states and 0.80 s
+  from pixels. LaProp and adaptive gradient clipping use foreach kernels, and
+  training metrics reach the host in one copy per update.
+- `create_config("dreamer-v3", model_size=...)` kept the 12M layer widths.
+- Training DreamerV3 through `agent.train()` crashed at its first checkpoint,
+  which expected DreamerV1/V2 update objects.
 - DeepMind Control episodes that end at the time limit (discount 1) are
   reported as truncations rather than terminations, so learners bootstrap the
   value of the last state. Every DMC task ends this way.
@@ -59,6 +69,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`reward_layers`, `cont_layers`), the replay ratio counts policy steps
   (action repeat divided out, matching the paper's worked example), and replay
   capacity defaults to 5M (Table 4).
+- DreamerV3 benchmark presets (`benchmark_config`, `BENCHMARKS`) follow Table 2
+  of the paper: task lists, step budget, action repeat, replay ratio and model
+  size for DMC Proprio and Visual Control, Atari, Atari100k, ProcGen, DMLab-30
+  and BSuite, with each benchmark's environment settings (sticky actions and the
+  full action set for Atari but not Atari100k, ProcGen hard mode with unlimited
+  levels). Gym environments take `gym_make_kwargs`, which the Atari presets use
+  to set ALE's `frameskip=1` so the action repeat of 4 is not applied twice.
+- `demos/dreamer_v3_demo.py` trains DreamerV3 from a benchmark preset
+  (resumable with `--resume`) and records the real-vs-imagined video, a policy
+  video and the learning curve. The gallery and README show two runs on
+  cartpole swing-up: from joint states with the paper's protocol (500k steps,
+  final evaluation return 866), and from pixels (300k steps at replay ratio
+  128, return 740-840 at the end).
 - `simulusion play -m diamond`: press `S` in DREAM mode to save the last
   `--dream-buffer` dream frames (default 50) as `dream_<timestamp>.mp4`, with
   the actions and predicted rewards in `dream_<timestamp>.json`. Before, the

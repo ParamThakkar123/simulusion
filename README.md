@@ -24,13 +24,18 @@
 ## See it in action
 
 Every model ships with a demo that trains from scratch on a laptop GPU (RTX
-3050, 4 GB) in one to two hours and records what it learned. These are short
-runs, not paper-scale results: the point is to show what each model does.
+3050, 4 GB) and records what it learned. Most are one-to-two-hour runs, not
+paper-scale results: the point is to show what each model does. DreamerV3's
+joint-state run follows the paper's protocol for its task.
 
 <table>
 <tr>
 <td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-dreamer"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/dreamer_dream.gif" alt="Dreamer" width="100%"></a><br><b>Dreamer</b>: the real environment (left) beside the world model imagining it open loop (right).</td>
 <td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-diamond"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/diamond_dream.gif" alt="DIAMOND" width="100%"></a><br><b>DIAMOND</b>: Breakout in the emulator beside a diffusion model generating every frame itself.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-dreamer-v3"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/dreamer_v3_dream.gif" alt="DreamerV3 from pixels" width="100%"></a><br><b>DreamerV3</b> from pixels: its world model tracks the cart and pole through 45 imagined steps.</td>
+<td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-dreamer-v3"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/dreamer_v3_proprio_policy.gif" alt="DreamerV3 from joint states" width="100%"></a><br><b>DreamerV3</b> from joint states, trained with the paper's protocol: swing-up return 866 of about 880.</td>
 </tr>
 <tr>
 <td width="50%" valign="top"><a href="https://paramthakkar123.github.io/simulusion/gallery.html#gallery-genie"><img src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/gallery/genie_replay.gif" alt="Genie" width="100%"></a><br><b>Genie</b>: a real Sonic clip beside Genie regenerating it from the first frame, with actions it learned from unlabelled video.</td>
