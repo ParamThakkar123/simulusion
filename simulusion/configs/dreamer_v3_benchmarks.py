@@ -1,12 +1,11 @@
 """DreamerV3 settings for the benchmarks of the paper (Table 2).
 
-Each :class:`Benchmark` records the paper's protocol for one benchmark: its
-tasks, step budget, action repeat, replay ratio and model size, plus the
-environment options that follow from the text (sticky actions on Atari, the
-hard ProcGen setting with unlimited levels, proprioceptive vs. pixel inputs on
-the control suites, the fixed PopArt action set on DMLab, the observation vector
-on BSuite, image plus inventory and status vectors on Minecraft). :func:`benchmark_config` turns one into a
-:class:`~simulusion.configs.dreamer_v3_config.DreamerV3Config`::
+The environments of each benchmark (tasks, step budget, action repeat, sticky
+actions, observation type, ...) are shared by every model and live in
+:mod:`simulusion.benchmarks`. This module adds only what Table 2
+fixes for DreamerV3 itself: the replay ratio, the model size and the number of
+parallel environment instances. :func:`benchmark_config` combines the two into
+a :class:`~simulusion.configs.dreamer_v3_config.DreamerV3Config`::
 
     cfg = benchmark_config("dmc-proprio", "walker-walk")
     cfg = benchmark_config("atari100k", "pong", model_size="12m")  # smaller GPU
@@ -33,14 +32,28 @@ Reference:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
+from simulusion.benchmarks import (  # noqa: F401  (task tables re-exported)
+    ATARI57_GAMES,
+    ATARI100K_GAMES,
+    BSUITE_ENVIRONMENTS,
+    DMC_PROPRIO_TASKS,
+    DMC_VISUAL_TASKS,
+    DMLAB30_LEVELS,
+    MINECRAFT_OBS_KEYS,
+    PROCGEN_GAMES,
+    Benchmark,
+    atari_env_id,
+    bsuite_settings,
+    get_benchmark,
+)
 from simulusion.configs.dreamer_v3_config import DreamerV3Config
 
 __all__ = [
     "BENCHMARKS",
-    "Benchmark",
+    "DreamerV3Benchmark",
     "atari_env_id",
     "benchmark_config",
     "bsuite_settings",
@@ -48,438 +61,36 @@ __all__ = [
 
 
 @dataclass(frozen=True)
-class Benchmark:
-    """One row of Table 2 and the environment settings it implies."""
+class DreamerV3Benchmark(Benchmark):
+    """A shared :class:`~simulusion.benchmarks.Benchmark` plus the
+    DreamerV3 settings of its Table 2 row."""
 
-    name: str
-    description: str
-    tasks: tuple[str, ...]
-    env_steps: int | None  # None: the benchmark fixes episodes per task (BSuite).
-    action_repeat: int
-    env_instances: int
-    replay_ratio: int
-    model_size: str
-    overrides: dict[str, Any] = field(default_factory=dict)
-
-    def task_id(self, task: str) -> str:
-        """The ``env`` value for ``task``.
-
-        Atari names become ``ALE/<Game>-v5``, DMLab-30 names gain their
-        ``contributed/dmlab30/`` directory and BSuite names their first setting
-        (``"catch"`` -> ``"catch/0"``); other names pass through.
-        """
-        backend = self.overrides.get("env_backend")
-        if backend == "gym" and not task.startswith("ALE/"):
-            return atari_env_id(task)
-        if backend == "dmlab" and "/" not in task:
-            return f"contributed/dmlab30/{task}"
-        if backend == "bsuite" and "/" not in task:
-            return f"{task}/0"
-        return task
+    env_instances: int = 1
+    replay_ratio: int = 32
+    model_size: str = "200m"
 
 
-def atari_env_id(game: str) -> str:
-    """``"ms_pacman"`` -> ``"ALE/MsPacman-v5"``."""
-    return "ALE/" + "".join(part.capitalize() for part in game.split("_")) + "-v5"
-
-
-# Visual Control (Tassa et al. 2018; Hafner et al. 2019): 20 tasks.
-DMC_VISUAL_TASKS = (
-    "acrobot-swingup",
-    "cartpole-balance",
-    "cartpole-balance_sparse",
-    "cartpole-swingup",
-    "cartpole-swingup_sparse",
-    "cheetah-run",
-    "cup-catch",
-    "finger-spin",
-    "finger-turn_easy",
-    "finger-turn_hard",
-    "hopper-hop",
-    "hopper-stand",
-    "pendulum-swingup",
-    "quadruped-run",
-    "quadruped-walk",
-    "reacher-easy",
-    "reacher-hard",
-    "walker-run",
-    "walker-stand",
-    "walker-walk",
-)
-# Proprioceptive Control drops the two quadruped tasks (paper, Benchmarks).
-DMC_PROPRIO_TASKS = tuple(t for t in DMC_VISUAL_TASKS if not t.startswith("quadruped"))
-
-ATARI100K_GAMES = (
-    "alien",
-    "amidar",
-    "assault",
-    "asterix",
-    "bank_heist",
-    "battle_zone",
-    "boxing",
-    "breakout",
-    "chopper_command",
-    "crazy_climber",
-    "demon_attack",
-    "freeway",
-    "frostbite",
-    "gopher",
-    "hero",
-    "jamesbond",
-    "kangaroo",
-    "krull",
-    "kung_fu_master",
-    "ms_pacman",
-    "pong",
-    "private_eye",
-    "qbert",
-    "road_runner",
-    "seaquest",
-    "up_n_down",
-)
-
-ATARI57_GAMES = (
-    "alien",
-    "amidar",
-    "assault",
-    "asterix",
-    "asteroids",
-    "atlantis",
-    "bank_heist",
-    "battle_zone",
-    "beam_rider",
-    "berzerk",
-    "bowling",
-    "boxing",
-    "breakout",
-    "centipede",
-    "chopper_command",
-    "crazy_climber",
-    "defender",
-    "demon_attack",
-    "double_dunk",
-    "enduro",
-    "fishing_derby",
-    "freeway",
-    "frostbite",
-    "gopher",
-    "gravitar",
-    "hero",
-    "ice_hockey",
-    "jamesbond",
-    "kangaroo",
-    "krull",
-    "kung_fu_master",
-    "montezuma_revenge",
-    "ms_pacman",
-    "name_this_game",
-    "phoenix",
-    "pitfall",
-    "pong",
-    "private_eye",
-    "qbert",
-    "riverraid",
-    "road_runner",
-    "robotank",
-    "seaquest",
-    "skiing",
-    "solaris",
-    "space_invaders",
-    "star_gunner",
-    "surround",
-    "tennis",
-    "time_pilot",
-    "tutankham",
-    "up_n_down",
-    "venture",
-    "video_pinball",
-    "wizard_of_wor",
-    "yars_revenge",
-    "zaxxon",
-)
-
-PROCGEN_GAMES = (
-    "bigfish",
-    "bossfight",
-    "caveflyer",
-    "chaser",
-    "climber",
-    "coinrun",
-    "dodgeball",
-    "fruitbot",
-    "heist",
-    "jumper",
-    "leaper",
-    "maze",
-    "miner",
-    "ninja",
-    "plunder",
-    "starpilot",
-)
-
-# DMLab-30 (Espeholt et al. 2018), level names relative to contributed/dmlab30.
-DMLAB30_LEVELS = (
-    "rooms_collect_good_objects_train",
-    "rooms_exploit_deferred_effects_train",
-    "rooms_select_nonmatching_object",
-    "rooms_watermaze",
-    "rooms_keys_doors_puzzle",
-    "language_select_described_object",
-    "language_select_located_object",
-    "language_execute_random_task",
-    "language_answer_quantitative_question",
-    "lasertag_one_opponent_small",
-    "lasertag_three_opponents_small",
-    "lasertag_one_opponent_large",
-    "lasertag_three_opponents_large",
-    "natlab_fixed_large_map",
-    "natlab_varying_map_regrowth",
-    "natlab_varying_map_randomized",
-    "skymaze_irreversible_path_hard",
-    "skymaze_irreversible_path_varied",
-    "psychlab_arbitrary_visuomotor_mapping",
-    "psychlab_continuous_recognition",
-    "psychlab_sequential_comparison",
-    "psychlab_visual_search",
-    "explore_object_locations_small",
-    "explore_object_locations_large",
-    "explore_obstructed_goals_small",
-    "explore_obstructed_goals_large",
-    "explore_goal_locations_small",
-    "explore_goal_locations_large",
-    "explore_object_rewards_few",
-    "explore_object_rewards_many",
-)
-
-# BSuite experiments that DreamerV3 reports (the 23 environments of the suite);
-# each runs every one of its settings, e.g. "catch/0" .. "catch/19".
-BSUITE_ENVIRONMENTS = (
-    "bandit",
-    "bandit_noise",
-    "bandit_scale",
-    "cartpole",
-    "cartpole_noise",
-    "cartpole_scale",
-    "cartpole_swingup",
-    "catch",
-    "catch_noise",
-    "catch_scale",
-    "deep_sea",
-    "deep_sea_stochastic",
-    "discounting_chain",
-    "memory_len",
-    "memory_size",
-    "mnist",
-    "mnist_noise",
-    "mnist_scale",
-    "mountain_car",
-    "mountain_car_noise",
-    "mountain_car_scale",
-    "umbrella_distract",
-    "umbrella_length",
-)
-
-# Minecraft Diamond inputs (paper, Minecraft appendix): the image plus inventory
-# counts, their episode maxima, the equipped item and health/hunger/breath.
-MINECRAFT_OBS_KEYS = (
-    "image",
-    "inventory",
-    "inventory_max",
-    "equipped",
-    "health",
-    "hunger",
-    "breath",
-)
-
-
-def bsuite_settings(environment: str) -> list[str]:
-    """Every setting of a BSuite environment, e.g. ``"catch/0"`` .. ``"catch/19"``.
-
-    Requires the ``bsuite`` package. Across the 23 environments there are 468.
-    """
-    from simulusion.envs.bsuite_env import list_bsuite_settings
-
-    return list_bsuite_settings(environment)
-
-
-# ALE ids default to a frame skip of 4. Dreamer applies the action repeat, so
-# the emulator must step single frames or every action would last 16 frames.
-_ALE_FRAMES_PER_EPISODE = 108_000  # 30 minutes at 60 fps, the ALE v5 limit.
-
-BENCHMARKS: dict[str, Benchmark] = {
-    benchmark.name: benchmark
-    for benchmark in (
-        Benchmark(
-            name="dmc-proprio",
-            description="Proprioceptive Control: DMC from joint states, no pixels.",
-            tasks=DMC_PROPRIO_TASKS,
-            env_steps=500_000,
-            action_repeat=2,
-            env_instances=16,
-            replay_ratio=512,
-            model_size="12m",
-            overrides={
-                "env_backend": "dmc",
-                "dmc_obs_type": "state",
-                "time_limit": 1000,
-            },
-        ),
-        Benchmark(
-            name="dmc-visual",
-            description="Visual Control: DMC from 64x64 pixels.",
-            tasks=DMC_VISUAL_TASKS,
-            env_steps=1_000_000,
-            action_repeat=2,
-            env_instances=16,
-            replay_ratio=512,
-            model_size="12m",
-            overrides={
-                "env_backend": "dmc",
-                "dmc_obs_type": "pixels",
-                "time_limit": 1000,
-            },
-        ),
-        Benchmark(
-            name="atari",
-            description="Atari 57 with sticky actions and the full action set.",
-            tasks=ATARI57_GAMES,
-            env_steps=200_000_000,
-            action_repeat=4,
-            env_instances=16,
-            replay_ratio=32,
-            model_size="200m",
-            overrides={
-                "env_backend": "gym",
-                "gym_make_kwargs": {
-                    "frameskip": 1,
-                    "repeat_action_probability": 0.25,
-                    "full_action_space": True,
-                },
-                "time_limit": _ALE_FRAMES_PER_EPISODE,
-            },
-        ),
-        Benchmark(
-            name="atari100k",
-            description=(
-                "Atari100k: 26 games, 400K frames, environments as originally "
-                "introduced (no sticky actions, minimal action set)."
-            ),
-            tasks=ATARI100K_GAMES,
-            env_steps=400_000,
-            action_repeat=4,
-            env_instances=1,
-            replay_ratio=128,
-            model_size="200m",
-            overrides={
-                "env_backend": "gym",
-                "gym_make_kwargs": {
-                    "frameskip": 1,
-                    "repeat_action_probability": 0.0,
-                    "full_action_space": False,
-                },
-                "time_limit": _ALE_FRAMES_PER_EPISODE,
-            },
-        ),
-        Benchmark(
-            name="procgen",
-            description="ProcGen: hard difficulty, unlimited level set.",
-            tasks=PROCGEN_GAMES,
-            env_steps=50_000_000,
-            action_repeat=1,
-            env_instances=16,
-            replay_ratio=64,
-            model_size="200m",
-            overrides={
-                "env_backend": "procgen",
-                "procgen_distribution_mode": "hard",
-                "procgen_num_levels": 0,
-                # Each game ends its own episodes; this only bounds a stuck one.
-                "time_limit": 100_000,
-            },
-        ),
-        Benchmark(
-            name="dmlab",
-            description="DMLab-30 with an action repeat of 4.",
-            tasks=DMLAB30_LEVELS,
-            env_steps=100_000_000,
-            action_repeat=4,
-            env_instances=16,
-            replay_ratio=32,
-            model_size="200m",
-            overrides={
-                "env_backend": "dmlab",
-                # The fixed action space of PopArt and R2D2 (15 actions).
-                "dmlab_action_set": "popart",
-                # Train on *_train levels; evaluate on held-out ones separately.
-                "dmlab_mode": "train",
-                # Table 2's repeat of 4 happens inside Lab, as in the reference;
-                # make_env requires Dreamer's own action_repeat to be 1 here and
-                # applies no time limit (levels end their own episodes).
-                # Training still counts Lab frames (native_action_repeat).
-                "action_repeat": 1,
-                "dmlab_action_repeat": 4,
-            },
-        ),
-        Benchmark(
-            name="bsuite",
-            description="BSuite: 23 environments, a single environment instance.",
-            tasks=BSUITE_ENVIRONMENTS,
-            env_steps=None,
-            action_repeat=1,
-            env_instances=1,
-            replay_ratio=1024,
-            model_size="200m",
-            overrides={
-                "env_backend": "bsuite",
-                # DreamerV3 learns from BSuite's flattened observation vector.
-                "bsuite_obs_type": "state",
-                "time_limit": 10_000_000,
-            },
-        ),
-        Benchmark(
-            name="minecraft",
-            description=(
-                "Minecraft Diamond: 12 milestone rewards, 36000-step episodes, "
-                "100x block breaking speed."
-            ),
-            tasks=("diamond",),
-            env_steps=100_000_000,
-            action_repeat=1,
-            env_instances=64,
-            replay_ratio=32,
-            model_size="200m",
-            overrides={
-                "env_backend": "minecraft",
-                "minecraft_break_speed": 100.0,
-                "obs_keys": list(MINECRAFT_OBS_KEYS),
-                "time_limit": 36_000,
-            },
-        ),
-    )
+# Table 2: env instances, replay ratio, model size.
+_TABLE_2: dict[str, tuple[int, int, str]] = {
+    "dmc-proprio": (16, 512, "12m"),
+    "dmc-visual": (16, 512, "12m"),
+    "atari": (16, 32, "200m"),
+    "atari100k": (1, 128, "200m"),
+    "procgen": (16, 64, "200m"),
+    "dmlab": (16, 32, "200m"),
+    "bsuite": (1, 1024, "200m"),
+    "minecraft": (64, 32, "200m"),
 }
 
-
-def _canonical(name: str) -> str:
-    key = str(name).strip().lower().replace("_", "-")
-    aliases = {
-        "proprio": "dmc-proprio",
-        "proprio-control": "dmc-proprio",
-        "visual": "dmc-visual",
-        "visual-control": "dmc-visual",
-        "atari57": "atari",
-        "atari-100k": "atari100k",
-        "dmlab30": "dmlab",
-        "dmlab-30": "dmlab",
-        "minecraft-diamond": "minecraft",
-        "diamond": "minecraft",
-        "behaviour-suite": "bsuite",
-    }
-    key = aliases.get(key, key)
-    if key not in BENCHMARKS:
-        raise ValueError(
-            f"Unknown benchmark {name!r}. Options: {', '.join(BENCHMARKS)}."
-        )
-    return key
+BENCHMARKS: dict[str, DreamerV3Benchmark] = {
+    name: DreamerV3Benchmark(
+        **asdict(get_benchmark(name)),
+        env_instances=instances,
+        replay_ratio=ratio,
+        model_size=size,
+    )
+    for name, (instances, ratio, size) in _TABLE_2.items()
+}
 
 
 def benchmark_config(
@@ -499,20 +110,12 @@ def benchmark_config(
         The resolved config. ``update_steps`` is derived from the benchmark's
         replay ratio unless ``auto_update_steps=False`` is passed.
     """
-    spec = BENCHMARKS[_canonical(benchmark)]
-    task = spec.tasks[0] if task is None else task
+    spec = BENCHMARKS[get_benchmark(benchmark).name]
     fields: dict[str, Any] = {
-        "env": spec.task_id(task),
-        "action_repeat": spec.action_repeat,
         "replay_ratio": spec.replay_ratio,
         "model_size": spec.model_size,
-        **{key: value for key, value in spec.overrides.items()},
+        **spec.env_fields(task),
     }
-    if spec.env_steps is not None:
-        fields["total_steps"] = spec.env_steps
-    for key in ("gym_make_kwargs", "obs_keys"):
-        if isinstance(fields.get(key), (dict, list)):
-            fields[key] = type(fields[key])(fields[key])  # never share the preset's
     fields.update(overrides)
     valid = set(DreamerV3Config.__dataclass_fields__)
     unknown = sorted(set(fields) - valid)

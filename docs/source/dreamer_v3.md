@@ -294,6 +294,12 @@ parallel environment instances are recorded in `BENCHMARKS[...].env_instances`
 but not used: the agent collects from a single environment. There is no
 Minecraft preset.
 
+The environment half of each preset (tasks, step budget, action repeat and
+environment options) is not DreamerV3's: it lives in
+`simulusion.benchmarks` (`suites.py`), shared by every model. Only the replay
+ratio, model size and environment instances are DreamerV3's own. Any other
+model can take the same protocol with `get_benchmark(name).env_fields(task)`.
+
 `demos/dreamer_v3_demo.py` trains from a preset and records the result; the
 {ref}`gallery <gallery-dreamer-v3>` shows its runs on cartpole swing-up.
 
