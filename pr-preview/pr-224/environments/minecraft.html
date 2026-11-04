@@ -446,7 +446,7 @@ setting. The <code class="docutils literal notranslate"><span class="pre">docker
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>docker/envs/Dockerfile<span class="w"> </span>-t<span class="w"> </span>simulusion-envs<span class="w"> </span>.
 docker<span class="w"> </span>run<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/runs:/data/simulusion"</span><span class="w"> </span>simulusion-envs<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>simulusion<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>dreamer<span class="w"> </span>model.env_backend<span class="o">=</span>minecraft<span class="w"> </span>model.env<span class="o">=</span>diamond<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>model.action_repeat<span class="o">=</span><span class="m">1</span><span class="w"> </span>model.time_limit<span class="o">=</span><span class="m">36000</span>
+<span class="w">    </span>model.action_repeat<span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
 <p>Outside Docker, on Linux with Python 3.11:</p>
@@ -472,7 +472,7 @@ xvfb-run<span class="w"> </span>-a<span class="w"> </span>python<span class="w">
 <td><p>+1 the first time per episode each of <code class="docutils literal notranslate"><span class="pre">log</span></code>, <code class="docutils literal notranslate"><span class="pre">planks</span></code>, <code class="docutils literal notranslate"><span class="pre">stick</span></code>, <code class="docutils literal notranslate"><span class="pre">crafting_table</span></code>, <code class="docutils literal notranslate"><span class="pre">wooden_pickaxe</span></code>, <code class="docutils literal notranslate"><span class="pre">cobblestone</span></code>, <code class="docutils literal notranslate"><span class="pre">stone_pickaxe</span></code>, <code class="docutils literal notranslate"><span class="pre">iron_ore</span></code>, <code class="docutils literal notranslate"><span class="pre">furnace</span></code>, <code class="docutils literal notranslate"><span class="pre">iron_ingot</span></code>, <code class="docutils literal notranslate"><span class="pre">iron_pickaxe</span></code>, <code class="docutils literal notranslate"><span class="pre">diamond</span></code> is held; plus 0.01 x the change in health (health scaled to [0, 1])</p></td>
 </tr>
 <tr class="row-even"><td><p>Episode end</p></td>
-<td><p>Death, or 36000 steps (30 minutes at 20 Hz). Breaking diamond ore does not end the episode.</p></td>
+<td><p>Death, or 36000 steps (30 minutes at 20 Hz). Breaking diamond ore does not end the episode. If Minecraft’s Malmo backend fails, the episode is cut short there (truncated, without reward) and the next reset restarts the game, as in the reference.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Block breaking</p></td>
 <td><p>100x faster (<code class="docutils literal notranslate"><span class="pre">break_speed=100</span></code>), so the attack key need not be held</p></td>
@@ -546,10 +546,12 @@ milestone items the episode has reached.</p>
     <span class="n">env_backend</span><span class="o">=</span><span class="s2">"minecraft"</span><span class="p">,</span>
     <span class="n">env</span><span class="o">=</span><span class="s2">"diamond"</span><span class="p">,</span>
     <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">time_limit</span><span class="o">=</span><span class="mi">36000</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>The agent acts on every Minecraft step, as in the reference, so <code class="docutils literal notranslate"><span class="pre">action_repeat</span></code>
+must be 1; <code class="docutils literal notranslate"><span class="pre">make_env</span></code> raises otherwise. Episodes last <code class="docutils literal notranslate"><span class="pre">minecraft_length</span></code> steps and
+<code class="docutils literal notranslate"><span class="pre">time_limit</span></code> does not apply.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Option</p></th>
@@ -565,6 +567,10 @@ milestone items the episode has reached.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cfg.minecraft_break_speed</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">100.0</span></code></p></td>
 <td><p>Block breaking speed multiplier</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cfg.minecraft_length</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">36000</span></code></p></td>
+<td><p>Episode length in steps</p></td>
 </tr>
 </tbody>
 </table>

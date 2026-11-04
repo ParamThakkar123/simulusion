@@ -519,7 +519,9 @@ every environment; <code class="docutils literal notranslate"><span class="pre">
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Training stops once the setting’s episode budget is spent. Only the training
+<p>BSuite acts on every step, so <code class="docutils literal notranslate"><span class="pre">action_repeat</span></code> must be 1 (<code class="docutils literal notranslate"><span class="pre">make_env</span></code> raises
+otherwise); episodes end by themselves and <code class="docutils literal notranslate"><span class="pre">time_limit</span></code> does not apply. Training
+stops once the setting’s episode budget is spent. Only the training
 environment records results; evaluation episodes are not part of the BSuite
 score. Dreamer V1/V2 learn from images, so they need <code class="docutils literal notranslate"><span class="pre">bsuite_obs_type=&quot;pixels&quot;</span></code>
 (the default) or <code class="docutils literal notranslate"><span class="pre">&quot;both&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code> is for agents that encode vectors.</p>

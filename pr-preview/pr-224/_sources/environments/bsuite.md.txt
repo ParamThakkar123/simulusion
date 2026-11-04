@@ -84,7 +84,9 @@ cfg = DreamerConfig(
 )
 ```
 
-Training stops once the setting's episode budget is spent. Only the training
+BSuite acts on every step, so `action_repeat` must be 1 (`make_env` raises
+otherwise); episodes end by themselves and `time_limit` does not apply. Training
+stops once the setting's episode budget is spent. Only the training
 environment records results; evaluation episodes are not part of the BSuite
 score. Dreamer V1/V2 learn from images, so they need ``bsuite_obs_type="pixels"``
 (the default) or ``"both"``; ``"state"`` is for agents that encode vectors.

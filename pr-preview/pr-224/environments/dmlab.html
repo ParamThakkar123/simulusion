@@ -497,9 +497,10 @@ the automatic choice.</p>
 </section>
 <section id="train-and-test-levels">
 <h2>Train and test levels<a class="headerlink" href="#train-and-test-levels" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">mode=&quot;train&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">cfg.dmlab_mode</span></code>) plays the <code class="docutils literal notranslate"><span class="pre">*_train</span></code> version of <code class="docutils literal notranslate"><span class="pre">*_test</span></code> levels.
-<code class="docutils literal notranslate"><span class="pre">mode=&quot;eval&quot;</span></code> keeps the level and enables DMLab’s held-out level set
-(<code class="docutils literal notranslate"><span class="pre">allowHoldOutLevels</span></code>) with a fixed mixer seed, for DMLab-30 test scores.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mode=&quot;train&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">cfg.dmlab_mode</span></code>, the default in a Dreamer config) plays the
+<code class="docutils literal notranslate"><span class="pre">*_train</span></code> version of <code class="docutils literal notranslate"><span class="pre">*_test</span></code> levels; the DreamerV3 reference trains and
+evaluates in this mode. <code class="docutils literal notranslate"><span class="pre">mode=&quot;eval&quot;</span></code> keeps the level and enables DMLab’s held-out
+level set (<code class="docutils literal notranslate"><span class="pre">allowHoldOutLevels</span></code>) with a fixed mixer seed, for DMLab-30 test scores.</p>
 </section>
 <section id="dmlab-30-in-a-dreamer-config">
 <h2>DMLab-30 in a Dreamer config<a class="headerlink" href="#dmlab-30-in-a-dreamer-config" title="Link to this heading">#</a></h2>
@@ -507,13 +508,19 @@ the automatic choice.</p>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">(</span>
     <span class="n">env_backend</span><span class="o">=</span><span class="s2">"dmlab"</span><span class="p">,</span>
-    <span class="n">env</span><span class="o">=</span><span class="s2">"contributed/dmlab30/explore_goal_locations_small"</span><span class="p">,</span>
-    <span class="n">dmlab_action_set</span><span class="o">=</span><span class="s2">"popart"</span><span class="p">,</span>
-    <span class="n">dmlab_mode</span><span class="o">=</span><span class="s2">"train"</span><span class="p">,</span>
-    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># dmlab_action_repeat=4 repeats inside Lab</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"explore_goal_locations_small"</span><span class="p">,</span>
+    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>This is the DreamerV3 protocol: the 15 PopArt actions, train mode, and each action
+repeated for 4 Lab frames inside the environment (<code class="docutils literal notranslate"><span class="pre">dmlab_action_repeat</span></code>).
+Dreamer’s own <code class="docutils literal notranslate"><span class="pre">action_repeat</span></code> must be 1 (<code class="docutils literal notranslate"><span class="pre">make_env</span></code> raises otherwise), <code class="docutils literal notranslate"><span class="pre">time_limit</span></code>
+does not apply since levels end their own episodes, and training budgets and logs
+count Lab frames.</p>
+<p>The 32 DMLab-30 level names (<code class="docutils literal notranslate"><span class="pre">DMLAB30_LEVELS</span></code>; two tasks have separate train and
+test levels) are looked up under <code class="docutils literal notranslate"><span class="pre">contributed/dmlab30/</span></code>, so the bare name works;
+other levels take their full path (<code class="docutils literal notranslate"><span class="pre">resolve_dmlab_level</span></code>).</p>
 </section>
 <section id="backend-options">
 <h2>Backend options<a class="headerlink" href="#backend-options" title="Link to this heading">#</a></h2>
@@ -530,8 +537,8 @@ the automatic choice.</p>
 <td><p>Native Lab frame repeat passed to <code class="docutils literal notranslate"><span class="pre">env.step(...,</span> <span class="pre">num_steps=...)</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cfg.dmlab_action_set</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Optional custom 2D array of native Lab actions.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;popart&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;popart&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;impala&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>, or a custom 2D array of native Lab actions.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cfg.dmlab_observations</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
@@ -550,15 +557,12 @@ the automatic choice.</p>
 <td><p>Embed the language instruction as <code class="docutils literal notranslate"><span class="pre">obs[&quot;instr&quot;]</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> turns it on for <code class="docutils literal notranslate"><span class="pre">language_*</span></code> levels.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cfg.dmlab_mode</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;train&quot;</span></code> maps <code class="docutils literal notranslate"><span class="pre">*_test</span></code> levels to <code class="docutils literal notranslate"><span class="pre">*_train</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;eval&quot;</span></code> enables held-out levels.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;train&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;train&quot;</span></code> maps <code class="docutils literal notranslate"><span class="pre">*_test</span></code> levels to <code class="docutils literal notranslate"><span class="pre">*_train</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;eval&quot;</span></code> enables held-out levels; <code class="docutils literal notranslate"><span class="pre">None</span></code> neither.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Simulusion’s shared Dreamer wrapper stack still applies <code class="docutils literal notranslate"><span class="pre">cfg.action_repeat</span></code> outside
-the DMLab adapter. If you only want native Lab frame repeat, leave
-<code class="docutils literal notranslate"><span class="pre">cfg.action_repeat</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p>
 </section>
 </section>
 

@@ -725,28 +725,35 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># obs["state"] without rendering (Proprio Control). Dreamer V1/V2</span>
     <span class="c1"># encode images only, so they need "pixels".</span>
     <span class="n">dmc_obs_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pixels"</span>
-    <span class="c1"># DeepMind Lab options. dmlab_action_repeat is native DMLab frame</span>
-    <span class="c1"># repeat; Dreamer action_repeat is still applied by the shared wrapper</span>
-    <span class="c1"># stack outside the backend adapter.</span>
+    <span class="c1"># DeepMind Lab options. dmlab_action_repeat is DMLab's frame repeat; as</span>
+    <span class="c1"># in DreamerV3, Dreamer's action_repeat must stay 1 and time_limit is not</span>
+    <span class="c1"># applied (levels end their own episodes). env is a level name such as</span>
+    <span class="c1"># "explore_goal_locations_small" (DMLab-30) or a full level path.</span>
     <span class="n">dmlab_action_repeat</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="n">dmlab_action_set</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># "popart" (15 actions) is the set DreamerV3 uses on DMLab-30.</span>
+    <span class="n">dmlab_action_set</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">"popart"</span>
     <span class="n">dmlab_observations</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dmlab_config</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">dmlab_renderer</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hardware"</span>
     <span class="c1"># Embed the language instruction under obs["instr"]; None: language_* levels.</span>
     <span class="n">dmlab_text</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="c1"># "train" plays *_train for *_test levels; "eval" enables held-out levels.</span>
-    <span class="n">dmlab_mode</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># "train" (the reference's mode for training and evaluation) plays</span>
+    <span class="c1"># *_train for *_test levels; "eval" enables held-out levels; None neither.</span>
+    <span class="n">dmlab_mode</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">"train"</span>
 
-    <span class="c1"># BSuite options. bsuite_obs_type: "pixels" renders the observation as an</span>
+    <span class="c1"># BSuite options (action_repeat must be 1; episodes end by themselves).</span>
+    <span class="c1"># bsuite_obs_type: "pixels" renders the observation as an</span>
     <span class="c1"># image, "state" gives the flat vector (DreamerV3's input), "both" both.</span>
     <span class="c1"># bsuite_results_dir records BSuite's CSV logs for scoring. Runs stop once</span>
     <span class="c1"># BSuite's episode budget for the setting is reached.</span>
     <span class="n">bsuite_obs_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"pixels"</span>
     <span class="n">bsuite_results_dir</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="c1"># Minecraft Diamond options (env: "diamond" or "wood").</span>
+    <span class="c1"># Minecraft Diamond options (env: "diamond" or "wood"). Episodes last</span>
+    <span class="c1"># minecraft_length steps (36000: 30 minutes at 20 Hz); action_repeat</span>
+    <span class="c1"># must be 1 and time_limit is not applied.</span>
     <span class="n">minecraft_break_speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="n">minecraft_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">36000</span>
 
     <span class="c1"># Procgen options. Use env values like "coinrun" or "procgen-coinrun-v0".</span>
     <span class="n">procgen_distribution_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"easy"</span>

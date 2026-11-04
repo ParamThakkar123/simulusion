@@ -58,9 +58,10 @@ the automatic choice.
 
 ## Train and test levels
 
-`mode="train"` (`cfg.dmlab_mode`) plays the `*_train` version of `*_test` levels.
-`mode="eval"` keeps the level and enables DMLab's held-out level set
-(`allowHoldOutLevels`) with a fixed mixer seed, for DMLab-30 test scores.
+`mode="train"` (`cfg.dmlab_mode`, the default in a Dreamer config) plays the
+`*_train` version of `*_test` levels; the DreamerV3 reference trains and
+evaluates in this mode. `mode="eval"` keeps the level and enables DMLab's held-out
+level set (`allowHoldOutLevels`) with a fixed mixer seed, for DMLab-30 test scores.
 
 ## DMLab-30 in a Dreamer config
 
@@ -69,25 +70,29 @@ from simulusion.configs.dreamer_config import DreamerConfig
 
 cfg = DreamerConfig(
     env_backend="dmlab",
-    env="contributed/dmlab30/explore_goal_locations_small",
-    dmlab_action_set="popart",
-    dmlab_mode="train",
-    action_repeat=1,  # dmlab_action_repeat=4 repeats inside Lab
+    env="explore_goal_locations_small",
+    action_repeat=1,
 )
 ```
+
+This is the DreamerV3 protocol: the 15 PopArt actions, train mode, and each action
+repeated for 4 Lab frames inside the environment (`dmlab_action_repeat`).
+Dreamer's own `action_repeat` must be 1 (`make_env` raises otherwise), `time_limit`
+does not apply since levels end their own episodes, and training budgets and logs
+count Lab frames.
+
+The 32 DMLab-30 level names (`DMLAB30_LEVELS`; two tasks have separate train and
+test levels) are looked up under `contributed/dmlab30/`, so the bare name works;
+other levels take their full path (`resolve_dmlab_level`).
 
 ## Backend options
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `cfg.dmlab_action_repeat` | `4` | Native Lab frame repeat passed to `env.step(..., num_steps=...)`. |
-| `cfg.dmlab_action_set` | `None` | Optional custom 2D array of native Lab actions. |
+| `cfg.dmlab_action_set` | `"popart"` | `"popart"`, `"impala"`, `"default"`, or a custom 2D array of native Lab actions. |
 | `cfg.dmlab_observations` | `None` | Additional native observation names. `RGB_INTERLEAVED` is always included. |
 | `cfg.dmlab_config` | `None` | Extra Lab config values. Width and height are derived from `cfg.image_size`. |
 | `cfg.dmlab_renderer` | `"hardware"` | Renderer argument forwarded to `deepmind_lab.Lab`. |
 | `cfg.dmlab_text` | `None` | Embed the language instruction as `obs["instr"]`; `None` turns it on for `language_*` levels. |
-| `cfg.dmlab_mode` | `None` | `"train"` maps `*_test` levels to `*_train`; `"eval"` enables held-out levels. |
-
-Simulusion's shared Dreamer wrapper stack still applies `cfg.action_repeat` outside
-the DMLab adapter. If you only want native Lab frame repeat, leave
-`cfg.action_repeat = 1`.
+| `cfg.dmlab_mode` | `"train"` | `"train"` maps `*_test` levels to `*_train`; `"eval"` enables held-out levels; `None` neither. |

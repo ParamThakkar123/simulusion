@@ -1171,15 +1171,33 @@ window.runMermaid = runMermaid;</script>
         <span class="n">info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">info</span> <span class="ow">or</span> <span class="p">{})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="s2">"error"</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
-            <span class="c1"># The reference resets when Malmo reports an error; end the episode</span>
-            <span class="c1"># here instead so the agent's episode bookkeeping stays consistent.</span>
-            <span class="n">backend_done</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># Malmo failed. The reference discards this step and resets in</span>
+            <span class="c1"># place, so the episode stops there without a terminal state and</span>
+            <span class="c1"># without reward. Here the episode is cut short (truncated, so it</span>
+            <span class="c1"># is bootstrapped) on the last good observation; the next reset()</span>
+            <span class="c1"># restarts the backend.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_obs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Call reset() before step()."</span><span class="p">)</span>
+            <span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_obs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">finalize_step_info</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"error"</span><span class="p">},</span>
+                    <span class="s2">"backend_error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]),</span>
+                    <span class="s2">"action"</span><span class="p">:</span> <span class="n">one_hot</span><span class="p">,</span>
+                    <span class="s2">"action_name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                    <span class="s2">"achievements"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">achievements</span><span class="p">(),</span>
+                <span class="p">},</span>
+                <span class="n">done</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">terminated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">truncated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">info</span>
         <span class="n">obs</span><span class="p">,</span> <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">is_first</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length</span>
         <span class="n">done</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">backend_done</span> <span class="ow">or</span> <span class="n">timeout</span><span class="p">)</span>
         <span class="n">info</span> <span class="o">=</span> <span class="n">finalize_step_info</span><span class="p">(</span>
             <span class="p">{</span>
-                <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">info</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"error"</span><span class="p">},</span>
+                <span class="o">**</span><span class="n">info</span><span class="p">,</span>
                 <span class="s2">"action"</span><span class="p">:</span> <span class="n">one_hot</span><span class="p">,</span>
                 <span class="s2">"action_name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
                 <span class="s2">"achievements"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">achievements</span><span class="p">(),</span>

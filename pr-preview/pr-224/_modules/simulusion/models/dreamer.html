@@ -784,6 +784,25 @@ window.runMermaid = runMermaid;</script>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid image_size=</span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">. Expected int or (H, W)."</span><span class="p">)</span>
 
 
+<span class="c1"># Benchmarks whose environment defines the action repeat and episode length,</span>
+<span class="c1"># as in the DreamerV3 reference, which adds neither on top: DMLab levels end</span>
+<span class="c1"># their own episodes, Minecraft ends after minecraft_length steps and BSuite</span>
+<span class="c1"># episodes end by themselves. make_env applies no time_limit to them.</span>
+<span class="n">BENCHMARK_PROTOCOL_BACKENDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"dmlab"</span><span class="p">,</span>
+        <span class="s2">"deepmind_lab"</span><span class="p">,</span>
+        <span class="s2">"deepmindlab"</span><span class="p">,</span>
+        <span class="s2">"minecraft"</span><span class="p">,</span>
+        <span class="s2">"minecraft_diamond"</span><span class="p">,</span>
+        <span class="s2">"minerl"</span><span class="p">,</span>
+        <span class="s2">"bsuite"</span><span class="p">,</span>
+        <span class="s2">"behavior_suite"</span><span class="p">,</span>
+        <span class="s2">"behaviour_suite"</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+
 <div class="viewcode-block" id="make_env">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.make_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -796,6 +815,10 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    ``evaluation=True`` builds an evaluation environment: it does not record</span>
 <span class="sd">    BSuite results, which must contain the training episodes only.</span>
+
+<span class="sd">    DMLab, Minecraft and BSuite (:data:`BENCHMARK_PROTOCOL_BACKENDS`) keep the</span>
+<span class="sd">    reference's protocol: ``action_repeat`` must be 1 and ``time_limit`` is</span>
+<span class="sd">    not applied, since the environment ends its own episodes.</span>
 <span class="sd">    """</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">simulusion.envs.wrappers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">env_wrapper</span>
 
@@ -891,8 +914,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
             <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
             <span class="n">break_speed</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"minecraft_break_speed"</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)),</span>
-            <span class="c1"># The shared TimeLimit wrapper bounds the episode.</span>
-            <span class="n">length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">length</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"minecraft_length"</span><span class="p">,</span> <span class="mi">36000</span><span class="p">)),</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"brax"</span><span class="p">,</span> <span class="s2">"jax_brax"</span><span class="p">}:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.brax_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">BraxImageEnv</span>
@@ -935,14 +957,23 @@ window.runMermaid = runMermaid;</script>
             <span class="s2">"robotics, procgen, bsuite, minecraft, brax, unity_mlagents."</span>
         <span class="p">)</span>
 
+    <span class="n">protocol</span> <span class="o">=</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">BENCHMARK_PROTOCOL_BACKENDS</span> <span class="ow">and</span> <span class="n">env_instance</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">protocol</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"env_backend=</span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2"> is a benchmark that fixes its own action "</span>
+            <span class="sa">f</span><span class="s2">"repeat, so action_repeat must be 1 (got </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="si">}</span><span class="s2">). "</span>
+            <span class="s2">"DMLab repeats each action dmlab_action_repeat frames (4) inside "</span>
+            <span class="s2">"the environment; Minecraft and BSuite act on every step."</span>
+        <span class="p">)</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">ActionRepeat</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">))</span>
     <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">NormalizeActions</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
     <span class="n">frame_stack</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"frame_stack"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
     <span class="k">if</span> <span class="n">frame_stack</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">FrameStack</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">frame_stack</span><span class="p">)</span>
-    <span class="n">repeat</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">))</span>
-    <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span><span class="p">)</span> <span class="o">//</span> <span class="n">repeat</span><span class="p">)</span>
-    <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">TimeLimit</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">protocol</span><span class="p">:</span>
+        <span class="n">repeat</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">))</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span><span class="p">)</span> <span class="o">//</span> <span class="n">repeat</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">env_wrapper</span><span class="o">.</span><span class="n">TimeLimit</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">env</span></div>
 
 

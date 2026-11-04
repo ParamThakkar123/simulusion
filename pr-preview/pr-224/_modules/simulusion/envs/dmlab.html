@@ -818,6 +818,60 @@ window.runMermaid = runMermaid;</script>
 <span class="p">]</span>
 
 
+<span class="c1"># The 30 DMLab-30 tasks (two have separate train and test levels), found under</span>
+<span class="c1"># contributed/dmlab30/. DMLabEnv accepts these bare names, as the DreamerV3</span>
+<span class="c1"># reference does.</span>
+<span class="n">DMLAB30_LEVELS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"rooms_collect_good_objects_train"</span><span class="p">,</span>
+    <span class="s2">"rooms_collect_good_objects_test"</span><span class="p">,</span>
+    <span class="s2">"rooms_exploit_deferred_effects_train"</span><span class="p">,</span>
+    <span class="s2">"rooms_exploit_deferred_effects_test"</span><span class="p">,</span>
+    <span class="s2">"rooms_select_nonmatching_object"</span><span class="p">,</span>
+    <span class="s2">"rooms_watermaze"</span><span class="p">,</span>
+    <span class="s2">"rooms_keys_doors_puzzle"</span><span class="p">,</span>
+    <span class="s2">"language_select_described_object"</span><span class="p">,</span>
+    <span class="s2">"language_select_located_object"</span><span class="p">,</span>
+    <span class="s2">"language_execute_random_task"</span><span class="p">,</span>
+    <span class="s2">"language_answer_quantitative_question"</span><span class="p">,</span>
+    <span class="s2">"lasertag_one_opponent_small"</span><span class="p">,</span>
+    <span class="s2">"lasertag_three_opponents_small"</span><span class="p">,</span>
+    <span class="s2">"lasertag_one_opponent_large"</span><span class="p">,</span>
+    <span class="s2">"lasertag_three_opponents_large"</span><span class="p">,</span>
+    <span class="s2">"natlab_fixed_large_map"</span><span class="p">,</span>
+    <span class="s2">"natlab_varying_map_regrowth"</span><span class="p">,</span>
+    <span class="s2">"natlab_varying_map_randomized"</span><span class="p">,</span>
+    <span class="s2">"skymaze_irreversible_path_hard"</span><span class="p">,</span>
+    <span class="s2">"skymaze_irreversible_path_varied"</span><span class="p">,</span>
+    <span class="s2">"psychlab_arbitrary_visuomotor_mapping"</span><span class="p">,</span>
+    <span class="s2">"psychlab_continuous_recognition"</span><span class="p">,</span>
+    <span class="s2">"psychlab_sequential_comparison"</span><span class="p">,</span>
+    <span class="s2">"psychlab_visual_search"</span><span class="p">,</span>
+    <span class="s2">"explore_object_locations_small"</span><span class="p">,</span>
+    <span class="s2">"explore_object_locations_large"</span><span class="p">,</span>
+    <span class="s2">"explore_obstructed_goals_small"</span><span class="p">,</span>
+    <span class="s2">"explore_obstructed_goals_large"</span><span class="p">,</span>
+    <span class="s2">"explore_goal_locations_small"</span><span class="p">,</span>
+    <span class="s2">"explore_goal_locations_large"</span><span class="p">,</span>
+    <span class="s2">"explore_object_rewards_few"</span><span class="p">,</span>
+    <span class="s2">"explore_object_rewards_many"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">DMLAB30_PREFIX</span> <span class="o">=</span> <span class="s2">"contributed/dmlab30/"</span>
+
+
+<div class="viewcode-block" id="resolve_dmlab_level">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.resolve_dmlab_level">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_dmlab_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The Lab level path for ``level``: DMLab-30 names gain their folder.</span>
+
+<span class="sd">    ``"explore_goal_locations_small"`` becomes</span>
+<span class="sd">    ``"contributed/dmlab30/explore_goal_locations_small"``; other names and</span>
+<span class="sd">    full paths are returned unchanged.</span>
+<span class="sd">    """</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DMLAB30_PREFIX</span> <span class="o">+</span> <span class="n">level</span> <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">DMLAB30_LEVELS</span> <span class="k">else</span> <span class="n">level</span></div>
+
+
+
 <div class="viewcode-block" id="make_dmlab_env">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.make_dmlab_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_dmlab_env</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DMLabEnv"</span><span class="p">:</span>
@@ -825,7 +879,8 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Args:</span>
 <span class="sd">        level: DeepMind Lab level name, for example</span>
-<span class="sd">            ``"rooms_collect_good_objects_train"``.</span>
+<span class="sd">            ``"rooms_collect_good_objects_train"``. DMLab-30 names are looked</span>
+<span class="sd">            up under ``contributed/dmlab30/`` (:func:`resolve_dmlab_level`).</span>
 <span class="sd">        **kwargs: Additional keyword arguments passed to :class:`DMLabEnv`.</span>
 
 <span class="sd">    Returns:</span>
@@ -903,7 +958,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">lab_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_level</span> <span class="o">=</span> <span class="n">resolve_dmlab_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mode</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"train"</span><span class="p">,</span> <span class="s2">"eval"</span><span class="p">):</span>
@@ -1034,6 +1089,11 @@ window.runMermaid = runMermaid;</script>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_OneHotActionSpace</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_action_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">native_action_repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Lab frames per step; training counts frames, as the reference."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_action_repeat</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">max_episode_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>

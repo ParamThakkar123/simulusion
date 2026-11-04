@@ -689,19 +689,6 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
-
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">plotly</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scatter</span><span class="p">,</span> <span class="n">Line</span>
-
-    <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">TSNE</span>
-
-    <span class="n">HAS_VIZ</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">plotly</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">HAS_VIZ</span> <span class="o">=</span> <span class="kc">False</span>
-
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.memory.planet_memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">Memory</span>
 
@@ -710,6 +697,25 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+
+<span class="c1"># Plotting needs plotly; t-SNE also needs scikit-learn. Each is optional</span>
+<span class="c1"># ("simulusion[viz]") and only the functions that use it require it.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">plotly</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">plotly.graph_objs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scatter</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">plotly</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">TSNE</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">TSNE</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">HAS_VIZ</span> <span class="o">=</span> <span class="n">plotly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">TSNE</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">module</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> is not installed: pip install "simulusion[viz]".'</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_RestrictedReplayUnpickler</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">Unpickler</span><span class="p">):</span>
@@ -1399,10 +1405,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Supports uncertainty-band plotting when `ys` is a 2D array.</span>
 <span class="sd">    """</span>
-    <span class="n">MAX_LINE</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 132, 180)"</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">)</span>
-    <span class="n">MIN_LINE</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 132, 180)"</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">)</span>
-    <span class="n">NO_LINE</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgba(0, 0, 0, 0)"</span><span class="p">)</span>
-    <span class="n">MEAN_LINE</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 172, 237)"</span><span class="p">)</span>
+    <span class="n">_require</span><span class="p">(</span><span class="n">plotly</span><span class="p">,</span> <span class="s2">"plotly"</span><span class="p">)</span>
+    <span class="c1"># Plain dicts: plotly 7 removed the graph_objs.Line class.</span>
+    <span class="n">MAX_LINE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 132, 180)"</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">)</span>
+    <span class="n">MIN_LINE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 132, 180)"</span><span class="p">,</span> <span class="n">dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">)</span>
+    <span class="n">NO_LINE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgba(0, 0, 0, 0)"</span><span class="p">)</span>
+    <span class="n">MEAN_LINE</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"rgb(0, 172, 237)"</span><span class="p">)</span>
     <span class="n">std_colour</span> <span class="o">=</span> <span class="s2">"rgba(29, 202, 255, 0.2)"</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1763,6 +1771,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        save_path: path to save the plot (HTML for plotly)</span>
 <span class="sd">        perplexity: t-SNE perplexity parameter</span>
 <span class="sd">    """</span>
+    <span class="n">_require</span><span class="p">(</span><span class="n">plotly</span><span class="p">,</span> <span class="s2">"plotly"</span><span class="p">)</span>
+    <span class="n">_require</span><span class="p">(</span><span class="n">TSNE</span><span class="p">,</span> <span class="s2">"scikit-learn"</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">latents</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="n">latents</span> <span class="o">=</span> <span class="n">latents</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 
@@ -1820,6 +1830,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        save_path: path to save the plot (HTML for plotly)</span>
 <span class="sd">        n_neighbors: UMAP n_neighbors parameter</span>
 <span class="sd">    """</span>
+    <span class="n">_require</span><span class="p">(</span><span class="n">plotly</span><span class="p">,</span> <span class="s2">"plotly"</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">latents</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="n">latents</span> <span class="o">=</span> <span class="n">latents</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 

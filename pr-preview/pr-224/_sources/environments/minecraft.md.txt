@@ -20,7 +20,7 @@ setting. The `docker/envs` image installs all of it, with DeepMind Lab and BSuit
 docker build -f docker/envs/Dockerfile -t simulusion-envs .
 docker run --gpus all --rm -v "$PWD/runs:/data/simulusion" simulusion-envs \
   simulusion train --config dreamer model.env_backend=minecraft model.env=diamond \
-    model.action_repeat=1 model.time_limit=36000
+    model.action_repeat=1
 ```
 
 Outside Docker, on Linux with Python 3.11:
@@ -37,7 +37,7 @@ xvfb-run -a python your_script.py
 | --- | --- |
 | Goal | Obtain a diamond, through 12 milestone items |
 | Rewards | +1 the first time per episode each of `log`, `planks`, `stick`, `crafting_table`, `wooden_pickaxe`, `cobblestone`, `stone_pickaxe`, `iron_ore`, `furnace`, `iron_ingot`, `iron_pickaxe`, `diamond` is held; plus 0.01 x the change in health (health scaled to [0, 1]) |
-| Episode end | Death, or 36000 steps (30 minutes at 20 Hz). Breaking diamond ore does not end the episode. |
+| Episode end | Death, or 36000 steps (30 minutes at 20 Hz). Breaking diamond ore does not end the episode. If Minecraft's Malmo backend fails, the episode is cut short there (truncated, without reward) and the next reset restarts the game, as in the reference. |
 | Block breaking | 100x faster (`break_speed=100`), so the attack key need not be held |
 | Actions | 25: `noop`, `attack`, `turn_up/down/left/right` (15 degrees), `forward`, `back`, `left`, `right`, `jump` (with forward, held for 10 steps), `place_dirt`, and 13 abstract crafting, placing, equipping and smelting actions |
 | Camera | Pitch kept within +-60 degrees |
@@ -82,11 +82,15 @@ cfg = DreamerConfig(
     env_backend="minecraft",
     env="diamond",
     action_repeat=1,
-    time_limit=36000,
 )
 ```
+
+The agent acts on every Minecraft step, as in the reference, so `action_repeat`
+must be 1; `make_env` raises otherwise. Episodes last `minecraft_length` steps and
+`time_limit` does not apply.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `cfg.env` | `"diamond"` | `"diamond"` or `"wood"` |
 | `cfg.minecraft_break_speed` | `100.0` | Block breaking speed multiplier |
+| `cfg.minecraft_length` | `36000` | Episode length in steps |
