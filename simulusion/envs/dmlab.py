@@ -129,12 +129,64 @@ DMLAB_LEVELS = [
 ]
 
 
+# The 30 DMLab-30 tasks (two have separate train and test levels), found under
+# contributed/dmlab30/. DMLabEnv accepts these bare names, as the DreamerV3
+# reference does.
+DMLAB30_LEVELS = (
+    "rooms_collect_good_objects_train",
+    "rooms_collect_good_objects_test",
+    "rooms_exploit_deferred_effects_train",
+    "rooms_exploit_deferred_effects_test",
+    "rooms_select_nonmatching_object",
+    "rooms_watermaze",
+    "rooms_keys_doors_puzzle",
+    "language_select_described_object",
+    "language_select_located_object",
+    "language_execute_random_task",
+    "language_answer_quantitative_question",
+    "lasertag_one_opponent_small",
+    "lasertag_three_opponents_small",
+    "lasertag_one_opponent_large",
+    "lasertag_three_opponents_large",
+    "natlab_fixed_large_map",
+    "natlab_varying_map_regrowth",
+    "natlab_varying_map_randomized",
+    "skymaze_irreversible_path_hard",
+    "skymaze_irreversible_path_varied",
+    "psychlab_arbitrary_visuomotor_mapping",
+    "psychlab_continuous_recognition",
+    "psychlab_sequential_comparison",
+    "psychlab_visual_search",
+    "explore_object_locations_small",
+    "explore_object_locations_large",
+    "explore_obstructed_goals_small",
+    "explore_obstructed_goals_large",
+    "explore_goal_locations_small",
+    "explore_goal_locations_large",
+    "explore_object_rewards_few",
+    "explore_object_rewards_many",
+)
+DMLAB30_PREFIX = "contributed/dmlab30/"
+
+
+def resolve_dmlab_level(level: str) -> str:
+    """The Lab level path for ``level``: DMLab-30 names gain their folder.
+
+    ``"explore_goal_locations_small"`` becomes
+    ``"contributed/dmlab30/explore_goal_locations_small"``; other names and
+    full paths are returned unchanged.
+    """
+    level = str(level)
+    return DMLAB30_PREFIX + level if level in DMLAB30_LEVELS else level
+
+
 def make_dmlab_env(level: str, **kwargs: Any) -> "DMLabEnv":
     """Create a DeepMind Lab environment adapter for Simulusion.
 
     Args:
         level: DeepMind Lab level name, for example
-            ``"rooms_collect_good_objects_train"``.
+            ``"rooms_collect_good_objects_train"``. DMLab-30 names are looked
+            up under ``contributed/dmlab30/`` (:func:`resolve_dmlab_level`).
         **kwargs: Additional keyword arguments passed to :class:`DMLabEnv`.
 
     Returns:
@@ -209,7 +261,7 @@ class DMLabEnv:
         mode: str | None = None,
         **lab_kwargs: Any,
     ):
-        self._level = str(level)
+        self._level = resolve_dmlab_level(level)
         if mode is not None:
             mode = str(mode).lower()
             if mode not in ("train", "eval"):
@@ -340,6 +392,11 @@ class DMLabEnv:
     @property
     def action_space(self) -> _OneHotActionSpace:
         return self._action_space
+
+    @property
+    def native_action_repeat(self) -> int:
+        """Lab frames per step; training counts frames, as the reference."""
+        return self._action_repeat
 
     @property
     def max_episode_steps(self) -> int:

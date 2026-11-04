@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   DreamerV3 benchmark environment on MineRL 0.4.4, following the reference code:
   25 flat actions with abstract crafting, +1 per milestone item once per episode,
   a health reward, 36000-step episodes, 100x block breaking, held jumps, a pitch
-  limit, and image plus inventory, equipped-item and status vectors.
+  limit, and image plus inventory, equipped-item and status vectors. A Malmo
+  failure cuts the episode short (truncated) and the next reset restarts it.
 - **BSuite benchmark protocol.** `BSuiteImageEnv` takes `obs_type="state"` (the
   flat observation vector DreamerV3 learns from), accepts bare names (`"catch"`
   is `"catch/0"`), records BSuite's CSV logs for scoring with `results_dir=`,
@@ -21,7 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **DMLab-30 protocol.** `DMLabEnv` offers the fixed PopArt/R2D2 (15) and IMPALA
   action sets by name, embeds the instruction of `language_*` levels as
   `obs["instr"]` as in the DreamerV3 reference, and has `train`/`eval` modes for
-  `*_train`/held-out levels.
+  `*_train`/held-out levels. DMLab-30 levels can be named without their folder
+  (`DMLAB30_LEVELS`, `resolve_dmlab_level`), and Dreamer configs default to the
+  PopArt actions and train mode, and count Lab frames.
+- **Benchmark protocol in Dreamer's `make_env`.** DMLab, Minecraft and BSuite
+  end their own episodes, so `time_limit` does not apply to them, and they
+  require `action_repeat=1` (DMLab repeats 4 frames inside Lab), as in the
+  DreamerV3 reference. `minecraft_length` sets Minecraft's episode length.
 - **`docker/envs` image** with DeepMind Lab (built from source), the patched
   MineRL 0.4.4 and BSuite on Python 3.11, for the benchmarks that cannot be
   pip-installed on every platform.

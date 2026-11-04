@@ -40,28 +40,35 @@ class DreamerConfig(SerializableConfigMixin):
     # obs["state"] without rendering (Proprio Control). Dreamer V1/V2
     # encode images only, so they need "pixels".
     dmc_obs_type: str = "pixels"
-    # DeepMind Lab options. dmlab_action_repeat is native DMLab frame
-    # repeat; Dreamer action_repeat is still applied by the shared wrapper
-    # stack outside the backend adapter.
+    # DeepMind Lab options. dmlab_action_repeat is DMLab's frame repeat; as
+    # in DreamerV3, Dreamer's action_repeat must stay 1 and time_limit is not
+    # applied (levels end their own episodes). env is a level name such as
+    # "explore_goal_locations_small" (DMLab-30) or a full level path.
     dmlab_action_repeat: int = 4
-    dmlab_action_set: Any = None
+    # "popart" (15 actions) is the set DreamerV3 uses on DMLab-30.
+    dmlab_action_set: Any = "popart"
     dmlab_observations: Any = None
     dmlab_config: Any = None
     dmlab_renderer: str = "hardware"
     # Embed the language instruction under obs["instr"]; None: language_* levels.
     dmlab_text: Any = None
-    # "train" plays *_train for *_test levels; "eval" enables held-out levels.
-    dmlab_mode: Any = None
+    # "train" (the reference's mode for training and evaluation) plays
+    # *_train for *_test levels; "eval" enables held-out levels; None neither.
+    dmlab_mode: Any = "train"
 
-    # BSuite options. bsuite_obs_type: "pixels" renders the observation as an
+    # BSuite options (action_repeat must be 1; episodes end by themselves).
+    # bsuite_obs_type: "pixels" renders the observation as an
     # image, "state" gives the flat vector (DreamerV3's input), "both" both.
     # bsuite_results_dir records BSuite's CSV logs for scoring. Runs stop once
     # BSuite's episode budget for the setting is reached.
     bsuite_obs_type: str = "pixels"
     bsuite_results_dir: Any = None
 
-    # Minecraft Diamond options (env: "diamond" or "wood").
+    # Minecraft Diamond options (env: "diamond" or "wood"). Episodes last
+    # minecraft_length steps (36000: 30 minutes at 20 Hz); action_repeat
+    # must be 1 and time_limit is not applied.
     minecraft_break_speed: float = 100.0
+    minecraft_length: int = 36000
 
     # Procgen options. Use env values like "coinrun" or "procgen-coinrun-v0".
     procgen_distribution_mode: str = "easy"

@@ -112,6 +112,19 @@ def test_dreamer_stops_once_the_bsuite_budget_is_spent():
     assert not task.should_stop()
 
 
+def test_training_counts_environment_frames():
+    # DMLab repeats each action 4 Lab frames; budgets and logs count frames.
+    from simulusion.training.tasks.dreamer import DreamerTask
+
+    task = DreamerTask.__new__(DreamerTask)
+    task.config = types.SimpleNamespace(model=DreamerConfig(action_repeat=1))
+    task.train_env = types.SimpleNamespace(native_action_repeat=4)
+    assert task._frames_per_step() == 4
+    task.config.model.action_repeat = 2
+    task.train_env = types.SimpleNamespace()
+    assert task._frames_per_step() == 2
+
+
 def _require_bsuite():
     return pytest.importorskip("bsuite")
 
@@ -271,20 +284,83 @@ def test_train_and_eval_modes(fake_lab):
     assert lab.config["mixerSeed"] == str(0x600D5EED)
 
 
+def test_dmlab30_names_are_found_in_their_folder(fake_lab):
+    from simulusion.envs.dmlab import DMLAB30_LEVELS, DMLabEnv, resolve_dmlab_level
+
+    assert len(DMLAB30_LEVELS) == 32  # 30 tasks, two with train and test levels
+    assert len(set(DMLAB30_LEVELS)) == 32
+    DMLabEnv("explore_goal_locations_small")
+    assert fake_lab.instances[-1].level == (
+        "contributed/dmlab30/explore_goal_locations_small"
+    )
+    # Full paths and other levels are left alone.
+    assert resolve_dmlab_level("contributed/dmlab30/rooms_watermaze") == (
+        "contributed/dmlab30/rooms_watermaze"
+    )
+    assert resolve_dmlab_level("seekavoid_arena_01") == "seekavoid_arena_01"
+
+
+def test_make_env_follows_the_dmlab30_protocol_by_default(fake_lab):
+    # Reference: popart actions, train mode, 4 Lab frames per step, no
+    # outer action repeat and no time limit (levels end their own episodes).
+    from simulusion.models.dreamer import make_env
+
+    cfg = DreamerConfig(
+        env_backend="dmlab",
+        env="rooms_collect_good_objects_test",
+        action_repeat=1,
+        time_limit=2,
+    )
+    env = make_env(cfg)
+    lab = fake_lab.instances[-1]
+    assert lab.level == "contributed/dmlab30/rooms_collect_good_objects_train"
+    assert env.action_space.shape == (15,)
+    assert env.native_action_repeat == 4
+    env.reset()
+    dones = [env.step(env.action_space.sample())[2] for _ in range(3)]
+    assert dones == [False, False, True]  # the level's end, not time_limit=2
+
+
 def test_make_env_passes_the_dmlab_options(fake_lab):
     from simulusion.models.dreamer import make_env
 
     cfg = DreamerConfig(
         env_backend="dmlab",
         env="language_execute_random_task",
-        dmlab_action_set="popart",
-        dmlab_mode="train",
+        action_repeat=1,
+        dmlab_action_set="impala",
+        dmlab_action_repeat=2,
+        dmlab_mode="eval",
         dmlab_renderer="software",
     )
     env = make_env(cfg)
-    assert env.action_space.shape == (15,)
+    assert env.action_space.shape == (9,)
+    assert env.native_action_repeat == 2
     assert {"image", "instr"} <= set(env.observation_space.spaces)
-    assert "INSTR" in fake_lab.instances[-1].observation_names
+    lab = fake_lab.instances[-1]
+    assert "INSTR" in lab.observation_names
+    assert lab.config["allowHoldOutLevels"] == "true"
+
+
+@pytest.mark.parametrize(
+    ("backend", "module", "cls"),
+    [
+        ("dmlab", "simulusion.envs.dmlab", "DMLabEnv"),
+        ("bsuite", "simulusion.envs.bsuite_env", "BSuiteImageEnv"),
+        ("minecraft", "simulusion.envs.minecraft_diamond", "MinecraftDiamondEnv"),
+    ],
+)
+def test_benchmarks_reject_an_outer_action_repeat(monkeypatch, backend, module, cls):
+    # The reference repeats inside the env (DMLab) or not at all.
+    import importlib
+
+    from simulusion.models.dreamer import make_env
+
+    monkeypatch.setattr(
+        importlib.import_module(module), cls, lambda *a, **k: types.SimpleNamespace()
+    )
+    with pytest.raises(ValueError, match="action_repeat must be 1"):
+        make_env(DreamerConfig(env_backend=backend, action_repeat=2))
 
 
 def test_make_env_passes_the_bsuite_options(tmp_path):
@@ -294,6 +370,7 @@ def test_make_env_passes_the_bsuite_options(tmp_path):
     cfg = DreamerConfig(
         env_backend="bsuite",
         env="catch",
+        action_repeat=1,
         bsuite_obs_type="state",
         bsuite_results_dir=str(tmp_path),
     )

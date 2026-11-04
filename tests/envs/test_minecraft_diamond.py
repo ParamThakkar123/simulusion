@@ -233,13 +233,19 @@ def test_episodes_end_on_death_or_after_the_step_limit():
     assert done and info["terminated"]
 
 
-def test_a_backend_error_ends_the_episode():
+def test_a_backend_error_cuts_the_episode_short():
+    # The reference drops the failed step and resets: no reward, no terminal.
     backend = FakeMineRL()
     env = MinecraftDiamondEnv(env=backend)
-    env.reset()
+    last = env.reset()
+    backend.inventory["log"] = 1
     backend.info = {"error": "malmo crashed"}
-    _, _, done, info = env.step(_act(env, "noop"))
-    assert done and "error" not in info
+    obs, reward, done, info = env.step(_act(env, "noop"))
+    assert done and info["truncated"] and not info["terminated"]
+    assert reward == 0.0 and "error" not in info
+    assert info["backend_error"] == "malmo crashed"
+    for key, value in last.items():
+        np.testing.assert_array_equal(obs[key], value)
 
 
 def test_reset_starts_a_new_episode():
@@ -285,7 +291,6 @@ def test_make_env_builds_minecraft_with_image_and_vectors(monkeypatch):
         env_backend="minecraft",
         env="diamond",
         action_repeat=1,
-        time_limit=36000,
         minecraft_break_speed=100.0,
     )
     env = dreamer_module.make_env(cfg)
@@ -296,3 +301,26 @@ def test_make_env_builds_minecraft_with_image_and_vectors(monkeypatch):
     obs = env.reset()
     obs, _, done, _ = env.step(env.action_space.sample())
     assert keys <= set(obs) and not done
+
+
+def test_make_env_ends_minecraft_episodes_after_minecraft_length(monkeypatch):
+    # The episode length is the benchmark's (36000); time_limit does not apply.
+    from simulusion.configs.dreamer_config import DreamerConfig
+    from simulusion.envs import minecraft_diamond
+    from simulusion.models import dreamer as dreamer_module
+
+    monkeypatch.setattr(
+        minecraft_diamond, "make_minerl_backend", lambda size, speed: FakeMineRL()
+    )
+    assert DreamerConfig().minecraft_length == 36000
+    cfg = DreamerConfig(
+        env_backend="minecraft",
+        env="diamond",
+        action_repeat=1,
+        time_limit=2,
+        minecraft_length=4,
+    )
+    env = dreamer_module.make_env(cfg)
+    env.reset()
+    dones = [env.step(env.action_space.sample())[2] for _ in range(4)]
+    assert dones == [False, False, False, True]

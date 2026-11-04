@@ -170,6 +170,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "DMLabEnv": "simulusion.envs",
     "make_dmlab_env": "simulusion.envs",
     "DMLAB_LEVELS": "simulusion.envs",
+    "DMLAB30_LEVELS": "simulusion.envs",
+    "resolve_dmlab_level": "simulusion.envs",
     "UnityMLAgentsEnv": "simulusion.envs",
     "make_unity_mlagents_env": "simulusion.envs",
     "MujocoEnv": "simulusion.envs",

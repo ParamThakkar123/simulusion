@@ -478,15 +478,33 @@ class MinecraftDiamondEnv:
         info = dict(info or {})
         self._step += 1
         if "error" in info:
-            # The reference resets when Malmo reports an error; end the episode
-            # here instead so the agent's episode bookkeeping stays consistent.
-            backend_done = True
+            # Malmo failed. The reference discards this step and resets in
+            # place, so the episode stops there without a terminal state and
+            # without reward. Here the episode is cut short (truncated, so it
+            # is bootstrapped) on the last good observation; the next reset()
+            # restarts the backend.
+            if self._last_obs is None:
+                raise RuntimeError("Call reset() before step().")
+            obs = {key: value.copy() for key, value in self._last_obs.items()}
+            info = finalize_step_info(
+                {
+                    **{k: v for k, v in info.items() if k != "error"},
+                    "backend_error": str(info["error"]),
+                    "action": one_hot,
+                    "action_name": self.action_names[index],
+                    "achievements": self.achievements(),
+                },
+                done=True,
+                terminated=False,
+                truncated=True,
+            )
+            return obs, 0.0, True, info
         obs, reward = self._process(raw, is_first=False)
         timeout = self._length is not None and self._step >= self._length
         done = bool(backend_done or timeout)
         info = finalize_step_info(
             {
-                **{k: v for k, v in info.items() if k != "error"},
+                **info,
                 "action": one_hot,
                 "action_name": self.action_names[index],
                 "achievements": self.achievements(),

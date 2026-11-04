@@ -11,9 +11,9 @@
 # Train Dreamer on a DMLab-30 level / Minecraft Diamond / BSuite (GPU):
 #   docker run --gpus all --rm -v "$PWD/runs:/data/simulusion" simulusion-envs \
 #     simulusion train --config dreamer model.env_backend=dmlab \
-#       model.env=contributed/dmlab30/explore_goal_locations_small
-#   ... model.env_backend=minecraft model.env=diamond ...
-#   ... model.env_backend=bsuite model.env=catch/0 ...
+#       model.env=explore_goal_locations_small model.action_repeat=1
+#   ... model.env_backend=minecraft model.env=diamond model.action_repeat=1
+#   ... model.env_backend=bsuite model.env=catch/0 model.action_repeat=1
 #
 # Minecraft runs a real game client, so commands start under xvfb-run (the
 # entrypoint does this). CPU-only build: --build-arg PYTORCH_INDEX_URL=
