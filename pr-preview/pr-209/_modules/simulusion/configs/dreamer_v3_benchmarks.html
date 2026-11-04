@@ -687,7 +687,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">tasks, step budget, action repeat, replay ratio and model size, plus the</span>
 <span class="sd">environment options that follow from the text (sticky actions on Atari, the</span>
 <span class="sd">hard ProcGen setting with unlimited levels, proprioceptive vs. pixel inputs on</span>
-<span class="sd">the control suites). :func:`benchmark_config` turns one into a</span>
+<span class="sd">the control suites, the fixed PopArt action set on DMLab, the observation vector</span>
+<span class="sd">on BSuite, image plus inventory and status vectors on Minecraft). :func:`benchmark_config` turns one into a</span>
 <span class="sd">:class:`~simulusion.configs.dreamer_v3_config.DreamerV3Config`::</span>
 
 <span class="sd">    cfg = benchmark_config("dmc-proprio", "walker-walk")</span>
@@ -701,8 +702,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">Two parts of Table 2 are not reproduced. The paper steps 16 environment</span>
 <span class="sd">instances in parallel (1 for Atari100k and BSuite); this agent steps one, which</span>
 <span class="sd">the paper reports performance is robust to, and the replay ratio is counted per</span>
-<span class="sd">policy step either way. Minecraft is not listed because there is no Minecraft</span>
-<span class="sd">backend for the Dreamer agents.</span>
+<span class="sd">policy step either way.</span>
+
+<span class="sd">BSuite fixes a number of episodes per setting instead of a step budget; the run</span>
+<span class="sd">stops once :class:`~simulusion.envs.bsuite_env.BSuiteImageEnv` reports the</span>
+<span class="sd">budget spent. A task such as ``"catch"`` means its first setting, ``"catch/0"``;</span>
+<span class="sd">the benchmark score covers every setting (:func:`bsuite_settings`).</span>
 
 <span class="sd">Reference:</span>
 <span class="sd">    Mastering Diverse Domains through World Models</span>
@@ -721,6 +726,7 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"Benchmark"</span><span class="p">,</span>
     <span class="s2">"atari_env_id"</span><span class="p">,</span>
     <span class="s2">"benchmark_config"</span><span class="p">,</span>
+    <span class="s2">"bsuite_settings"</span><span class="p">,</span>
 <span class="p">]</span>
 
 
@@ -741,14 +747,17 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">task_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""The ``env`` value for ``task``.</span>
 
-<span class="sd">        Atari names become ``ALE/&lt;Game&gt;-v5`` and DMLab-30 names gain their</span>
-<span class="sd">        ``contributed/dmlab30/`` directory; other names pass through.</span>
+<span class="sd">        Atari names become ``ALE/&lt;Game&gt;-v5``, DMLab-30 names gain their</span>
+<span class="sd">        ``contributed/dmlab30/`` directory and BSuite names their first setting</span>
+<span class="sd">        (``"catch"`` -&gt; ``"catch/0"``); other names pass through.</span>
 <span class="sd">        """</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">overrides</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env_backend"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"gym"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"ALE/"</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">atari_env_id</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"dmlab"</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">"contributed/dmlab30/</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"bsuite"</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">/0"</span>
         <span class="k">return</span> <span class="n">task</span>
 
 
@@ -953,6 +962,29 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"umbrella_length"</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="c1"># Minecraft Diamond inputs (paper, Minecraft appendix): the image plus inventory</span>
+<span class="c1"># counts, their episode maxima, the equipped item and health/hunger/breath.</span>
+<span class="n">MINECRAFT_OBS_KEYS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"image"</span><span class="p">,</span>
+    <span class="s2">"inventory"</span><span class="p">,</span>
+    <span class="s2">"inventory_max"</span><span class="p">,</span>
+    <span class="s2">"equipped"</span><span class="p">,</span>
+    <span class="s2">"health"</span><span class="p">,</span>
+    <span class="s2">"hunger"</span><span class="p">,</span>
+    <span class="s2">"breath"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bsuite_settings</span><span class="p">(</span><span class="n">environment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Every setting of a BSuite environment, e.g. ``"catch/0"`` .. ``"catch/19"``.</span>
+
+<span class="sd">    Requires the ``bsuite`` package. Across the 23 environments there are 468.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.bsuite_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_bsuite_settings</span>
+
+    <span class="k">return</span> <span class="n">list_bsuite_settings</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
+
+
 <span class="c1"># ALE ids default to a frame skip of 4. Dreamer applies the action repeat, so</span>
 <span class="c1"># the emulator must step single frames or every action would last 16 frames.</span>
 <span class="n">_ALE_FRAMES_PER_EPISODE</span> <span class="o">=</span> <span class="mi">108_000</span>  <span class="c1"># 30 minutes at 60 fps, the ALE v5 limit.</span>
@@ -1059,11 +1091,16 @@ window.runMermaid = runMermaid;</script>
             <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
             <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
-                <span class="c1"># Repeat in the shared wrapper only, so that total_steps and</span>
-                <span class="c1"># time_limit count frames as on every other benchmark.</span>
-                <span class="s2">"dmlab_action_repeat"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="c1"># Levels end their own episodes.</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">10_000_000</span><span class="p">,</span>
+                <span class="c1"># The fixed action space of PopArt and R2D2 (15 actions).</span>
+                <span class="s2">"dmlab_action_set"</span><span class="p">:</span> <span class="s2">"popart"</span><span class="p">,</span>
+                <span class="c1"># Train on *_train levels; evaluate on held-out ones separately.</span>
+                <span class="s2">"dmlab_mode"</span><span class="p">:</span> <span class="s2">"train"</span><span class="p">,</span>
+                <span class="c1"># Table 2's repeat of 4 happens inside Lab, as in the reference;</span>
+                <span class="c1"># make_env requires Dreamer's own action_repeat to be 1 here and</span>
+                <span class="c1"># applies no time limit (levels end their own episodes).</span>
+                <span class="c1"># Training still counts Lab frames (native_action_repeat).</span>
+                <span class="s2">"action_repeat"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">"dmlab_action_repeat"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">Benchmark</span><span class="p">(</span>
@@ -1075,7 +1112,31 @@ window.runMermaid = runMermaid;</script>
             <span class="n">env_instances</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
             <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"bsuite"</span><span class="p">,</span> <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">10_000_000</span><span class="p">},</span>
+            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"bsuite"</span><span class="p">,</span>
+                <span class="c1"># DreamerV3 learns from BSuite's flattened observation vector.</span>
+                <span class="s2">"bsuite_obs_type"</span><span class="p">:</span> <span class="s2">"state"</span><span class="p">,</span>
+                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">10_000_000</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">Benchmark</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"minecraft"</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Minecraft Diamond: 12 milestone rewards, 36000-step episodes, "</span>
+                <span class="s2">"100x block breaking speed."</span>
+            <span class="p">),</span>
+            <span class="n">tasks</span><span class="o">=</span><span class="p">(</span><span class="s2">"diamond"</span><span class="p">,),</span>
+            <span class="n">env_steps</span><span class="o">=</span><span class="mi">100_000_000</span><span class="p">,</span>
+            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">env_instances</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
+            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
+                <span class="s2">"minecraft_break_speed"</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>
+                <span class="s2">"obs_keys"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">MINECRAFT_OBS_KEYS</span><span class="p">),</span>
+                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">36_000</span><span class="p">,</span>
+            <span class="p">},</span>
         <span class="p">),</span>
     <span class="p">)</span>
 <span class="p">}</span>
@@ -1092,6 +1153,9 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">"atari-100k"</span><span class="p">:</span> <span class="s2">"atari100k"</span><span class="p">,</span>
         <span class="s2">"dmlab30"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
         <span class="s2">"dmlab-30"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
+        <span class="s2">"minecraft-diamond"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
+        <span class="s2">"diamond"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
+        <span class="s2">"behaviour-suite"</span><span class="p">:</span> <span class="s2">"bsuite"</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">key</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BENCHMARKS</span><span class="p">:</span>
@@ -1131,8 +1195,9 @@ window.runMermaid = runMermaid;</script>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">env_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fields</span><span class="p">[</span><span class="s2">"total_steps"</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">env_steps</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"gym_make_kwargs"</span><span class="p">),</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">fields</span><span class="p">[</span><span class="s2">"gym_make_kwargs"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s2">"gym_make_kwargs"</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"gym_make_kwargs"</span><span class="p">,</span> <span class="s2">"obs_keys"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])(</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>  <span class="c1"># never share the preset's</span>
     <span class="n">fields</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="p">)</span>
     <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="n">valid</span><span class="p">)</span>

@@ -726,6 +726,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.dreamer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DreamerAgent</span><span class="p">,</span>
     <span class="n">_apply_config_overrides</span><span class="p">,</span>
+    <span class="n">_has_discrete_actions</span><span class="p">,</span>
     <span class="n">_resolve_pretrained_file</span><span class="p">,</span>
     <span class="n">_save_config_next_to_checkpoint</span><span class="p">,</span>
     <span class="n">get_available_memory</span><span class="p">,</span>
@@ -1883,6 +1884,22 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_initial_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_executed_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The action the env actually ran, in the form the actor produces.</span>
+
+<span class="sd">        Discrete adapters report it as a +-1 vector; the categorical actor</span>
+<span class="sd">        samples 0/1 one-hots, so replay stores the 0/1 form to match.</span>
+<span class="sd">        """</span>
+        <span class="n">executed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"action"</span> <span class="ow">in</span> <span class="n">info</span> <span class="k">else</span> <span class="n">action</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">discrete_actions</span><span class="p">:</span>
+            <span class="n">one_hot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">one_hot</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">executed</span><span class="p">))]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">return</span> <span class="n">one_hot</span>
+        <span class="k">return</span> <span class="n">executed</span>
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_latent</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">"deter"</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="s2">"deter"</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"stoch"</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="s2">"stoch"</span><span class="p">][</span><span class="mi">0</span><span class="p">]}</span>
@@ -1960,12 +1977,7 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
 
             <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
-            <span class="n">executed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-                <span class="n">info</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"action"</span> <span class="ow">in</span> <span class="n">info</span>
-                <span class="k">else</span> <span class="n">action</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">)</span>
+            <span class="n">executed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_executed_action</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
             <span class="n">episode_return</span> <span class="o">=</span> <span class="n">carry</span><span class="p">[</span><span class="s2">"episode_return"</span><span class="p">]</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">done</span><span class="p">:</span>
@@ -2053,11 +2065,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="p">)</span>
                 <span class="n">action_np</span> <span class="o">=</span> <span class="n">action</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
                 <span class="n">next_obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action_np</span><span class="p">)</span>
-                <span class="n">executed</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">info</span><span class="p">[</span><span class="s2">"action"</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"action"</span> <span class="ow">in</span> <span class="n">info</span>
-                    <span class="k">else</span> <span class="n">action_np</span>
-                <span class="p">)</span>
+                <span class="n">executed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_executed_action</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">action_np</span><span class="p">)</span>
                 <span class="n">episode_rewards</span><span class="p">[</span><span class="n">episode</span><span class="p">]</span> <span class="o">+=</span> <span class="n">reward</span>
 
                 <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
@@ -2193,16 +2201,16 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_actor_dist</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Choose the policy distribution from an environment's action space."""</span>
-    <span class="n">action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Choose the policy distribution from an environment's action space.</span>
+
+<span class="sd">    Discrete backends expose their actions as a one-hot Box and set the</span>
+<span class="sd">    ``discrete_actions`` marker, which wrappers forward from any depth. The</span>
+<span class="sd">    paper uses a categorical policy for them. A raw ``Discrete`` space is</span>
+<span class="sd">    recognised directly.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"discrete_actions"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">"onehot"</span>
-    <span class="c1"># The OneHotAction wrapper exposes a Box space but keeps a discrete</span>
-    <span class="c1"># underlying space, which it advertises through `_env.action_space`.</span>
-    <span class="n">inner</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"_env"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">inner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">inner</span><span class="p">,</span> <span class="s2">"action_space"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"n"</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">"onehot"</span>
-    <span class="k">return</span> <span class="s2">"normal"</span>
+    <span class="k">return</span> <span class="s2">"onehot"</span> <span class="k">if</span> <span class="n">_has_discrete_actions</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"normal"</span>
 
 
 <div class="viewcode-block" id="DreamerV3Agent">

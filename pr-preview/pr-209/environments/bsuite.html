@@ -63,7 +63,7 @@
     <link rel="icon" href="../_static/simulusion-favicon.svg"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Procgen" href="procgen.html" />
+    <link rel="next" title="Minecraft Diamond" href="minecraft.html" />
     <link rel="prev" title="Atari" href="atari.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -319,6 +319,7 @@
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">BSuite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -431,7 +432,10 @@
   <section id="deepmind-bsuite">
 <h1>DeepMind BSuite<a class="headerlink" href="#deepmind-bsuite" title="Link to this heading">#</a></h1>
 <p>The BSuite backend adapts DeepMind’s Behaviour Suite for Reinforcement Learning (BSuite) diagnostic tasks to Simulusion’s image-first interface. BSuite tasks provide compact <code class="docutils literal notranslate"><span class="pre">dm_env</span></code> observations and mostly discrete actions with known optimal reward profiles, making them useful for detecting fundamental issues in world-model training (e.g. credit assignment, memory, exploration).</p>
-<p>Install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code></p>
+<p>Install: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;simulusion[bsuite]&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code>). All 23
+environments and their 468 settings run on Linux, macOS and Windows.</p>
+<p>A task id names one setting of an environment, <code class="docutils literal notranslate"><span class="pre">&quot;&lt;environment&gt;/&lt;setting&gt;&quot;</span></code>. A
+bare name such as <code class="docutils literal notranslate"><span class="pre">&quot;catch&quot;</span></code> means its first setting, <code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span></code>.</p>
 <section id="main-api">
 <h2>Main API<a class="headerlink" href="#main-api" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_bsuite_env</span><span class="p">,</span> <span class="n">list_available_bsuite_ids</span>
@@ -466,12 +470,62 @@
 <li><p>The canvas is resized to <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> using bilinear interpolation.</p></li>
 <li><p>The result is returned as <code class="docutils literal notranslate"><span class="pre">{&quot;image&quot;:</span> <span class="pre">uint8</span> <span class="pre">array</span> <span class="pre">with</span> <span class="pre">shape</span> <span class="pre">(3,</span> <span class="pre">H,</span> <span class="pre">W)}</span></code>.</p></li>
 </ul>
-<p>When <code class="docutils literal notranslate"><span class="pre">include_state=True</span></code>, observations also include a <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code> key with the flattened raw observation vector.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">make_bsuite_env</span><span class="p">(</span><span class="s2">"catch/0"</span><span class="p">,</span> <span class="n">include_state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p><code class="docutils literal notranslate"><span class="pre">obs_type</span></code> picks what the observation holds:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">obs_type</span></code></p></th>
+<th class="head"><p>Keys</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;pixels&quot;</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span></code>: the flattened observation vector, <code class="docutils literal notranslate"><span class="pre">float32</span></code>. DreamerV3 learns from this.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;both&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">image</span></code> and <code class="docutils literal notranslate"><span class="pre">state</span></code> (the same as <code class="docutils literal notranslate"><span class="pre">include_state=True</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">make_bsuite_env</span><span class="p">(</span><span class="s2">"catch/0"</span><span class="p">,</span> <span class="n">obs_type</span><span class="o">=</span><span class="s2">"state"</span><span class="p">)</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-<span class="k">assert</span> <span class="s2">"image"</span> <span class="ow">in</span> <span class="n">obs</span> <span class="ow">and</span> <span class="s2">"state"</span> <span class="ow">in</span> <span class="n">obs</span>
+<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"state"</span><span class="p">}</span> <span class="ow">and</span> <span class="n">obs</span><span class="p">[</span><span class="s2">"state"</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">50</span><span class="p">,)</span>
 </pre></div>
 </div>
+</section>
+<section id="episode-budget-and-scoring">
+<h2>Episode budget and scoring<a class="headerlink" href="#episode-budget-and-scoring" title="Link to this heading">#</a></h2>
+<p>BSuite runs each setting for a fixed number of episodes
+(<code class="docutils literal notranslate"><span class="pre">env.num_episodes</span></code>, 1000 or 10000) rather than a step budget.
+<code class="docutils literal notranslate"><span class="pre">env.episodes_completed</span></code> counts finished episodes and <code class="docutils literal notranslate"><span class="pre">env.budget_exhausted</span></code>
+turns true at the budget; Dreamer training stops there on its own.</p>
+<p>BSuite scores come from its own logs. <code class="docutils literal notranslate"><span class="pre">results_dir=</span></code> (<code class="docutils literal notranslate"><span class="pre">cfg.bsuite_results_dir</span></code>)
+records the run with <code class="docutils literal notranslate"><span class="pre">bsuite.load_and_record_to_csv</span></code>; load the CSVs with
+<code class="docutils literal notranslate"><span class="pre">bsuite.logging.csv_load</span></code> and score them with
+<code class="docutils literal notranslate"><span class="pre">bsuite.experiments.summary_analysis</span></code>. A benchmark score covers every setting of
+every environment; <code class="docutils literal notranslate"><span class="pre">list_bsuite_settings(&quot;catch&quot;)</span></code> lists one environment’s.</p>
+</section>
+<section id="bsuite-in-a-dreamer-config">
+<h2>BSuite in a Dreamer config<a class="headerlink" href="#bsuite-in-a-dreamer-config" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerConfig</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">DreamerConfig</span><span class="p">(</span>
+    <span class="n">env_backend</span><span class="o">=</span><span class="s2">"bsuite"</span><span class="p">,</span>
+    <span class="n">env</span><span class="o">=</span><span class="s2">"catch/3"</span><span class="p">,</span>
+    <span class="n">bsuite_results_dir</span><span class="o">=</span><span class="s2">"runs/bsuite"</span><span class="p">,</span>
+    <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>BSuite acts on every step, so <code class="docutils literal notranslate"><span class="pre">action_repeat</span></code> must be 1 (<code class="docutils literal notranslate"><span class="pre">make_env</span></code> raises
+otherwise); episodes end by themselves and <code class="docutils literal notranslate"><span class="pre">time_limit</span></code> does not apply. Training
+stops once the setting’s episode budget is spent. Only the training
+environment records results; evaluation episodes are not part of the BSuite
+score. Dreamer V1/V2 learn from images, so they need <code class="docutils literal notranslate"><span class="pre">bsuite_obs_type=&quot;pixels&quot;</span></code>
+(the default) or <code class="docutils literal notranslate"><span class="pre">&quot;both&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code> is for agents that encode vectors.</p>
 </section>
 <section id="actions">
 <h2>Actions<a class="headerlink" href="#actions" title="Link to this heading">#</a></h2>
@@ -524,7 +578,7 @@
 <ul class="simple">
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">ImportError:</span> <span class="pre">No</span> <span class="pre">module</span> <span class="pre">named</span> <span class="pre">bsuite</span></code></strong>: install the optional dependency with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bsuite</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span> <span class="pre">not</span> <span class="pre">recognised</span></code></strong>: verify the task ID exists in your BSuite installation with <code class="docutils literal notranslate"><span class="pre">list_available_bsuite_ids()</span></code>.</p></li>
-<li><p><strong>Synthetic images are uninformative</strong>: BSuite observations are small numeric vectors tiled onto a canvas; the synthetic image preserves all information but may look unfamiliar. Use <code class="docutils literal notranslate"><span class="pre">include_state=True</span></code> to access the raw vector alongside the image.</p></li>
+<li><p><strong>Synthetic images are uninformative</strong>: BSuite observations are small numeric vectors tiled onto a canvas; the synthetic image preserves all information but may look unfamiliar. Use <code class="docutils literal notranslate"><span class="pre">obs_type=&quot;state&quot;</span></code> to learn from the raw vector.</p></li>
 </ul>
 </section>
 </section>
@@ -549,11 +603,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="procgen.html"
+       href="minecraft.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Procgen</p>
+        <p class="prev-next-title">Minecraft Diamond</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -579,6 +633,8 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#main-api">Main API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seed-determinism">Seed determinism</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observations">Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#episode-budget-and-scoring">Episode budget and scoring</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bsuite-in-a-dreamer-config">BSuite in a Dreamer config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#actions">Actions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#info-contract">Info contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>

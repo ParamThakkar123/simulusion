@@ -409,7 +409,7 @@
                 <article class="bd-article">
                   
   <section id="dreamerv3-mastering-diverse-domains-with-fixed-hyperparameters">
-<h1><a class="toc-backref" href="#id1" role="doc-backlink">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a><a class="headerlink" href="#dreamerv3-mastering-diverse-domains-with-fixed-hyperparameters" title="Link to this heading">#</a></h1>
+<h1><a class="toc-backref" href="#id2" role="doc-backlink">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a><a class="headerlink" href="#dreamerv3-mastering-diverse-domains-with-fixed-hyperparameters" title="Link to this heading">#</a></h1>
 <p>DreamerV3 is the third generation of the Dreamer family. Its distinguishing claim is
 not a new architecture but <em>robustness</em>: a single set of hyperparameters trains
 successfully across more than 150 tasks spanning continuous and discrete actions,
@@ -420,56 +420,57 @@ by orders of magnitude.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#dreamerv3-mastering-diverse-domains-with-fixed-hyperparameters" id="id1">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></p>
+<li><p><a class="reference internal" href="#dreamerv3-mastering-diverse-domains-with-fixed-hyperparameters" id="id2">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></p>
 <ul>
-<li><p><a class="reference internal" href="#quick-start" id="id2">Quick start</a></p></li>
-<li><p><a class="reference internal" href="#what-changed-from-dreamerv2" id="id3">What changed from DreamerV2</a></p></li>
-<li><p><a class="reference internal" href="#theory" id="id4">Theory</a></p>
+<li><p><a class="reference internal" href="#quick-start" id="id3">Quick start</a></p></li>
+<li><p><a class="reference internal" href="#what-changed-from-dreamerv2" id="id4">What changed from DreamerV2</a></p></li>
+<li><p><a class="reference internal" href="#theory" id="id5">Theory</a></p>
 <ul>
-<li><p><a class="reference internal" href="#world-model" id="id5">World model</a></p></li>
-<li><p><a class="reference internal" href="#free-bits-and-the-two-kl-terms" id="id6">Free bits and the two KL terms</a></p></li>
-<li><p><a class="reference internal" href="#unimix" id="id7">Unimix</a></p></li>
-<li><p><a class="reference internal" href="#two-hot-reward-and-critic-heads" id="id8">Two-hot reward and critic heads</a></p></li>
-<li><p><a class="reference internal" href="#percentile-return-normalization" id="id9">Percentile return normalization</a></p></li>
-<li><p><a class="reference internal" href="#actor-and-critic" id="id10">Actor and critic</a></p></li>
-<li><p><a class="reference internal" href="#optimizer" id="id11">Optimizer</a></p></li>
+<li><p><a class="reference internal" href="#world-model" id="id6">World model</a></p></li>
+<li><p><a class="reference internal" href="#free-bits-and-the-two-kl-terms" id="id7">Free bits and the two KL terms</a></p></li>
+<li><p><a class="reference internal" href="#unimix" id="id8">Unimix</a></p></li>
+<li><p><a class="reference internal" href="#two-hot-reward-and-critic-heads" id="id9">Two-hot reward and critic heads</a></p></li>
+<li><p><a class="reference internal" href="#percentile-return-normalization" id="id10">Percentile return normalization</a></p></li>
+<li><p><a class="reference internal" href="#actor-and-critic" id="id11">Actor and critic</a></p></li>
+<li><p><a class="reference internal" href="#optimizer" id="id12">Optimizer</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#model-sizes" id="id12">Model sizes</a></p></li>
-<li><p><a class="reference internal" href="#configuration" id="id13">Configuration</a></p>
+<li><p><a class="reference internal" href="#model-sizes" id="id13">Model sizes</a></p></li>
+<li><p><a class="reference internal" href="#configuration" id="id14">Configuration</a></p>
 <ul>
-<li><p><a class="reference internal" href="#replay-ratio" id="id14">Replay ratio</a></p></li>
-<li><p><a class="reference internal" href="#benchmark-presets" id="id15">Benchmark presets</a></p></li>
-<li><p><a class="reference internal" href="#replay-layout" id="id16">Replay layout</a></p></li>
+<li><p><a class="reference internal" href="#replay-ratio" id="id15">Replay ratio</a></p></li>
+<li><p><a class="reference internal" href="#benchmark-presets" id="id16">Benchmark presets</a></p></li>
+<li><p><a class="reference internal" href="#replay-layout" id="id17">Replay layout</a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id18">Benchmark presets</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#observations-and-actions" id="id17">Observations and actions</a></p></li>
-<li><p><a class="reference internal" href="#usage" id="id18">Usage</a></p>
+<li><p><a class="reference internal" href="#observations-and-actions" id="id19">Observations and actions</a></p></li>
+<li><p><a class="reference internal" href="#usage" id="id20">Usage</a></p>
 <ul>
-<li><p><a class="reference internal" href="#from-the-top-level-api" id="id19">From the top-level API</a></p></li>
-<li><p><a class="reference internal" href="#direct-construction" id="id20">Direct construction</a></p></li>
-<li><p><a class="reference internal" href="#checkpoints" id="id21">Checkpoints</a></p></li>
-<li><p><a class="reference internal" href="#components-in-isolation" id="id22">Components in isolation</a></p></li>
+<li><p><a class="reference internal" href="#from-the-top-level-api" id="id21">From the top-level API</a></p></li>
+<li><p><a class="reference internal" href="#direct-construction" id="id22">Direct construction</a></p></li>
+<li><p><a class="reference internal" href="#checkpoints" id="id23">Checkpoints</a></p></li>
+<li><p><a class="reference internal" href="#components-in-isolation" id="id24">Components in isolation</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#diagnostics" id="id23">Diagnostics</a></p></li>
-<li><p><a class="reference internal" href="#common-pitfalls" id="id24">Common pitfalls</a></p>
+<li><p><a class="reference internal" href="#diagnostics" id="id25">Diagnostics</a></p></li>
+<li><p><a class="reference internal" href="#common-pitfalls" id="id26">Common pitfalls</a></p>
 <ul>
-<li><p><a class="reference internal" href="#both-kl-terms-sit-exactly-at-1-0" id="id25">Both KL terms sit exactly at 1.0</a></p></li>
-<li><p><a class="reference internal" href="#entropy-collapses-to-zero" id="id26">Entropy collapses to zero</a></p></li>
-<li><p><a class="reference internal" href="#rewards-are-learned-but-the-policy-does-not-improve" id="id27">Rewards are learned but the policy does not improve</a></p></li>
-<li><p><a class="reference internal" href="#out-of-memory-with-large-model-sizes" id="id28">Out-of-memory with large model sizes</a></p></li>
+<li><p><a class="reference internal" href="#both-kl-terms-sit-exactly-at-1-0" id="id27">Both KL terms sit exactly at 1.0</a></p></li>
+<li><p><a class="reference internal" href="#entropy-collapses-to-zero" id="id28">Entropy collapses to zero</a></p></li>
+<li><p><a class="reference internal" href="#rewards-are-learned-but-the-policy-does-not-improve" id="id29">Rewards are learned but the policy does not improve</a></p></li>
+<li><p><a class="reference internal" href="#out-of-memory-with-large-model-sizes" id="id30">Out-of-memory with large model sizes</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#deviations-from-the-paper" id="id29">Deviations from the paper</a></p></li>
-<li><p><a class="reference internal" href="#see-also" id="id30">See also</a></p></li>
-<li><p><a class="reference internal" href="#references" id="id31">References</a></p></li>
+<li><p><a class="reference internal" href="#deviations-from-the-paper" id="id31">Deviations from the paper</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id32">See also</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id33">References</a></p></li>
 </ul>
 </li>
 </ul>
 </nav>
 <section id="quick-start">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Quick start</a><a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
 
 <span class="n">agent</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_model</span><span class="p">(</span>
@@ -487,7 +488,7 @@ by orders of magnitude.</p>
 </div>
 </section>
 <section id="what-changed-from-dreamerv2">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">What changed from DreamerV2</a><a class="headerlink" href="#what-changed-from-dreamerv2" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">What changed from DreamerV2</a><a class="headerlink" href="#what-changed-from-dreamerv2" title="Link to this heading">#</a></h2>
 <p>DreamerV2 already used discrete latents and two-hot heads. DreamerV3 adds the
 robustness machinery that removes the need for per-domain tuning.</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -543,9 +544,9 @@ robustness machinery that removes the need for per-domain tuning.</p>
 </div>
 </section>
 <section id="theory">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Theory</a><a class="headerlink" href="#theory" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Theory</a><a class="headerlink" href="#theory" title="Link to this heading">#</a></h2>
 <section id="world-model">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">World model</a><a class="headerlink" href="#world-model" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">World model</a><a class="headerlink" href="#world-model" title="Link to this heading">#</a></h3>
 <p>The world model is a Recurrent State-Space Model whose stochastic state is a vector
 of categorical variables rather than a Gaussian:</p>
 <div class="math notranslate nohighlight">
@@ -562,7 +563,7 @@ gradients: the forward pass is a hard one-hot vector, the backward pass sees the
 softmax probabilities.</p>
 </section>
 <section id="free-bits-and-the-two-kl-terms">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Free bits and the two KL terms</a><a class="headerlink" href="#free-bits-and-the-two-kl-terms" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Free bits and the two KL terms</a><a class="headerlink" href="#free-bits-and-the-two-kl-terms" title="Link to this heading">#</a></h3>
 <p>The world model loss splits the KL into a <strong>dynamics</strong> term (train the prior towards
 the posterior) and a <strong>representation</strong> term (train the posterior towards the prior),
 weighted differently and each clipped below one nat:</p>
@@ -584,14 +585,14 @@ both.</p>
 values — so seeing them log the same number is expected, not a bug.</p>
 </section>
 <section id="unimix">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Unimix</a><a class="headerlink" href="#unimix" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Unimix</a><a class="headerlink" href="#unimix" title="Link to this heading">#</a></h3>
 <p>Every categorical (the encoder, the dynamics predictor, and a discrete policy) is a
 mixture of 99% network output and 1% uniform. A distribution can therefore never
 become deterministic, which bounds log-probabilities and keeps the KL terms finite.
 This eliminates the KL spikes observed in earlier experiments.</p>
 </section>
 <section id="two-hot-reward-and-critic-heads">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Two-hot reward and critic heads</a><a class="headerlink" href="#two-hot-reward-and-critic-heads" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Two-hot reward and critic heads</a><a class="headerlink" href="#two-hot-reward-and-critic-heads" title="Link to this heading">#</a></h3>
 <p>Rewards and values vary by orders of magnitude across domains. A squared loss on
 large targets can diverge; absolute and Huber losses stagnate; normalizing by running
 statistics makes the optimization non-stationary.</p>
@@ -609,7 +610,7 @@ representable. Crucially, the loss depends only on the predicted probabilities, 
 the origin, so small targets are unaffected.</p>
 </section>
 <section id="percentile-return-normalization">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Percentile return normalization</a><a class="headerlink" href="#percentile-return-normalization" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Percentile return normalization</a><a class="headerlink" href="#percentile-return-normalization" title="Link to this heading">#</a></h3>
 <p>The actor uses a fixed entropy scale <code class="docutils literal notranslate"><span class="pre">η</span> <span class="pre">=</span> <span class="pre">3e-4</span></code> across all domains. For that to work,
 returns must be brought onto a common scale without destroying the information about
 reward frequency that tells the agent whether to explore or exploit:</p>
@@ -625,7 +626,7 @@ rewards the deviation approaches zero and amplifies noise without bound.</p></li
 </ul>
 </section>
 <section id="actor-and-critic">
-<h3><a class="toc-backref" href="#id10" role="doc-backlink">Actor and critic</a><a class="headerlink" href="#actor-and-critic" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Actor and critic</a><a class="headerlink" href="#actor-and-critic" title="Link to this heading">#</a></h3>
 <p>The actor maximizes the Reinforce objective with an entropy bonus, for both discrete
 and continuous actions:</p>
 <div class="math notranslate nohighlight">
@@ -646,7 +647,7 @@ annotations. This helps where rewards are hard to predict from imagination alone
 zero at step 0, which avoids a burst of hallucinated value early in training.</p>
 </section>
 <section id="optimizer">
-<h3><a class="toc-backref" href="#id11" role="doc-backlink">Optimizer</a><a class="headerlink" href="#optimizer" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Optimizer</a><a class="headerlink" href="#optimizer" title="Link to this heading">#</a></h3>
 <p>LaProp normalizes gradients by an RMSProp second-moment estimate <em>before</em> applying
 momentum, whereas Adam computes both from the raw gradient. That ordering tolerates
 <code class="docutils literal notranslate"><span class="pre">ε</span> <span class="pre">=</span> <span class="pre">1e-20</span></code> and avoids instabilities seen with Adam.</p>
@@ -656,7 +657,7 @@ weights, it does not need retuning when loss functions or loss scales change.</p
 </section>
 </section>
 <section id="model-sizes">
-<h2><a class="toc-backref" href="#id12" role="doc-backlink">Model sizes</a><a class="headerlink" href="#model-sizes" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Model sizes</a><a class="headerlink" href="#model-sizes" title="Link to this heading">#</a></h2>
 <p>Widths derive from a single model dimension <code class="docutils literal notranslate"><span class="pre">d</span></code> (Table 3 of the paper). Larger models
 score higher <strong>and</strong> need less environment interaction.</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -722,7 +723,7 @@ listed as 1024 rather than 2048. <code class="docutils literal notranslate"><spa
 </div>
 </section>
 <section id="configuration">
-<h2><a class="toc-backref" href="#id13" role="doc-backlink">Configuration</a><a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Configuration</a><a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">DreamerV3Config</span></code> extends <code class="docutils literal notranslate"><span class="pre">DreamerConfig</span></code>, so every environment backend option
 carries over. The defaults below reproduce Table 4 and are meant to be used
 unchanged.</p>
@@ -830,7 +831,7 @@ unchanged.</p>
 </table>
 </div>
 <section id="replay-ratio">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">Replay ratio</a><a class="headerlink" href="#replay-ratio" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Replay ratio</a><a class="headerlink" href="#replay-ratio" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">update_steps</span></code> is derived from <code class="docutils literal notranslate"><span class="pre">replay_ratio</span></code> rather than set directly:</p>
 <p>The replay ratio counts policy steps, so action repeat is divided out
 (<code class="docutils literal notranslate"><span class="pre">collect_steps</span></code> counts environment frames):</p>
@@ -846,7 +847,7 @@ cheapest of these; use 512 to match the paper’s control-suite runs. Set
 <code class="docutils literal notranslate"><span class="pre">auto_update_steps=False</span></code> to control <code class="docutils literal notranslate"><span class="pre">update_steps</span></code> yourself.</p>
 </section>
 <section id="benchmark-presets">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">Benchmark presets</a><a class="headerlink" href="#benchmark-presets" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Benchmark presets</a><a class="headerlink" href="#benchmark-presets" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">benchmark_config</span></code> returns a config that follows one benchmark’s protocol from
 Table 2 of the paper: the task, step budget, action repeat, replay ratio and
 model size, plus the environment settings the paper states.</p>
@@ -932,7 +933,7 @@ Minecraft preset.</p>
 <a class="reference internal" href="gallery.html#gallery-dreamer-v3"><span class="std std-ref">gallery</span></a> shows its runs on cartpole swing-up.</p>
 </section>
 <section id="replay-layout">
-<h3><a class="toc-backref" href="#id16" role="doc-backlink">Replay layout</a><a class="headerlink" href="#replay-layout" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Replay layout</a><a class="headerlink" href="#replay-layout" title="Link to this heading">#</a></h3>
 <p>Replay holds one record per observation, in the indexing of the world model
 equations. Record <code class="docutils literal notranslate"><span class="pre">t</span></code> stores <code class="docutils literal notranslate"><span class="pre">x_t</span></code>, the action <code class="docutils literal notranslate"><span class="pre">a_{t-1}</span></code> that led to it, the reward
 <code class="docutils literal notranslate"><span class="pre">r_t</span></code> received on arriving at it, and <code class="docutils literal notranslate"><span class="pre">is_first</span></code> / <code class="docutils literal notranslate"><span class="pre">is_last</span></code> / <code class="docutils literal notranslate"><span class="pre">is_terminal</span></code>. The
@@ -948,9 +949,104 @@ back. Each minibatch is filled first from chunks the model has not trained on ye
 (the online queue), then topped up uniformly. Collection also continues the open
 episode across calls, so the environment is only reset when an episode ends.</p>
 </section>
+<section id="id1">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Benchmark presets</a><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">benchmark_config</span></code> builds a config that follows the paper’s protocol for one
+benchmark of Table 2: its task list, step budget, action repeat, replay ratio, model
+size and environment settings. Other fields keep their defaults, and keyword
+arguments override anything, for example to fit a smaller GPU:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_v3_benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="n">benchmark_config</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">benchmark_config</span><span class="p">(</span><span class="s2">"dmlab"</span><span class="p">,</span> <span class="s2">"explore_goal_locations_small"</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">benchmark_config</span><span class="p">(</span><span class="s2">"atari100k"</span><span class="p">,</span> <span class="s2">"pong"</span><span class="p">,</span> <span class="n">model_size</span><span class="o">=</span><span class="s2">"12m"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Benchmark</p></th>
+<th class="head"><p>Tasks</p></th>
+<th class="head"><p>Env steps</p></th>
+<th class="head"><p>Repeat</p></th>
+<th class="head"><p>Replay ratio</p></th>
+<th class="head"><p>Model</p></th>
+<th class="head"><p>Environment settings</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmc-proprio</span></code></p></td>
+<td><p>18</p></td>
+<td><p>500K</p></td>
+<td><p>2</p></td>
+<td><p>512</p></td>
+<td><p>12M</p></td>
+<td><p>Joint states (<code class="docutils literal notranslate"><span class="pre">dmc_obs_type=&quot;state&quot;</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dmc-visual</span></code></p></td>
+<td><p>20</p></td>
+<td><p>1M</p></td>
+<td><p>2</p></td>
+<td><p>512</p></td>
+<td><p>12M</p></td>
+<td><p>64x64 pixels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">atari</span></code></p></td>
+<td><p>57</p></td>
+<td><p>200M</p></td>
+<td><p>4</p></td>
+<td><p>32</p></td>
+<td><p>200M</p></td>
+<td><p>Sticky actions, full action set</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">atari100k</span></code></p></td>
+<td><p>26</p></td>
+<td><p>400K</p></td>
+<td><p>4</p></td>
+<td><p>128</p></td>
+<td><p>200M</p></td>
+<td><p>No sticky actions, minimal action set</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">procgen</span></code></p></td>
+<td><p>16</p></td>
+<td><p>50M</p></td>
+<td><p>1</p></td>
+<td><p>64</p></td>
+<td><p>200M</p></td>
+<td><p>Hard mode, unlimited levels</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dmlab</span></code></p></td>
+<td><p>30</p></td>
+<td><p>100M</p></td>
+<td><p>4</p></td>
+<td><p>32</p></td>
+<td><p>200M</p></td>
+<td><p>PopArt 15-action set, instruction input on language levels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bsuite</span></code></p></td>
+<td><p>23</p></td>
+<td><p>per-setting episode budget</p></td>
+<td><p>1</p></td>
+<td><p>1024</p></td>
+<td><p>200M</p></td>
+<td><p>Flat observation vector; stops at BSuite’s episode budget</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">minecraft</span></code></p></td>
+<td><p>1</p></td>
+<td><p>100M</p></td>
+<td><p>1</p></td>
+<td><p>32</p></td>
+<td><p>200M</p></td>
+<td><p>Image plus inventory, equipped item and health/hunger/breath</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>DMLab and Minecraft need packages that only build on Linux with Python 3.11; the
+<code class="docutils literal notranslate"><span class="pre">docker/envs</span></code> image provides them. See <a class="reference internal" href="environments/dmlab.html"><span class="doc">DeepMind Lab</span></a>,
+<a class="reference internal" href="environments/bsuite.html"><span class="doc">DeepMind BSuite</span></a> and <a class="reference internal" href="environments/minecraft.html"><span class="doc">Minecraft Diamond</span></a>.</p>
+</section>
 </section>
 <section id="observations-and-actions">
-<h2><a class="toc-backref" href="#id17" role="doc-backlink">Observations and actions</a><a class="headerlink" href="#observations-and-actions" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Observations and actions</a><a class="headerlink" href="#observations-and-actions" title="Link to this heading">#</a></h2>
 <p>Both observation kinds and both action kinds are handled automatically:</p>
 <ul class="simple">
 <li><p><strong>Image observations</strong> (<code class="docutils literal notranslate"><span class="pre">(C,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>) use a stride-2 convolution stack down to 4x4,
@@ -982,6 +1078,12 @@ loss is the sum of the inputs’ losses (logged per input as
 <tr class="row-even"><td><p>DMLab <code class="docutils literal notranslate"><span class="pre">language_*</span></code> levels</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">instr</span></code></p></td>
 </tr>
+<tr class="row-odd"><td><p>BSuite, <code class="docutils literal notranslate"><span class="pre">bsuite_obs_type=&quot;state&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Minecraft Diamond (<code class="docutils literal notranslate"><span class="pre">minecraft</span></code> preset)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">image</span></code>, <code class="docutils literal notranslate"><span class="pre">inventory</span></code>, <code class="docutils literal notranslate"><span class="pre">inventory_max</span></code>, <code class="docutils literal notranslate"><span class="pre">equipped</span></code>, <code class="docutils literal notranslate"><span class="pre">health</span></code>, <code class="docutils literal notranslate"><span class="pre">hunger</span></code>, <code class="docutils literal notranslate"><span class="pre">breath</span></code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -999,9 +1101,9 @@ one-hot categorical carrying the same 1% unimix.</p></li>
 <p><code class="docutils literal notranslate"><span class="pre">actor_dist</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, which resolves from the environment’s action space.</p>
 </section>
 <section id="usage">
-<h2><a class="toc-backref" href="#id18" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
 <section id="from-the-top-level-api">
-<h3><a class="toc-backref" href="#id19" role="doc-backlink">From the top-level API</a><a class="headerlink" href="#from-the-top-level-api" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">From the top-level API</a><a class="headerlink" href="#from-the-top-level-api" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">simulusion</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">simulusion</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="s2">"dreamer-v3"</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="s2">"walker-walk"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -1012,7 +1114,7 @@ one-hot categorical carrying the same 1% unimix.</p></li>
 </div>
 </section>
 <section id="direct-construction">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Direct construction</a><a class="headerlink" href="#direct-construction" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Direct construction</a><a class="headerlink" href="#direct-construction" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models.dreamer_v3</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerV3</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerV3Config</span>
 
@@ -1027,7 +1129,7 @@ one-hot categorical carrying the same 1% unimix.</p></li>
 </div>
 </section>
 <section id="checkpoints">
-<h3><a class="toc-backref" href="#id21" role="doc-backlink">Checkpoints</a><a class="headerlink" href="#checkpoints" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Checkpoints</a><a class="headerlink" href="#checkpoints" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"checkpoints/dreamer_v3.pt"</span><span class="p">)</span>  <span class="c1"># writes config.yaml alongside</span>
 <span class="n">restored</span> <span class="o">=</span> <span class="n">DreamerV3</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"checkpoints"</span><span class="p">)</span>
 </pre></div>
@@ -1036,7 +1138,7 @@ one-hot categorical carrying the same 1% unimix.</p></li>
 resumes exactly rather than restarting the normalization statistics.</p>
 </section>
 <section id="components-in-isolation">
-<h3><a class="toc-backref" href="#id22" role="doc-backlink">Components in isolation</a><a class="headerlink" href="#components-in-isolation" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Components in isolation</a><a class="headerlink" href="#components-in-isolation" title="Link to this heading">#</a></h3>
 <p>Every piece is usable on its own:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CategoricalRSSM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.optim</span><span class="w"> </span><span class="kn">import</span> <span class="n">LaProp</span><span class="p">,</span> <span class="n">adaptive_grad_clip_</span>
@@ -1047,7 +1149,7 @@ resumes exactly rather than restarting the normalization statistics.</p>
 </section>
 </section>
 <section id="diagnostics">
-<h2><a class="toc-backref" href="#id23" role="doc-backlink">Diagnostics</a><a class="headerlink" href="#diagnostics" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">Diagnostics</a><a class="headerlink" href="#diagnostics" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">train_one_batch</span></code> publishes a metrics dictionary that the training loop logs
 automatically:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -1086,34 +1188,34 @@ automatically:</p>
 </div>
 </section>
 <section id="common-pitfalls">
-<h2><a class="toc-backref" href="#id24" role="doc-backlink">Common pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Common pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h2>
 <section id="both-kl-terms-sit-exactly-at-1-0">
-<h3><a class="toc-backref" href="#id25" role="doc-backlink">Both KL terms sit exactly at 1.0</a><a class="headerlink" href="#both-kl-terms-sit-exactly-at-1-0" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id27" role="doc-backlink">Both KL terms sit exactly at 1.0</a><a class="headerlink" href="#both-kl-terms-sit-exactly-at-1-0" title="Link to this heading">#</a></h3>
 <p>Free bits are fully saturated, so the representation is not being shaped by the
 dynamics at all. This is normal early on. If it persists, the world model may be
 underfitting — check <code class="docutils literal notranslate"><span class="pre">wm/recon_loss</span></code> is still decreasing.</p>
 </section>
 <section id="entropy-collapses-to-zero">
-<h3><a class="toc-backref" href="#id26" role="doc-backlink">Entropy collapses to zero</a><a class="headerlink" href="#entropy-collapses-to-zero" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">Entropy collapses to zero</a><a class="headerlink" href="#entropy-collapses-to-zero" title="Link to this heading">#</a></h3>
 <p>The actor has stopped exploring. Check <code class="docutils literal notranslate"><span class="pre">actor/return_scale</span></code>: if it is very large, the
 advantages have been scaled down until the entropy term dominates nothing. Confirm
 that reward magnitudes are what you expect.</p>
 </section>
 <section id="rewards-are-learned-but-the-policy-does-not-improve">
-<h3><a class="toc-backref" href="#id27" role="doc-backlink">Rewards are learned but the policy does not improve</a><a class="headerlink" href="#rewards-are-learned-but-the-policy-does-not-improve" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id29" role="doc-backlink">Rewards are learned but the policy does not improve</a><a class="headerlink" href="#rewards-are-learned-but-the-policy-does-not-improve" title="Link to this heading">#</a></h3>
 <p>Check <code class="docutils literal notranslate"><span class="pre">critic/value</span></code> against <code class="docutils literal notranslate"><span class="pre">critic/target</span></code>. A persistent gap points at the critic;
 try raising <code class="docutils literal notranslate"><span class="pre">critic_replay_loss_scale</span></code> for environments where rewards are hard to
 predict from imagination alone.</p>
 </section>
 <section id="out-of-memory-with-large-model-sizes">
-<h3><a class="toc-backref" href="#id28" role="doc-backlink">Out-of-memory with large model sizes</a><a class="headerlink" href="#out-of-memory-with-large-model-sizes" title="Link to this heading">#</a></h3>
+<h3><a class="toc-backref" href="#id30" role="doc-backlink">Out-of-memory with large model sizes</a><a class="headerlink" href="#out-of-memory-with-large-model-sizes" title="Link to this heading">#</a></h3>
 <p>The replay buffer sizes itself from available RAM and logs a warning when it shrinks.
 The dominant GPU cost is <code class="docutils literal notranslate"><span class="pre">batch_size</span> <span class="pre">*</span> <span class="pre">train_seq_len</span></code>; lower <code class="docutils literal notranslate"><span class="pre">train_seq_len</span></code> before
 lowering <code class="docutils literal notranslate"><span class="pre">model_size</span></code>, since sequence length costs less in final performance.</p>
 </section>
 </section>
 <section id="deviations-from-the-paper">
-<h2><a class="toc-backref" href="#id29" role="doc-backlink">Deviations from the paper</a><a class="headerlink" href="#deviations-from-the-paper" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id31" role="doc-backlink">Deviations from the paper</a><a class="headerlink" href="#deviations-from-the-paper" title="Link to this heading">#</a></h2>
 <p>Documented here so results can be compared fairly:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">buffer_size</span></code> is 5M as in the paper, but shrinks to fit the available RAM (each
@@ -1131,7 +1233,7 @@ error, matching the Methods section’s description of the decoder.</p></li>
 </ul>
 </section>
 <section id="see-also">
-<h2><a class="toc-backref" href="#id30" role="doc-backlink">See also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id32" role="doc-backlink">See also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> — DreamerV1 and DreamerV2</p></li>
 <li><p><a class="reference internal" href="modular_rssm_guide.html"><span class="doc">Modular RSSM</span></a> — swapping encoders, backbones, and decoders</p></li>
@@ -1139,7 +1241,7 @@ error, matching the Methods section’s description of the decoder.</p></li>
 </ul>
 </section>
 <section id="references">
-<h2><a class="toc-backref" href="#id31" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id33" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Hafner, D., Pasukonis, J., Ba, J., &amp; Lillicrap, T. (2023). Mastering Diverse Domains through World Models.</p></li>
 <li><p>Ziyin, L., Wang, Z. T., &amp; Ueda, M. (2020). LaProp: Separating Momentum and Adaptivity in Adam.</p></li>
@@ -1213,6 +1315,7 @@ error, matching the Methods section’s description of the decoder.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replay-ratio">Replay ratio</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-presets">Benchmark presets</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#replay-layout">Replay layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Benchmark presets</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observations-and-actions">Observations and actions</a></li>

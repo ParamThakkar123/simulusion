@@ -801,6 +801,16 @@ window.runMermaid = runMermaid;</script>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s2">"MinecraftDiamondEnv"</span><span class="p">,</span>
+        <span class="s2">"make_minecraft_diamond_env"</span><span class="p">,</span>
+        <span class="s2">"DIAMOND_ACTIONS"</span><span class="p">,</span>
+        <span class="s2">"DIAMOND_MILESTONES"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">minecraft_diamond</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">minecraft_diamond</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"BraxImageEnv"</span><span class="p">,</span> <span class="s2">"make_brax_env"</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.brax_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">BraxImageEnv</span><span class="p">,</span> <span class="n">make_brax_env</span>
 
@@ -808,27 +818,30 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="n">BraxImageEnv</span>
         <span class="k">return</span> <span class="n">make_brax_env</span>
 
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"DMLabEnv"</span><span class="p">,</span> <span class="s2">"make_dmlab_env"</span><span class="p">,</span> <span class="s2">"DMLAB_LEVELS"</span><span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.dmlab</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMLabEnv</span><span class="p">,</span> <span class="n">make_dmlab_env</span><span class="p">,</span> <span class="n">DMLAB_LEVELS</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s2">"DMLabEnv"</span><span class="p">,</span>
+        <span class="s2">"make_dmlab_env"</span><span class="p">,</span>
+        <span class="s2">"DMLAB_LEVELS"</span><span class="p">,</span>
+        <span class="s2">"DMLAB30_LEVELS"</span><span class="p">,</span>
+        <span class="s2">"resolve_dmlab_level"</span><span class="p">,</span>
+        <span class="s2">"POPART_ACTION_SET"</span><span class="p">,</span>
+        <span class="s2">"IMPALA_ACTION_SET"</span><span class="p">,</span>
+        <span class="s2">"embed_instruction"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">dmlab</span>
 
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"DMLabEnv"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">DMLabEnv</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"make_dmlab_env"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">make_dmlab_env</span>
-        <span class="k">return</span> <span class="n">DMLAB_LEVELS</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dmlab</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"BSuiteImageEnv"</span><span class="p">,</span> <span class="s2">"make_bsuite_env"</span><span class="p">,</span> <span class="s2">"list_available_bsuite_ids"</span><span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.bsuite_env</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-            <span class="n">BSuiteImageEnv</span><span class="p">,</span>
-            <span class="n">make_bsuite_env</span><span class="p">,</span>
-            <span class="n">list_available_bsuite_ids</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s2">"BSuiteImageEnv"</span><span class="p">,</span>
+        <span class="s2">"make_bsuite_env"</span><span class="p">,</span>
+        <span class="s2">"list_available_bsuite_ids"</span><span class="p">,</span>
+        <span class="s2">"list_bsuite_settings"</span><span class="p">,</span>
+        <span class="s2">"normalize_bsuite_id"</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">bsuite_env</span>
 
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"BSuiteImageEnv"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">BSuiteImageEnv</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"make_bsuite_env"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">make_bsuite_env</span>
-        <span class="k">return</span> <span class="n">list_available_bsuite_ids</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bsuite_env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"UnityMLAgentsEnv"</span><span class="p">,</span> <span class="s2">"make_unity_mlagents_env"</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.unity_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">UnityMLAgentsEnv</span><span class="p">,</span> <span class="n">make_unity_mlagents_env</span>
@@ -907,6 +920,10 @@ window.runMermaid = runMermaid;</script>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.dmlab</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_dmlab_env</span>
 
         <span class="k">return</span> <span class="n">make_dmlab_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"minecraft"</span><span class="p">,</span> <span class="s2">"minecraft_diamond"</span><span class="p">,</span> <span class="s2">"minerl"</span><span class="p">}:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.minecraft_diamond</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_minecraft_diamond_env</span>
+
+        <span class="k">return</span> <span class="n">make_minecraft_diamond_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"procgen"</span><span class="p">,</span> <span class="s2">"coinrun"</span><span class="p">}:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.procgen_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_procgen_env</span>
 
@@ -995,6 +1012,11 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"list_minecraft_actions"</span><span class="p">,</span>
     <span class="s2">"list_minecraft_envs"</span><span class="p">,</span>
     <span class="s2">"make_minecraft_env"</span><span class="p">,</span>
+    <span class="c1"># Minecraft Diamond (DreamerV3 benchmark, MineRL 0.4.4)</span>
+    <span class="s2">"MinecraftDiamondEnv"</span><span class="p">,</span>
+    <span class="s2">"make_minecraft_diamond_env"</span><span class="p">,</span>
+    <span class="s2">"DIAMOND_ACTIONS"</span><span class="p">,</span>
+    <span class="s2">"DIAMOND_MILESTONES"</span><span class="p">,</span>
     <span class="s2">"UnityMLAgentsEnv"</span><span class="p">,</span>
     <span class="s2">"make_unity_mlagents_env"</span><span class="p">,</span>
     <span class="s2">"DeepMindControlEnv"</span><span class="p">,</span>
@@ -1003,9 +1025,16 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"DMLabEnv"</span><span class="p">,</span>
     <span class="s2">"make_dmlab_env"</span><span class="p">,</span>
     <span class="s2">"DMLAB_LEVELS"</span><span class="p">,</span>
+    <span class="s2">"DMLAB30_LEVELS"</span><span class="p">,</span>
+    <span class="s2">"resolve_dmlab_level"</span><span class="p">,</span>
+    <span class="s2">"POPART_ACTION_SET"</span><span class="p">,</span>
+    <span class="s2">"IMPALA_ACTION_SET"</span><span class="p">,</span>
+    <span class="s2">"embed_instruction"</span><span class="p">,</span>
     <span class="s2">"BSuiteImageEnv"</span><span class="p">,</span>
     <span class="s2">"make_bsuite_env"</span><span class="p">,</span>
     <span class="s2">"list_available_bsuite_ids"</span><span class="p">,</span>
+    <span class="s2">"list_bsuite_settings"</span><span class="p">,</span>
+    <span class="s2">"normalize_bsuite_id"</span><span class="p">,</span>
     <span class="s2">"TimeLimit"</span><span class="p">,</span>
     <span class="s2">"ActionRepeat"</span><span class="p">,</span>
     <span class="s2">"NormalizeActions"</span><span class="p">,</span>

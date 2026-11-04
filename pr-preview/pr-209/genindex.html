@@ -1057,10 +1057,10 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.training.trainer.TrainResult.best_checkpoint">best_checkpoint (simulusion.training.trainer.TrainResult attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.training.trainer.TrainerConfig.best_metric">best_metric (simulusion.training.trainer.TrainerConfig attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.training.trainer.TrainerConfig.best_mode">best_mode (simulusion.training.trainer.TrainerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.training.trainer.TrainResult.best_value">best_value (simulusion.training.trainer.TrainResult attribute)</a>
@@ -1084,6 +1084,10 @@ window.runMermaid = runMermaid;</script>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.brax_jit">brax_jit (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.brax_suppress_warp_warnings">brax_suppress_warp_warnings (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.bsuite_obs_type">bsuite_obs_type (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.bsuite_results_dir">bsuite_results_dir (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.memory.iris_memory.IRISReplayBuffer.buffer_capacity">buffer_capacity (simulusion.memory.iris_memory.IRISReplayBuffer property)</a>
 </li>
@@ -1501,14 +1505,14 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.world_model.WorldModelBase.device">(simulusion.world_model.WorldModelBase attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.training.trainer.DeviceLoader">DeviceLoader (class in simulusion.training.trainer)</a>
 </li>
       <li><a href="api_reference.html#simulusion.benchmarks.adapters.DiamondAdapter">DiamondAdapter (class in simulusion.benchmarks.adapters)</a>
 </li>
       <li><a href="api_reference.html#simulusion.training.train_diamond.DiamondAgent">DiamondAgent (class in simulusion.training.train_diamond)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api_reference.html#simulusion.envs.diamond_atari.DiamondAtariWrapper">DiamondAtariWrapper (class in simulusion.envs.diamond_atari)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig">DiamondConfig (class in simulusion.configs.diamond_config)</a>
@@ -1553,6 +1557,16 @@ window.runMermaid = runMermaid;</script>
       </ul></li>
       <li><a href="api_reference.html#simulusion.configs.diamond_config.DiamondConfig.discount_factor">discount_factor (simulusion.configs.diamond_config.DiamondConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.envs.dmlab.DMLabEnv.discrete_actions">discrete_actions (simulusion.envs.dmlab.DMLabEnv property)</a>
+
+      <ul>
+        <li><a href="api_reference.html#simulusion.envs.gym_env.GymImageEnv.discrete_actions">(simulusion.envs.gym_env.GymImageEnv property)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.envs.procgen_env.ProcgenImageEnv.discrete_actions">(simulusion.envs.procgen_env.ProcgenImageEnv property)</a>
+</li>
+        <li><a href="api_reference.html#simulusion.envs.wrappers.OneHotAction.discrete_actions">(simulusion.envs.wrappers.OneHotAction attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api_reference.html#simulusion.vision.iris_decoder.DiscreteAutoencoder">DiscreteAutoencoder (class in simulusion.vision.iris_decoder)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMControllerConfig.display">display (simulusion.configs.wm_config.WMControllerConfig attribute)</a>
@@ -1577,9 +1591,13 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.dmlab_config">dmlab_config (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.dmlab_mode">dmlab_mode (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.dmlab_observations">dmlab_observations (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.dmlab_renderer">dmlab_renderer (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.dmlab_text">dmlab_text (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.envs.dmlab.DMLabEnv">DMLabEnv (class in simulusion.envs.dmlab)</a>
 </li>
@@ -1717,6 +1735,8 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.genie_config.VideoTokenizerConfig.ema_decay">ema_decay (simulusion.configs.genie_config.VideoTokenizerConfig attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.envs.dmlab.embed_instruction">embed_instruction() (in module simulusion.envs.dmlab)</a>
+</li>
       <li><a href="api_reference.html#simulusion.models.modular_rssm.EncoderBase.embed_size">embed_size (simulusion.models.modular_rssm.EncoderBase attribute)</a>
 
       <ul>
@@ -1801,10 +1821,10 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.configs.iris_config.IRISConfig.encoder_residual_blocks">encoder_residual_blocks (simulusion.configs.iris_config.IRISConfig attribute)</a>
 </li>
-      <li><a href="api_reference.html#simulusion.models.modular_rssm.EncoderBase">EncoderBase (class in simulusion.models.modular_rssm)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api_reference.html#simulusion.models.modular_rssm.EncoderBase">EncoderBase (class in simulusion.models.modular_rssm)</a>
+</li>
       <li><a href="api_reference.html#simulusion.utils.utils.ensure_results_dir_exists">ensure_results_dir_exists() (in module simulusion.utils.utils)</a>
 </li>
       <li><a href="api_reference.html#simulusion.vision.dreamer_decoder.SampleDist.entropy">entropy() (simulusion.vision.dreamer_decoder.SampleDist method)</a>
@@ -3151,6 +3171,10 @@ window.runMermaid = runMermaid;</script>
 </li>
       <li><a href="api_reference.html#simulusion.agents.planning.CEMPlanner.min_std">min_std (simulusion.agents.planning.CEMPlanner attribute)</a>
 </li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.minecraft_break_speed">minecraft_break_speed (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.minecraft_length">minecraft_length (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
+</li>
       <li><a href="api_reference.html#simulusion.training.precision.MixedPrecision">MixedPrecision (class in simulusion.training.precision)</a>
 </li>
       <li><a href="api_reference.html#simulusion.models.vit.MLP">MLP (class in simulusion.models.vit)</a>
@@ -3488,6 +3512,8 @@ window.runMermaid = runMermaid;</script>
         <li><a href="api_reference.html#simulusion.vision.dreamer_decoder.SampleDist.name">(simulusion.vision.dreamer_decoder.SampleDist property)</a>
 </li>
       </ul></li>
+      <li><a href="api_reference.html#simulusion.envs.dmlab.DMLabEnv.native_action_repeat">native_action_repeat (simulusion.envs.dmlab.DMLabEnv property)</a>
+</li>
       <li><a href="api_reference.html#simulusion.configs.dreamer_config.DreamerConfig.no_gpu">no_gpu (simulusion.configs.dreamer_config.DreamerConfig attribute)</a>
 </li>
       <li><a href="api_reference.html#simulusion.configs.wm_config.WMMDNRNNConfig.noreload">noreload (simulusion.configs.wm_config.WMMDNRNNConfig attribute)</a>
@@ -3999,6 +4025,8 @@ window.runMermaid = runMermaid;</script>
 </li>
       </ul></li>
       <li><a href="api_reference.html#simulusion.envs.wrappers.ResizeImage">ResizeImage (class in simulusion.envs.wrappers)</a>
+</li>
+      <li><a href="api_reference.html#simulusion.envs.dmlab.resolve_dmlab_level">resolve_dmlab_level() (in module simulusion.envs.dmlab)</a>
 </li>
       <li><a href="api_reference.html#simulusion.inference.precision.resolve_precision">resolve_precision() (in module simulusion.inference.precision)</a>
 </li>

@@ -319,6 +319,7 @@
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l2"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -436,6 +437,7 @@
 <li class="toctree-l1"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atari.html">Atari</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bsuite.html">BSuite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="robotics.html">Gymnasium Robotics</a></li>
@@ -476,61 +478,67 @@
 <td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code> only</p></td>
 <td><p>Original continuous <code class="docutils literal notranslate"><span class="pre">Box</span></code> or one-hot vector for discrete actions</p></td>
 </tr>
-<tr class="row-odd"><td><p>DeepMind BSuite</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="bsuite.html"><span class="std std-doc">DeepMind BSuite</span></a></p></td>
 <td><p>Small diagnostic RL benchmark tasks such as <code class="docutils literal notranslate"><span class="pre">catch/0</span></code> and <code class="docutils literal notranslate"><span class="pre">deep_sea/0</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">BSuiteImageEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_bsuite_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;bsuite&quot;</span></code></p></td>
-<td><p>Dict with synthetic <code class="docutils literal notranslate"><span class="pre">image</span></code> only</p></td>
+<td><p>Dict with synthetic <code class="docutils literal notranslate"><span class="pre">image</span></code>, the flat <code class="docutils literal notranslate"><span class="pre">state</span></code> vector, or both</p></td>
 <td><p>One-hot vector for discrete actions</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="brax.html"><span class="std std-doc">Brax</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="minecraft.html"><span class="std std-doc">Minecraft Diamond</span></a></p></td>
+<td><p>DreamerV3’s Minecraft benchmark: obtain a diamond from sparse milestone rewards</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MinecraftDiamondEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;minecraft&quot;</span></code></p></td>
+<td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code> plus inventory and status vectors</p></td>
+<td><p>One-hot vector over 25 actions</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="brax.html"><span class="std std-doc">Brax</span></a></p></td>
 <td><p>JAX/Brax continuous-control tasks through a Gym-like image adapter</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">BraxImageEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_brax_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;brax&quot;</span></code></p></td>
 <td><p>Dict with synthesized <code class="docutils literal notranslate"><span class="pre">image</span></code>; raw vector in <code class="docutils literal notranslate"><span class="pre">info[&quot;vector_observation&quot;]</span></code></p></td>
 <td><p>Continuous <code class="docutils literal notranslate"><span class="pre">Box[-1,</span> <span class="pre">1]</span></code> matching <code class="docutils literal notranslate"><span class="pre">env.action_size</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="atari.html"><span class="std std-doc">Atari</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="atari.html"><span class="std std-doc">Atari</span></a></p></td>
 <td><p>Atari 2600 environments through Gymnasium/ALE</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">make_atari_env</span></code>, <code class="docutils literal notranslate"><span class="pre">make_atari_vector_env</span></code></p></td>
 <td><p>ALE RGB/RAM observations</p></td>
 <td><p>Discrete Atari actions</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="procgen.html"><span class="std std-doc">Procgen</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="procgen.html"><span class="std std-doc">Procgen</span></a></p></td>
 <td><p>Procedurally generated benchmark games</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ProcgenImageEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_procgen_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;procgen&quot;</span></code></p></td>
 <td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p>One-hot vector for discrete Procgen actions</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="mujoco.html"><span class="std std-doc">MuJoCo</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="mujoco.html"><span class="std std-doc">MuJoCo</span></a></p></td>
 <td><p>Gymnasium MuJoCo task ids and native MJCF/MJB models</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">make_mujoco_env</span></code></p></td>
 <td><p>Image dict via <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code>/<code class="docutils literal notranslate"><span class="pre">MuJoCoImageEnv</span></code></p></td>
 <td><p>Continuous <code class="docutils literal notranslate"><span class="pre">Box</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="robotics.html"><span class="std std-doc">Gymnasium Robotics</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="robotics.html"><span class="std std-doc">Gymnasium Robotics</span></a></p></td>
 <td><p>All ids registered by the installed Gymnasium Robotics package, including moved legacy MuJoCo v2/v3 ids</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">make_robotics_env</span></code>, <code class="docutils literal notranslate"><span class="pre">list_gymnasium_robotics_envs</span></code></p></td>
 <td><p>Image dict via <code class="docutils literal notranslate"><span class="pre">GymImageEnv</span></code></p></td>
 <td><p>Continuous <code class="docutils literal notranslate"><span class="pre">Box</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="unity.html"><span class="std std-doc">Unity ML-Agents</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="unity.html"><span class="std std-doc">Unity ML-Agents</span></a></p></td>
 <td><p>External Unity executable simulations with continuous-control behaviors</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">UnityMLAgentsEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;unity_mlagents&quot;</span></code></p></td>
 <td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p>Continuous <code class="docutils literal notranslate"><span class="pre">Box[-1,</span> <span class="pre">1]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="vectorized.html"><span class="std std-doc">Vectorized environments</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="vectorized.html"><span class="std std-doc">Vectorized environments</span></a></p></td>
 <td><p>Multiprocess/vector rollout collection and native ALE vectorization</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">TorchVectorizedEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_atari_vector_env</span></code></p></td>
 <td><p>Batched observations</p></td>
 <td><p>Batched actions</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="world_model.html"><span class="std std-doc">World Model Env</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="world_model.html"><span class="std std-doc">World Model Env</span></a></p></td>
 <td><p>Model-based RL, policy optimization, and evaluation inside learned dynamics</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">WorldModelEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_world_model_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;world-model&quot;</span></code></p></td>
 <td><p>Adapter-defined Gymnasium space</p></td>
 <td><p>Adapter-defined Gymnasium space</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="wrappers.html"><span class="std std-doc">Wrappers</span></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="wrappers.html"><span class="std std-doc">Wrappers</span></a></p></td>
 <td><p>Shared preprocessing, action conversion, time limits, reward observations, and image transforms</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulusion.envs.wrappers</span></code></p></td>
 <td><p>Backend-dependent</p></td>
@@ -544,7 +552,7 @@
 <h2>Shared conventions<a class="headerlink" href="#shared-conventions" title="Link to this heading">#</a></h2>
 <p>Most Simulusion training code expects image observations as a dictionary entry named <code class="docutils literal notranslate"><span class="pre">image</span></code> with channel-first shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> and <code class="docutils literal notranslate"><span class="pre">uint8</span></code> values. Backend adapters that wrap vector-only environments synthesize an image representation so pixel-based agents can still run.</p>
 <p>DIAMOND-style Atari support is documented on the Atari page as a preprocessing helper for Atari rollouts. It is not a separate environment backend.</p>
-<p>Dreamer environment construction applies a standard wrapper stack after creating DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen, BSuite, Brax, or Unity environments:</p>
+<p>Dreamer environment construction applies a standard wrapper stack after creating DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen, BSuite, Minecraft, Brax, or Unity environments:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ActionRepeat</span></code> repeats each selected action for <code class="docutils literal notranslate"><span class="pre">cfg.action_repeat</span></code> environment steps.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NormalizeActions</span></code> exposes finite continuous action bounds as normalized <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> policy outputs.</p></li>
