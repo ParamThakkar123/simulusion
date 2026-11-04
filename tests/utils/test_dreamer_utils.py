@@ -319,6 +319,28 @@ class TestLambdaReturn:
         assert torch.allclose(actual, expected, atol=1e-5)
 
 
+class TestComputeReturn:
+    def test_matches_the_v1_v2_recursion(self):
+        """``compute_return`` takes current-state values and shifts them itself."""
+        torch.manual_seed(0)
+        rewards = torch.randn(5, 2)
+        values = torch.randn(5, 2)
+        discounts = torch.rand(5, 2)
+        last_value = torch.randn(2)
+        lam = 0.95
+
+        next_values = torch.cat([values[1:], last_value.unsqueeze(0)], 0)
+        targets = rewards + discounts * next_values * (1 - lam)
+        expected = torch.zeros(5, 2)
+        accumulated = last_value
+        for t in reversed(range(5)):
+            accumulated = targets[t] + discounts[t] * lam * accumulated
+            expected[t] = accumulated
+
+        actual = compute_return(rewards, values, discounts, lam, last_value)
+        assert torch.allclose(actual, expected, atol=1e-5)
+
+
 class TestNumpyInterop:
     def test_twohot_matches_manual_numpy_computation(self):
         bins = torch.tensor([0.0, 1.0, 2.0])
