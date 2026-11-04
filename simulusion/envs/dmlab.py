@@ -211,6 +211,11 @@ class DMLabEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """DMLab actions are discrete; the Box space holds their one-hot form."""
+        return True
+
+    @property
     def max_episode_steps(self) -> int:
         fps = int(self._config.get("fps", 60))
         episode_length = int(self._config.get("episode_length_seconds", 60))

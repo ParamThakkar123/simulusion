@@ -105,6 +105,7 @@ def test_make_env_gym_backend(
         seed=cfg.seed,
         size=cfg.image_size,
         render_mode=cfg.gym_render_mode,
+        make_kwargs=None,
     )
 
 

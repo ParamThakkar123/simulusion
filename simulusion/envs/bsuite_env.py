@@ -131,6 +131,11 @@ class BSuiteImageEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """Whether the Box action space stands for a discrete one (one-hot)."""
+        return self._discrete_n is not None
+
+    @property
     def max_episode_steps(self) -> int:
         return int(getattr(self._env, "bsuite_num_episodes", 0) or 1000)
 

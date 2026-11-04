@@ -1021,13 +1021,47 @@ class TestActorDistResolution:
         env.action_space = Mock(spec=["n"])
         assert _resolve_actor_dist(env) == "onehot"
 
-    def test_one_hot_wrapped_env_resolves_to_onehot(self):
-        inner = Mock()
-        inner.action_space = Mock(spec=["n"])
-        env = Mock()
-        env.action_space = Mock(spec=["shape", "low", "high"])
-        env._env = inner
-        assert _resolve_actor_dist(env) == "onehot"
+    def test_one_hot_wrapper_is_seen_through_outer_wrappers(self):
+        from simulusion.envs import wrappers
+        from simulusion.utils.gym_compat import gym
+
+        class DiscreteEnv:
+            action_space = gym.spaces.Discrete(4)
+            observation_space = gym.spaces.Dict(
+                {"image": gym.spaces.Box(0, 255, IMAGE_SHAPE, np.uint8)}
+            )
+
+        one_hot = wrappers.OneHotAction(DiscreteEnv())
+        stacked = wrappers.TimeLimit(wrappers.FrameStack(one_hot, 2), 10)
+        assert _resolve_actor_dist(wrappers.TimeLimit(one_hot, 10)) == "onehot"
+        assert _resolve_actor_dist(stacked) == "onehot"
+
+    @pytest.mark.parametrize(
+        ("env_id", "expected"), [("CartPole-v1", "onehot"), ("Pendulum-v1", "normal")]
+    )
+    def test_make_env_stack_resolves_like_the_raw_action_space(self, env_id, expected):
+        from simulusion.models.dreamer import make_env
+
+        config = tiny_config(env=env_id, env_backend="gym", frame_stack=2)
+        env = make_env(config)
+        try:
+            assert _resolve_actor_dist(env) == expected
+        finally:
+            env.close()
+
+
+class TestExecutedAction:
+    def test_discrete_actions_are_stored_as_zero_one_one_hots(self):
+        model = build(tiny_config(actor_dist="onehot"), action_size=4)
+        info = {"action": np.array([-1.0, -1.0, 1.0, -1.0], np.float32)}
+        stored = model._executed_action(info, np.zeros(4, np.float32))
+        assert stored.tolist() == [0.0, 0.0, 1.0, 0.0]
+
+    def test_continuous_actions_are_stored_unchanged(self):
+        model = build()
+        info = {"action": np.array([0.25, -0.5], np.float32)}
+        stored = model._executed_action(info, np.zeros(2, np.float32))
+        assert stored.tolist() == [0.25, -0.5]
 
 
 # ---------------------------------------------------------------------------

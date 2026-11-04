@@ -209,6 +209,11 @@ class ProcgenImageEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """Procgen actions are discrete; the Box space holds their one-hot form."""
+        return True
+
+    @property
     def max_episode_steps(self) -> int:
         return self._max_episode_steps
 

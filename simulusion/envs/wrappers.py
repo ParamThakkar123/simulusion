@@ -242,6 +242,10 @@ class OneHotAction:
     indices before forwarding to the underlying environment.
     """
 
+    # Marks the Box space as standing for a discrete one; outer wrappers
+    # forward attributes, so the marker is visible at any wrapping depth.
+    discrete_actions = True
+
     def __init__(self, env: Any) -> None:
         assert isinstance(env.action_space, gym.spaces.Discrete)
         self._env = env

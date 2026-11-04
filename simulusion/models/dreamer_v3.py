@@ -43,6 +43,7 @@ from simulusion.models.categorical_rssm import CategoricalRSSM
 from simulusion.models.dreamer import (
     DreamerAgent,
     _apply_config_overrides,
+    _has_discrete_actions,
     _resolve_pretrained_file,
     _save_config_next_to_checkpoint,
     get_available_memory,
@@ -1162,6 +1163,22 @@ class DreamerV3:
     def _initial_action(self) -> torch.Tensor:
         return torch.zeros(1, self.action_size, device=self.device)
 
+    def _executed_action(self, info: Any, action: Any) -> np.ndarray:
+        """The action the env actually ran, in the form the actor produces.
+
+        Discrete adapters report it as a +-1 vector; the categorical actor
+        samples 0/1 one-hots, so replay stores the 0/1 form to match.
+        """
+        executed = np.asarray(
+            info["action"] if isinstance(info, dict) and "action" in info else action,
+            dtype=np.float32,
+        ).reshape(self.action_size)
+        if self.discrete_actions:
+            one_hot = np.zeros(self.action_size, dtype=np.float32)
+            one_hot[int(np.argmax(executed))] = 1.0
+            return one_hot
+        return executed
+
     @staticmethod
     def _latent(state: dict) -> dict:
         return {"deter": state["deter"][0], "stoch": state["stoch"][0]}
@@ -1239,12 +1256,7 @@ class DreamerV3:
             )
 
             next_obs, reward, done, info = env.step(action)
-            executed = np.asarray(
-                info["action"]
-                if isinstance(info, dict) and "action" in info
-                else action,
-                dtype=np.float32,
-            ).reshape(self.action_size)
+            executed = self._executed_action(info, action)
             episode_return = carry["episode_return"] + float(reward)
 
             if done:
@@ -1324,11 +1336,7 @@ class DreamerV3:
                     )
                 action_np = action[0].cpu().numpy()
                 next_obs, reward, done, info = env.step(action_np)
-                executed = (
-                    info["action"]
-                    if isinstance(info, dict) and "action" in info
-                    else action_np
-                )
+                executed = self._executed_action(info, action_np)
                 episode_rewards[episode] += reward
 
                 if render:
@@ -1456,16 +1464,16 @@ def _is_true_termination(info: Any, done: bool | float) -> float:
 
 
 def _resolve_actor_dist(env: Any) -> str:
-    """Choose the policy distribution from an environment's action space."""
-    action_space = env.action_space
-    if hasattr(action_space, "n") and not hasattr(action_space, "low"):
+    """Choose the policy distribution from an environment's action space.
+
+    Discrete backends expose their actions as a one-hot Box and set the
+    ``discrete_actions`` marker, which wrappers forward from any depth. The
+    paper uses a categorical policy for them. A raw ``Discrete`` space is
+    recognised directly.
+    """
+    if getattr(env, "discrete_actions", False) is True:
         return "onehot"
-    # The OneHotAction wrapper exposes a Box space but keeps a discrete
-    # underlying space, which it advertises through `_env.action_space`.
-    inner = getattr(env, "_env", None)
-    if inner is not None and hasattr(getattr(inner, "action_space", None), "n"):
-        return "onehot"
-    return "normal"
+    return "onehot" if _has_discrete_actions(env) else "normal"
 
 
 class DreamerV3Agent(DreamerAgent):
