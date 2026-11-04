@@ -110,6 +110,7 @@ model under *Algorithms* in the sidebar.
    :caption: Algorithms
 
    dreamer
+   dreamer_v3
    planet
    jepa
    iris

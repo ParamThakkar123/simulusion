@@ -266,6 +266,9 @@ def _build_env_catalog() -> dict[str, list[str]]:
         "dreamer": dreamer_envs,
         "dreamerv1": dreamer_envs,
         "dreamerv2": dreamer_envs,
+        # DreamerV3 additionally handles discrete action spaces through the
+        # one-hot action wrapper, so Atari is in scope for it.
+        "dreamerv3": _dedupe_envs(dreamer_envs, atari_envs[:80]),
         "planet": planet_envs,
         "rssm": planet_envs,
         "iris": atari_and_robotics_envs,

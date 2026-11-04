@@ -7,109 +7,34 @@ Computes human-normalized scores and compares to baselines.
 
 from simulusion.training.train_iris import IRISTrainer
 from simulusion.configs.iris_config import IRISConfig
+from simulusion.benchmarks import (
+    ATARI100K_GAMES as _GAMES,
+    ATARI_HUMAN_SCORES,
+    ATARI_RANDOM_SCORES,
+    atari_env_id,
+    atari_game,
+    human_normalized_score,
+)
 import numpy as np
 import json
 import os
 from typing import Any, List, Dict, Optional, cast
 
 
-# Atari 100k benchmark games
-ATARI_100K_GAMES = [
-    "ALE/Alien-v5",
-    "ALE/Amidar-v5",
-    "ALE/Assault-v5",
-    "ALE/Asterix-v5",
-    "ALE/BankHeist-v5",
-    "ALE/BattleZone-v5",
-    "ALE/Boxing-v5",
-    "ALE/Breakout-v5",
-    "ALE/ChopperCommand-v5",
-    "ALE/CrazyClimber-v5",
-    "ALE/DemonAttack-v5",
-    "ALE/Freeway-v5",
-    "ALE/Frostbite-v5",
-    "ALE/Gopher-v5",
-    "ALE/Hero-v5",
-    "ALE/Jamesbond-v5",
-    "ALE/Kangaroo-v5",
-    "ALE/Krull-v5",
-    "ALE/KungFuMaster-v5",
-    "ALE/MsPacman-v5",
-    "ALE/Pong-v5",
-    "ALE/PrivateEye-v5",
-    "ALE/Qbert-v5",
-    "ALE/RoadRunner-v5",
-    "ALE/Seaquest-v5",
-    "ALE/UpNDown-v5",
-]
-
-
-# Human scores for computing human-normalized score
-# These are from the paper (Wang et al., 2016)
-HUMAN_SCORES = {
-    "Alien": 7127.7,
-    "Amidar": 1719.5,
-    "Assault": 742.0,
-    "Asterix": 8503.3,
-    "BankHeist": 753.1,
-    "BattleZone": 37187.5,
-    "Boxing": 12.1,
-    "Breakout": 30.5,
-    "ChopperCommand": 7387.8,
-    "CrazyClimber": 35829.4,
-    "DemonAttack": 1971.0,
-    "Freeway": 29.6,
-    "Frostbite": 4334.7,
-    "Gopher": 2412.5,
-    "Hero": 30826.4,
-    "Jamesbond": 302.8,
-    "Kangaroo": 3035.0,
-    "Krull": 2665.5,
-    "KungFuMaster": 22736.3,
-    "MsPacman": 6951.6,
-    "Pong": 14.6,
-    "PrivateEye": 69571.3,
-    "Qbert": 13455.0,
-    "RoadRunner": 7845.0,
-    "Seaquest": 42054.7,
-    "UpNDown": 11693.2,
-}
-
-
-# Random baseline scores
-RANDOM_SCORES = {
-    "Alien": 227.8,
-    "Amidar": 5.8,
-    "Assault": 222.4,
-    "Asterix": 210.0,
-    "BankHeist": 14.2,
-    "BattleZone": 2360.0,
-    "Boxing": 0.1,
-    "Breakout": 1.7,
-    "ChopperCommand": 811.0,
-    "CrazyClimber": 10780.5,
-    "DemonAttack": 152.1,
-    "Freeway": 0.0,
-    "Frostbite": 65.2,
-    "Gopher": 257.6,
-    "Hero": 1027.0,
-    "Jamesbond": 29.0,
-    "Kangaroo": 52.0,
-    "Krull": 1598.0,
-    "KungFuMaster": 258.5,
-    "MsPacman": 307.3,
-    "Pong": -20.7,
-    "PrivateEye": 24.9,
-    "Qbert": 163.9,
-    "RoadRunner": 11.5,
-    "Seaquest": 68.4,
-    "UpNDown": 533.4,
-}
-
-
 def game_name(game: str) -> str:
     """``"ALE/MsPacman-v5"`` -> ``"MsPacman"``: the key of the score tables."""
     return game.replace("ALE/", "").replace("-v5", "")
+
+
+# Atari 100k games and reference scores (Wang et al., 2016), from the shared
+# benchmark tables (simulusion.benchmarks), keyed as IRIS names them.
+ATARI_100K_GAMES = [atari_env_id(g) for g in _GAMES]
+HUMAN_SCORES = {
+    game_name(g): ATARI_HUMAN_SCORES[atari_game(g)] for g in ATARI_100K_GAMES
+}
+RANDOM_SCORES = {
+    game_name(g): ATARI_RANDOM_SCORES[atari_game(g)] for g in ATARI_100K_GAMES
+}
 
 
 def compute_human_normalized_score(score: float, game: str) -> float:
@@ -125,13 +50,7 @@ def compute_human_normalized_score(score: float, game: str) -> float:
             f"No human/random reference score for '{game}'; known games: "
             f"{', '.join(sorted(HUMAN_SCORES))}."
         )
-    human = HUMAN_SCORES[game]
-    random = RANDOM_SCORES[game]
-
-    if human == random:
-        return 0.0
-
-    return (score - random) / (human - random)
+    return human_normalized_score(score, game)
 
 
 def interquartile_mean(values: List[float]) -> float:

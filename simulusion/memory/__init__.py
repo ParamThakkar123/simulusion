@@ -13,6 +13,7 @@ from typing import Any
 
 __all__ = [
     "ReplayBuffer",
+    "DreamerV3ReplayBuffer",
     "Episode",
     "Memory",
     "IRISReplayBuffer",
@@ -25,6 +26,10 @@ def __getattr__(name: str) -> Any:
         from .dreamer_memory import ReplayBuffer
 
         return ReplayBuffer
+    if name == "DreamerV3ReplayBuffer":
+        from .dreamer_v3_memory import DreamerV3ReplayBuffer
+
+        return DreamerV3ReplayBuffer
     if name == "Episode":
         from .planet_memory import Episode
 

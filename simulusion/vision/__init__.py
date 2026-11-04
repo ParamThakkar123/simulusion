@@ -34,12 +34,16 @@ __all__ = [
     "ConvEncoder",
     "CNNEncoder",
     "IRISEncoder",
+    "DreamerV3Encoder",
     # Decoders
     "ConvDecoder",
     "CNNDecoder",
     "DenseDecoder",
     "ActionDecoder",
     "IRISDecoder",
+    "DreamerV3Decoder",
+    "DreamerV3Head",
+    "DreamerV3Actor",
     # Video Processing
     "VideoTokenizer",
     "create_video_tokenizer",
@@ -69,6 +73,10 @@ def __getattr__(name: str) -> Any:
         from .iris_encoder import IRISEncoder
 
         return IRISEncoder
+    if name == "DreamerV3Encoder":
+        from .dreamer_v3_nets import DreamerV3Encoder
+
+        return DreamerV3Encoder
 
     # Perceptual loss
     if name == "LPIPSPerceptualLoss":
@@ -101,6 +109,18 @@ def __getattr__(name: str) -> Any:
         from .iris_decoder import IRISDecoder
 
         return IRISDecoder
+    if name == "DreamerV3Decoder":
+        from .dreamer_v3_nets import DreamerV3Decoder
+
+        return DreamerV3Decoder
+    if name == "DreamerV3Head":
+        from .dreamer_v3_nets import DreamerV3Head
+
+        return DreamerV3Head
+    if name == "DreamerV3Actor":
+        from .dreamer_v3_nets import DreamerV3Actor
+
+        return DreamerV3Actor
 
     # Video Processing
     if name == "VideoTokenizer":

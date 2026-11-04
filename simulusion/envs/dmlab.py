@@ -394,6 +394,11 @@ class DMLabEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """DMLab actions are discrete; the Box space holds their one-hot form."""
+        return True
+
+    @property
     def native_action_repeat(self) -> int:
         """Lab frames per step; training counts frames, as the reference."""
         return self._action_repeat

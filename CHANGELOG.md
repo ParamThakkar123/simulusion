@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   end their own episodes, so `time_limit` does not apply to them, and they
   require `action_repeat=1` (DMLab repeats 4 frames inside Lab), as in the
   DreamerV3 reference. `minecraft_length` sets Minecraft's episode length.
+- **DreamerV3 presets for BSuite, DMLab-30 and Minecraft Diamond.** A
+  `minecraft` preset follows Table 2 (100M steps, replay ratio 32); the `bsuite`
+  preset learns from the observation vector and `bsuite_settings` lists the 468
+  settings; the `dmlab` preset uses the PopArt action set on training levels.
 - **`docker/envs` image** with DeepMind Lab (built from source), the patched
   MineRL 0.4.4 and BSuite on Python 3.11, for the benchmarks that cannot be
   pip-installed on every platform.
@@ -38,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
 
 ### Fixed
+- DreamerV3 updates were bound by kernel launches (about 90 small kernels per
+  recurrent step): 2.4 s per update on an RTX 3050 laptop with the GPU mostly
+  idle. The observe rollout (forward and backward) and imagination now replay
+  as CUDA graphs (`cuda_graphs=True`, falling back to eager on CPU, under AMP,
+  or if capture fails), taking an update to 0.36 s from joint states and 0.80 s
+  from pixels. LaProp and adaptive gradient clipping use foreach kernels, and
+  training metrics reach the host in one copy per update.
+- DreamerV3's `actor_dist="auto"` chose a Gaussian policy for DMLab, BSuite and
+  Minecraft, whose discrete actions are one-hot `Box` spaces; it now picks the
+  categorical policy the paper uses.
+- `create_config("dreamer-v3", model_size=...)` kept the 12M layer widths.
+- Training DreamerV3 through `agent.train()` crashed at its first checkpoint,
+  which expected DreamerV1/V2 update objects.
 - `BSuiteImageEnv.max_episode_steps` returned the setting's episode count.
 - **Plotting works with plotly 7**, which removed `plotly.graph_objs.Line`:
   importing it disabled all plotting, so `lineplot` and `plot_metrics` (and so
@@ -55,10 +72,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   [Simulusion demo models](https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362)
   collection. The README and the gallery link to them, and the gallery lists
   each repo with how to load it.
+- **DreamerV3** (`create_model("dreamer-v3")`). Implements the paper's
+  robustness techniques: categorical latents with 1% unimix and straight-through
+  gradients, separate dynamics/representation KL terms with free bits, symexp
+  two-hot reward and critic heads, percentile return normalization with a
+  denominator limit, a critic EMA regularizer and replay loss, zero-initialized
+  head outputs, and LaProp with adaptive gradient clipping. It trains through
+  `DreamerAgent` on the shared Trainer, and its per-term losses, gradient norms
+  and return scale are logged with the other training metrics.
+- `DreamerV3Config` with the paper's Table 4 defaults and the 12M-400M model-size
+  presets from Table 3; widths resolve from `model_size` and `update_steps`
+  derives from `replay_ratio`.
+- `CategoricalRSSM`, `DreamerV3Encoder`/`Decoder`/`Head`/`Actor`,
+  `DreamerV3ReplayBuffer`, `BlockGRUCell`/`BlockLinear`, and a new
+  `simulusion.optim` package exporting `LaProp` and `adaptive_grad_clip_`,
+  all usable independently of the agent.
+- Discrete action support in the shared Dreamer `make_env`: environments with a
+  discrete action space are wrapped with `OneHotAction` instead of failing in
+  `NormalizeActions`.
+- `examples/dreamer_v3_example.py` and the {doc}`dreamer_v3` documentation page.
+- DreamerV3 replay follows the paper's Methods section. Each record holds an
+  observation with the action and reward that led to it, and the final
+  observation of every episode gets its own record, so the reward and continue
+  predictors at `s_t` learn `r_t` and `c_t` as in Eq. 1, and imagined rewards
+  are read off at the state reached. Model states are stored in replay,
+  replayed sequences start from them, and training writes fresh states back.
+  Each minibatch is filled from the online queue first. Collection continues
+  the open episode across calls instead of resetting the environment.
+- DreamerV3 encodes several observations at once (`obs_keys`), as in the
+  paper: image inputs are stacked into one CNN, vector inputs into one symlog
+  MLP, and the decoder reconstructs each of them. By default it encodes the
+  image, or the state vector when there is no image (DMC Proprio Control), plus
+  a DMLab language instruction when present. Replay and checkpoints keep every
+  input.
+- DreamerV3's reward and continue predictors are 1-layer MLPs
+  (`reward_layers`, `cont_layers`), the replay ratio counts policy steps
+  (action repeat divided out, matching the paper's worked example), and replay
+  capacity defaults to 5M (Table 4).
+- DreamerV3 benchmark presets (`benchmark_config`, `BENCHMARKS`) follow Table 2
+  of the paper: task lists, step budget, action repeat, replay ratio and model
+  size for DMC Proprio and Visual Control, Atari, Atari100k, ProcGen, DMLab-30
+  and BSuite, with each benchmark's environment settings (sticky actions and the
+  full action set for Atari but not Atari100k, ProcGen hard mode with unlimited
+  levels). Gym environments take `gym_make_kwargs`, which the Atari presets use
+  to set ALE's `frameskip=1` so the action repeat of 4 is not applied twice.
+- `demos/dreamer_v3_demo.py` trains DreamerV3 from a benchmark preset
+  (resumable with `--resume`) and records the real-vs-imagined video, a policy
+  video and the learning curve. The gallery and README show two runs on
+  cartpole swing-up: from joint states with the paper's protocol (500k steps,
+  final evaluation return 866), and from pixels (300k steps at replay ratio
+  128, return 740-840 at the end).
 - `simulusion play -m diamond`: press `S` in DREAM mode to save the last
   `--dream-buffer` dream frames (default 50) as `dream_<timestamp>.mp4`, with
   the actions and predicted rewards in `dream_<timestamp>.json`. Before, the
   only way to keep a dream was `--record` from the start.
+
+### Changed
+- `DreamerAgent` subclasses can pick their configuration class (`_config_cls`)
+  and build their own algorithm core (`_build_core`) alongside `core_cls`.
+  Passing a base `DreamerConfig` to a subclass agent carries over only the
+  fields that were changed, so the subclass's tuned defaults are kept.
 
 ## [1.1.0] — 2026-10-25
 
