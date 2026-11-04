@@ -929,6 +929,11 @@ repeat of 4 is not applied on top of ALE’s own frame skip. The paper’s
 parallel environment instances are recorded in <code class="docutils literal notranslate"><span class="pre">BENCHMARKS[...].env_instances</span></code>
 but not used: the agent collects from a single environment. There is no
 Minecraft preset.</p>
+<p>The environment half of each preset (tasks, step budget, action repeat and
+environment options) is not DreamerV3’s: it lives in
+<code class="docutils literal notranslate"><span class="pre">simulusion.benchmarks</span></code> (<code class="docutils literal notranslate"><span class="pre">suites.py</span></code>), shared by every model. Only the replay
+ratio, model size and environment instances are DreamerV3’s own. Any other
+model can take the same protocol with <code class="docutils literal notranslate"><span class="pre">get_benchmark(name).env_fields(task)</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">demos/dreamer_v3_demo.py</span></code> trains from a preset and records the result; the
 <a class="reference internal" href="gallery.html#gallery-dreamer-v3"><span class="std std-ref">gallery</span></a> shows its runs on cartpole swing-up.</p>
 </section>

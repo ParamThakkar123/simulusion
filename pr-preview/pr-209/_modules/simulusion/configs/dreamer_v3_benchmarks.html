@@ -683,13 +683,12 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for simulusion.configs.dreamer_v3_benchmarks</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""DreamerV3 settings for the benchmarks of the paper (Table 2).</span>
 
-<span class="sd">Each :class:`Benchmark` records the paper's protocol for one benchmark: its</span>
-<span class="sd">tasks, step budget, action repeat, replay ratio and model size, plus the</span>
-<span class="sd">environment options that follow from the text (sticky actions on Atari, the</span>
-<span class="sd">hard ProcGen setting with unlimited levels, proprioceptive vs. pixel inputs on</span>
-<span class="sd">the control suites, the fixed PopArt action set on DMLab, the observation vector</span>
-<span class="sd">on BSuite, image plus inventory and status vectors on Minecraft). :func:`benchmark_config` turns one into a</span>
-<span class="sd">:class:`~simulusion.configs.dreamer_v3_config.DreamerV3Config`::</span>
+<span class="sd">The environments of each benchmark (tasks, step budget, action repeat, sticky</span>
+<span class="sd">actions, observation type, ...) are shared by every model and live in</span>
+<span class="sd">:mod:`simulusion.benchmarks`. This module adds only what Table 2</span>
+<span class="sd">fixes for DreamerV3 itself: the replay ratio, the model size and the number of</span>
+<span class="sd">parallel environment instances. :func:`benchmark_config` combines the two into</span>
+<span class="sd">a :class:`~simulusion.configs.dreamer_v3_config.DreamerV3Config`::</span>
 
 <span class="sd">    cfg = benchmark_config("dmc-proprio", "walker-walk")</span>
 <span class="sd">    cfg = benchmark_config("atari100k", "pong", model_size="12m")  # smaller GPU</span>
@@ -716,14 +715,28 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401  (task tables re-exported)</span>
+    <span class="n">ATARI57_GAMES</span><span class="p">,</span>
+    <span class="n">ATARI100K_GAMES</span><span class="p">,</span>
+    <span class="n">BSUITE_ENVIRONMENTS</span><span class="p">,</span>
+    <span class="n">DMC_PROPRIO_TASKS</span><span class="p">,</span>
+    <span class="n">DMC_VISUAL_TASKS</span><span class="p">,</span>
+    <span class="n">DMLAB30_LEVELS</span><span class="p">,</span>
+    <span class="n">MINECRAFT_OBS_KEYS</span><span class="p">,</span>
+    <span class="n">PROCGEN_GAMES</span><span class="p">,</span>
+    <span class="n">Benchmark</span><span class="p">,</span>
+    <span class="n">atari_env_id</span><span class="p">,</span>
+    <span class="n">bsuite_settings</span><span class="p">,</span>
+    <span class="n">get_benchmark</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.dreamer_v3_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">DreamerV3Config</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"BENCHMARKS"</span><span class="p">,</span>
-    <span class="s2">"Benchmark"</span><span class="p">,</span>
+    <span class="s2">"DreamerV3Benchmark"</span><span class="p">,</span>
     <span class="s2">"atari_env_id"</span><span class="p">,</span>
     <span class="s2">"benchmark_config"</span><span class="p">,</span>
     <span class="s2">"bsuite_settings"</span><span class="p">,</span>
@@ -731,438 +744,36 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Benchmark</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""One row of Table 2 and the environment settings it implies."""</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Benchmark</span><span class="p">(</span><span class="n">Benchmark</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A shared :class:`~simulusion.benchmarks.Benchmark` plus the</span>
+<span class="sd">    DreamerV3 settings of its Table 2 row."""</span>
 
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">tasks</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-    <span class="n">env_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>  <span class="c1"># None: the benchmark fixes episodes per task (BSuite).</span>
-    <span class="n">action_repeat</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">env_instances</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">replay_ratio</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">overrides</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">task_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The ``env`` value for ``task``.</span>
-
-<span class="sd">        Atari names become ``ALE/&lt;Game&gt;-v5``, DMLab-30 names gain their</span>
-<span class="sd">        ``contributed/dmlab30/`` directory and BSuite names their first setting</span>
-<span class="sd">        (``"catch"`` -&gt; ``"catch/0"``); other names pass through.</span>
-<span class="sd">        """</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">overrides</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"env_backend"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"gym"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"ALE/"</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">atari_env_id</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"dmlab"</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">"contributed/dmlab30/</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">"</span>
-        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">"bsuite"</span> <span class="ow">and</span> <span class="s2">"/"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">task</span><span class="si">}</span><span class="s2">/0"</span>
-        <span class="k">return</span> <span class="n">task</span>
+    <span class="n">env_instances</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">replay_ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"200m"</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">atari_env_id</span><span class="p">(</span><span class="n">game</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""``"ms_pacman"`` -&gt; ``"ALE/MsPacman-v5"``."""</span>
-    <span class="k">return</span> <span class="s2">"ALE/"</span> <span class="o">+</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">game</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"_"</span><span class="p">))</span> <span class="o">+</span> <span class="s2">"-v5"</span>
-
-
-<span class="c1"># Visual Control (Tassa et al. 2018; Hafner et al. 2019): 20 tasks.</span>
-<span class="n">DMC_VISUAL_TASKS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"acrobot-swingup"</span><span class="p">,</span>
-    <span class="s2">"cartpole-balance"</span><span class="p">,</span>
-    <span class="s2">"cartpole-balance_sparse"</span><span class="p">,</span>
-    <span class="s2">"cartpole-swingup"</span><span class="p">,</span>
-    <span class="s2">"cartpole-swingup_sparse"</span><span class="p">,</span>
-    <span class="s2">"cheetah-run"</span><span class="p">,</span>
-    <span class="s2">"cup-catch"</span><span class="p">,</span>
-    <span class="s2">"finger-spin"</span><span class="p">,</span>
-    <span class="s2">"finger-turn_easy"</span><span class="p">,</span>
-    <span class="s2">"finger-turn_hard"</span><span class="p">,</span>
-    <span class="s2">"hopper-hop"</span><span class="p">,</span>
-    <span class="s2">"hopper-stand"</span><span class="p">,</span>
-    <span class="s2">"pendulum-swingup"</span><span class="p">,</span>
-    <span class="s2">"quadruped-run"</span><span class="p">,</span>
-    <span class="s2">"quadruped-walk"</span><span class="p">,</span>
-    <span class="s2">"reacher-easy"</span><span class="p">,</span>
-    <span class="s2">"reacher-hard"</span><span class="p">,</span>
-    <span class="s2">"walker-run"</span><span class="p">,</span>
-    <span class="s2">"walker-stand"</span><span class="p">,</span>
-    <span class="s2">"walker-walk"</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="c1"># Proprioceptive Control drops the two quadruped tasks (paper, Benchmarks).</span>
-<span class="n">DMC_PROPRIO_TASKS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">DMC_VISUAL_TASKS</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"quadruped"</span><span class="p">))</span>
-
-<span class="n">ATARI100K_GAMES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"alien"</span><span class="p">,</span>
-    <span class="s2">"amidar"</span><span class="p">,</span>
-    <span class="s2">"assault"</span><span class="p">,</span>
-    <span class="s2">"asterix"</span><span class="p">,</span>
-    <span class="s2">"bank_heist"</span><span class="p">,</span>
-    <span class="s2">"battle_zone"</span><span class="p">,</span>
-    <span class="s2">"boxing"</span><span class="p">,</span>
-    <span class="s2">"breakout"</span><span class="p">,</span>
-    <span class="s2">"chopper_command"</span><span class="p">,</span>
-    <span class="s2">"crazy_climber"</span><span class="p">,</span>
-    <span class="s2">"demon_attack"</span><span class="p">,</span>
-    <span class="s2">"freeway"</span><span class="p">,</span>
-    <span class="s2">"frostbite"</span><span class="p">,</span>
-    <span class="s2">"gopher"</span><span class="p">,</span>
-    <span class="s2">"hero"</span><span class="p">,</span>
-    <span class="s2">"jamesbond"</span><span class="p">,</span>
-    <span class="s2">"kangaroo"</span><span class="p">,</span>
-    <span class="s2">"krull"</span><span class="p">,</span>
-    <span class="s2">"kung_fu_master"</span><span class="p">,</span>
-    <span class="s2">"ms_pacman"</span><span class="p">,</span>
-    <span class="s2">"pong"</span><span class="p">,</span>
-    <span class="s2">"private_eye"</span><span class="p">,</span>
-    <span class="s2">"qbert"</span><span class="p">,</span>
-    <span class="s2">"road_runner"</span><span class="p">,</span>
-    <span class="s2">"seaquest"</span><span class="p">,</span>
-    <span class="s2">"up_n_down"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">ATARI57_GAMES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"alien"</span><span class="p">,</span>
-    <span class="s2">"amidar"</span><span class="p">,</span>
-    <span class="s2">"assault"</span><span class="p">,</span>
-    <span class="s2">"asterix"</span><span class="p">,</span>
-    <span class="s2">"asteroids"</span><span class="p">,</span>
-    <span class="s2">"atlantis"</span><span class="p">,</span>
-    <span class="s2">"bank_heist"</span><span class="p">,</span>
-    <span class="s2">"battle_zone"</span><span class="p">,</span>
-    <span class="s2">"beam_rider"</span><span class="p">,</span>
-    <span class="s2">"berzerk"</span><span class="p">,</span>
-    <span class="s2">"bowling"</span><span class="p">,</span>
-    <span class="s2">"boxing"</span><span class="p">,</span>
-    <span class="s2">"breakout"</span><span class="p">,</span>
-    <span class="s2">"centipede"</span><span class="p">,</span>
-    <span class="s2">"chopper_command"</span><span class="p">,</span>
-    <span class="s2">"crazy_climber"</span><span class="p">,</span>
-    <span class="s2">"defender"</span><span class="p">,</span>
-    <span class="s2">"demon_attack"</span><span class="p">,</span>
-    <span class="s2">"double_dunk"</span><span class="p">,</span>
-    <span class="s2">"enduro"</span><span class="p">,</span>
-    <span class="s2">"fishing_derby"</span><span class="p">,</span>
-    <span class="s2">"freeway"</span><span class="p">,</span>
-    <span class="s2">"frostbite"</span><span class="p">,</span>
-    <span class="s2">"gopher"</span><span class="p">,</span>
-    <span class="s2">"gravitar"</span><span class="p">,</span>
-    <span class="s2">"hero"</span><span class="p">,</span>
-    <span class="s2">"ice_hockey"</span><span class="p">,</span>
-    <span class="s2">"jamesbond"</span><span class="p">,</span>
-    <span class="s2">"kangaroo"</span><span class="p">,</span>
-    <span class="s2">"krull"</span><span class="p">,</span>
-    <span class="s2">"kung_fu_master"</span><span class="p">,</span>
-    <span class="s2">"montezuma_revenge"</span><span class="p">,</span>
-    <span class="s2">"ms_pacman"</span><span class="p">,</span>
-    <span class="s2">"name_this_game"</span><span class="p">,</span>
-    <span class="s2">"phoenix"</span><span class="p">,</span>
-    <span class="s2">"pitfall"</span><span class="p">,</span>
-    <span class="s2">"pong"</span><span class="p">,</span>
-    <span class="s2">"private_eye"</span><span class="p">,</span>
-    <span class="s2">"qbert"</span><span class="p">,</span>
-    <span class="s2">"riverraid"</span><span class="p">,</span>
-    <span class="s2">"road_runner"</span><span class="p">,</span>
-    <span class="s2">"robotank"</span><span class="p">,</span>
-    <span class="s2">"seaquest"</span><span class="p">,</span>
-    <span class="s2">"skiing"</span><span class="p">,</span>
-    <span class="s2">"solaris"</span><span class="p">,</span>
-    <span class="s2">"space_invaders"</span><span class="p">,</span>
-    <span class="s2">"star_gunner"</span><span class="p">,</span>
-    <span class="s2">"surround"</span><span class="p">,</span>
-    <span class="s2">"tennis"</span><span class="p">,</span>
-    <span class="s2">"time_pilot"</span><span class="p">,</span>
-    <span class="s2">"tutankham"</span><span class="p">,</span>
-    <span class="s2">"up_n_down"</span><span class="p">,</span>
-    <span class="s2">"venture"</span><span class="p">,</span>
-    <span class="s2">"video_pinball"</span><span class="p">,</span>
-    <span class="s2">"wizard_of_wor"</span><span class="p">,</span>
-    <span class="s2">"yars_revenge"</span><span class="p">,</span>
-    <span class="s2">"zaxxon"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">PROCGEN_GAMES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"bigfish"</span><span class="p">,</span>
-    <span class="s2">"bossfight"</span><span class="p">,</span>
-    <span class="s2">"caveflyer"</span><span class="p">,</span>
-    <span class="s2">"chaser"</span><span class="p">,</span>
-    <span class="s2">"climber"</span><span class="p">,</span>
-    <span class="s2">"coinrun"</span><span class="p">,</span>
-    <span class="s2">"dodgeball"</span><span class="p">,</span>
-    <span class="s2">"fruitbot"</span><span class="p">,</span>
-    <span class="s2">"heist"</span><span class="p">,</span>
-    <span class="s2">"jumper"</span><span class="p">,</span>
-    <span class="s2">"leaper"</span><span class="p">,</span>
-    <span class="s2">"maze"</span><span class="p">,</span>
-    <span class="s2">"miner"</span><span class="p">,</span>
-    <span class="s2">"ninja"</span><span class="p">,</span>
-    <span class="s2">"plunder"</span><span class="p">,</span>
-    <span class="s2">"starpilot"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># DMLab-30 (Espeholt et al. 2018), level names relative to contributed/dmlab30.</span>
-<span class="n">DMLAB30_LEVELS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"rooms_collect_good_objects_train"</span><span class="p">,</span>
-    <span class="s2">"rooms_exploit_deferred_effects_train"</span><span class="p">,</span>
-    <span class="s2">"rooms_select_nonmatching_object"</span><span class="p">,</span>
-    <span class="s2">"rooms_watermaze"</span><span class="p">,</span>
-    <span class="s2">"rooms_keys_doors_puzzle"</span><span class="p">,</span>
-    <span class="s2">"language_select_described_object"</span><span class="p">,</span>
-    <span class="s2">"language_select_located_object"</span><span class="p">,</span>
-    <span class="s2">"language_execute_random_task"</span><span class="p">,</span>
-    <span class="s2">"language_answer_quantitative_question"</span><span class="p">,</span>
-    <span class="s2">"lasertag_one_opponent_small"</span><span class="p">,</span>
-    <span class="s2">"lasertag_three_opponents_small"</span><span class="p">,</span>
-    <span class="s2">"lasertag_one_opponent_large"</span><span class="p">,</span>
-    <span class="s2">"lasertag_three_opponents_large"</span><span class="p">,</span>
-    <span class="s2">"natlab_fixed_large_map"</span><span class="p">,</span>
-    <span class="s2">"natlab_varying_map_regrowth"</span><span class="p">,</span>
-    <span class="s2">"natlab_varying_map_randomized"</span><span class="p">,</span>
-    <span class="s2">"skymaze_irreversible_path_hard"</span><span class="p">,</span>
-    <span class="s2">"skymaze_irreversible_path_varied"</span><span class="p">,</span>
-    <span class="s2">"psychlab_arbitrary_visuomotor_mapping"</span><span class="p">,</span>
-    <span class="s2">"psychlab_continuous_recognition"</span><span class="p">,</span>
-    <span class="s2">"psychlab_sequential_comparison"</span><span class="p">,</span>
-    <span class="s2">"psychlab_visual_search"</span><span class="p">,</span>
-    <span class="s2">"explore_object_locations_small"</span><span class="p">,</span>
-    <span class="s2">"explore_object_locations_large"</span><span class="p">,</span>
-    <span class="s2">"explore_obstructed_goals_small"</span><span class="p">,</span>
-    <span class="s2">"explore_obstructed_goals_large"</span><span class="p">,</span>
-    <span class="s2">"explore_goal_locations_small"</span><span class="p">,</span>
-    <span class="s2">"explore_goal_locations_large"</span><span class="p">,</span>
-    <span class="s2">"explore_object_rewards_few"</span><span class="p">,</span>
-    <span class="s2">"explore_object_rewards_many"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># BSuite experiments that DreamerV3 reports (the 23 environments of the suite);</span>
-<span class="c1"># each runs every one of its settings, e.g. "catch/0" .. "catch/19".</span>
-<span class="n">BSUITE_ENVIRONMENTS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"bandit"</span><span class="p">,</span>
-    <span class="s2">"bandit_noise"</span><span class="p">,</span>
-    <span class="s2">"bandit_scale"</span><span class="p">,</span>
-    <span class="s2">"cartpole"</span><span class="p">,</span>
-    <span class="s2">"cartpole_noise"</span><span class="p">,</span>
-    <span class="s2">"cartpole_scale"</span><span class="p">,</span>
-    <span class="s2">"cartpole_swingup"</span><span class="p">,</span>
-    <span class="s2">"catch"</span><span class="p">,</span>
-    <span class="s2">"catch_noise"</span><span class="p">,</span>
-    <span class="s2">"catch_scale"</span><span class="p">,</span>
-    <span class="s2">"deep_sea"</span><span class="p">,</span>
-    <span class="s2">"deep_sea_stochastic"</span><span class="p">,</span>
-    <span class="s2">"discounting_chain"</span><span class="p">,</span>
-    <span class="s2">"memory_len"</span><span class="p">,</span>
-    <span class="s2">"memory_size"</span><span class="p">,</span>
-    <span class="s2">"mnist"</span><span class="p">,</span>
-    <span class="s2">"mnist_noise"</span><span class="p">,</span>
-    <span class="s2">"mnist_scale"</span><span class="p">,</span>
-    <span class="s2">"mountain_car"</span><span class="p">,</span>
-    <span class="s2">"mountain_car_noise"</span><span class="p">,</span>
-    <span class="s2">"mountain_car_scale"</span><span class="p">,</span>
-    <span class="s2">"umbrella_distract"</span><span class="p">,</span>
-    <span class="s2">"umbrella_length"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Minecraft Diamond inputs (paper, Minecraft appendix): the image plus inventory</span>
-<span class="c1"># counts, their episode maxima, the equipped item and health/hunger/breath.</span>
-<span class="n">MINECRAFT_OBS_KEYS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"image"</span><span class="p">,</span>
-    <span class="s2">"inventory"</span><span class="p">,</span>
-    <span class="s2">"inventory_max"</span><span class="p">,</span>
-    <span class="s2">"equipped"</span><span class="p">,</span>
-    <span class="s2">"health"</span><span class="p">,</span>
-    <span class="s2">"hunger"</span><span class="p">,</span>
-    <span class="s2">"breath"</span><span class="p">,</span>
-<span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">bsuite_settings</span><span class="p">(</span><span class="n">environment</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Every setting of a BSuite environment, e.g. ``"catch/0"`` .. ``"catch/19"``.</span>
-
-<span class="sd">    Requires the ``bsuite`` package. Across the 23 environments there are 468.</span>
-<span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.bsuite_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_bsuite_settings</span>
-
-    <span class="k">return</span> <span class="n">list_bsuite_settings</span><span class="p">(</span><span class="n">environment</span><span class="p">)</span>
-
-
-<span class="c1"># ALE ids default to a frame skip of 4. Dreamer applies the action repeat, so</span>
-<span class="c1"># the emulator must step single frames or every action would last 16 frames.</span>
-<span class="n">_ALE_FRAMES_PER_EPISODE</span> <span class="o">=</span> <span class="mi">108_000</span>  <span class="c1"># 30 minutes at 60 fps, the ALE v5 limit.</span>
-
-<span class="n">BENCHMARKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Benchmark</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">benchmark</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">benchmark</span>
-    <span class="k">for</span> <span class="n">benchmark</span> <span class="ow">in</span> <span class="p">(</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"dmc-proprio"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"Proprioceptive Control: DMC from joint states, no pixels."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">DMC_PROPRIO_TASKS</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"12m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"dmc"</span><span class="p">,</span>
-                <span class="s2">"dmc_obs_type"</span><span class="p">:</span> <span class="s2">"state"</span><span class="p">,</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"dmc-visual"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"Visual Control: DMC from 64x64 pixels."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">DMC_VISUAL_TASKS</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"12m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"dmc"</span><span class="p">,</span>
-                <span class="s2">"dmc_obs_type"</span><span class="p">:</span> <span class="s2">"pixels"</span><span class="p">,</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"atari"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"Atari 57 with sticky actions and the full action set."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">ATARI57_GAMES</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">200_000_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"gym"</span><span class="p">,</span>
-                <span class="s2">"gym_make_kwargs"</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">"frameskip"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="s2">"repeat_action_probability"</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
-                    <span class="s2">"full_action_space"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="n">_ALE_FRAMES_PER_EPISODE</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"atari100k"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">"Atari100k: 26 games, 400K frames, environments as originally "</span>
-                <span class="s2">"introduced (no sticky actions, minimal action set)."</span>
-            <span class="p">),</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">ATARI100K_GAMES</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">400_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"gym"</span><span class="p">,</span>
-                <span class="s2">"gym_make_kwargs"</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">"frameskip"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                    <span class="s2">"repeat_action_probability"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-                    <span class="s2">"full_action_space"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-                <span class="p">},</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="n">_ALE_FRAMES_PER_EPISODE</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"procgen"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"ProcGen: hard difficulty, unlimited level set."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">PROCGEN_GAMES</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">50_000_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"procgen"</span><span class="p">,</span>
-                <span class="s2">"procgen_distribution_mode"</span><span class="p">:</span> <span class="s2">"hard"</span><span class="p">,</span>
-                <span class="s2">"procgen_num_levels"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-                <span class="c1"># Each game ends its own episodes; this only bounds a stuck one.</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">100_000</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"dmlab"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"DMLab-30 with an action repeat of 4."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">DMLAB30_LEVELS</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">100_000_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
-                <span class="c1"># The fixed action space of PopArt and R2D2 (15 actions).</span>
-                <span class="s2">"dmlab_action_set"</span><span class="p">:</span> <span class="s2">"popart"</span><span class="p">,</span>
-                <span class="c1"># Train on *_train levels; evaluate on held-out ones separately.</span>
-                <span class="s2">"dmlab_mode"</span><span class="p">:</span> <span class="s2">"train"</span><span class="p">,</span>
-                <span class="c1"># Table 2's repeat of 4 happens inside Lab, as in the reference;</span>
-                <span class="c1"># make_env requires Dreamer's own action_repeat to be 1 here and</span>
-                <span class="c1"># applies no time limit (levels end their own episodes).</span>
-                <span class="c1"># Training still counts Lab frames (native_action_repeat).</span>
-                <span class="s2">"action_repeat"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-                <span class="s2">"dmlab_action_repeat"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"bsuite"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="s2">"BSuite: 23 environments, a single environment instance."</span><span class="p">,</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="n">BSUITE_ENVIRONMENTS</span><span class="p">,</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"bsuite"</span><span class="p">,</span>
-                <span class="c1"># DreamerV3 learns from BSuite's flattened observation vector.</span>
-                <span class="s2">"bsuite_obs_type"</span><span class="p">:</span> <span class="s2">"state"</span><span class="p">,</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">10_000_000</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-        <span class="n">Benchmark</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"minecraft"</span><span class="p">,</span>
-            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">"Minecraft Diamond: 12 milestone rewards, 36000-step episodes, "</span>
-                <span class="s2">"100x block breaking speed."</span>
-            <span class="p">),</span>
-            <span class="n">tasks</span><span class="o">=</span><span class="p">(</span><span class="s2">"diamond"</span><span class="p">,),</span>
-            <span class="n">env_steps</span><span class="o">=</span><span class="mi">100_000_000</span><span class="p">,</span>
-            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">env_instances</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-            <span class="n">replay_ratio</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-            <span class="n">model_size</span><span class="o">=</span><span class="s2">"200m"</span><span class="p">,</span>
-            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
-                <span class="s2">"minecraft_break_speed"</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>
-                <span class="s2">"obs_keys"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">MINECRAFT_OBS_KEYS</span><span class="p">),</span>
-                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">36_000</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
+<span class="c1"># Table 2: env instances, replay ratio, model size.</span>
+<span class="n">_TABLE_2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"dmc-proprio"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"12m"</span><span class="p">),</span>
+    <span class="s2">"dmc-visual"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"12m"</span><span class="p">),</span>
+    <span class="s2">"atari"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+    <span class="s2">"atari100k"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+    <span class="s2">"procgen"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+    <span class="s2">"dmlab"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+    <span class="s2">"bsuite"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+    <span class="s2">"minecraft"</span><span class="p">:</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
 <span class="p">}</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_canonical</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
-    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"proprio"</span><span class="p">:</span> <span class="s2">"dmc-proprio"</span><span class="p">,</span>
-        <span class="s2">"proprio-control"</span><span class="p">:</span> <span class="s2">"dmc-proprio"</span><span class="p">,</span>
-        <span class="s2">"visual"</span><span class="p">:</span> <span class="s2">"dmc-visual"</span><span class="p">,</span>
-        <span class="s2">"visual-control"</span><span class="p">:</span> <span class="s2">"dmc-visual"</span><span class="p">,</span>
-        <span class="s2">"atari57"</span><span class="p">:</span> <span class="s2">"atari"</span><span class="p">,</span>
-        <span class="s2">"atari-100k"</span><span class="p">:</span> <span class="s2">"atari100k"</span><span class="p">,</span>
-        <span class="s2">"dmlab30"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
-        <span class="s2">"dmlab-30"</span><span class="p">:</span> <span class="s2">"dmlab"</span><span class="p">,</span>
-        <span class="s2">"minecraft-diamond"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
-        <span class="s2">"diamond"</span><span class="p">:</span> <span class="s2">"minecraft"</span><span class="p">,</span>
-        <span class="s2">"behaviour-suite"</span><span class="p">:</span> <span class="s2">"bsuite"</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="n">key</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BENCHMARKS</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Unknown benchmark </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Options: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BENCHMARKS</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">key</span>
+<span class="n">BENCHMARKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DreamerV3Benchmark</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">DreamerV3Benchmark</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">get_benchmark</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+        <span class="n">env_instances</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span>
+        <span class="n">replay_ratio</span><span class="o">=</span><span class="n">ratio</span><span class="p">,</span>
+        <span class="n">model_size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_TABLE_2</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">}</span>
 
 
 <div class="viewcode-block" id="benchmark_config">
@@ -1184,20 +795,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        The resolved config. ``update_steps`` is derived from the benchmark's</span>
 <span class="sd">        replay ratio unless ``auto_update_steps=False`` is passed.</span>
 <span class="sd">    """</span>
-    <span class="n">spec</span> <span class="o">=</span> <span class="n">BENCHMARKS</span><span class="p">[</span><span class="n">_canonical</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)]</span>
-    <span class="n">task</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">task</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">BENCHMARKS</span><span class="p">[</span><span class="n">get_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
     <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"env"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">task_id</span><span class="p">(</span><span class="n">task</span><span class="p">),</span>
-        <span class="s2">"action_repeat"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">,</span>
         <span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">replay_ratio</span><span class="p">,</span>
         <span class="s2">"model_size"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">model_size</span><span class="p">,</span>
-        <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">overrides</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+        <span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">env_fields</span><span class="p">(</span><span class="n">task</span><span class="p">),</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">env_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fields</span><span class="p">[</span><span class="s2">"total_steps"</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">env_steps</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"gym_make_kwargs"</span><span class="p">,</span> <span class="s2">"obs_keys"</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-            <span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])(</span><span class="n">fields</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>  <span class="c1"># never share the preset's</span>
     <span class="n">fields</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
     <span class="n">valid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="p">)</span>
     <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="n">valid</span><span class="p">)</span>

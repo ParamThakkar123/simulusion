@@ -40336,14 +40336,171 @@ matching typical transformer training best practices.</p>
 <section id="module-simulusion.benchmarks">
 <span id="benchmarks-and-reports"></span><h2>Benchmarks and reports<a class="headerlink" href="#module-simulusion.benchmarks" title="Link to this heading">#</a></h2>
 <p>Benchmarks sub-module - Benchmark runners and adapters for world models.</p>
-<p>This package provides tools for running standardized evaluations of world
-models (Dreamer, IRIS, DIAMOND) across multiple seeds and computing aggregate
-metrics.</p>
-<dl class="simple">
-<dt>Usage:</dt><dd><p>from simulusion.benchmarks import BenchmarkRunner, DiamondAdapter
+<p>This package defines the benchmark suites every model is evaluated on (task
+lists, step budgets, environment options and Atari reference scores, in
+<code class="docutils literal notranslate"><span class="pre">suites.py</span></code>) and provides tools for running standardized evaluations of
+world models (Dreamer, IRIS, DIAMOND) across multiple seeds and computing
+aggregate metrics.</p>
+<dl>
+<dt>Usage:</dt><dd><p>from simulusion.benchmarks import get_benchmark, human_normalized_score
+fields = get_benchmark(“atari100k”).env_fields(“pong”)</p>
+<p>from simulusion.benchmarks import BenchmarkRunner, DiamondAdapter
 runner = BenchmarkRunner(adapter_cls=DiamondAdapter, …)</p>
 </dd>
 </dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.</span></span><span class="sig-name descname"><span class="pre">Benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_repeat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#Benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.Benchmark" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>One benchmark’s protocol: its tasks, budget and environment options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Key in <code class="xref py py-data docutils literal notranslate"><span class="pre">BENCHMARKS</span></code>.</p></li>
+<li><p><strong>description</strong> (<em>str</em>) – One line on what it measures.</p></li>
+<li><p><strong>tasks</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>) – Every task the benchmark score covers.</p></li>
+<li><p><strong>env_steps</strong> (<em>int</em><em> | </em><em>None</em>) – Environment frames per run (the unit of <code class="docutils literal notranslate"><span class="pre">total_steps</span></code>);
+<code class="docutils literal notranslate"><span class="pre">None</span></code> when the benchmark fixes episodes instead (BSuite).</p></li>
+<li><p><strong>action_repeat</strong> (<em>int</em>) – Frames per agent step.</p></li>
+<li><p><strong>overrides</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Environment options, keyed by the shared config field names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>description</strong> (<em>str</em>)</p></li>
+<li><p><strong>tasks</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>env_steps</strong> (<em>int</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>action_repeat</strong> (<em>int</em>)</p></li>
+<li><p><strong>overrides</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.description">
+<span class="sig-name descname"><span class="pre">description</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.description" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.tasks">
+<span class="sig-name descname"><span class="pre">tasks</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.tasks" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.env_steps">
+<span class="sig-name descname"><span class="pre">env_steps</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.env_steps" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.action_repeat">
+<span class="sig-name descname"><span class="pre">action_repeat</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.action_repeat" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.overrides">
+<span class="sig-name descname"><span class="pre">overrides</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#simulusion.benchmarks.Benchmark.overrides" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.task_id">
+<span class="sig-name descname"><span class="pre">task_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#Benchmark.task_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.Benchmark.task_id" title="Link to this definition">#</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">env</span></code> value for <code class="docutils literal notranslate"><span class="pre">task</span></code>.</p>
+<p>Atari names become <code class="docutils literal notranslate"><span class="pre">ALE/&lt;Game&gt;-v5</span></code>, DMLab-30 names gain their
+<code class="docutils literal notranslate"><span class="pre">contributed/dmlab30/</span></code> directory and BSuite names their first setting
+(<code class="docutils literal notranslate"><span class="pre">&quot;catch&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span></code>); other names pass through.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.benchmarks.Benchmark.env_fields">
+<span class="sig-name descname"><span class="pre">env_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#Benchmark.env_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.Benchmark.env_fields" title="Link to this definition">#</a></dt>
+<dd><p>Config fields that put an agent on <code class="docutils literal notranslate"><span class="pre">task</span></code> under this protocol.</p>
+<p><code class="docutils literal notranslate"><span class="pre">env</span></code>, <code class="docutils literal notranslate"><span class="pre">action_repeat</span></code>, <code class="docutils literal notranslate"><span class="pre">total_steps</span></code> (when the budget is in
+steps) and every environment option; <code class="docutils literal notranslate"><span class="pre">task</span></code> defaults to the first.
+Containers are copies, so editing the result never changes the preset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task</strong> (<em>str</em><em> | </em><em>None</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.benchmarks.atari_env_id">
+<span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.</span></span><span class="sig-name descname"><span class="pre">atari_env_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">game</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#atari_env_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.atari_env_id" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;ms_pacman&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;ALE/MsPacman-v5&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>game</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.benchmarks.atari_game">
+<span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.</span></span><span class="sig-name descname"><span class="pre">atari_game</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">game</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#atari_game"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.atari_game" title="Link to this definition">#</a></dt>
+<dd><p>The snake-case name of an Atari game, however it is written.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;ALE/MsPacman-v5&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;MsPacman-v5&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;MsPacman&quot;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&quot;ms_pacman&quot;</span></code> all give <code class="docutils literal notranslate"><span class="pre">&quot;ms_pacman&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>game</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.benchmarks.bsuite_settings">
+<span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.</span></span><span class="sig-name descname"><span class="pre">bsuite_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#bsuite_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.bsuite_settings" title="Link to this definition">#</a></dt>
+<dd><p>Every setting of a BSuite environment, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;catch/0&quot;</span></code> .. <code class="docutils literal notranslate"><span class="pre">&quot;catch/19&quot;</span></code>.</p>
+<p>Requires the <code class="docutils literal notranslate"><span class="pre">bsuite</span></code> package. Across the 23 environments there are 468.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>environment</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.benchmarks.get_benchmark">
+<span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.</span></span><span class="sig-name descname"><span class="pre">get_benchmark</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/suites.html#get_benchmark"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.get_benchmark" title="Link to this definition">#</a></dt>
+<dd><p>The <a class="reference internal" href="#simulusion.benchmarks.Benchmark" title="simulusion.benchmarks.Benchmark"><code class="xref py py-class docutils literal notranslate"><span class="pre">Benchmark</span></code></a> called <code class="docutils literal notranslate"><span class="pre">name</span></code> (aliases such as <code class="docutils literal notranslate"><span class="pre">&quot;dmlab30&quot;</span></code> work).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#simulusion.benchmarks.Benchmark" title="simulusion.benchmarks.suites.Benchmark"><em>Benchmark</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py class" id="module-simulusion.benchmarks.runner">
 <dt class="sig sig-object py" id="simulusion.benchmarks.runner.BenchmarkRunner">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.benchmarks.runner.</span></span><span class="sig-name descname"><span class="pre">BenchmarkRunner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapter_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'results'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/benchmarks/runner.html#BenchmarkRunner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.benchmarks.runner.BenchmarkRunner" title="Link to this definition">#</a></dt>
@@ -44736,6 +44893,21 @@ along the batch dimension.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-simulusion.benchmarks">Benchmarks and reports</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark"><code class="docutils literal notranslate"><span class="pre">Benchmark</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.name"><code class="docutils literal notranslate"><span class="pre">Benchmark.name</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.description"><code class="docutils literal notranslate"><span class="pre">Benchmark.description</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.tasks"><code class="docutils literal notranslate"><span class="pre">Benchmark.tasks</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.env_steps"><code class="docutils literal notranslate"><span class="pre">Benchmark.env_steps</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.action_repeat"><code class="docutils literal notranslate"><span class="pre">Benchmark.action_repeat</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.overrides"><code class="docutils literal notranslate"><span class="pre">Benchmark.overrides</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.task_id"><code class="docutils literal notranslate"><span class="pre">Benchmark.task_id()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.Benchmark.env_fields"><code class="docutils literal notranslate"><span class="pre">Benchmark.env_fields()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.atari_env_id"><code class="docutils literal notranslate"><span class="pre">atari_env_id()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.atari_game"><code class="docutils literal notranslate"><span class="pre">atari_game()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.bsuite_settings"><code class="docutils literal notranslate"><span class="pre">bsuite_settings()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.get_benchmark"><code class="docutils literal notranslate"><span class="pre">get_benchmark()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.runner.BenchmarkRunner"><code class="docutils literal notranslate"><span class="pre">BenchmarkRunner</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.benchmarks.runner.BenchmarkRunner.run"><code class="docutils literal notranslate"><span class="pre">BenchmarkRunner.run()</span></code></a></li>
 </ul>

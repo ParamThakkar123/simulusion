@@ -686,6 +686,13 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.serialization</span><span class="w"> </span><span class="kn">import</span> <span class="n">SerializableConfigMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ATARI100K_GAMES</span> <span class="k">as</span> <span class="n">_GAMES</span><span class="p">,</span>
+    <span class="n">ATARI_HUMAN_SCORES</span><span class="p">,</span>
+    <span class="n">ATARI_RANDOM_SCORES</span><span class="p">,</span>
+    <span class="n">atari_env_id</span><span class="p">,</span>
+    <span class="n">atari_game</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="get_default_device">
@@ -860,95 +867,11 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="c1"># Atari 100k benchmark games</span>
-<span class="n">ATARI_100K_GAMES</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"Alien-v5"</span><span class="p">,</span>
-    <span class="s2">"Amidar-v5"</span><span class="p">,</span>
-    <span class="s2">"Assault-v5"</span><span class="p">,</span>
-    <span class="s2">"Asterix-v5"</span><span class="p">,</span>
-    <span class="s2">"BankHeist-v5"</span><span class="p">,</span>
-    <span class="s2">"BattleZone-v5"</span><span class="p">,</span>
-    <span class="s2">"Boxing-v5"</span><span class="p">,</span>
-    <span class="s2">"Breakout-v5"</span><span class="p">,</span>
-    <span class="s2">"ChopperCommand-v5"</span><span class="p">,</span>
-    <span class="s2">"CrazyClimber-v5"</span><span class="p">,</span>
-    <span class="s2">"DemonAttack-v5"</span><span class="p">,</span>
-    <span class="s2">"Freeway-v5"</span><span class="p">,</span>
-    <span class="s2">"Frostbite-v5"</span><span class="p">,</span>
-    <span class="s2">"Gopher-v5"</span><span class="p">,</span>
-    <span class="s2">"Hero-v5"</span><span class="p">,</span>
-    <span class="s2">"Jamesbond-v5"</span><span class="p">,</span>
-    <span class="s2">"Kangaroo-v5"</span><span class="p">,</span>
-    <span class="s2">"Krull-v5"</span><span class="p">,</span>
-    <span class="s2">"KungFuMaster-v5"</span><span class="p">,</span>
-    <span class="s2">"MsPacman-v5"</span><span class="p">,</span>
-    <span class="s2">"Pong-v5"</span><span class="p">,</span>
-    <span class="s2">"PrivateEye-v5"</span><span class="p">,</span>
-    <span class="s2">"Qbert-v5"</span><span class="p">,</span>
-    <span class="s2">"RoadRunner-v5"</span><span class="p">,</span>
-    <span class="s2">"Seaquest-v5"</span><span class="p">,</span>
-    <span class="s2">"UpNDown-v5"</span><span class="p">,</span>
-<span class="p">]</span>
-
-
-<span class="c1"># Human normalized scores (for evaluation)</span>
-<span class="n">HUMAN_SCORES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"Alien-v5"</span><span class="p">:</span> <span class="mf">7127.7</span><span class="p">,</span>
-    <span class="s2">"Amidar-v5"</span><span class="p">:</span> <span class="mf">1719.5</span><span class="p">,</span>
-    <span class="s2">"Assault-v5"</span><span class="p">:</span> <span class="mf">742.0</span><span class="p">,</span>
-    <span class="s2">"Asterix-v5"</span><span class="p">:</span> <span class="mf">8503.3</span><span class="p">,</span>
-    <span class="s2">"BankHeist-v5"</span><span class="p">:</span> <span class="mf">753.1</span><span class="p">,</span>
-    <span class="s2">"BattleZone-v5"</span><span class="p">:</span> <span class="mf">37187.5</span><span class="p">,</span>
-    <span class="s2">"Boxing-v5"</span><span class="p">:</span> <span class="mf">12.1</span><span class="p">,</span>
-    <span class="s2">"Breakout-v5"</span><span class="p">:</span> <span class="mf">30.5</span><span class="p">,</span>
-    <span class="s2">"ChopperCommand-v5"</span><span class="p">:</span> <span class="mf">7387.8</span><span class="p">,</span>
-    <span class="s2">"CrazyClimber-v5"</span><span class="p">:</span> <span class="mf">35829.4</span><span class="p">,</span>
-    <span class="s2">"DemonAttack-v5"</span><span class="p">:</span> <span class="mf">1971.0</span><span class="p">,</span>
-    <span class="s2">"Freeway-v5"</span><span class="p">:</span> <span class="mf">29.6</span><span class="p">,</span>
-    <span class="s2">"Frostbite-v5"</span><span class="p">:</span> <span class="mf">4334.7</span><span class="p">,</span>
-    <span class="s2">"Gopher-v5"</span><span class="p">:</span> <span class="mf">2412.5</span><span class="p">,</span>
-    <span class="s2">"Hero-v5"</span><span class="p">:</span> <span class="mf">30826.4</span><span class="p">,</span>
-    <span class="s2">"Jamesbond-v5"</span><span class="p">:</span> <span class="mf">302.8</span><span class="p">,</span>
-    <span class="s2">"Kangaroo-v5"</span><span class="p">:</span> <span class="mf">3035.0</span><span class="p">,</span>
-    <span class="s2">"Krull-v5"</span><span class="p">:</span> <span class="mf">2665.5</span><span class="p">,</span>
-    <span class="s2">"KungFuMaster-v5"</span><span class="p">:</span> <span class="mf">22736.3</span><span class="p">,</span>
-    <span class="s2">"MsPacman-v5"</span><span class="p">:</span> <span class="mf">6951.6</span><span class="p">,</span>
-    <span class="s2">"Pong-v5"</span><span class="p">:</span> <span class="mf">14.6</span><span class="p">,</span>
-    <span class="s2">"PrivateEye-v5"</span><span class="p">:</span> <span class="mf">69571.3</span><span class="p">,</span>
-    <span class="s2">"Qbert-v5"</span><span class="p">:</span> <span class="mf">13455.0</span><span class="p">,</span>
-    <span class="s2">"RoadRunner-v5"</span><span class="p">:</span> <span class="mf">7845.0</span><span class="p">,</span>
-    <span class="s2">"Seaquest-v5"</span><span class="p">:</span> <span class="mf">42054.7</span><span class="p">,</span>
-    <span class="s2">"UpNDown-v5"</span><span class="p">:</span> <span class="mf">11693.2</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="n">RANDOM_SCORES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"Alien-v5"</span><span class="p">:</span> <span class="mf">227.8</span><span class="p">,</span>
-    <span class="s2">"Amidar-v5"</span><span class="p">:</span> <span class="mf">5.8</span><span class="p">,</span>
-    <span class="s2">"Assault-v5"</span><span class="p">:</span> <span class="mf">222.4</span><span class="p">,</span>
-    <span class="s2">"Asterix-v5"</span><span class="p">:</span> <span class="mf">210.0</span><span class="p">,</span>
-    <span class="s2">"BankHeist-v5"</span><span class="p">:</span> <span class="mf">14.2</span><span class="p">,</span>
-    <span class="s2">"BattleZone-v5"</span><span class="p">:</span> <span class="mf">2360.0</span><span class="p">,</span>
-    <span class="s2">"Boxing-v5"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
-    <span class="s2">"Breakout-v5"</span><span class="p">:</span> <span class="mf">1.7</span><span class="p">,</span>
-    <span class="s2">"ChopperCommand-v5"</span><span class="p">:</span> <span class="mf">811.0</span><span class="p">,</span>
-    <span class="s2">"CrazyClimber-v5"</span><span class="p">:</span> <span class="mf">10780.5</span><span class="p">,</span>
-    <span class="s2">"DemonAttack-v5"</span><span class="p">:</span> <span class="mf">152.1</span><span class="p">,</span>
-    <span class="s2">"Freeway-v5"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-    <span class="s2">"Frostbite-v5"</span><span class="p">:</span> <span class="mf">65.2</span><span class="p">,</span>
-    <span class="s2">"Gopher-v5"</span><span class="p">:</span> <span class="mf">257.6</span><span class="p">,</span>
-    <span class="s2">"Hero-v5"</span><span class="p">:</span> <span class="mf">1027.0</span><span class="p">,</span>
-    <span class="s2">"Jamesbond-v5"</span><span class="p">:</span> <span class="mf">29.0</span><span class="p">,</span>
-    <span class="s2">"Kangaroo-v5"</span><span class="p">:</span> <span class="mf">52.0</span><span class="p">,</span>
-    <span class="s2">"Krull-v5"</span><span class="p">:</span> <span class="mf">1598.0</span><span class="p">,</span>
-    <span class="s2">"KungFuMaster-v5"</span><span class="p">:</span> <span class="mf">258.5</span><span class="p">,</span>
-    <span class="s2">"MsPacman-v5"</span><span class="p">:</span> <span class="mf">307.3</span><span class="p">,</span>
-    <span class="s2">"Pong-v5"</span><span class="p">:</span> <span class="o">-</span><span class="mf">20.7</span><span class="p">,</span>
-    <span class="s2">"PrivateEye-v5"</span><span class="p">:</span> <span class="mf">24.9</span><span class="p">,</span>
-    <span class="s2">"Qbert-v5"</span><span class="p">:</span> <span class="mf">163.9</span><span class="p">,</span>
-    <span class="s2">"RoadRunner-v5"</span><span class="p">:</span> <span class="mf">11.5</span><span class="p">,</span>
-    <span class="s2">"Seaquest-v5"</span><span class="p">:</span> <span class="mf">68.4</span><span class="p">,</span>
-    <span class="s2">"UpNDown-v5"</span><span class="p">:</span> <span class="mf">533.4</span><span class="p">,</span>
-<span class="p">}</span>
+<span class="c1"># Atari 100k games and reference scores, from the shared benchmark tables</span>
+<span class="c1"># (simulusion.benchmarks), keyed the way DIAMOND names games.</span>
+<span class="n">ATARI_100K_GAMES</span> <span class="o">=</span> <span class="p">[</span><span class="n">atari_env_id</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"ALE/"</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">_GAMES</span><span class="p">]</span>
+<span class="n">HUMAN_SCORES</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span><span class="p">:</span> <span class="n">ATARI_HUMAN_SCORES</span><span class="p">[</span><span class="n">atari_game</span><span class="p">(</span><span class="n">g</span><span class="p">)]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">ATARI_100K_GAMES</span><span class="p">}</span>
+<span class="n">RANDOM_SCORES</span> <span class="o">=</span> <span class="p">{</span><span class="n">g</span><span class="p">:</span> <span class="n">ATARI_RANDOM_SCORES</span><span class="p">[</span><span class="n">atari_game</span><span class="p">(</span><span class="n">g</span><span class="p">)]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">ATARI_100K_GAMES</span><span class="p">}</span>
 </pre></div>
 
                 </article>
