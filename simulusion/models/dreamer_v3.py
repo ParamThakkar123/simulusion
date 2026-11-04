@@ -50,8 +50,8 @@ from simulusion.models.dreamer import (
     make_env,
 )
 from simulusion.optim import LaProp, adaptive_grad_clip_
-from simulusion.utils.dreamer_utils import FreezeParameters
-from simulusion.utils.dreamer_v3_utils import (
+from simulusion.utils.dreamer_utils import (
+    FreezeParameters,
     ReturnNormalizer,
     free_bits,
     lambda_return,

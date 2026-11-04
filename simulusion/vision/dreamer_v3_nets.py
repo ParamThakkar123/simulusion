@@ -30,8 +30,7 @@ import torch.distributions as distributions
 
 from simulusion.export import ExportableAgentMixin
 from simulusion.layers.rms_norm import RMSNorm
-from simulusion.utils.dreamer_utils import symlog
-from simulusion.utils.dreamer_v3_utils import SymexpTwoHotDist
+from simulusion.utils.dreamer_utils import SymexpTwoHotDist, symlog
 
 __all__ = [
     "ChannelRMSNorm",

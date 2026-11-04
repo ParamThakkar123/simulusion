@@ -434,7 +434,7 @@ Every piece is usable on its own:
 from simulusion.models import CategoricalRSSM
 from simulusion.optim import LaProp, adaptive_grad_clip_
 from simulusion.layers import BlockGRUCell
-from simulusion.utils.dreamer_v3_utils import ReturnNormalizer, SymexpTwoHotDist
+from simulusion.utils.dreamer_utils import ReturnNormalizer, SymexpTwoHotDist
 ```
 
 ## Diagnostics
