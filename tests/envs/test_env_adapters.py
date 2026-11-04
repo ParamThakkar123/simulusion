@@ -1119,7 +1119,7 @@ def test_dmlab_env_adapts_deepmind_lab_api(monkeypatch):
     obs, reward, done, info = env.step(action)
 
     lab = _FakeDeepMindLabModule.instances[-1]
-    assert lab.level == "rooms_collect_good_objects_train"
+    assert lab.level == "contributed/dmlab30/rooms_collect_good_objects_train"
     assert lab.observations_requested == ["RGB_INTERLEAVED", "VEL.TRANS"]
     assert lab.config["width"] == "32"
     assert lab.config["height"] == "32"
@@ -1231,6 +1231,7 @@ def test_make_env_dmlab_backend(
     cfg = DreamerConfig()
     cfg.env_backend = "dmlab"
     cfg.env = "rooms_collect_good_objects_train"
+    cfg.action_repeat = 1
     cfg.image_size = (64, 64)
     cfg.dmlab_action_repeat = 5
     cfg.dmlab_observations = ["VEL.TRANS"]
@@ -1255,7 +1256,10 @@ def test_make_env_dmlab_backend(
         observations=cfg.dmlab_observations,
         config=cfg.dmlab_config,
         renderer=cfg.dmlab_renderer,
+        text=cfg.dmlab_text,
+        mode=cfg.dmlab_mode,
     )
+    mock_time_limit.assert_not_called()  # DMLab levels end their own episodes
 
 
 @patch("simulusion.envs.wrappers.TimeLimit")
@@ -1309,6 +1313,7 @@ def test_make_env_bsuite_backend(
     cfg = DreamerConfig()
     cfg.env_backend = "bsuite"
     cfg.env = "catch/0"
+    cfg.action_repeat = 1
     cfg.image_size = (64, 64)
 
     env = Mock()
@@ -1320,7 +1325,14 @@ def test_make_env_bsuite_backend(
     out_env = make_env(cfg)
 
     assert out_env is env
-    mock_bsuite_env.assert_called_once_with(cfg.env, seed=cfg.seed, size=cfg.image_size)
+    mock_bsuite_env.assert_called_once_with(
+        cfg.env,
+        seed=cfg.seed,
+        size=cfg.image_size,
+        obs_type=cfg.bsuite_obs_type,
+        results_dir=cfg.bsuite_results_dir,
+    )
+    mock_time_limit.assert_not_called()  # BSuite episodes end by themselves
 
 
 class _FakeActionSpec:

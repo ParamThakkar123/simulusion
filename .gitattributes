@@ -1,0 +1,4 @@
+# Shell scripts and Dockerfiles run inside Linux containers; keep LF even
+# in Windows checkouts (core.autocrlf=true would otherwise add CR).
+*.sh text eol=lf
+Dockerfile text eol=lf

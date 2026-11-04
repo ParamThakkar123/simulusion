@@ -8,12 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Minecraft Diamond** (`MinecraftDiamondEnv`, `env_backend="minecraft"`): the
+  DreamerV3 benchmark environment on MineRL 0.4.4, following the reference code:
+  25 flat actions with abstract crafting, +1 per milestone item once per episode,
+  a health reward, 36000-step episodes, 100x block breaking, held jumps, a pitch
+  limit, and image plus inventory, equipped-item and status vectors. A Malmo
+  failure cuts the episode short (truncated) and the next reset restarts it.
+- **BSuite benchmark protocol.** `BSuiteImageEnv` takes `obs_type="state"` (the
+  flat observation vector DreamerV3 learns from), accepts bare names (`"catch"`
+  is `"catch/0"`), records BSuite's CSV logs for scoring with `results_dir=`,
+  and tracks the episode budget, at which Dreamer training now stops.
+  `list_bsuite_settings` lists an environment's settings (468 in all).
+- **DMLab-30 protocol.** `DMLabEnv` offers the fixed PopArt/R2D2 (15) and IMPALA
+  action sets by name, embeds the instruction of `language_*` levels as
+  `obs["instr"]` as in the DreamerV3 reference, and has `train`/`eval` modes for
+  `*_train`/held-out levels. DMLab-30 levels can be named without their folder
+  (`DMLAB30_LEVELS`, `resolve_dmlab_level`), and Dreamer configs default to the
+  PopArt actions and train mode, and count Lab frames.
+- **Benchmark protocol in Dreamer's `make_env`.** DMLab, Minecraft and BSuite
+  end their own episodes, so `time_limit` does not apply to them, and they
+  require `action_repeat=1` (DMLab repeats 4 frames inside Lab), as in the
+  DreamerV3 reference. `minecraft_length` sets Minecraft's episode length.
+- **`docker/envs` image** with DeepMind Lab (built from source), the patched
+  MineRL 0.4.4 and BSuite on Python 3.11, for the benchmarks that cannot be
+  pip-installed on every platform.
 - **Proprioceptive DeepMind Control observations.** `DeepMindControlEnv` takes
   `obs_type="state"` (Dreamer configs: `dmc_obs_type="state"`), which returns
   the task's state flattened into `obs["state"]` and skips rendering, for the
   Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
 
 ### Fixed
+- `BSuiteImageEnv.max_episode_steps` returned the setting's episode count.
+- **Plotting works with plotly 7**, which removed `plotly.graph_objs.Line`:
+  importing it disabled all plotting, so `lineplot` and `plot_metrics` (and so
+  `train_rssm`) crashed. plotly and scikit-learn are now imported separately,
+  so line plots no longer need scikit-learn, and a missing package raises an
+  `ImportError` naming the `viz` extra.
+- **`@deprecated` on a class** recursed forever on construction; it now calls
+  the original `__init__`. Deprecation warnings name the function (not
+  "function"), point at the caller, and have no stray space before the reason.
 - DeepMind Control episodes that end at the time limit (discount 1) are
   reported as truncations rather than terminations, so learners bootstrap the
   value of the last state. Every DMC task ends this way.

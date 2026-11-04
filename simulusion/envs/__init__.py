@@ -118,6 +118,16 @@ def __getattr__(name: str) -> Any:
         }
         return _map[name]
 
+    if name in (
+        "MinecraftDiamondEnv",
+        "make_minecraft_diamond_env",
+        "DIAMOND_ACTIONS",
+        "DIAMOND_MILESTONES",
+    ):
+        from . import minecraft_diamond
+
+        return getattr(minecraft_diamond, name)
+
     if name in ("BraxImageEnv", "make_brax_env"):
         from .brax_env import BraxImageEnv, make_brax_env
 
@@ -125,27 +135,30 @@ def __getattr__(name: str) -> Any:
             return BraxImageEnv
         return make_brax_env
 
-    if name in ("DMLabEnv", "make_dmlab_env", "DMLAB_LEVELS"):
-        from .dmlab import DMLabEnv, make_dmlab_env, DMLAB_LEVELS
+    if name in (
+        "DMLabEnv",
+        "make_dmlab_env",
+        "DMLAB_LEVELS",
+        "DMLAB30_LEVELS",
+        "resolve_dmlab_level",
+        "POPART_ACTION_SET",
+        "IMPALA_ACTION_SET",
+        "embed_instruction",
+    ):
+        from . import dmlab
 
-        if name == "DMLabEnv":
-            return DMLabEnv
-        if name == "make_dmlab_env":
-            return make_dmlab_env
-        return DMLAB_LEVELS
+        return getattr(dmlab, name)
 
-    if name in ("BSuiteImageEnv", "make_bsuite_env", "list_available_bsuite_ids"):
-        from .bsuite_env import (
-            BSuiteImageEnv,
-            make_bsuite_env,
-            list_available_bsuite_ids,
-        )
+    if name in (
+        "BSuiteImageEnv",
+        "make_bsuite_env",
+        "list_available_bsuite_ids",
+        "list_bsuite_settings",
+        "normalize_bsuite_id",
+    ):
+        from . import bsuite_env
 
-        if name == "BSuiteImageEnv":
-            return BSuiteImageEnv
-        if name == "make_bsuite_env":
-            return make_bsuite_env
-        return list_available_bsuite_ids
+        return getattr(bsuite_env, name)
 
     if name in ("UnityMLAgentsEnv", "make_unity_mlagents_env"):
         from .unity_env import UnityMLAgentsEnv, make_unity_mlagents_env
@@ -222,6 +235,10 @@ def make_env(env_id: str, **kwargs: Any) -> Any:
         from .dmlab import make_dmlab_env
 
         return make_dmlab_env(env_id, **kwargs)
+    if backend in {"minecraft", "minecraft_diamond", "minerl"}:
+        from .minecraft_diamond import make_minecraft_diamond_env
+
+        return make_minecraft_diamond_env(env_id, **kwargs)
     if backend in {"procgen", "coinrun"}:
         from .procgen_env import make_procgen_env
 
@@ -309,6 +326,11 @@ __all__ = [
     "list_minecraft_actions",
     "list_minecraft_envs",
     "make_minecraft_env",
+    # Minecraft Diamond (DreamerV3 benchmark, MineRL 0.4.4)
+    "MinecraftDiamondEnv",
+    "make_minecraft_diamond_env",
+    "DIAMOND_ACTIONS",
+    "DIAMOND_MILESTONES",
     "UnityMLAgentsEnv",
     "make_unity_mlagents_env",
     "DeepMindControlEnv",
@@ -317,9 +339,16 @@ __all__ = [
     "DMLabEnv",
     "make_dmlab_env",
     "DMLAB_LEVELS",
+    "DMLAB30_LEVELS",
+    "resolve_dmlab_level",
+    "POPART_ACTION_SET",
+    "IMPALA_ACTION_SET",
+    "embed_instruction",
     "BSuiteImageEnv",
     "make_bsuite_env",
     "list_available_bsuite_ids",
+    "list_bsuite_settings",
+    "normalize_bsuite_id",
     "TimeLimit",
     "ActionRepeat",
     "NormalizeActions",
