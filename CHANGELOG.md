@@ -39,6 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - `BSuiteImageEnv.max_episode_steps` returned the setting's episode count.
+- **Plotting works with plotly 7**, which removed `plotly.graph_objs.Line`:
+  importing it disabled all plotting, so `lineplot` and `plot_metrics` (and so
+  `train_rssm`) crashed. plotly and scikit-learn are now imported separately,
+  so line plots no longer need scikit-learn, and a missing package raises an
+  `ImportError` naming the `viz` extra.
+- **`@deprecated` on a class** recursed forever on construction; it now calls
+  the original `__init__`. Deprecation warnings name the function (not
+  "function"), point at the caller, and have no stray space before the reason.
 - DeepMind Control episodes that end at the time limit (discount 1) are
   reported as truncations rather than terminations, so learners bootstrap the
   value of the last state. Every DMC task ends this way.

@@ -20,7 +20,7 @@ class TestUtils:
         "test_StreamingVideoWriter_float_frame",
         "test_TorchImageEnvWrapper_reset",
     }
-    _needs_plotly = {"test_plot_metrics"}
+    _needs_plotly = {"test_plot_metrics", "test_lineplot_draws_an_uncertainty_band"}
     _needs_gym = {"test_TorchImageEnvWrapper_init_with_string"}
 
     @pytest.fixture(autouse=True)
@@ -217,6 +217,21 @@ class TestUtils:
 
             html_file = os.path.join(tmpdir, "test_loss.html")
             assert os.path.exists(html_file)
+
+    def test_lineplot_draws_an_uncertainty_band(self, tmp_path):
+        # The band styles its lines, which used plotly's Line class (gone in 7).
+        from simulusion.utils.utils import lineplot
+
+        ys = np.random.default_rng(0).normal(size=(5, 3))
+        lineplot(np.arange(5), ys, "band", str(tmp_path))
+        assert (tmp_path / "band.html").exists()
+
+    def test_plotting_without_plotly_explains_the_install(self, monkeypatch):
+        from simulusion.utils import utils
+
+        monkeypatch.setattr(utils, "plotly", None)
+        with pytest.raises(ImportError, match=r"plotly is not installed.*\[viz\]"):
+            utils.lineplot([0, 1], [0.0, 1.0], "x")
 
     def test_save_video_chw(self):
         from simulusion.utils.utils import save_video
