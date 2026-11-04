@@ -715,7 +715,9 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.benchmarks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>  <span class="c1"># noqa: F401  (task tables re-exported)</span>
@@ -746,33 +748,45 @@ window.runMermaid = runMermaid;</script>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DreamerV3Benchmark</span><span class="p">(</span><span class="n">Benchmark</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""A shared :class:`~simulusion.benchmarks.Benchmark` plus the</span>
-<span class="sd">    DreamerV3 settings of its Table 2 row."""</span>
+<span class="sd">    DreamerV3 settings of its Table 2 row.</span>
+
+<span class="sd">    ``config`` holds :class:`DreamerV3Config` fields (the replay ratio and model</span>
+<span class="sd">    size), so they are declared once, on the config. ``env_instances`` is not a</span>
+<span class="sd">    config field: the agent steps one environment (see the module docstring).</span>
+<span class="sd">    """</span>
 
     <span class="n">env_instances</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">replay_ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span>
-    <span class="n">model_size</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"200m"</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
 
-<span class="c1"># Table 2: env instances, replay ratio, model size.</span>
-<span class="n">_TABLE_2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"dmc-proprio"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"12m"</span><span class="p">),</span>
-    <span class="s2">"dmc-visual"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"12m"</span><span class="p">),</span>
-    <span class="s2">"atari"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
-    <span class="s2">"atari100k"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
-    <span class="s2">"procgen"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
-    <span class="s2">"dmlab"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
-    <span class="s2">"bsuite"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
-    <span class="s2">"minecraft"</span><span class="p">:</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"200m"</span><span class="p">),</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_fields</span><span class="p">(</span><span class="n">fields</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid config override(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="c1"># Table 2: env instances, then the DreamerV3Config fields the row fixes.</span>
+<span class="n">_TABLE_2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"dmc-proprio"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"12m"</span><span class="p">}),</span>
+    <span class="s2">"dmc-visual"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"12m"</span><span class="p">}),</span>
+    <span class="s2">"atari"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="s2">"atari100k"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="s2">"procgen"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="s2">"dmlab"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="s2">"bsuite"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="s2">"minecraft"</span><span class="p">:</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
 <span class="p">}</span>
+
+<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_config</span> <span class="ow">in</span> <span class="n">_TABLE_2</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">_check_fields</span><span class="p">(</span><span class="n">_config</span><span class="p">)</span>
 
 <span class="n">BENCHMARKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DreamerV3Benchmark</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">name</span><span class="p">:</span> <span class="n">DreamerV3Benchmark</span><span class="p">(</span>
         <span class="o">**</span><span class="n">asdict</span><span class="p">(</span><span class="n">get_benchmark</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
         <span class="n">env_instances</span><span class="o">=</span><span class="n">instances</span><span class="p">,</span>
-        <span class="n">replay_ratio</span><span class="o">=</span><span class="n">ratio</span><span class="p">,</span>
-        <span class="n">model_size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">MappingProxyType</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_TABLE_2</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">instances</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_TABLE_2</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 <span class="p">}</span>
 
 
@@ -796,16 +810,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        replay ratio unless ``auto_update_steps=False`` is passed.</span>
 <span class="sd">    """</span>
     <span class="n">spec</span> <span class="o">=</span> <span class="n">BENCHMARKS</span><span class="p">[</span><span class="n">get_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-    <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">replay_ratio</span><span class="p">,</span>
-        <span class="s2">"model_size"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">model_size</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">env_fields</span><span class="p">(</span><span class="n">task</span><span class="p">),</span>
-    <span class="p">}</span>
-    <span class="n">fields</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span>
-    <span class="n">valid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="p">)</span>
-    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="o">-</span> <span class="n">valid</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid config override(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">env_fields</span><span class="p">(</span><span class="n">task</span><span class="p">),</span> <span class="o">**</span><span class="n">overrides</span><span class="p">}</span>
+    <span class="n">_check_fields</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="p">(),</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
 
 </pre></div>
