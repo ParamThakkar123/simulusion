@@ -611,7 +611,7 @@ cfg.env = "Pendulum-v1"
 
 cfg.env_backend = "dmlab"  # DeepMind Lab
 cfg.env = "rooms_collect_good_objects_train"
-cfg.dmlab_action_repeat = 4
+cfg.action_repeat = 1  # DMLab, BSuite and Minecraft repeat inside the env
 
 cfg.env_backend = "mujoco"  # MuJoCo
 cfg.env = "Humanoid-v4"

@@ -62,14 +62,19 @@ from simulusion.envs.brax_env import BraxImageEnv as BraxImageEnv
 from simulusion.envs.brax_env import make_brax_env as make_brax_env
 from simulusion.envs.bsuite_env import BSuiteImageEnv as BSuiteImageEnv
 from simulusion.envs.bsuite_env import list_available_bsuite_ids as list_available_bsuite_ids
+from simulusion.envs.bsuite_env import list_bsuite_settings as list_bsuite_settings
 from simulusion.envs.bsuite_env import make_bsuite_env as make_bsuite_env
 from simulusion.envs.diamond_atari import make_diamond_atari_env as make_diamond_atari_env
 from simulusion.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
+from simulusion.envs.dmlab import DMLAB30_LEVELS as DMLAB30_LEVELS
 from simulusion.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
 from simulusion.envs.dmlab import DMLabEnv as DMLabEnv
 from simulusion.envs.dmlab import make_dmlab_env as make_dmlab_env
+from simulusion.envs.dmlab import resolve_dmlab_level as resolve_dmlab_level
 from simulusion.envs.gym_env import GymImageEnv as GymImageEnv
 from simulusion.envs.gym_env import make_gym_env as make_gym_env
+from simulusion.envs.minecraft_diamond import MinecraftDiamondEnv as MinecraftDiamondEnv
+from simulusion.envs.minecraft_diamond import make_minecraft_diamond_env as make_minecraft_diamond_env
 from simulusion.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
 from simulusion.envs.mujoco_env import MuJoCoImageEnv as MujocoEnv
 from simulusion.envs.mujoco_env import make_mujoco_env as make_mujoco_env
@@ -234,6 +239,7 @@ __all__ = [
     "ConvDecoder",
     "ConvEncoder",
     "DDPM",
+    "DMLAB30_LEVELS",
     "DMLAB_LEVELS",
     "DMLabEnv",
     "DeepMindControlEnv",
@@ -298,6 +304,7 @@ __all__ = [
     "Logger",
     "MODEL_SPECS",
     "Memory",
+    "MinecraftDiamondEnv",
     "MixedPrecision",
     "ModelSpec",
     "ModularRSSM",
@@ -380,6 +387,7 @@ __all__ = [
     "jepa_linear_probe",
     "list_available_atari_envs",
     "list_available_bsuite_ids",
+    "list_bsuite_settings",
     "list_dit_presets",
     "list_env_backends",
     "list_envs",
@@ -401,6 +409,7 @@ __all__ = [
     "make_dmlab_env",
     "make_env",
     "make_gym_env",
+    "make_minecraft_diamond_env",
     "make_mujoco_env",
     "make_mujoco_env_from_config",
     "make_robotics_env",
@@ -416,6 +425,7 @@ __all__ = [
     "register_gymnasium_robotics_envs",
     "register_task",
     "register_world_model",
+    "resolve_dmlab_level",
     "rollout_drift",
     "run_training",
     "save_bundle",

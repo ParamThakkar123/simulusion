@@ -6,19 +6,6 @@ import numpy as np
 import glob
 import warnings
 from typing import Any, Dict, List
-
-
-try:
-    import plotly
-    from plotly.graph_objs import Scatter, Line
-
-    from sklearn.manifold import TSNE
-
-    HAS_VIZ = True
-except ImportError:
-    plotly = None
-    HAS_VIZ = False
-
 from collections import defaultdict
 from simulusion.memory.planet_memory import Memory
 
@@ -27,6 +14,25 @@ from torchvision.utils import make_grid, save_image
 import torch.nn.functional as F
 
 import yaml
+
+
+# Plotting needs plotly; t-SNE also needs scikit-learn. Each is optional
+# ("simulusion[viz]") and only the functions that use it require it.
+try:
+    import plotly
+    from plotly.graph_objs import Scatter
+except ImportError:
+    plotly = None
+try:
+    from sklearn.manifold import TSNE
+except ImportError:
+    TSNE = None
+HAS_VIZ = plotly is not None and TSNE is not None
+
+
+def _require(module: Any, name: str) -> None:
+    if module is None:
+        raise ImportError(f'{name} is not installed: pip install "simulusion[viz]".')
 
 
 class _RestrictedReplayUnpickler(pickle.Unpickler):
@@ -645,10 +651,12 @@ def lineplot(
 
     Supports uncertainty-band plotting when `ys` is a 2D array.
     """
-    MAX_LINE = Line(color="rgb(0, 132, 180)", dash="dash")
-    MIN_LINE = Line(color="rgb(0, 132, 180)", dash="dash")
-    NO_LINE = Line(color="rgba(0, 0, 0, 0)")
-    MEAN_LINE = Line(color="rgb(0, 172, 237)")
+    _require(plotly, "plotly")
+    # Plain dicts: plotly 7 removed the graph_objs.Line class.
+    MAX_LINE = dict(color="rgb(0, 132, 180)", dash="dash")
+    MIN_LINE = dict(color="rgb(0, 132, 180)", dash="dash")
+    NO_LINE = dict(color="rgba(0, 0, 0, 0)")
+    MEAN_LINE = dict(color="rgb(0, 172, 237)")
     std_colour = "rgba(29, 202, 255, 0.2)"
     if isinstance(ys, dict):
         data = []
@@ -985,6 +993,8 @@ def visualize_latent_tsne(
         save_path: path to save the plot (HTML for plotly)
         perplexity: t-SNE perplexity parameter
     """
+    _require(plotly, "plotly")
+    _require(TSNE, "scikit-learn")
     if isinstance(latents, torch.Tensor):
         latents = latents.detach().cpu().numpy()
 
@@ -1039,6 +1049,7 @@ def visualize_latent_umap(
         save_path: path to save the plot (HTML for plotly)
         n_neighbors: UMAP n_neighbors parameter
     """
+    _require(plotly, "plotly")
     if isinstance(latents, torch.Tensor):
         latents = latents.detach().cpu().numpy()
 

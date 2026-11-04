@@ -106,7 +106,7 @@ class DreamerTask(TrainingTask):
         args = self.config.model
         args.seed = trainer.config.seed
         self.train_env = make_env(args)
-        self.test_env = make_env(args)
+        self.test_env = make_env(args, evaluation=True)
         obs_shape = image_obs_shape(self.train_env)
         action_size = self.train_env.action_space.shape[0]
         self.dreamer = _core_cls(self.variant)(
@@ -114,15 +114,28 @@ class DreamerTask(TrainingTask):
         )
         self.dreamer.set_precision(trainer.precision)
 
+    def _frames_per_step(self) -> int:
+        """Environment frames per agent step: Dreamer's action repeat times
+        the repeat inside the environment (DMLab's), as the reference counts.
+        """
+        native = getattr(self.train_env, "native_action_repeat", 1)
+        native = native if isinstance(native, int) and native > 0 else 1
+        return int(self.config.model.action_repeat) * native
+
     def progress(self) -> int:
-        return int(self.dreamer.data_buffer.steps * self.config.model.action_repeat)
+        return int(self.dreamer.data_buffer.steps * self._frames_per_step())
+
+    def should_stop(self) -> bool:
+        # BSuite budgets each setting in episodes; its adapter reports when
+        # that many have finished (through the wrappers' attribute forwarding).
+        return getattr(self.train_env, "budget_exhausted", False) is True
 
     def train_step(self) -> Metrics:
         args = self.config.model
         metrics: dict[str, float] = {}
         if not self.seeded:
             rewards = self.dreamer.collect_random_episodes(
-                self.train_env, args.seed_steps // args.action_repeat
+                self.train_env, args.seed_steps // self._frames_per_step()
             )
             metrics["seed_avg_reward"] = float(np.mean(rewards))
             self.seeded = True
@@ -139,7 +152,7 @@ class DreamerTask(TrainingTask):
             )
         metrics.update(mean_metrics(rows))
         rewards = self.dreamer.act_and_collect_data(
-            self.train_env, args.collect_steps // args.action_repeat
+            self.train_env, args.collect_steps // self._frames_per_step()
         )
         buffer = self.dreamer.data_buffer
         metrics.update(
