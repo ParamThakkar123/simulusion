@@ -315,6 +315,35 @@ back. Each minibatch is filled first from chunks the model has not trained on ye
 (the online queue), then topped up uniformly. Collection also continues the open
 episode across calls, so the environment is only reset when an episode ends.
 
+### Benchmark presets
+
+`benchmark_config` builds a config that follows the paper's protocol for one
+benchmark of Table 2: its task list, step budget, action repeat, replay ratio, model
+size and environment settings. Other fields keep their defaults, and keyword
+arguments override anything, for example to fit a smaller GPU:
+
+```python
+from simulusion.configs.dreamer_v3_benchmarks import benchmark_config
+
+cfg = benchmark_config("dmlab", "explore_goal_locations_small")
+cfg = benchmark_config("atari100k", "pong", model_size="12m")
+```
+
+| Benchmark | Tasks | Env steps | Repeat | Replay ratio | Model | Environment settings |
+| --- | --- | --- | --- | --- | --- | --- |
+| `dmc-proprio` | 18 | 500K | 2 | 512 | 12M | Joint states (`dmc_obs_type="state"`) |
+| `dmc-visual` | 20 | 1M | 2 | 512 | 12M | 64x64 pixels |
+| `atari` | 57 | 200M | 4 | 32 | 200M | Sticky actions, full action set |
+| `atari100k` | 26 | 400K | 4 | 128 | 200M | No sticky actions, minimal action set |
+| `procgen` | 16 | 50M | 1 | 64 | 200M | Hard mode, unlimited levels |
+| `dmlab` | 30 | 100M | 4 | 32 | 200M | PopArt 15-action set, instruction input on language levels |
+| `bsuite` | 23 | per-setting episode budget | 1 | 1024 | 200M | Flat observation vector; stops at BSuite's episode budget |
+| `minecraft` | 1 | 100M | 1 | 32 | 200M | Image plus inventory, equipped item and health/hunger/breath |
+
+DMLab and Minecraft need packages that only build on Linux with Python 3.11; the
+`docker/envs` image provides them. See {doc}`environments/dmlab`,
+{doc}`environments/bsuite` and {doc}`environments/minecraft`.
+
 ## Observations and actions
 
 Both observation kinds and both action kinds are handled automatically:
@@ -338,6 +367,8 @@ Both observation kinds and both action kinds are handled automatically:
 | DMC, `dmc_obs_type="pixels"` (Visual Control) | `image` |
 | DMC, `dmc_obs_type="state"` (Proprio Control) | `state` |
 | DMLab `language_*` levels | `image`, `instr` |
+| BSuite, `bsuite_obs_type="state"` | `state` |
+| Minecraft Diamond (`minecraft` preset) | `image`, `inventory`, `inventory_max`, `equipped`, `health`, `hunger`, `breath` |
 
 Name the keys to encode something else, such as `obs_keys=["image", "state"]`.
 Replay stores each encoded input in its own array (images as `uint8`, vectors as
