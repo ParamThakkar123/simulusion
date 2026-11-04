@@ -681,7 +681,31 @@ window.runMermaid = runMermaid;</script>
                 <article class="bd-article">
                   
   <h1>Source code for simulusion.utils.dreamer_utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span></span><span class="sd">"""Utilities shared by the Dreamer family (V1, V2 and V3).</span>
+
+<span class="sd">Besides the generic helpers (parameter freezing, logging, ``lambda``-returns),</span>
+<span class="sd">this module holds the robustness primitives DreamerV3 introduced to train with</span>
+<span class="sd">fixed hyperparameters across domains:</span>
+
+<span class="sd">* :func:`symlog` / :func:`symexp` -- symmetric log squashing and its inverse.</span>
+<span class="sd">* :func:`twohot` -- two-hot encoding against an arbitrary sorted grid.</span>
+<span class="sd">* :class:`SymexpTwoHotDist` -- a categorical distribution over exponentially</span>
+<span class="sd">  spaced bins, trained on two-hot encoded targets. This decouples gradient</span>
+<span class="sd">  magnitudes from target magnitudes for the reward predictor and the critic.</span>
+<span class="sd">* :class:`ReturnNormalizer` -- percentile-based return scaling with a</span>
+<span class="sd">  denominator limit, used to keep the actor entropy regularizer on a fixed</span>
+<span class="sd">  scale regardless of reward magnitude or sparsity.</span>
+<span class="sd">* :func:`free_bits` -- clipping of the KL terms below one nat.</span>
+<span class="sd">* :func:`lambda_return` -- bootstrapped ``lambda``-returns.</span>
+
+<span class="sd">Reference:</span>
+<span class="sd">    Mastering Diverse Domains through World Models</span>
+<span class="sd">    Hafner et al., 2023 - https://arxiv.org/abs/2301.04104</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>  <span class="c1"># noqa: S403  # restricted unpickler loaded separately</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -702,7 +726,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="symlog">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.symlog">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">symlog</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Symmetric log transform used by Dreamer V2 for reward/value targets.</span>
+<span class="w">    </span><span class="sd">"""Symmetric log transform used by Dreamer V2/V3 for reward/value targets.</span>
 
 <span class="sd">    Defined as ``sign(x) * log(1 + |x|)``. This compresses large positive or</span>
 <span class="sd">    negative values into a range that is easier to predict with a categorical</span>
@@ -774,22 +798,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            containing the soft two-hot distribution. The encoding assumes</span>
 <span class="sd">            the target is already in symlog space, matching Dreamer V2.</span>
 <span class="sd">        """</span>
-        <span class="n">sym_target</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">)</span>
-        <span class="n">target_flat</span> <span class="o">=</span> <span class="n">sym_target</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">step</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_buckets</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">sym_target</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span>
-        <span class="n">offset_flat</span> <span class="o">=</span> <span class="n">offset</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">lower</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">offset_flat</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
-        <span class="n">upper</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">lower</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_buckets</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">lower</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">weight_upper</span> <span class="o">=</span> <span class="p">(</span><span class="n">offset_flat</span> <span class="o">-</span> <span class="n">lower</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">weight_lower</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight_upper</span>
-        <span class="n">one_hot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-            <span class="n">target_flat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_buckets</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">target_flat</span><span class="o">.</span><span class="n">device</span>
-        <span class="p">)</span>
-        <span class="n">one_hot</span><span class="o">.</span><span class="n">scatter_</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">lower</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">weight_lower</span><span class="p">)</span>
-        <span class="n">one_hot</span><span class="o">.</span><span class="n">scatter_add_</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">upper</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">weight_upper</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">one_hot</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_buckets</span><span class="p">)</span></div>
+        <span class="n">centers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bucket_centers</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">twohot</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">centers</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TwoHotEncoder.decode">
@@ -812,6 +822,286 @@ window.runMermaid = runMermaid;</script>
         <span class="n">expectation</span> <span class="o">=</span> <span class="p">(</span><span class="n">probs</span> <span class="o">*</span> <span class="n">centers</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">symexp</span><span class="p">(</span><span class="n">expectation</span><span class="p">)</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="twohot">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.twohot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">twohot</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">bins</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Two-hot encode ``target`` against a sorted, monotonically increasing grid.</span>
+
+<span class="sd">    The two-hot encoding generalizes one-hot encoding to continuous values: all</span>
+<span class="sd">    entries are zero except at the two bins bracketing the target, whose weights</span>
+<span class="sd">    sum to one and are linearly interpolated by distance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        target: Tensor of arbitrary shape with real-valued targets.</span>
+<span class="sd">        bins: 1-D tensor of bin locations, sorted ascending.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of shape ``(*target.shape, len(bins))``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">bins</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"bins must be 1-D, got shape </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">bins</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">bins</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_bins</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"bins must contain at least two entries"</span><span class="p">)</span>
+
+    <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">bins</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># Tensor bounds, so the clamp does not wait on the GPU.</span>
+    <span class="n">clipped</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="n">bins</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">bins</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Index of the lower bracketing bin. `bins[below] &lt;= clipped &lt;= bins[above]`.</span>
+    <span class="n">below</span> <span class="o">=</span> <span class="n">bins</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">clipped</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span> <span class="n">num_bins</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">clipped</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">below</span> <span class="o">=</span> <span class="n">below</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">below</span> <span class="o">=</span> <span class="n">below</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_bins</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">above</span> <span class="o">=</span> <span class="n">below</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">lower</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[</span><span class="n">below</span><span class="p">]</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[</span><span class="n">above</span><span class="p">]</span>
+    <span class="n">span</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">bins</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">weight_upper</span> <span class="o">=</span> <span class="p">((</span><span class="n">clipped</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span> <span class="o">/</span> <span class="n">span</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">weight_lower</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight_upper</span>
+
+    <span class="n">encoded</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">clipped</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">num_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">bins</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">bins</span><span class="o">.</span><span class="n">device</span>
+    <span class="p">)</span>
+    <span class="n">encoded</span><span class="o">.</span><span class="n">scatter_</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">below</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">weight_lower</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">encoded</span><span class="o">.</span><span class="n">scatter_add_</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">above</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">weight_upper</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">encoded</span></div>
+
+
+
+<div class="viewcode-block" id="SymexpTwoHotDist">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.SymexpTwoHotDist">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SymexpTwoHotDist</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Categorical distribution over exponentially spaced bins.</span>
+
+<span class="sd">    The network emits ``num_bins`` logits. Bin locations are</span>
+<span class="sd">    ``symexp(linspace(-symlog_range, +symlog_range, num_bins))``, so they span</span>
+<span class="sd">    many orders of magnitude while remaining dense near zero. Predictions are</span>
+<span class="sd">    read out as the probability-weighted average of the bin locations, which</span>
+<span class="sd">    lets the head output any continuous value in the covered interval.</span>
+
+<span class="sd">    Training minimizes the cross entropy against the two-hot encoded target.</span>
+<span class="sd">    Because the loss only depends on the predicted probabilities and not on the</span>
+<span class="sd">    bin locations, gradient magnitudes are decoupled from target magnitudes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        logits: Tensor of shape ``(*batch, num_bins)``.</span>
+<span class="sd">        num_bins: Number of bins.</span>
+<span class="sd">        symlog_range: Half-width of the grid in symlog space.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span><span class="p">,</span>
+        <span class="n">symlog_range</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_bins</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"logits last dimension </span><span class="si">{</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> does not match "</span>
+                <span class="sa">f</span><span class="s2">"num_bins=</span><span class="si">{</span><span class="n">num_bins</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_bins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">symlog_range</span><span class="p">)</span>
+        <span class="c1"># Bins are always float32: symexp(20) overflows float16, so the grid</span>
+        <span class="c1"># must not follow an autocast dtype.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bins</span> <span class="o">=</span> <span class="n">symexp</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Bins ascend, so the negative ones are a prefix. Their count is found</span>
+        <span class="c1"># on the host (symexp keeps signs) instead of by masking GPU tensors.</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symlog_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_negative</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">grid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">probs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Expected value under the predicted bin probabilities.</span>
+
+<span class="sd">        Two precautions keep this accurate across the many orders of magnitude</span>
+<span class="sd">        the bins span. Positive and negative bins are accumulated separately,</span>
+<span class="sd">        each from small to large magnitude, and the reduction runs in float64.</span>
+<span class="sd">        Without the wider accumulator, cancellation between the two halves</span>
+<span class="sd">        leaves a residual on the order of the largest bin's float32 ulp -- which</span>
+<span class="sd">        for the default grid means a zero-initialized head would predict a</span>
+<span class="sd">        reward of about -2 instead of exactly 0.</span>
+<span class="sd">        """</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+        <span class="n">weighted</span> <span class="o">=</span> <span class="n">probs</span> <span class="o">*</span> <span class="n">bins</span>
+        <span class="n">negative</span> <span class="o">=</span> <span class="n">weighted</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_negative</span><span class="p">]</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="n">weighted</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_negative</span> <span class="p">:]</span>
+        <span class="c1"># Reverse the negative half so both halves accumulate small -&gt; large.</span>
+        <span class="n">negative_sum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">negative</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">positive_sum</span> <span class="o">=</span> <span class="n">positive</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">negative_sum</span> <span class="o">+</span> <span class="n">positive_sum</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymexpTwoHotDist.mode">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.SymexpTwoHotDist.mode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span></div>
+
+
+<div class="viewcode-block" id="SymexpTwoHotDist.log_prob">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.SymexpTwoHotDist.log_prob">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Cross entropy against the two-hot encoding of ``target``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: Real-valued targets shaped like ``logits`` without the final</span>
+<span class="sd">                bin dimension.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Log-probability tensor shaped like ``target``.</span>
+<span class="sd">        """</span>
+        <span class="n">encoded</span> <span class="o">=</span> <span class="n">twohot</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bins</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">encoded</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SymexpTwoHotDist.cross_entropy_to">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.SymexpTwoHotDist.cross_entropy_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cross_entropy_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"SymexpTwoHotDist"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Cross entropy of this distribution against ``other``'s probabilities.</span>
+
+<span class="sd">        Used for the critic's EMA (slow target) regularizer, where the target is</span>
+<span class="sd">        a full distribution rather than a scalar.</span>
+<span class="sd">        """</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">probs</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logits</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ReturnNormalizer">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReturnNormalizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Percentile-range return normalization with a denominator limit.</span>
+
+<span class="sd">    Divides returns by an exponentially smoothed estimate of the range between</span>
+<span class="sd">    the ``low`` and ``high`` percentiles. Only large return magnitudes are scaled</span>
+<span class="sd">    down: the denominator is ``max(limit, scale)``, so returns that are already</span>
+<span class="sd">    small pass through untouched. This preserves information about reward</span>
+<span class="sd">    frequency (unlike advantage normalization) and does not blow up under sparse</span>
+<span class="sd">    rewards (unlike standard-deviation normalization).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        decay: EMA decay for the smoothed range.</span>
+<span class="sd">        limit: Lower bound on the denominator.</span>
+<span class="sd">        low: Lower percentile, in ``[0, 100]``.</span>
+<span class="sd">        high: Upper percentile, in ``[0, 100]``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span>
+        <span class="n">limit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">low</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="n">high</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">95.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span> <span class="o">&lt;=</span> <span class="mf">100.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Require 0 &lt;= low &lt; high &lt;= 100, got </span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decay</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">decay</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Current smoothed percentile range (before the limit is applied)."""</span>
+        <span class="k">return</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReturnNormalizer.scale_tensor">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer.scale_tensor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scale_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">""":attr:`scale` as a tensor, read without synchronizing with the GPU."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(())</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ReturnNormalizer.update">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer.update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">returns</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Update the EMA from a batch of returns and return the denominator."""</span>
+        <span class="n">flat</span> <span class="o">=</span> <span class="n">returns</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">quantiles</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
+            <span class="n">flat</span><span class="p">,</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">flat</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">batch_scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">quantiles</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">quantiles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">batch_scale</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decay</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">batch_scale</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">decay</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_scale</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">returns</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">returns</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReturnNormalizer.denominator">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer.denominator">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">denominator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``max(limit, scale)`` as a tensor."""</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">returns</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">returns</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReturnNormalizer.state_dict">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer.state_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"scale"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+            <span class="s2">"decay"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">decay</span><span class="p">,</span>
+            <span class="s2">"limit"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">,</span>
+            <span class="s2">"low"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span>
+            <span class="s2">"high"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="ReturnNormalizer.load_state_dict">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.ReturnNormalizer.load_state_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decay</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"decay"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">decay</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"limit"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"low"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"high"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">))</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"scale"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="free_bits">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.free_bits">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">free_bits</span><span class="p">(</span><span class="n">kl</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">nats</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Clip a KL term below ``nats`` so it stops contributing once minimized.</span>
+
+<span class="sd">    DreamerV3 applies this to both the dynamics and representation losses, which</span>
+<span class="sd">    lets the representation loss carry a small weight without collapsing to</span>
+<span class="sd">    trivially predictable (and uninformative) representations.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">kl</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">nats</span><span class="p">))</span></div>
 
 
 
@@ -1032,6 +1322,47 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span>
 
 
+<div class="viewcode-block" id="lambda_return">
+<a class="viewcode-back" href="../../../api_reference.html#simulusion.lambda_return">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lambda_return</span><span class="p">(</span>
+    <span class="n">rewards</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">continues</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute bootstrapped ``lambda``-returns.</span>
+
+<span class="sd">    Implements ``R_t = r_t + gamma_t * ((1 - lambda) * v_t + lambda * R_{t+1})``</span>
+<span class="sd">    with ``R_T = bootstrap``, where ``gamma_t`` is folded into ``continues``</span>
+<span class="sd">    (that is, ``continues = discount * continue_flag``).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        rewards: Rewards ``r_t``, shape ``(T, ...)``.</span>
+<span class="sd">        values: Value estimates ``v_t`` for the *next* state, shape ``(T, ...)``.</span>
+<span class="sd">        continues: Discounted continuation flags, shape ``(T, ...)``.</span>
+<span class="sd">        bootstrap: Value used to terminate the recursion, shape ``(...)``.</span>
+<span class="sd">        lambda_: Trace decay in ``[0, 1]``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor of returns with shape ``(T, ...)``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rewards</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">continues</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"rewards, values and continues must share a shape; got "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">continues</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="n">horizon</span> <span class="o">=</span> <span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">interm</span> <span class="o">=</span> <span class="n">rewards</span> <span class="o">+</span> <span class="n">continues</span> <span class="o">*</span> <span class="n">values</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">lambda_</span><span class="p">)</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accumulated</span> <span class="o">=</span> <span class="n">bootstrap</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">horizon</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">accumulated</span> <span class="o">=</span> <span class="n">interm</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">continues</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">lambda_</span> <span class="o">*</span> <span class="n">accumulated</span>
+        <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accumulated</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,))</span></div>
+
+
+
 <div class="viewcode-block" id="compute_return">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.compute_return">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_return</span><span class="p">(</span>
@@ -1043,19 +1374,12 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Compute TD(lambda) returns from imagined rewards, values, and discounts.</span>
 
-<span class="sd">    Implements backward recursion used by Dreamer actor/value objectives.</span>
+<span class="sd">    Dreamer V1/V2 convention for :func:`lambda_return`: ``values[t]`` is the</span>
+<span class="sd">    value of state ``t``, so the next-state values are formed by shifting in</span>
+<span class="sd">    ``last_value``, which also bootstraps the recursion.</span>
 <span class="sd">    """</span>
     <span class="n">next_values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">last_value</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)],</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="n">targets</span> <span class="o">=</span> <span class="n">rewards</span> <span class="o">+</span> <span class="n">discounts</span> <span class="o">*</span> <span class="n">next_values</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">td_lam</span><span class="p">)</span>
-    <span class="n">rets</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">last_rew</span> <span class="o">=</span> <span class="n">last_value</span>
-
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rewards</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">last_rew</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">discounts</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">td_lam</span> <span class="o">*</span> <span class="p">(</span><span class="n">last_rew</span><span class="p">)</span>
-        <span class="n">rets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last_rew</span><span class="p">)</span>
-
-    <span class="n">returns</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">rets</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">returns</span></div>
+    <span class="k">return</span> <span class="n">lambda_return</span><span class="p">(</span><span class="n">rewards</span><span class="p">,</span> <span class="n">next_values</span><span class="p">,</span> <span class="n">discounts</span><span class="p">,</span> <span class="n">last_value</span><span class="p">,</span> <span class="n">td_lam</span><span class="p">)</span></div>
 
 </pre></div>
 

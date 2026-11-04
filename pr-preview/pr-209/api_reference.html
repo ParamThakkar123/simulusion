@@ -12988,7 +12988,9 @@ through certain components should be blocked for speed and correctness.</p>
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">simulusion.</span></span><span class="sig-name descname"><span class="pre">compute_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td_lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#compute_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Compute TD(lambda) returns from imagined rewards, values, and discounts.</p>
-<p>Implements backward recursion used by Dreamer actor/value objectives.</p>
+<p>Dreamer V1/V2 convention for <code class="xref py py-func docutils literal notranslate"><span class="pre">lambda_return()</span></code>: <code class="docutils literal notranslate"><span class="pre">values[t]</span></code> is the
+value of state <code class="docutils literal notranslate"><span class="pre">t</span></code>, so the next-state values are formed by shifting in
+<code class="docutils literal notranslate"><span class="pre">last_value</span></code>, which also bootstraps the recursion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -41179,10 +41181,31 @@ stops decreasing; in ‘max’ mode, when it stops increasing.</p></li>
 
 </dd></dl>
 
-<dl class="py function" id="module-simulusion.utils.dreamer_utils">
+<p id="module-simulusion.utils.dreamer_utils">Utilities shared by the Dreamer family (V1, V2 and V3).</p>
+<p>Besides the generic helpers (parameter freezing, logging, <code class="docutils literal notranslate"><span class="pre">lambda</span></code>-returns),
+this module holds the robustness primitives DreamerV3 introduced to train with
+fixed hyperparameters across domains:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.symlog" title="simulusion.utils.dreamer_utils.symlog"><code class="xref py py-func docutils literal notranslate"><span class="pre">symlog()</span></code></a> / <a class="reference internal" href="#simulusion.utils.dreamer_utils.symexp" title="simulusion.utils.dreamer_utils.symexp"><code class="xref py py-func docutils literal notranslate"><span class="pre">symexp()</span></code></a> – symmetric log squashing and its inverse.</p></li>
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.twohot" title="simulusion.utils.dreamer_utils.twohot"><code class="xref py py-func docutils literal notranslate"><span class="pre">twohot()</span></code></a> – two-hot encoding against an arbitrary sorted grid.</p></li>
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist" title="simulusion.utils.dreamer_utils.SymexpTwoHotDist"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymexpTwoHotDist</span></code></a> – a categorical distribution over exponentially
+spaced bins, trained on two-hot encoded targets. This decouples gradient
+magnitudes from target magnitudes for the reward predictor and the critic.</p></li>
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.ReturnNormalizer" title="simulusion.utils.dreamer_utils.ReturnNormalizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReturnNormalizer</span></code></a> – percentile-based return scaling with a
+denominator limit, used to keep the actor entropy regularizer on a fixed
+scale regardless of reward magnitude or sparsity.</p></li>
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.free_bits" title="simulusion.utils.dreamer_utils.free_bits"><code class="xref py py-func docutils literal notranslate"><span class="pre">free_bits()</span></code></a> – clipping of the KL terms below one nat.</p></li>
+<li><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.lambda_return" title="simulusion.utils.dreamer_utils.lambda_return"><code class="xref py py-func docutils literal notranslate"><span class="pre">lambda_return()</span></code></a> – bootstrapped <code class="docutils literal notranslate"><span class="pre">lambda</span></code>-returns.</p></li>
+</ul>
+<dl class="simple">
+<dt>Reference:</dt><dd><p>Mastering Diverse Domains through World Models
+Hafner et al., 2023 - <a class="reference external" href="https://arxiv.org/abs/2301.04104">https://arxiv.org/abs/2301.04104</a></p>
+</dd>
+</dl>
+<dl class="py function">
 <dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.symlog">
 <span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">symlog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#symlog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.symlog" title="Link to this definition">#</a></dt>
-<dd><p>Symmetric log transform used by Dreamer V2 for reward/value targets.</p>
+<dd><p>Symmetric log transform used by Dreamer V2/V3 for reward/value targets.</p>
 <p>Defined as <code class="docutils literal notranslate"><span class="pre">sign(x)</span> <span class="pre">*</span> <span class="pre">log(1</span> <span class="pre">+</span> <span class="pre">|x|)</span></code>. This compresses large positive or
 negative values into a range that is easier to predict with a categorical
 distribution over a bounded set of buckets.</p>
@@ -41292,6 +41315,229 @@ symlog transform.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.twohot">
+<span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">twohot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#twohot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.twohot" title="Link to this definition">#</a></dt>
+<dd><p>Two-hot encode <code class="docutils literal notranslate"><span class="pre">target</span></code> against a sorted, monotonically increasing grid.</p>
+<p>The two-hot encoding generalizes one-hot encoding to continuous values: all
+entries are zero except at the two bins bracketing the target, whose weights
+sum to one and are linearly interpolated by distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>Tensor</em>) – Tensor of arbitrary shape with real-valued targets.</p></li>
+<li><p><strong>bins</strong> (<em>Tensor</em>) – 1-D tensor of bin locations, sorted ascending.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of shape <code class="docutils literal notranslate"><span class="pre">(*target.shape,</span> <span class="pre">len(bins))</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">SymexpTwoHotDist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">255</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symlog_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#SymexpTwoHotDist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Categorical distribution over exponentially spaced bins.</p>
+<p>The network emits <code class="docutils literal notranslate"><span class="pre">num_bins</span></code> logits. Bin locations are
+<code class="docutils literal notranslate"><span class="pre">symexp(linspace(-symlog_range,</span> <span class="pre">+symlog_range,</span> <span class="pre">num_bins))</span></code>, so they span
+many orders of magnitude while remaining dense near zero. Predictions are
+read out as the probability-weighted average of the bin locations, which
+lets the head output any continuous value in the covered interval.</p>
+<p>Training minimizes the cross entropy against the two-hot encoded target.
+Because the loss only depends on the predicted probabilities and not on the
+bin locations, gradient magnitudes are decoupled from target magnitudes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logits</strong> (<em>torch.Tensor</em>) – Tensor of shape <code class="docutils literal notranslate"><span class="pre">(*batch,</span> <span class="pre">num_bins)</span></code>.</p></li>
+<li><p><strong>num_bins</strong> (<em>int</em>) – Number of bins.</p></li>
+<li><p><strong>symlog_range</strong> (<em>float</em>) – Half-width of the grid in symlog space.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist.probs">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">probs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.probs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist.mean">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mean</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.mean" title="Link to this definition">#</a></dt>
+<dd><p>Expected value under the predicted bin probabilities.</p>
+<p>Two precautions keep this accurate across the many orders of magnitude
+the bins span. Positive and negative bins are accumulated separately,
+each from small to large magnitude, and the reduction runs in float64.
+Without the wider accumulator, cancellation between the two halves
+leaves a residual on the order of the largest bin’s float32 ulp – which
+for the default grid means a zero-initialized head would predict a
+reward of about -2 instead of exactly 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#SymexpTwoHotDist.mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.mode" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist.log_prob">
+<span class="sig-name descname"><span class="pre">log_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#SymexpTwoHotDist.log_prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.log_prob" title="Link to this definition">#</a></dt>
+<dd><p>Cross entropy against the two-hot encoding of <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> (<em>Tensor</em>) – Real-valued targets shaped like <code class="docutils literal notranslate"><span class="pre">logits</span></code> without the final
+bin dimension.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Log-probability tensor shaped like <code class="docutils literal notranslate"><span class="pre">target</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.SymexpTwoHotDist.cross_entropy_to">
+<span class="sig-name descname"><span class="pre">cross_entropy_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#SymexpTwoHotDist.cross_entropy_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.cross_entropy_to" title="Link to this definition">#</a></dt>
+<dd><p>Cross entropy of this distribution against <code class="docutils literal notranslate"><span class="pre">other</span></code>’s probabilities.</p>
+<p>Used for the critic’s EMA (slow target) regularizer, where the target is
+a full distribution rather than a scalar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist" title="simulusion.utils.dreamer_utils.SymexpTwoHotDist"><em>SymexpTwoHotDist</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">ReturnNormalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">95.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Percentile-range return normalization with a denominator limit.</p>
+<p>Divides returns by an exponentially smoothed estimate of the range between
+the <code class="docutils literal notranslate"><span class="pre">low</span></code> and <code class="docutils literal notranslate"><span class="pre">high</span></code> percentiles. Only large return magnitudes are scaled
+down: the denominator is <code class="docutils literal notranslate"><span class="pre">max(limit,</span> <span class="pre">scale)</span></code>, so returns that are already
+small pass through untouched. This preserves information about reward
+frequency (unlike advantage normalization) and does not blow up under sparse
+rewards (unlike standard-deviation normalization).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decay</strong> (<em>float</em>) – EMA decay for the smoothed range.</p></li>
+<li><p><strong>limit</strong> (<em>float</em>) – Lower bound on the denominator.</p></li>
+<li><p><strong>low</strong> (<em>float</em>) – Lower percentile, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100]</span></code>.</p></li>
+<li><p><strong>high</strong> (<em>float</em>) – Upper percentile, in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.scale">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">scale</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.scale" title="Link to this definition">#</a></dt>
+<dd><p>Current smoothed percentile range (before the limit is applied).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.scale_tensor">
+<span class="sig-name descname"><span class="pre">scale_tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer.scale_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.scale_tensor" title="Link to this definition">#</a></dt>
+<dd><p><a class="reference internal" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.scale" title="simulusion.utils.dreamer_utils.ReturnNormalizer.scale"><code class="xref py py-attr docutils literal notranslate"><span class="pre">scale</span></code></a> as a tensor, read without synchronizing with the GPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returns</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.update" title="Link to this definition">#</a></dt>
+<dd><p>Update the EMA from a batch of returns and return the denominator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>returns</strong> (<em>Tensor</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.denominator">
+<span class="sig-name descname"><span class="pre">denominator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer.denominator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.denominator" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">max(limit,</span> <span class="pre">scale)</span></code> as a tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<em>device</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>dtype</strong> (<em>dtype</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.state_dict" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.ReturnNormalizer.load_state_dict">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#ReturnNormalizer.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.load_state_dict" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.free_bits">
+<span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">free_bits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#free_bits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.free_bits" title="Link to this definition">#</a></dt>
+<dd><p>Clip a KL term below <code class="docutils literal notranslate"><span class="pre">nats</span></code> so it stops contributing once minimized.</p>
+<p>DreamerV3 applies this to both the dynamics and representation losses, which
+lets the representation loss carry a small weight without collapsing to
+trivially predictable (and uninformative) representations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kl</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>nats</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Tensor</em></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -41429,10 +41675,39 @@ video previews during Dreamer training/evaluation.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.lambda_return">
+<span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">lambda_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#lambda_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.lambda_return" title="Link to this definition">#</a></dt>
+<dd><p>Compute bootstrapped <code class="docutils literal notranslate"><span class="pre">lambda</span></code>-returns.</p>
+<p>Implements <code class="docutils literal notranslate"><span class="pre">R_t</span> <span class="pre">=</span> <span class="pre">r_t</span> <span class="pre">+</span> <span class="pre">gamma_t</span> <span class="pre">*</span> <span class="pre">((1</span> <span class="pre">-</span> <span class="pre">lambda)</span> <span class="pre">*</span> <span class="pre">v_t</span> <span class="pre">+</span> <span class="pre">lambda</span> <span class="pre">*</span> <span class="pre">R_{t+1})</span></code>
+with <code class="docutils literal notranslate"><span class="pre">R_T</span> <span class="pre">=</span> <span class="pre">bootstrap</span></code>, where <code class="docutils literal notranslate"><span class="pre">gamma_t</span></code> is folded into <code class="docutils literal notranslate"><span class="pre">continues</span></code>
+(that is, <code class="docutils literal notranslate"><span class="pre">continues</span> <span class="pre">=</span> <span class="pre">discount</span> <span class="pre">*</span> <span class="pre">continue_flag</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rewards</strong> (<em>Tensor</em>) – Rewards <code class="docutils literal notranslate"><span class="pre">r_t</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">...)</span></code>.</p></li>
+<li><p><strong>values</strong> (<em>Tensor</em>) – Value estimates <code class="docutils literal notranslate"><span class="pre">v_t</span></code> for the <em>next</em> state, shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">...)</span></code>.</p></li>
+<li><p><strong>continues</strong> (<em>Tensor</em>) – Discounted continuation flags, shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">...)</span></code>.</p></li>
+<li><p><strong>bootstrap</strong> (<em>Tensor</em>) – Value used to terminate the recursion, shape <code class="docutils literal notranslate"><span class="pre">(...)</span></code>.</p></li>
+<li><p><strong>lambda</strong> – Trace decay in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p><strong>lambda_</strong> (<em>float</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of returns with shape <code class="docutils literal notranslate"><span class="pre">(T,</span> <span class="pre">...)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="simulusion.utils.dreamer_utils.compute_return">
 <span class="sig-prename descclassname"><span class="pre">simulusion.utils.dreamer_utils.</span></span><span class="sig-name descname"><span class="pre">compute_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewards</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discounts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">td_lam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulusion/utils/dreamer_utils.html#compute_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulusion.utils.dreamer_utils.compute_return" title="Link to this definition">#</a></dt>
 <dd><p>Compute TD(lambda) returns from imagined rewards, values, and discounts.</p>
-<p>Implements backward recursion used by Dreamer actor/value objectives.</p>
+<p>Dreamer V1/V2 convention for <a class="reference internal" href="#simulusion.utils.dreamer_utils.lambda_return" title="simulusion.utils.dreamer_utils.lambda_return"><code class="xref py py-func docutils literal notranslate"><span class="pre">lambda_return()</span></code></a>: <code class="docutils literal notranslate"><span class="pre">values[t]</span></code> is the
+value of state <code class="docutils literal notranslate"><span class="pre">t</span></code>, so the next-state values are formed by shifting in
+<code class="docutils literal notranslate"><span class="pre">last_value</span></code>, which also bootstraps the recursion.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -44973,6 +45248,25 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.TwoHotEncoder.decode"><code class="docutils literal notranslate"><span class="pre">TwoHotEncoder.decode()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.twohot"><code class="docutils literal notranslate"><span class="pre">twohot()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.probs"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist.probs</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.mean"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist.mean</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.mode"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist.mode()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.log_prob"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist.log_prob()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.SymexpTwoHotDist.cross_entropy_to"><code class="docutils literal notranslate"><span class="pre">SymexpTwoHotDist.cross_entropy_to()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.scale"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.scale</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.scale_tensor"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.scale_tensor()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.update"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.update()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.denominator"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.denominator()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.state_dict"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.state_dict()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.ReturnNormalizer.load_state_dict"><code class="docutils literal notranslate"><span class="pre">ReturnNormalizer.load_state_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.free_bits"><code class="docutils literal notranslate"><span class="pre">free_bits()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.get_parameters"><code class="docutils literal notranslate"><span class="pre">get_parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.FreezeParameters"><code class="docutils literal notranslate"><span class="pre">FreezeParameters</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.Logger"><code class="docutils literal notranslate"><span class="pre">Logger</span></code></a><ul class="nav section-nav flex-column">
@@ -44983,6 +45277,7 @@ along the batch dimension.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.Logger.flush"><code class="docutils literal notranslate"><span class="pre">Logger.flush()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.lambda_return"><code class="docutils literal notranslate"><span class="pre">lambda_return()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.dreamer_utils.compute_return"><code class="docutils literal notranslate"><span class="pre">compute_return()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.jepa_utils.trunc_normal_"><code class="docutils literal notranslate"><span class="pre">trunc_normal_()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simulusion.utils.jepa_utils.repeat_interleave_batch"><code class="docutils literal notranslate"><span class="pre">repeat_interleave_batch()</span></code></a></li>
