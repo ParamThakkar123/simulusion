@@ -65,9 +65,11 @@ from simulusion.envs.bsuite_env import list_bsuite_settings as list_bsuite_setti
 from simulusion.envs.bsuite_env import make_bsuite_env as make_bsuite_env
 from simulusion.envs.diamond_atari import make_diamond_atari_env as make_diamond_atari_env
 from simulusion.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
+from simulusion.envs.dmlab import DMLAB30_LEVELS as DMLAB30_LEVELS
 from simulusion.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
 from simulusion.envs.dmlab import DMLabEnv as DMLabEnv
 from simulusion.envs.dmlab import make_dmlab_env as make_dmlab_env
+from simulusion.envs.dmlab import resolve_dmlab_level as resolve_dmlab_level
 from simulusion.envs.gym_env import GymImageEnv as GymImageEnv
 from simulusion.envs.gym_env import make_gym_env as make_gym_env
 from simulusion.envs.minecraft_diamond import MinecraftDiamondEnv as MinecraftDiamondEnv
@@ -227,6 +229,7 @@ __all__ = [
     "ConvDecoder",
     "ConvEncoder",
     "DDPM",
+    "DMLAB30_LEVELS",
     "DMLAB_LEVELS",
     "DMLabEnv",
     "DeepMindControlEnv",
@@ -404,6 +407,7 @@ __all__ = [
     "register_gymnasium_robotics_envs",
     "register_task",
     "register_world_model",
+    "resolve_dmlab_level",
     "rollout_drift",
     "run_training",
     "save_bundle",
