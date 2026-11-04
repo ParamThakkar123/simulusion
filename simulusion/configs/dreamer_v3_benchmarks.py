@@ -32,7 +32,9 @@ Reference:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, replace
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass, field, replace
+from types import MappingProxyType
 from typing import Any
 
 from simulusion.benchmarks import (  # noqa: F401  (task tables re-exported)
@@ -63,33 +65,45 @@ __all__ = [
 @dataclass(frozen=True)
 class DreamerV3Benchmark(Benchmark):
     """A shared :class:`~simulusion.benchmarks.Benchmark` plus the
-    DreamerV3 settings of its Table 2 row."""
+    DreamerV3 settings of its Table 2 row.
+
+    ``config`` holds :class:`DreamerV3Config` fields (the replay ratio and model
+    size), so they are declared once, on the config. ``env_instances`` is not a
+    config field: the agent steps one environment (see the module docstring).
+    """
 
     env_instances: int = 1
-    replay_ratio: int = 32
-    model_size: str = "200m"
+    config: Mapping[str, Any] = field(default_factory=dict)
 
 
-# Table 2: env instances, replay ratio, model size.
-_TABLE_2: dict[str, tuple[int, int, str]] = {
-    "dmc-proprio": (16, 512, "12m"),
-    "dmc-visual": (16, 512, "12m"),
-    "atari": (16, 32, "200m"),
-    "atari100k": (1, 128, "200m"),
-    "procgen": (16, 64, "200m"),
-    "dmlab": (16, 32, "200m"),
-    "bsuite": (1, 1024, "200m"),
-    "minecraft": (64, 32, "200m"),
+def _check_fields(fields: Mapping[str, Any]) -> None:
+    unknown = sorted(set(fields) - set(DreamerV3Config.__dataclass_fields__))
+    if unknown:
+        raise ValueError(f"Invalid config override(s): {', '.join(unknown)}")
+
+
+# Table 2: env instances, then the DreamerV3Config fields the row fixes.
+_TABLE_2: dict[str, tuple[int, dict[str, Any]]] = {
+    "dmc-proprio": (16, {"replay_ratio": 512, "model_size": "12m"}),
+    "dmc-visual": (16, {"replay_ratio": 512, "model_size": "12m"}),
+    "atari": (16, {"replay_ratio": 32, "model_size": "200m"}),
+    "atari100k": (1, {"replay_ratio": 128, "model_size": "200m"}),
+    "procgen": (16, {"replay_ratio": 64, "model_size": "200m"}),
+    "dmlab": (16, {"replay_ratio": 32, "model_size": "200m"}),
+    "bsuite": (1, {"replay_ratio": 1024, "model_size": "200m"}),
+    "minecraft": (64, {"replay_ratio": 32, "model_size": "200m"}),
 }
+
+for _, _config in _TABLE_2.values():
+    _check_fields(_config)
 
 BENCHMARKS: dict[str, DreamerV3Benchmark] = {
     name: DreamerV3Benchmark(
         **asdict(get_benchmark(name)),
         env_instances=instances,
-        replay_ratio=ratio,
-        model_size=size,
+        config=MappingProxyType(config),
     )
-    for name, (instances, ratio, size) in _TABLE_2.items()
+    for name, (instances, config) in _TABLE_2.items()
 }
 
 
@@ -111,14 +125,6 @@ def benchmark_config(
         replay ratio unless ``auto_update_steps=False`` is passed.
     """
     spec = BENCHMARKS[get_benchmark(benchmark).name]
-    fields: dict[str, Any] = {
-        "replay_ratio": spec.replay_ratio,
-        "model_size": spec.model_size,
-        **spec.env_fields(task),
-    }
-    fields.update(overrides)
-    valid = set(DreamerV3Config.__dataclass_fields__)
-    unknown = sorted(set(fields) - valid)
-    if unknown:
-        raise ValueError(f"Invalid config override(s): {', '.join(unknown)}")
+    fields: dict[str, Any] = {**spec.config, **spec.env_fields(task), **overrides}
+    _check_fields(fields)
     return replace(DreamerV3Config(), **fields)

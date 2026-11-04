@@ -32,8 +32,7 @@ def test_benchmarks_match_table_2(name):
     assert spec.env_steps == steps
     assert spec.action_repeat == repeat
     assert spec.env_instances == instances
-    assert spec.replay_ratio == ratio
-    assert spec.model_size == size
+    assert spec.config == {"replay_ratio": ratio, "model_size": size}
 
 
 @pytest.mark.parametrize("name", sorted(TABLE_2))
@@ -43,9 +42,9 @@ def test_configs_carry_the_protocol(name):
     # DMLab repeats inside Lab; the frames per agent step still match Table 2.
     inner = cfg.dmlab_action_repeat if cfg.env_backend == "dmlab" else 1
     assert cfg.action_repeat * inner == spec.action_repeat
-    assert cfg.replay_ratio == spec.replay_ratio
-    assert cfg.model_size == spec.model_size
-    assert cfg.hidden_size == MODEL_SIZES[spec.model_size]["hidden_size"]
+    for key, value in spec.config.items():
+        assert getattr(cfg, key) == value
+    assert cfg.hidden_size == MODEL_SIZES[cfg.model_size]["hidden_size"]
     if spec.env_steps is not None:
         assert cfg.total_steps == spec.env_steps
     for key, value in spec.overrides.items():
