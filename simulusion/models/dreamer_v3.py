@@ -735,12 +735,13 @@ class DreamerV3:
 
     def _capture(self, name: str, build: Any) -> Any:
         """Build a CUDA graph, or turn graphs off (with a warning) if that fails."""
+        stream = torch.cuda.current_stream()
         try:
             graph = build()
         except RuntimeError as exc:
             logger.warning("CUDA graph capture failed; running eagerly: %s", exc)
             self.args.cuda_graphs = False
-            torch.cuda.synchronize()
+            _recover_from_failed_capture(stream)
             return None
         setattr(self, f"_{name}", graph)
         return graph
@@ -1461,6 +1462,23 @@ def _is_true_termination(info: Any, done: bool | float) -> float:
             except (TypeError, ValueError):
                 pass
     return 1.0
+
+
+def _recover_from_failed_capture(stream: torch.cuda.Stream) -> None:
+    """Make CUDA usable again after a CUDA graph capture raised.
+
+    ``torch.cuda.graph`` does not restore the stream it switched to when the
+    capture fails, so later work would be queued on the invalidated capture
+    stream. Even on the restored stream, the first kernel launch reports the
+    failed capture's error once; a throwaway launch absorbs it.
+    """
+    torch.cuda.set_stream(stream)
+    for _ in range(2):
+        try:
+            torch.zeros(1, device=stream.device).add_(1).cpu()
+            return
+        except RuntimeError:
+            continue
 
 
 def _resolve_actor_dist(env: Any) -> str:

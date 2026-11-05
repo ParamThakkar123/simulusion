@@ -404,16 +404,19 @@ class DreamerV3Actor(ExportableAgentMixin, nn.Module):
         modules.append(nn.Linear(current, out_features))
         self.model = nn.Sequential(*modules)
 
+    def _discrete_probs(self, out: torch.Tensor) -> torch.Tensor:
+        """Action probabilities of the discrete head, with the unimix applied."""
+        probs = torch.softmax(out, dim=-1)
+        if self.unimix > 0.0:
+            uniform = torch.ones_like(probs) / float(self.action_size)
+            probs = (1.0 - self.unimix) * probs + self.unimix * uniform
+        return probs
+
     def dist(self, features: torch.Tensor) -> distributions.Distribution:
         """Return the action distribution for the given features."""
         out = self.model(features)
         if self.discrete:
-            logits = out
-            if self.unimix > 0.0:
-                probs = torch.softmax(logits, dim=-1)
-                uniform = torch.ones_like(probs) / float(self.action_size)
-                probs = (1.0 - self.unimix) * probs + self.unimix * uniform
-                logits = torch.log(probs)
+            logits = torch.log(self._discrete_probs(out)) if self.unimix > 0.0 else out
             return distributions.OneHotCategorical(logits=logits, validate_args=False)
         mean, std = torch.chunk(out, 2, dim=-1)
         mean = torch.tanh(mean)
@@ -426,23 +429,24 @@ class DreamerV3Actor(ExportableAgentMixin, nn.Module):
         self, features: torch.Tensor, deterministic: bool = False
     ) -> torch.Tensor:
         """Sample (or take the mode of) an action."""
+        if self.discrete:
+            # Work on the probabilities directly: this runs inside the CUDA
+            # graph of imagination, and OneHotCategorical cannot be captured
+            # (it validates its arguments on the host even with
+            # validate_args=False, because its inner Categorical ignores it).
+            probs = self._discrete_probs(self.model(features))
+            if deterministic:
+                index = torch.argmax(probs, dim=-1)
+            else:
+                # Inverse-CDF draw: the distribution of OneHotCategorical.sample
+                # without torch.multinomial, which cannot be captured either.
+                uniform = torch.rand_like(probs[..., :1])
+                index = (probs.cumsum(-1) < uniform).sum(-1)
+                index = index.clamp(max=self.action_size - 1)
+            return torch.nn.functional.one_hot(index, self.action_size).to(probs.dtype)
         dist = self.dist(features)
         if deterministic:
-            if self.discrete:
-                logits = torch.as_tensor(getattr(dist, "logits"))
-                index = torch.argmax(logits, dim=-1)
-                return torch.nn.functional.one_hot(index, self.action_size).to(
-                    logits.dtype
-                )
             return dist.mean
-        if self.discrete:
-            # Inverse-CDF draw of a one-hot action: the distribution of
-            # OneHotCategorical.sample without torch.multinomial, which cannot
-            # be captured in a CUDA graph.
-            probs = torch.as_tensor(getattr(dist, "probs"))
-            uniform = torch.rand_like(probs[..., :1])
-            index = (probs.cumsum(-1) < uniform).sum(-1).clamp(max=self.action_size - 1)
-            return torch.nn.functional.one_hot(index, self.action_size).to(probs.dtype)
         # mean + std * noise samples the same Normal. torch.normal would first
         # check std >= 0 on the host, which a CUDA graph cannot contain.
         normal = getattr(dist, "base_dist")

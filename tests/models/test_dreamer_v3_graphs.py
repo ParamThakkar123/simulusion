@@ -99,6 +99,17 @@ def test_discrete_actor_sampler_draws_from_its_distribution():
     assert torch.allclose(actions.mean(0), expected, atol=0.006)
 
 
+def test_discrete_actor_mode_is_the_most_likely_action():
+    torch.manual_seed(0)
+    actor = DreamerV3Actor(8, 5, discrete=True, layers=1, units=16)
+    features = torch.randn(64, 8)
+    with torch.no_grad():
+        actions = actor(features, deterministic=True)
+        probs = actor.dist(features).probs
+    assert torch.equal(actions.argmax(-1), probs.argmax(-1))
+    assert torch.equal(actions.sum(-1), torch.ones(64))
+
+
 def test_continuous_actor_sampler_matches_the_normal():
     torch.manual_seed(0)
     actor = DreamerV3Actor(8, 2, discrete=False, layers=1, units=16)
@@ -205,6 +216,59 @@ def test_graphed_imagination_matches_eager():
             torch.testing.assert_close(graph_states[key], eager_states[key])
 
 
+def imagination_start(model, seed):
+    torch.manual_seed(seed)
+    start = model.rssm.init_state(6, model.device)
+    start["deter"] = torch.randn_like(start["deter"])
+    start["logit"] = torch.randn(6, 4, 4, device="cuda")
+    start["stoch"] = torch.softmax(start["logit"], -1)
+    return start
+
+
+@cuda
+def test_graphed_imagination_matches_eager_for_discrete_actions():
+    # The discrete head once built a OneHotCategorical inside the graph, whose
+    # argument check syncs with the host and invalidated every capture.
+    torch.manual_seed(0)
+    model = DreamerV3(tiny_config(actor_dist="onehot"), {"state": (6,)}, 3, "cuda")
+    make_deterministic(model.rssm)
+    sample = model.actor.forward
+    model.actor.forward = lambda feat, deterministic=False: sample(feat, True)
+    for seed in (1, 2):
+        start = imagination_start(model, seed)
+        with torch.no_grad():
+            eager_states, eager_actions = model.rssm.imagine_rollout(
+                model.actor.forward, start, 4
+            )
+            graph_states, graph_actions = model._imagine_rollout(start, 4)
+        assert model._imagine_graph is not None
+        torch.testing.assert_close(graph_actions, eager_actions)
+        for key in ("logit", "stoch", "deter"):
+            torch.testing.assert_close(graph_states[key], eager_states[key])
+
+
+@cuda
+def test_failed_capture_falls_back_to_eager():
+    model = build()
+    act = model.actor.forward
+
+    def syncing_policy(feat, deterministic=False):
+        if torch.cuda.is_current_stream_capturing():
+            feat.sum().item()  # A host sync, which no CUDA graph can contain.
+        return act(feat, deterministic)
+
+    model.actor.forward = syncing_policy
+    start = imagination_start(model, 1)
+    with torch.no_grad():
+        states, actions = model._imagine_rollout(start, 4)
+    assert model._imagine_graph is None
+    assert not model._graphs_enabled()
+    assert torch.cuda.current_stream() == torch.cuda.default_stream()
+    assert torch.isfinite(actions).all() and torch.isfinite(states["deter"]).all()
+    # CUDA keeps working afterwards.
+    assert torch.ones(3, device="cuda").sum().item() == 3.0
+
+
 @cuda
 def test_graphs_follow_in_place_weight_updates():
     model = build()
@@ -217,16 +281,22 @@ def test_graphs_follow_in_place_weight_updates():
     torch.testing.assert_close(graph_post["deter"], eager_post["deter"])
 
 
+@pytest.mark.parametrize("actor_dist", ["normal", "onehot"])
 @cuda
-def test_training_with_graphs_runs_and_can_be_disabled():
+def test_training_with_graphs_runs_and_can_be_disabled(actor_dist):
     rng = np.random.default_rng(0)
     for enabled in (True, False):
         torch.manual_seed(0)
-        model = DreamerV3(tiny_config(cuda_graphs=enabled), {"state": (6,)}, 2, "cuda")
+        config = tiny_config(cuda_graphs=enabled, actor_dist=actor_dist)
+        model = DreamerV3(config, {"state": (6,)}, 2, "cuda")
         for t in range(60):
+            if actor_dist == "onehot":
+                action = np.eye(2, dtype=np.float32)[rng.integers(2)]
+            else:
+                action = rng.uniform(-1, 1, 2).astype(np.float32)
             model.data_buffer.add(
                 {"state": rng.normal(size=6).astype(np.float32)},
-                rng.uniform(-1, 1, 2).astype(np.float32),
+                action,
                 float(rng.normal()),
                 is_first=t % 20 == 0,
                 is_last=t % 20 == 19,
