@@ -63,6 +63,10 @@ def train(args: argparse.Namespace) -> None:
         overrides["model_size"] = args.model_size
     if args.replay_ratio:
         overrides["replay_ratio"] = args.replay_ratio
+    if args.benchmark == "bsuite":
+        # BSuite scores a run from its own CSV log. A resumed run cannot add to
+        # it (the episode budget restarts), so BSuite refuses an existing log.
+        overrides["bsuite_results_dir"] = str(run / "bsuite_csv")
     cfg = benchmark_config(
         args.benchmark,
         args.task,
