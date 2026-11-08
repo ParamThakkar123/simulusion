@@ -222,6 +222,11 @@ class BSuiteImageEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """Whether the Box action space stands for a discrete one (one-hot)."""
+        return self._discrete_n is not None
+
+    @property
     def max_episode_steps(self) -> int:
         # BSuite tasks end their own episodes (the longest, mountain_car, after
         # 1000 steps); this bounds the step count of one episode, not the run.

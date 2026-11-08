@@ -31,7 +31,9 @@ policy entirely in the imagination of that world model. No gradients flow from t
 environment to the policy — the world model is the only bridge between real
 experience and learned behavior.
 
-The family has two major versions, documented individually below.
+The family has two major versions documented on this page. DreamerV3 has its own
+page, {doc}`dreamer_v3`, because it changes the latent representation, the actor
+objective, and the optimizer rather than just the loss terms.
 
 ---
 
@@ -710,6 +712,7 @@ The prior predicts states that drift from realistic latents over long horizons.
 
 ## See Also
 
+- {doc}`dreamer_v3` — DreamerV3, which trains across domains without retuning
 - {doc}`modular_rssm_guide` — swap Dreamer's encoder, backbone, or decoder for research
 - {doc}`iris` — discrete world model alternative to Dreamer
 - {doc}`diamond` — diffusion-based world model alternative

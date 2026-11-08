@@ -3,6 +3,13 @@ from typing import List, Optional
 
 
 from simulusion.configs.serialization import SerializableConfigMixin
+from simulusion.benchmarks import (
+    ATARI100K_GAMES as _GAMES,
+    ATARI_HUMAN_SCORES,
+    ATARI_RANDOM_SCORES,
+    atari_env_id,
+    atari_game,
+)
 
 
 def get_default_device() -> str:
@@ -168,92 +175,8 @@ class DiamondConfig(SerializableConfigMixin):
     min_delta: float = 1e-4
 
 
-# Atari 100k benchmark games
-ATARI_100K_GAMES = [
-    "Alien-v5",
-    "Amidar-v5",
-    "Assault-v5",
-    "Asterix-v5",
-    "BankHeist-v5",
-    "BattleZone-v5",
-    "Boxing-v5",
-    "Breakout-v5",
-    "ChopperCommand-v5",
-    "CrazyClimber-v5",
-    "DemonAttack-v5",
-    "Freeway-v5",
-    "Frostbite-v5",
-    "Gopher-v5",
-    "Hero-v5",
-    "Jamesbond-v5",
-    "Kangaroo-v5",
-    "Krull-v5",
-    "KungFuMaster-v5",
-    "MsPacman-v5",
-    "Pong-v5",
-    "PrivateEye-v5",
-    "Qbert-v5",
-    "RoadRunner-v5",
-    "Seaquest-v5",
-    "UpNDown-v5",
-]
-
-
-# Human normalized scores (for evaluation)
-HUMAN_SCORES = {
-    "Alien-v5": 7127.7,
-    "Amidar-v5": 1719.5,
-    "Assault-v5": 742.0,
-    "Asterix-v5": 8503.3,
-    "BankHeist-v5": 753.1,
-    "BattleZone-v5": 37187.5,
-    "Boxing-v5": 12.1,
-    "Breakout-v5": 30.5,
-    "ChopperCommand-v5": 7387.8,
-    "CrazyClimber-v5": 35829.4,
-    "DemonAttack-v5": 1971.0,
-    "Freeway-v5": 29.6,
-    "Frostbite-v5": 4334.7,
-    "Gopher-v5": 2412.5,
-    "Hero-v5": 30826.4,
-    "Jamesbond-v5": 302.8,
-    "Kangaroo-v5": 3035.0,
-    "Krull-v5": 2665.5,
-    "KungFuMaster-v5": 22736.3,
-    "MsPacman-v5": 6951.6,
-    "Pong-v5": 14.6,
-    "PrivateEye-v5": 69571.3,
-    "Qbert-v5": 13455.0,
-    "RoadRunner-v5": 7845.0,
-    "Seaquest-v5": 42054.7,
-    "UpNDown-v5": 11693.2,
-}
-
-RANDOM_SCORES = {
-    "Alien-v5": 227.8,
-    "Amidar-v5": 5.8,
-    "Assault-v5": 222.4,
-    "Asterix-v5": 210.0,
-    "BankHeist-v5": 14.2,
-    "BattleZone-v5": 2360.0,
-    "Boxing-v5": 0.1,
-    "Breakout-v5": 1.7,
-    "ChopperCommand-v5": 811.0,
-    "CrazyClimber-v5": 10780.5,
-    "DemonAttack-v5": 152.1,
-    "Freeway-v5": 0.0,
-    "Frostbite-v5": 65.2,
-    "Gopher-v5": 257.6,
-    "Hero-v5": 1027.0,
-    "Jamesbond-v5": 29.0,
-    "Kangaroo-v5": 52.0,
-    "Krull-v5": 1598.0,
-    "KungFuMaster-v5": 258.5,
-    "MsPacman-v5": 307.3,
-    "Pong-v5": -20.7,
-    "PrivateEye-v5": 24.9,
-    "Qbert-v5": 163.9,
-    "RoadRunner-v5": 11.5,
-    "Seaquest-v5": 68.4,
-    "UpNDown-v5": 533.4,
-}
+# Atari 100k games and reference scores, from the shared benchmark tables
+# (simulusion.benchmarks), keyed the way DIAMOND names games.
+ATARI_100K_GAMES = [atari_env_id(g).removeprefix("ALE/") for g in _GAMES]
+HUMAN_SCORES = {g: ATARI_HUMAN_SCORES[atari_game(g)] for g in ATARI_100K_GAMES}
+RANDOM_SCORES = {g: ATARI_RANDOM_SCORES[atari_game(g)] for g in ATARI_100K_GAMES}

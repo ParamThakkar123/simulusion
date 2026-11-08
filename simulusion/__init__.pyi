@@ -37,6 +37,7 @@ from simulusion.configs.dit_config import dit_preset_config as dit_preset_config
 from simulusion.configs.dit_config import get_dit_config as get_dit_config
 from simulusion.configs.dit_config import list_dit_presets as list_dit_presets
 from simulusion.configs.dreamer_config import DreamerConfig as DreamerConfig
+from simulusion.configs.dreamer_v3_config import DreamerV3Config as DreamerV3Config
 from simulusion.configs.genie_config import DynamicsModelConfig as DynamicsModelConfig
 from simulusion.configs.genie_config import GenieConfig as GenieConfig
 from simulusion.configs.genie_config import GenieSmallConfig as GenieSmallConfig
@@ -114,10 +115,12 @@ from simulusion.inference.steppers import make_stepper as make_stepper
 from simulusion.layers.ada_ln_norm import AdaLNNormalization as AdaLNNormalization
 from simulusion.layers.rms_norm import RMSNorm as RMSNorm
 from simulusion.memory.dreamer_memory import ReplayBuffer as ReplayBuffer
+from simulusion.memory.dreamer_v3_memory import DreamerV3ReplayBuffer as DreamerV3ReplayBuffer
 from simulusion.memory.iris_memory import IRISOnPolicyBuffer as IRISOnPolicyBuffer
 from simulusion.memory.iris_memory import IRISReplayBuffer as IRISReplayBuffer
 from simulusion.memory.planet_memory import Episode as Episode
 from simulusion.memory.planet_memory import Memory as Memory
+from simulusion.models.categorical_rssm import CategoricalRSSM as CategoricalRSSM
 from simulusion.models.diffusion.DDPM import DDPM as DDPM
 from simulusion.models.diffusion.DiT import DiT as DiT
 from simulusion.models.diffusion.DiT import PatchEmbed as PatchEmbed
@@ -135,6 +138,8 @@ from simulusion.models.dreamer_v1 import DreamerV1 as DreamerV1
 from simulusion.models.dreamer_v1 import DreamerV1Agent as DreamerV1Agent
 from simulusion.models.dreamer_v2 import DreamerV2 as DreamerV2
 from simulusion.models.dreamer_v2 import DreamerV2Agent as DreamerV2Agent
+from simulusion.models.dreamer_v3 import DreamerV3 as DreamerV3
+from simulusion.models.dreamer_v3 import DreamerV3Agent as DreamerV3Agent
 from simulusion.models.dynamics_model import DynamicsModel as DynamicsModel
 from simulusion.models.dynamics_model import create_dynamics_model as create_dynamics_model
 from simulusion.models.genie import Genie as Genie
@@ -193,6 +198,10 @@ from simulusion.vision.dreamer_decoder import DenseDecoder as DenseDecoder
 from simulusion.vision.dreamer_decoder import SampleDist as SampleDist
 from simulusion.vision.dreamer_decoder import TanhBijector as TanhBijector
 from simulusion.vision.dreamer_encoder import ConvEncoder as ConvEncoder
+from simulusion.vision.dreamer_v3_nets import DreamerV3Actor as DreamerV3Actor
+from simulusion.vision.dreamer_v3_nets import DreamerV3Decoder as DreamerV3Decoder
+from simulusion.vision.dreamer_v3_nets import DreamerV3Encoder as DreamerV3Encoder
+from simulusion.vision.dreamer_v3_nets import DreamerV3Head as DreamerV3Head
 from simulusion.vision.iris_decoder import IRISDecoder as IRISDecoder
 from simulusion.vision.iris_encoder import IRISEncoder as IRISEncoder
 from simulusion.vision.perceptual_loss import LPIPSPerceptualLoss as LPIPSPerceptualLoss
@@ -226,6 +235,7 @@ __all__ = [
     "CNNDecoder",
     "CNNEncoder",
     "CNNFeatureExtractor",
+    "CategoricalRSSM",
     "ConvDecoder",
     "ConvEncoder",
     "DDPM",
@@ -248,6 +258,14 @@ __all__ = [
     "DreamerV1Agent",
     "DreamerV2",
     "DreamerV2Agent",
+    "DreamerV3",
+    "DreamerV3Actor",
+    "DreamerV3Agent",
+    "DreamerV3Config",
+    "DreamerV3Decoder",
+    "DreamerV3Encoder",
+    "DreamerV3Head",
+    "DreamerV3ReplayBuffer",
     "DreamerValueModel",
     "DynamicsModel",
     "DynamicsModelConfig",

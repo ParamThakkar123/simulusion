@@ -451,6 +451,11 @@ class MinecraftDiamondEnv:
         return self._action_space
 
     @property
+    def discrete_actions(self) -> bool:
+        """Minecraft actions are discrete; the Box space holds their one-hot form."""
+        return True
+
+    @property
     def max_episode_steps(self) -> int:
         return self._length or DEFAULT_LENGTH
 
