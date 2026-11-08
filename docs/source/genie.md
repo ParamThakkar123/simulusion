@@ -1,4 +1,11 @@
-# Genie: Generative Interactive Environment
+---
+og:description: "Genie in PyTorch: learn a playable world model and latent actions from unlabelled video, following Bruce et al. (2024), with Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "Genie in PyTorch: learn a playable world model and latent actions from unlabelled video, following Bruce et al. (2024), with Simulusion."
+---
+
+# Genie in PyTorch: Generative Interactive Environments
 
 Genie is a generative model trained from video-only data that can be used as an
 interactive environment for reinforcement learning and decision-making tasks,

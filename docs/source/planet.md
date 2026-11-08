@@ -1,4 +1,11 @@
-# PlaNet
+---
+og:description: "PlaNet in PyTorch: learn a recurrent state-space model (RSSM) from images and plan actions with CEM inside it, using Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "PlaNet in PyTorch: learn a recurrent state-space model (RSSM) from images and plan actions with CEM inside it, using Simulusion."
+---
+
+# PlaNet in PyTorch: Latent Planning with an RSSM
 
 **PlaNet** (Deep **Pl**anning **Net**work) is a latent-dynamics model that learns
 a compact state-space representation from image observations and uses online

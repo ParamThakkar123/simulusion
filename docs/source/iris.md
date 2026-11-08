@@ -1,4 +1,11 @@
-# IRIS: Transformers for Sample-Efficient World Models
+---
+og:description: "IRIS in PyTorch: a discrete-token Transformer world model for sample-efficient Atari 100k RL, following Micheli et al. (ICLR 2023)."
+myst:
+  html_meta:
+    "description lang=en": "IRIS in PyTorch: a discrete-token Transformer world model for sample-efficient Atari 100k RL, following Micheli et al. (ICLR 2023)."
+---
+
+# IRIS in PyTorch: Transformer World Models
 
 IRIS (Imagination with auto-Regression over an Inner Speech) is an implementation of the paper
 "Transformers are Sample-Efficient World Models" (Micheli et al., 2023).
