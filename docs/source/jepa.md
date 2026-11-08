@@ -1,4 +1,11 @@
-# JEPA: Joint Embedding Predictive Architecture
+---
+og:description: "I-JEPA in PyTorch: self-supervised representations learned by predicting in latent space, a world-model component in Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "I-JEPA in PyTorch: self-supervised representations learned by predicting in latent space, a world-model component in Simulusion."
+---
+
+# I-JEPA in PyTorch: Joint-Embedding Predictive Architecture
 
 JEPA is a self-supervised learning method that learns visual representations by predicting
 representations in abstract latent space, without relying on generative modeling or

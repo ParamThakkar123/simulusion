@@ -1,4 +1,11 @@
-# World Models Deep Dive (Ha & Schmidhuber, 2018)
+---
+og:description: "Ha & Schmidhuber's World Models (VAE, MDN-RNN, controller) in PyTorch: architecture, training, inference and pitfalls in Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "Ha & Schmidhuber's World Models (VAE, MDN-RNN, controller) in PyTorch: architecture, training, inference and pitfalls in Simulusion."
+---
+
+# World Models in PyTorch: Ha & Schmidhuber (2018) Deep Dive
 
 This page is a comprehensive technical reference for the Ha & Schmidhuber World Models
 implementation in Simulusion. It covers the architecture, data pipeline, training details,

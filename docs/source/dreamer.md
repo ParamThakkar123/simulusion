@@ -1,4 +1,11 @@
-# Dreamer: Model-Based RL with Latent Dynamics
+---
+og:description: "Dreamer (DreamerV1 and DreamerV2) in PyTorch: train a latent world model from pixels and learn a policy in imagination with Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "Dreamer (DreamerV1 and DreamerV2) in PyTorch: train a latent world model from pixels and learn a policy in imagination with Simulusion."
+---
+
+# Dreamer in PyTorch: DreamerV1 and DreamerV2 World Models
 
 Dreamer is a model-based reinforcement learning algorithm that learns a latent dynamics model
 from images and trains a behavior policy entirely in the latent space.
