@@ -1033,3 +1033,17 @@ section {
     transition: none;
   }
 }
+
+/* === BRAND WORD === */
+/* "Simulusion" in page text, set like the navbar wordmark: Geist Mono 500,
+   uppercase, 0.16em tracking, at the surrounding size and colour. Applied by
+   brand_word.js. The last letter's tracking is taken back. */
+.brand-word {
+  font-family: var(--sim-font-mono);
+  font-weight: 500;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-right: -0.16em;
+  white-space: nowrap;
+}
