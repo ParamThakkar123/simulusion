@@ -138,6 +138,11 @@ robotics = [
 brax = [
     "brax>=0.13.0",
     "jax>=0.10.1",
+    # mujoco-mjx must match the installed mujoco release: mjx 4.x pulls in
+    # mujoco-core 4.x and references `mjtEnableBit.mjENBL_IPC`, which the
+    # mujoco < 3.12 that the robotics extra caps does not have, so importing
+    # brax raises AttributeError. pip ignores the uv constraint below.
+    "mujoco-mjx<3.12",
 ]
 # No `procgen` extra: upstream Procgen wheels stop at Python 3.10, and Simulusion
 # requires >= 3.11, so the extra could only ever resolve to nothing. The
@@ -266,6 +271,7 @@ constraint-dependencies = [
     # AttributeError. Cap mujoco below 3.13 so the `brax` and `dmc` extras can
     # live in one environment; dm-control then resolves to 1.0.45.
     "mujoco<3.13",
+    "mujoco-mjx<3.13",
     "bleach>=6.4.0",
     "certifi>=2026.10.19",
     "filelock>=4.2.1",

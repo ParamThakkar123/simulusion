@@ -26,6 +26,7 @@ constraints = [
     { name = "mistune", specifier = ">=3.3.0" },
     { name = "msgpack", specifier = ">=1.2.1" },
     { name = "mujoco", specifier = "<3.13" },
+    { name = "mujoco-mjx", specifier = "<3.13" },
     { name = "nbconvert", specifier = ">=7.17.2" },
     { name = "opentelemetry-api", specifier = ">=1.45.1" },
     { name = "pillow", specifier = ">=13.0.0" },
@@ -4365,6 +4366,7 @@ all = [
     { name = "mistune" },
     { name = "mlagents-envs" },
     { name = "mujoco" },
+    { name = "mujoco-mjx" },
     { name = "mypy" },
     { name = "myst-parser" },
     { name = "nbconvert" },
@@ -4401,6 +4403,7 @@ all = [
 brax = [
     { name = "brax" },
     { name = "jax" },
+    { name = "mujoco-mjx" },
 ]
 bsuite = [
     { name = "bsuite" },
@@ -4524,6 +4527,7 @@ requires-dist = [
     { name = "mlagents-envs", marker = "extra == 'ml-agents'", specifier = ">=0.28.0,<0.29.0" },
     { name = "mujoco", marker = "extra == 'mujoco'", specifier = ">=3.2.0" },
     { name = "mujoco", marker = "extra == 'robotics'", specifier = ">=3.2.0,<3.12" },
+    { name = "mujoco-mjx", marker = "extra == 'brax'", specifier = "<3.12" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.19.1" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0,<5.0.0" },
     { name = "nbconvert", marker = "extra == 'docs'", specifier = ">=7.17.2" },
