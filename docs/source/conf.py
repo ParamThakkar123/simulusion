@@ -160,6 +160,8 @@ html_context = {"default_mode": "dark"}
 html_js_files = [
     # Small script to tidy duplicated navbar elements caused by theme options.
     "fix_navbar.js",
+    # Sets "Simulusion" in page text in the navbar wordmark style.
+    "brand_word.js",
 ]
 
 # Copy both our _static assets and the `images/` dir so images referenced from
