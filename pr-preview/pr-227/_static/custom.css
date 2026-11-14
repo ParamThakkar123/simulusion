@@ -1,0 +1,1035 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+/*
+ * Theme mirrors the Simulusion site (simulusion-frontend, app/tokens.css):
+ * Geist / Geist Mono, near-black and off-white surfaces, signal-lime accent.
+ * The --sim-* tokens are copied from the site; the --pst-* variables map them
+ * onto pydata-sphinx-theme so its own components pick them up.
+ */
+
+/* === DESIGN TOKENS === */
+html {
+  --sim-font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sim-font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sim-lime: #d4ff3a;
+  --sim-lime-hover: #e4ff85;
+  --sim-lime-pressed: #bdea1f;
+  --sim-olive: #4f6a00;
+  --sim-on-lime: #0a0b0a;
+  --sim-radius-control: 4px;
+  --sim-radius-item: 6px;
+  --sim-radius-surface: 10px;
+  --sim-radius-card: 12px;
+  --doc-content-max-width: 760px;
+
+  --pst-font-family-base: var(--sim-font-sans);
+  --pst-font-family-heading: var(--sim-font-sans);
+  --pst-font-family-monospace: var(--sim-font-mono);
+  --pst-font-size-base: 16px;
+}
+
+html[data-theme="light"] {
+  --sim-bg: #fafaf7;
+  --sim-surface: #ffffff;
+  --sim-weak: #f3f3f4;
+  --sim-soft: #f3f3f4;
+  --sim-text: #131513;
+  --sim-text-sub: #6e6e74;
+  --sim-stroke-soft: #e6e6e8;
+  --sim-stroke-sub: #d4d4d7;
+  --sim-ink: var(--sim-olive);
+  --sim-code-surface: #f3f3f4;
+  --sim-code-text: #131513;
+  --sim-code-comment: #6e6e74;
+  --sim-code-keyword: #7c3aed;
+  --sim-code-string: #047834;
+  --sim-code-function: #1755d6;
+  --sim-code-number: #b5410e;
+  --sim-info: #1755d6;
+  --sim-success: #047834;
+  --sim-warning: #a16207;
+  --sim-danger: #e5484d;
+  --sim-shadow: #18181a14;
+
+  --pst-color-primary: var(--sim-ink);
+  --pst-color-secondary: var(--sim-ink);
+  --pst-color-accent: var(--sim-ink);
+  --pst-color-link: var(--sim-ink);
+  --pst-color-link-hover: var(--sim-text);
+  --pst-color-background: var(--sim-bg);
+  --pst-color-on-background: var(--sim-surface);
+  --pst-color-surface: var(--sim-weak);
+  --pst-color-on-surface: var(--sim-surface);
+  --pst-color-text-base: var(--sim-text);
+  --pst-color-text-muted: var(--sim-text-sub);
+  --pst-color-heading: var(--sim-text);
+  --pst-color-border: var(--sim-stroke-soft);
+  --pst-color-shadow: var(--sim-shadow);
+  --pst-color-inline-code: var(--sim-text);
+  --pst-color-inline-code-links: var(--sim-ink);
+  --pst-color-target: #f6ffd9;
+  --pst-color-table-row-hover-bg: var(--sim-weak);
+  --pst-color-info: var(--sim-info);
+  --pst-color-success: var(--sim-success);
+  --pst-color-warning: var(--sim-warning);
+  --pst-color-danger: var(--sim-danger);
+}
+
+html[data-theme="dark"] {
+  --sim-bg: #0a0b0a;
+  --sim-surface: #131513;
+  --sim-weak: #131513;
+  --sim-soft: #1f221f;
+  --sim-text: #fcfcfc;
+  --sim-text-sub: #9c9ca1;
+  --sim-stroke-soft: #1f221f;
+  --sim-stroke-sub: #343834;
+  --sim-ink: var(--sim-lime);
+  --sim-code-surface: #131513;
+  --sim-code-text: #fcfcfc;
+  --sim-code-comment: #9c9ca1;
+  --sim-code-keyword: #a78bfa;
+  --sim-code-string: #4ade80;
+  --sim-code-function: #4c84ff;
+  --sim-code-number: #fb923c;
+  --sim-info: #8b7dff;
+  --sim-success: #4ade80;
+  --sim-warning: #facc15;
+  --sim-danger: #f2555a;
+  --sim-shadow: #00000066;
+
+  --pst-color-primary: var(--sim-ink);
+  --pst-color-secondary: var(--sim-ink);
+  --pst-color-accent: var(--sim-ink);
+  --pst-color-link: var(--sim-ink);
+  --pst-color-link-hover: var(--sim-lime-hover);
+  --pst-color-background: var(--sim-bg);
+  --pst-color-on-background: var(--sim-surface);
+  --pst-color-surface: var(--sim-weak);
+  --pst-color-on-surface: var(--sim-surface);
+  --pst-color-text-base: var(--sim-text);
+  --pst-color-text-muted: var(--sim-text-sub);
+  --pst-color-heading: var(--sim-text);
+  --pst-color-border: var(--sim-stroke-soft);
+  --pst-color-shadow: var(--sim-shadow);
+  --pst-color-inline-code: var(--sim-text);
+  --pst-color-inline-code-links: var(--sim-ink);
+  --pst-color-target: #d4ff3a1f;
+  --pst-color-table-row-hover-bg: var(--sim-weak);
+  --pst-color-info: var(--sim-info);
+  --pst-color-success: var(--sim-success);
+  --pst-color-warning: var(--sim-warning);
+  --pst-color-danger: var(--sim-danger);
+}
+
+::selection {
+  background: #d4ff3a59;
+}
+
+/* === BASE TYPOGRAPHY === */
+body {
+  font-family: var(--sim-font-sans);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--sim-text);
+  background-color: var(--sim-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--sim-font-sans);
+  font-weight: 500;
+  color: var(--sim-text);
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+h1 {
+  font-size: 40px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-top: 0.4em;
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  margin-top: 2.25em;
+}
+
+h3 {
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+a {
+  color: var(--sim-ink);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--pst-color-link-hover);
+  text-decoration: underline;
+}
+
+/* Headings that are links (autosummary, cross references) keep the text colour. */
+h1 a, h2 a, h3 a, h4 a {
+  color: inherit;
+}
+
+p {
+  margin: 0 0 1em;
+  line-height: 1.75;
+}
+
+/* === MAIN CONTENT === */
+.bd-main .bd-content .bd-article-container {
+  max-width: var(--doc-content-max-width);
+}
+
+.bd-article {
+  padding-top: 0.5rem;
+}
+
+/* Breadcrumbs: small muted text like the site's docs header. */
+.bd-breadcrumbs {
+  font-size: 13px;
+}
+
+.bd-breadcrumbs .breadcrumb-item,
+.bd-breadcrumbs .breadcrumb-item a {
+  color: var(--sim-text-sub);
+}
+
+.bd-breadcrumbs .breadcrumb-item.active {
+  color: var(--sim-text);
+}
+
+/* === NAVBAR === */
+.bd-header,
+.navbar {
+  min-height: 64px !important;
+  padding: 0 !important;
+  border-bottom: 1px solid var(--sim-stroke-soft) !important;
+  background: var(--sim-bg) !important;
+  box-shadow: none !important;
+}
+
+.bd-header .bd-header__inner,
+.bd-header .container-xxl,
+.navbar .container-xxl {
+  min-height: 64px !important;
+  padding: 0 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.navbar-brand {
+  padding: 0 !important;
+  margin-right: 0.5rem !important;
+  color: var(--sim-text) !important;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none !important;
+}
+
+.navbar-brand:hover {
+  text-decoration: none !important;
+}
+
+/* Brand matches the Simulusion site navbar: 20px Lattice mark, 9px gap, then
+   the name in Geist Mono 500, 17px, uppercase, 0.16em tracking. */
+.navbar-brand img.logo__image {
+  height: 20px;
+  width: auto;
+}
+
+.navbar-brand .logo__title {
+  font-family: var(--sim-font-mono);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin: 0;
+  color: var(--sim-text);
+}
+
+.navbar-collapse {
+  display: flex !important;
+  padding: 0 !important;
+}
+
+.navbar-nav {
+  display: flex !important;
+  gap: 0.25rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.navbar-nav .nav-link {
+  color: var(--sim-text-sub) !important;
+  font-size: 15px !important;
+  padding: 0.25rem 0.5rem !important;
+  font-weight: 400 !important;
+  border-radius: var(--sim-radius-control);
+  transition: color 0.15s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--sim-text) !important;
+  text-decoration: none !important;
+}
+
+.navbar .icon-link,
+.bd-header .pst-navbar-icon {
+  color: var(--sim-text-sub) !important;
+  border-radius: var(--sim-radius-control);
+  transition: color 0.15s ease;
+}
+
+.navbar .icon-link:hover,
+.bd-header .pst-navbar-icon:hover {
+  color: var(--sim-text) !important;
+  background: transparent !important;
+}
+
+.navbar-toggler {
+  padding: 0.2rem 0.4rem !important;
+  font-size: 0.8rem !important;
+}
+
+/* Hide center nav items */
+.bd-header .navbar-header-items__center,
+.bd-header .navbar-nav.bd-navbar-elements {
+  display: none !important;
+}
+
+.bd-header .navbar-header-items__end {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* === SEARCH === */
+/* Looks like the site's "Search the docs" field: bordered, near-square. */
+.bd-search {
+  display: flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  margin: 0 0.5rem 0 0 !important;
+  padding: 0.2rem 0.6rem !important;
+  background: var(--sim-weak) !important;
+  border: 1px solid var(--sim-stroke-soft) !important;
+  border-radius: var(--sim-radius-control) !important;
+  min-width: 240px !important;
+  max-width: 280px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 100 !important;
+  transition: border-color 0.15s ease;
+}
+
+.bd-search:hover,
+.bd-search:focus-within {
+  border-color: var(--sim-stroke-sub) !important;
+  box-shadow: none !important;
+}
+
+.bd-search input {
+  font-family: var(--sim-font-sans) !important;
+  font-size: 13px !important;
+  padding: 0.2rem 0.5rem !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--sim-text) !important;
+  pointer-events: none !important;
+}
+
+.bd-search input::placeholder {
+  color: var(--sim-text-sub) !important;
+  font-size: 13px !important;
+}
+
+.bd-search .fa-magnifying-glass {
+  color: var(--sim-text-sub) !important;
+  font-size: 0.75rem !important;
+}
+
+.bd-search .search-button__kbd-shortcut kbd,
+.bd-search kbd {
+  font-family: var(--sim-font-mono);
+  font-size: 11px;
+  color: var(--sim-text-sub);
+  background: transparent;
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: 3px;
+  box-shadow: none;
+}
+
+/* Hide sidebar search (only keep navbar search) */
+.bd-sidebar .bd-search,
+.bd-sidebar-secondary .bd-search {
+  display: none !important;
+}
+
+/* === CUSTOM SEARCH OVERLAY === */
+#custom-search-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+#custom-search-overlay.show {
+  display: flex;
+}
+
+#custom-search-overlay .search-box {
+  width: 90%;
+  max-width: 580px;
+  background: var(--sim-bg);
+  border-radius: var(--sim-radius-card);
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--sim-stroke-soft);
+}
+
+#custom-search-overlay .search-box input {
+  width: 100%;
+  font-size: 1.15rem;
+  padding: 0.75rem 1rem;
+  background: var(--sim-weak);
+  border: 1px solid var(--sim-stroke-sub);
+  border-radius: var(--sim-radius-control);
+  color: var(--sim-text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+#custom-search-overlay .search-box input:focus {
+  border-color: var(--sim-ink);
+}
+
+#custom-search-overlay .kbd-hint {
+  margin-top: 0.75rem;
+  text-align: center;
+  color: var(--sim-text-sub);
+  font-size: 0.8rem;
+}
+
+#custom-search-overlay kbd {
+  background: var(--sim-weak);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--sim-radius-control);
+  font-size: 0.7rem;
+  margin: 0 0.15rem;
+  border: 1px solid var(--sim-stroke-soft);
+}
+
+/* === PRIMARY SIDEBAR (left) === */
+/* Matches the site's docs nav: 264px column, hairline right border, bold
+   group labels, muted items, active item on a soft pill. */
+.bd-sidebar-primary {
+  background: var(--sim-bg) !important;
+  border-right: 1px solid var(--sim-stroke-soft) !important;
+  padding: 1.75rem 1.5rem !important;
+  max-width: 264px;
+  flex-basis: 264px;
+}
+
+.bd-sidebar-primary .bd-links__title {
+  display: none;
+}
+
+.bd-sidebar-primary .bd-links p.caption {
+  margin: 1.5rem 0 0.4rem;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--sim-text);
+}
+
+.bd-sidebar-primary .bd-links p.caption:first-of-type {
+  margin-top: 0;
+}
+
+.bd-sidebar-primary .bd-links .caption-text {
+  color: var(--sim-text);
+}
+
+.bd-sidebar-primary .bd-links a,
+.bd-sidebar-primary .bd-sidenav a {
+  display: block;
+  padding: 6px 8px !important;
+  font-size: 14px;
+  line-height: 1.1;
+  color: var(--sim-text-sub);
+  border-radius: var(--sim-radius-item);
+  box-shadow: none !important;
+  transition: color 0.1s ease, background-color 0.1s ease;
+}
+
+.bd-sidebar-primary .bd-links a:hover,
+.bd-sidebar-primary .bd-sidenav a:hover {
+  color: var(--sim-text);
+  background: transparent;
+  text-decoration: none;
+}
+
+.bd-sidebar-primary .bd-sidenav li > a.current,
+.bd-sidebar-primary .bd-sidenav li.current.active > a {
+  color: var(--sim-text) !important;
+  background: var(--sim-weak) !important;
+  font-weight: 500;
+  box-shadow: none !important;
+}
+
+.bd-sidebar-primary .bd-sidenav .toctree-toggle {
+  color: var(--sim-text-sub);
+}
+
+/* Theme utility controls ("Collapse Sidebar", "Show Source"): quiet, muted
+   text like the site's secondary links rather than accent-coloured. */
+.pst-sidebar-collapse button,
+.bd-sidebar-secondary .tocsection.sourcelink a,
+.bd-sidebar-secondary .sourcelink a {
+  color: var(--sim-text-sub) !important;
+  font-size: 13px;
+  font-weight: 400;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pst-sidebar-collapse button .pst-collapse-sidebar-label,
+.pst-sidebar-collapse button svg {
+  color: inherit !important;
+  fill: currentColor;
+  text-decoration: none !important;
+}
+
+.pst-sidebar-collapse button:hover,
+.bd-sidebar-secondary .sourcelink a:hover {
+  color: var(--sim-text) !important;
+}
+
+.pst-sidebar-collapse {
+  margin-bottom: 1rem;
+}
+
+/* === SECONDARY SIDEBAR ("On this page") === */
+.bd-sidebar-secondary {
+  background: var(--sim-bg) !important;
+  border-left: none !important;
+}
+
+.bd-sidebar-secondary .onthispage {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sim-text);
+  text-transform: none;
+  letter-spacing: normal;
+  margin-bottom: 0.5rem;
+}
+
+.bd-sidebar-secondary .onthispage i {
+  display: none;
+}
+
+/* The theme draws a vertical guide line and pulls the links 16px left onto
+   it; the site has no line, so drop both and keep one left edge. */
+.bd-sidebar-secondary .sidebar-secondary-item {
+  border-left: none !important;
+}
+
+.bd-sidebar-secondary .section-nav {
+  border-left: none !important;
+  padding-left: 0 !important;
+}
+
+.bd-sidebar-secondary .section-nav a.nav-link {
+  margin-left: 0 !important;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 3px 0 !important;
+  color: var(--sim-text-sub);
+  box-shadow: none !important;
+}
+
+.bd-sidebar-secondary .section-nav a.nav-link:hover {
+  color: var(--sim-text);
+  text-decoration: none;
+}
+
+.bd-sidebar-secondary .section-nav li.active > a.nav-link,
+.bd-sidebar-secondary .section-nav a.nav-link.active {
+  color: var(--sim-ink) !important;
+  font-weight: 400;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* === CODE BLOCKS === */
+/* Site style: flat code surface, 10px radius, no border; Geist Mono 13px. */
+div.highlight,
+.highlight {
+  background: var(--sim-code-surface) !important;
+  border: none;
+  border-radius: var(--sim-radius-surface);
+  margin: 1.25rem 0;
+  overflow: hidden;
+}
+
+.highlight pre,
+div.highlight pre {
+  padding: 14px 16px;
+  font-family: var(--sim-font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--sim-code-text);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+  box-shadow: none !important;
+}
+
+/* Inline code */
+code.literal,
+code.docutils.literal {
+  font-family: var(--sim-font-mono);
+  background: var(--sim-weak);
+  padding: 0.12em 0.4em;
+  border-radius: var(--sim-radius-control);
+  font-size: 0.85em;
+  border: 1px solid var(--sim-stroke-soft);
+  color: var(--sim-text);
+}
+
+a code.literal,
+a code.docutils.literal {
+  color: var(--sim-ink);
+}
+
+/* Syntax highlighting tokens, from the site's code colours */
+html[data-theme] .highlight .c, html[data-theme] .highlight .c1, html[data-theme] .highlight .cm, html[data-theme] .highlight .cs, html[data-theme] .highlight .ch { color: var(--sim-code-comment); font-style: normal; }
+html[data-theme] .highlight .k, html[data-theme] .highlight .kn, html[data-theme] .highlight .kd, html[data-theme] .highlight .kr, html[data-theme] .highlight .kp, html[data-theme] .highlight .ow, html[data-theme] .highlight .nd { color: var(--sim-code-keyword); font-weight: 400; }
+html[data-theme] .highlight .s, html[data-theme] .highlight .s1, html[data-theme] .highlight .s2, html[data-theme] .highlight .sa, html[data-theme] .highlight .sb, html[data-theme] .highlight .sd, html[data-theme] .highlight .se, html[data-theme] .highlight .si, html[data-theme] .highlight .sh { color: var(--sim-code-string); font-style: normal; }
+html[data-theme] .highlight .nf, html[data-theme] .highlight .fm, html[data-theme] .highlight .nb, html[data-theme] .highlight .bp, html[data-theme] .highlight .nc, html[data-theme] .highlight .kc, html[data-theme] .highlight .kt { color: var(--sim-code-function); font-weight: 400; }
+html[data-theme] .highlight .m, html[data-theme] .highlight .mf, html[data-theme] .highlight .mi, html[data-theme] .highlight .mh, html[data-theme] .highlight .il { color: var(--sim-code-number); }
+html[data-theme] .highlight .n, html[data-theme] .highlight .nn, html[data-theme] .highlight .nv, html[data-theme] .highlight .na, html[data-theme] .highlight .p, html[data-theme] .highlight .o, html[data-theme] .highlight .w { color: var(--sim-code-text); font-weight: 400; }
+html[data-theme] .highlight .gp, html[data-theme] .highlight .go { color: var(--sim-code-comment); }
+html[data-theme] .highlight .hll { background-color: #d4ff3a1f; }
+
+/* === COPY BUTTON === */
+/* Small muted "Copy" control, like the site's code blocks. */
+button.copybtn {
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.15s ease;
+  background: transparent;
+  border: 1px solid var(--sim-stroke-sub);
+  border-radius: var(--sim-radius-control);
+  color: var(--sim-text-sub);
+  padding: 0.2rem 0.4rem;
+  margin: 0.35rem;
+  cursor: pointer;
+}
+
+button.copybtn:hover {
+  color: var(--sim-text);
+}
+
+div.highlight:hover button.copybtn {
+  opacity: 1;
+}
+
+/* === ADMONITIONS === */
+.admonition,
+div.admonition {
+  margin: 1.5rem 0;
+  border-radius: var(--sim-radius-surface);
+  border: 1px solid var(--sim-stroke-soft) !important;
+  border-left: 3px solid var(--sim-ink) !important;
+  background: var(--sim-weak) !important;
+  box-shadow: none !important;
+  padding: 1rem 1.25rem;
+}
+
+.admonition > .admonition-title,
+div.admonition > .admonition-title {
+  font-weight: 500;
+  font-size: 15px;
+  margin: -1rem -1.25rem 0.75rem;
+  padding: 0.6rem 1.25rem 0.6rem 2.75rem;
+  background: transparent !important;
+  color: var(--sim-text);
+  border-bottom: 1px solid var(--sim-stroke-soft);
+}
+
+.admonition > .admonition-title::after,
+div.admonition > .admonition-title::after {
+  color: var(--sim-ink);
+}
+
+.admonition.note, .admonition.seealso { border-left-color: var(--sim-info) !important; }
+.admonition.note > .admonition-title::after, .admonition.seealso > .admonition-title::after { color: var(--sim-info); }
+.admonition.tip, .admonition.hint { border-left-color: var(--sim-ink) !important; }
+.admonition.warning, .admonition.caution, .admonition.attention { border-left-color: var(--sim-warning) !important; }
+.admonition.warning > .admonition-title::after, .admonition.caution > .admonition-title::after, .admonition.attention > .admonition-title::after { color: var(--sim-warning); }
+.admonition.important, .admonition.danger, .admonition.error { border-left-color: var(--sim-danger) !important; }
+.admonition.important > .admonition-title::after, .admonition.danger > .admonition-title::after, .admonition.error > .admonition-title::after { color: var(--sim-danger); }
+
+/* === TABLES === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 14px;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: none;
+}
+
+table th {
+  background: transparent;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 500;
+  border-bottom: 1px solid var(--sim-stroke-sub);
+  color: var(--sim-text);
+  white-space: nowrap;
+}
+
+table td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--sim-stroke-soft);
+  vertical-align: top;
+  color: var(--sim-text);
+}
+
+table tr:hover {
+  background: var(--sim-weak);
+}
+
+/* The theme's .table draws the header rule in the accent colour; the site
+   uses neutral hairlines. */
+.bd-article table.table > :not(caption) > * > * {
+  border-color: var(--sim-stroke-soft);
+}
+
+.bd-article table.table > thead,
+.bd-article table.table > thead > tr,
+.bd-article table.table > thead > tr > th {
+  border-bottom: 1px solid var(--sim-stroke-sub) !important;
+}
+
+/* === DEFINITION LISTS (parameter docs from autodoc) === */
+dl:not(.field-list) > dt {
+  background: var(--sim-weak);
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: var(--sim-radius-item);
+  font-weight: 500;
+  border-left: 2px solid var(--sim-ink);
+  font-family: var(--sim-font-mono);
+  font-size: 13px;
+}
+
+/* === CONTENTS DIRECTIVE (page-local TOC) === */
+.toctree-wrapper.compound,
+div.contents {
+  background: transparent;
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: var(--sim-radius-card);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+div.contents p.topic-title {
+  font-weight: 500;
+  font-size: 13px;
+  margin-bottom: 0.5rem;
+  color: var(--sim-text);
+}
+
+div.contents ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+div.contents li {
+  margin: 0.2rem 0;
+}
+
+/* === STATIC ARCHITECTURE DIAGRAMS === */
+.architecture-diagram {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--sim-weak);
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: var(--sim-radius-card);
+}
+
+.diagram-section {
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: var(--sim-radius-surface);
+  padding: 0.9rem;
+  background: var(--sim-bg);
+}
+
+.diagram-section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 15px;
+}
+
+.diagram-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.diagram-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--sim-stroke-sub);
+  border-radius: var(--sim-radius-item);
+  background: var(--sim-bg);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.diagram-node.info { border-color: var(--sim-info); }
+.diagram-node.success { border-color: var(--sim-ink); }
+.diagram-node.warning { border-color: var(--sim-warning); }
+.diagram-node.danger { border-color: var(--sim-danger); }
+
+.diagram-arrow {
+  color: var(--sim-text-sub);
+  font-weight: 700;
+  transform: rotate(90deg);
+  align-self: flex-start;
+}
+
+/* === PREV / NEXT AND FOOTER === */
+.prev-next-area a,
+.prev-next-footer a {
+  border-radius: var(--sim-radius-card);
+}
+
+.prev-next-area a p.prev-next-title,
+.prev-next-footer .prev-next-title {
+  color: var(--sim-text);
+  font-weight: 500;
+}
+
+.prev-next-area .prev-next-subtitle,
+.prev-next-footer .prev-next-subtitle {
+  color: var(--sim-text-sub);
+  font-size: 13px;
+}
+
+.prev-next-area a:hover p.prev-next-title {
+  color: var(--sim-ink);
+  text-decoration: none;
+}
+
+.bd-footer,
+.footer {
+  margin-top: 3rem;
+  padding: 2rem 0;
+  color: var(--sim-text-sub);
+  border-top: 1px solid var(--sim-stroke-soft);
+  background: var(--sim-bg);
+  font-size: 13px;
+}
+
+/* === SCROLLBARS === */
+html[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--sim-bg);
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #343834;
+  border-radius: 4px;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #53535a;
+}
+
+/* === MISC ELEMENTS === */
+blockquote {
+  border-left: 2px solid var(--sim-stroke-sub);
+  background: transparent;
+  margin: 1.25rem 0;
+  padding: 0.25rem 1rem;
+  color: var(--sim-text-sub);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--sim-stroke-soft);
+  margin: 2rem 0;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  h1 { font-size: 34px; }
+  h2 { font-size: 22px; }
+  h3 { font-size: 18px; }
+  .highlight pre { font-size: 12px; }
+  .bd-search { min-width: 100px !important; max-width: 140px !important; }
+}
+
+/* === PAGE ENTRY ANIMATION === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  section {
+    animation: none;
+  }
+}
+
+/* === DEMO MEDIA & GALLERY === */
+.demo-media {
+  margin: 1.25rem 0 1.5rem;
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: var(--sim-radius-card);
+  overflow: hidden;
+  background: #0a0b0a;
+}
+
+.demo-media video,
+.demo-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.demo-media figcaption {
+  padding: 0.6rem 0.9rem;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--sim-text-sub);
+  background: var(--sim-bg);
+  border-top: 1px solid var(--sim-stroke-soft);
+}
+
+.demo-media figcaption code {
+  font-size: 12px;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+/* Cards follow the site's docs cards: 12px radius, hairline border. */
+.demo-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sim-stroke-soft);
+  border-radius: var(--sim-radius-card);
+  overflow: hidden;
+  background: var(--sim-bg);
+  color: inherit;
+  text-decoration: none !important;
+  transition: border-color 0.15s ease;
+}
+
+.demo-card:hover {
+  border-color: var(--sim-stroke-sub);
+}
+
+.demo-card video,
+.demo-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #0a0b0a;
+  image-rendering: pixelated;
+}
+
+.demo-card .demo-card-body {
+  padding: 14px 18px 16px;
+}
+
+.demo-card .demo-card-title {
+  display: block;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--sim-text);
+  margin-bottom: 0.2rem;
+}
+
+.demo-card .demo-card-text {
+  display: block;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sim-text-sub);
+}
+
+.demo-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.demo-pair .demo-media {
+  margin: 0.5rem 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-card {
+    transition: none;
+  }
+}
