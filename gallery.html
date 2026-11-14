@@ -42,7 +42,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2421a7e9" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
@@ -138,9 +138,11 @@
     
     
     
-    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
-    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+    <img src="_static/lattice-mark-lime.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/lattice-mark-lime.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
+  
+    <p class="title logo__title">Simulusion</p>
   
 </a></div>
     
@@ -457,8 +459,8 @@ environment. Nothing on the right is copied from the left: wherever the two
 halves drift apart is exactly where the model is wrong.</p>
 <hr class="docutils" />
 </section>
-<section id="dreamer">
-<span id="gallery-dreamer"></span><h2>Dreamer<a class="headerlink" href="#dreamer" title="Link to this heading">#</a></h2>
+<section id="gallery-dreamer">
+<span id="dreamer"></span><h2>Dreamer<a class="headerlink" href="#gallery-dreamer" title="Link to this heading">#</a></h2>
 <p>Dreamer learns a recurrent state-space model of the environment from pixels,
 then trains an actor-critic purely on imagined trajectories. Here it is on the
 DeepMind Control <em>cartpole swing-up</em> task. In 60k environment steps (about
@@ -502,8 +504,8 @@ python<span class="w"> </span>demos/dreamer_demo.py<span class="w"> </span>recor
 <p>See <a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> for the method and the full API.</p>
 <hr class="docutils" />
 </section>
-<section id="planet">
-<span id="gallery-planet"></span><h2>PlaNet<a class="headerlink" href="#planet" title="Link to this heading">#</a></h2>
+<section id="gallery-planet">
+<span id="planet"></span><h2>PlaNet<a class="headerlink" href="#gallery-planet" title="Link to this heading">#</a></h2>
 <p>PlaNet has no policy network. At every step it searches over action sequences
 with the cross-entropy method <em>inside</em> its learned latent model and executes the
 first action of the best plan. Same task as Dreamer, so the two are comparable:
@@ -529,8 +531,8 @@ python<span class="w"> </span>demos/planet_demo.py<span class="w"> </span>record
 <p>See <a class="reference internal" href="planet.html"><span class="doc">PlaNet</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="diamond">
-<span id="gallery-diamond"></span><h2>DIAMOND<a class="headerlink" href="#diamond" title="Link to this heading">#</a></h2>
+<section id="gallery-diamond">
+<span id="diamond"></span><h2>DIAMOND<a class="headerlink" href="#gallery-diamond" title="Link to this heading">#</a></h2>
 <p>DIAMOND’s world model is a diffusion model: it generates each next Atari frame
 by denoising, conditioned on the previous four frames and the action. The agent
 is trained entirely on frames the model generates. After 21 epochs (about
@@ -560,8 +562,8 @@ python<span class="w"> </span>demos/diamond_demo.py<span class="w"> </span>recor
 and press <code class="docutils literal notranslate"><span class="pre">TAB</span></code> to switch between the real game and the dream. See <a class="reference internal" href="diamond.html"><span class="doc">DIAMOND</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="iris">
-<span id="gallery-iris"></span><h2>IRIS<a class="headerlink" href="#iris" title="Link to this heading">#</a></h2>
+<section id="gallery-iris">
+<span id="iris"></span><h2>IRIS<a class="headerlink" href="#gallery-iris" title="Link to this heading">#</a></h2>
 <p>IRIS compresses every frame into 16 discrete tokens with a VQ autoencoder,
 then models the game as a sequence of tokens and actions with a Transformer. The
 policy learns from Transformer imagination only.</p>
@@ -603,8 +605,8 @@ by token. <code class="docutils literal notranslate"><span class="pre">--resume<
 stop at the same epoch however often it was restarted. See <a class="reference internal" href="iris.html"><span class="doc">IRIS: Transformers for Sample-Efficient World Models</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="genie">
-<span id="gallery-genie"></span><h2>Genie<a class="headerlink" href="#genie" title="Link to this heading">#</a></h2>
+<section id="gallery-genie">
+<span id="genie"></span><h2>Genie<a class="headerlink" href="#gallery-genie" title="Link to this heading">#</a></h2>
 <p>Genie learns from gameplay video alone, with no actions recorded. A latent
 action model discovers a small vocabulary of “controls” from how consecutive
 frames differ, and a MaskGIT dynamics model generates the next frame given one.
@@ -629,8 +631,8 @@ python<span class="w"> </span>demos/genie_demo.py<span class="w"> </span>record
 <p>See <a class="reference internal" href="genie.html"><span class="doc">Genie: Generative Interactive Environment</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="dit">
-<span id="gallery-dit"></span><h2>DiT<a class="headerlink" href="#dit" title="Link to this heading">#</a></h2>
+<section id="gallery-dit">
+<span id="dit"></span><h2>DiT<a class="headerlink" href="#gallery-dit" title="Link to this heading">#</a></h2>
 <p>A Diffusion Transformer (DiT-S/4, 33M parameters) trained class-conditionally
 on CIFAR-10 for 40 epochs, about two hours, and sampled with classifier-free
 guidance at scale 4.</p>
@@ -650,8 +652,8 @@ python<span class="w"> </span>demos/dit_demo.py<span class="w"> </span>record
 <p>See <a class="reference internal" href="dit.html"><span class="doc">DiT: Diffusion Transformer and Diffusion Models</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="modularrssm">
-<span id="gallery-modular-rssm"></span><h2>ModularRSSM<a class="headerlink" href="#modularrssm" title="Link to this heading">#</a></h2>
+<section id="gallery-modular-rssm">
+<span id="modularrssm"></span><h2>ModularRSSM<a class="headerlink" href="#gallery-modular-rssm" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ModularRSSM</span></code> builds a world model from interchangeable parts: an encoder, a
 decoder and a recurrent backbone. The demo trains the same encoder and decoder
 with a GRU and with an LSTM backbone on identical data, then lets both predict
@@ -670,8 +672,8 @@ python<span class="w"> </span>demos/modular_rssm_demo.py<span class="w"> </span>
 <p>See <a class="reference internal" href="modular_rssm_guide.html"><span class="doc">Modular RSSM</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="i-jepa">
-<span id="gallery-i-jepa"></span><h2>I-JEPA<a class="headerlink" href="#i-jepa" title="Link to this heading">#</a></h2>
+<section id="gallery-i-jepa">
+<span id="i-jepa"></span><h2>I-JEPA<a class="headerlink" href="#gallery-i-jepa" title="Link to this heading">#</a></h2>
 <p>I-JEPA learns image features without reconstructing pixels and without labels:
 it predicts the <em>representations</em> of masked image blocks from a visible context
 block. A ViT-Tiny trained for 30 epochs on CIFAR-10 (about an hour) shows
@@ -688,8 +690,8 @@ python<span class="w"> </span>demos/jepa_demo.py<span class="w"> </span>record
 <p>See <a class="reference internal" href="jepa.html"><span class="doc">JEPA: Joint Embedding Predictive Architecture</span></a>.</p>
 <hr class="docutils" />
 </section>
-<section id="pretrained-checkpoints">
-<span id="gallery-pretrained-checkpoints"></span><h2>Pretrained checkpoints<a class="headerlink" href="#pretrained-checkpoints" title="Link to this heading">#</a></h2>
+<section id="gallery-pretrained-checkpoints">
+<span id="pretrained-checkpoints"></span><h2>Pretrained checkpoints<a class="headerlink" href="#gallery-pretrained-checkpoints" title="Link to this heading">#</a></h2>
 <p>The checkpoints behind these clips are on the Hugging Face Hub, in the
 <a class="reference external" href="https://huggingface.co/collections/simillusion/simulusion-demo-models-6ae0419992e0177bc1695362">Simulusion demo models</a>
 collection. Each model card links the paper, repeats the results above and
@@ -801,15 +803,15 @@ for details and per-demo options.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-read-the-world-model-clips">How to read the world-model clips</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dreamer">Dreamer</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#planet">PlaNet</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diamond">DIAMOND</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#iris">IRIS</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#genie">Genie</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dit">DiT</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#modularrssm">ModularRSSM</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#i-jepa">I-JEPA</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pretrained-checkpoints">Pretrained checkpoints</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-dreamer">Dreamer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-planet">PlaNet</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-diamond">DIAMOND</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-iris">IRIS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-genie">Genie</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-dit">DiT</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-modular-rssm">ModularRSSM</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-i-jepa">I-JEPA</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-pretrained-checkpoints">Pretrained checkpoints</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproduce-everything">Reproduce everything</a></li>
 </ul>
   </nav></div>

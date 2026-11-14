@@ -42,7 +42,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=eaa1d750" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=2421a7e9" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
@@ -138,9 +138,11 @@
     
     
     
-    <img src="_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
-    <img src="_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+    <img src="_static/lattice-mark-lime.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="_static/lattice-mark-lime.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
+  
+    <p class="title logo__title">Simulusion</p>
   
 </a></div>
     
@@ -420,9 +422,9 @@ model directly.</p>
 <li><p><a class="reference internal" href="#why-world-models-need-a-different-recipe" id="id2">Why world models need a different recipe</a></p></li>
 <li><p><a class="reference internal" href="#quick-reference" id="id3">Quick reference</a></p></li>
 <li><p><a class="reference internal" href="#in-process-optimization" id="id4">In-process optimization</a></p></li>
-<li><p><a class="reference internal" href="#a-uniform-step-interface" id="id5">A uniform step interface</a></p></li>
+<li><p><a class="reference internal" href="#steppers" id="id5">A uniform step interface</a></p></li>
 <li><p><a class="reference internal" href="#measuring-speed" id="id6">Measuring speed</a></p></li>
-<li><p><a class="reference internal" href="#measuring-fidelity-rollout-drift" id="id7">Measuring fidelity: rollout drift</a></p></li>
+<li><p><a class="reference internal" href="#drift" id="id7">Measuring fidelity: rollout drift</a></p></li>
 <li><p><a class="reference internal" href="#reducing-model-cost" id="id8">Reducing model cost</a></p></li>
 <li><p><a class="reference internal" href="#exporting" id="id9">Exporting</a></p></li>
 <li><p><a class="reference internal" href="#deployment-bundles" id="id10">Deployment bundles</a></p></li>
@@ -582,8 +584,8 @@ without AMX/AVX512-BF16.</p></li>
 </ul>
 </section>
 </section>
-<section id="a-uniform-step-interface">
-<span id="steppers"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">A uniform step interface</a><a class="headerlink" href="#a-uniform-step-interface" title="Link to this heading">#</a></h2>
+<section id="steppers">
+<span id="a-uniform-step-interface"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">A uniform step interface</a><a class="headerlink" href="#steppers" title="Link to this heading">#</a></h2>
 <p>Each model family names its steps differently. A <em>stepper</em> gives them one
 shape, with state as an explicit <code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Tensor]</span></code> whose batch is on dim 0:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -682,8 +684,8 @@ environment. The warm-up iterations absorb compilation, CUDA-graph capture and
 cuDNN autotuning. To benchmark a stateful loop, pass a closure that advances
 its own state.</p>
 </section>
-<section id="measuring-fidelity-rollout-drift">
-<span id="drift"></span><h2><a class="toc-backref" href="#id7" role="doc-backlink">Measuring fidelity: rollout drift</a><a class="headerlink" href="#measuring-fidelity-rollout-drift" title="Link to this heading">#</a></h2>
+<section id="drift">
+<span id="measuring-fidelity-rollout-drift"></span><h2><a class="toc-backref" href="#id7" role="doc-backlink">Measuring fidelity: rollout drift</a><a class="headerlink" href="#drift" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.inference</span><span class="w"> </span><span class="kn">import</span> <span class="n">rollout_drift</span>
 
 
@@ -946,14 +948,14 @@ required by the core inference API.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#precision">Precision</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-uniform-step-interface">A uniform step interface</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#steppers">A uniform step interface</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deterministic-dreamer-actions">Deterministic Dreamer actions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#explicit-noise">Explicit noise</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#an-exportable-step">An exportable step</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measuring-speed">Measuring speed</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measuring-fidelity-rollout-drift">Measuring fidelity: rollout drift</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#drift">Measuring fidelity: rollout drift</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reducing-model-cost">Reducing model cost</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weight-only-int8-quantization">Weight-only int8 quantization</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fewer-sampling-steps">Fewer sampling steps</a></li>

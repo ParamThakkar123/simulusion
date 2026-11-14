@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap');
 
 /* === DESIGN TOKENS === */
 :root {
@@ -119,7 +119,7 @@ p {
   color: var(--pst-color-text-base) !important;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 9px;
   text-decoration: none !important;
 }
 
@@ -127,10 +127,22 @@ p {
   text-decoration: none !important;
 }
 
-/* The logo is the full wordmark; size it to sit inside the 48px navbar. */
+/* Brand matches the Simulusion site navbar: 20px Lattice mark, 9px gap, then
+   the name in Geist Mono 500, 17px, uppercase, 0.16em tracking. */
 .navbar-brand img.logo__image {
-  height: 30px;
+  height: 20px;
   width: auto;
+}
+
+.navbar-brand .logo__title {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin: 0;
+  color: var(--pst-color-text-base);
 }
 
 .navbar-logo-icon {
