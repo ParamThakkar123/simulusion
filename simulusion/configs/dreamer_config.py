@@ -71,6 +71,11 @@ class DreamerConfig(SerializableConfigMixin):
     minecraft_length: int = 36000
 
     # Procgen options. Use env values like "coinrun" or "procgen-coinrun-v0".
+    # Atari 100k preprocessing protocol for env_backend="atari100k": one of
+    # simulusion.envs.ATARI_100K_PROTOCOLS ("atari100k" = "dreamerv3", "iris",
+    # "diamond", "storm", and the "-eval" variants). Frame skip happens inside
+    # the environment, so action_repeat must be 1.
+    atari100k_protocol: str = "atari100k"
     procgen_distribution_mode: str = "easy"
     procgen_num_levels: int = 0
     procgen_start_level: Any = None

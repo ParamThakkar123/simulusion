@@ -87,6 +87,37 @@ All backends except `WorldModelEnv` and `DiamondAtari` (passthrough) set these k
 |---|---|---|
 | `life_lost` | No | `bool` set only when `terminate_on_life_loss` is enabled and the agent loses a life while at least one life remains. All upstream ALE / Gymnasium info keys are passed through unchanged. |
 
+### Crafter (`crafter_env.py`)
+
+| Key | Always? | Description |
+|---|---|---|
+| `achievements` | Yes | Unlock count of each of the 22 achievements so far in the episode; the final step's dict feeds `crafter_score`. |
+| `inventory`, `player_pos`, `semantic` | Yes | Passed through from Crafter. |
+
+### Memory Maze (`memory_maze_env.py`)
+
+| Key | Always? | Description |
+|---|---|---|
+| `vector_observation` | Yes | The current target's RGB colour (`target_color`). |
+
+### Atari 100k (`atari100k_env.py`)
+
+| Key | Always? | Description |
+|---|---|---|
+| `lives` | Yes | Lives left. |
+| `life_lost` | Yes | A life was lost during this step. With `life_loss="terminate"` this also ends the episode. |
+| `game_over` | Yes | The game itself ended; the next reset starts a new game. |
+| `episode_frame_number` | Yes | Emulator frames since the last real reset, including no-ops. |
+
+### Craftax (`craftax_env.py`)
+
+| Key | Always? | Description |
+|---|---|---|
+| `achievements` | Yes | 1 for each achievement unlocked so far in the episode, else 0. |
+| `timestep` | Yes | Steps taken in the episode. |
+| `craftax_score` | No | Craftax's own episode score, on the final step. |
+| `vector_observation` | No | The observation vector, for symbolic variants. |
+
 ### Procgen (`procgen_env.py`)
 
 | Key | Always? | Description |

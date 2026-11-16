@@ -80,6 +80,10 @@ BENCHMARK_ENV_BACKENDS = (
     "mujoco",
     "robotics",
     "bsuite",
+    "crafter",
+    "memory_maze",
+    "atari100k",
+    "craftax",
     "brax",
     "unity_mlagents",
 )
