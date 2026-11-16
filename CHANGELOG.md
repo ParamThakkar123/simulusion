@@ -54,8 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - The `dmc` extras and `simulusion.install_dmc` require `labmaze-new>=0.0.3`,
   which builds labmaze's native extension with setuptools instead of Bazel, so
-  `labmaze.RandomMaze` works on CPython 3.13, including Windows. Its source is
-  in `third_party/labmaze`.
+  `labmaze.RandomMaze` works on CPython 3.13, including Windows.
 
 ### Fixed
 - `BSuiteImageEnv.max_episode_steps` returned the setting's episode count.

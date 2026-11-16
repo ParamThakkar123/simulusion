@@ -20,7 +20,6 @@ truncation.
 
 from __future__ import annotations
 
-import importlib
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -28,6 +27,7 @@ import numpy as np
 
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
+from simulusion.envs.brax_env import _require_module
 from simulusion.envs._images import to_chw_uint8, to_hwc_uint8
 
 #: The 22 Crafter achievements, in the order of ``crafter.constants``.
@@ -89,13 +89,10 @@ def normalize_crafter_task(task: str) -> str:
 
 
 def _require_crafter() -> Any:
-    try:
-        return importlib.import_module("crafter")
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "The Crafter backend requires the 'crafter' package. Install it with "
-            "`pip install simulusion[crafter]` or `pip install crafter`."
-        ) from exc
+    return _require_module(
+        "crafter",
+        "Install it with `pip install simulusion[crafter]` or `pip install crafter`.",
+    )
 
 
 def crafter_success_rates(

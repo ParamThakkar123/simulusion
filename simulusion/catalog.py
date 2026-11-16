@@ -184,6 +184,16 @@ def _list_available_atari_envs() -> list[str]:
 ATARI_ENVS: list[str] = _list_available_atari_envs()
 
 
+def _list_atari100k_games() -> list[str]:
+    try:
+        from simulusion.envs.atari100k_env import list_atari100k_games
+
+        return list_atari100k_games()
+    except Exception:
+        logger.debug("Atari 100k games unavailable", exc_info=True)
+        return []
+
+
 def _list_available_dmlab_levels() -> list[str]:
     try:
         from simulusion.envs.dmlab import DMLAB_LEVELS
@@ -253,34 +263,7 @@ ENV_BACKENDS: dict[str, dict[str, Any]] = {
     "atari100k": {
         "label": "Atari 100k",
         "description": "The 26 Atari 100k games with paper preprocessing protocols",
-        "environments": [
-            "alien",
-            "amidar",
-            "assault",
-            "asterix",
-            "bank_heist",
-            "battle_zone",
-            "boxing",
-            "breakout",
-            "chopper_command",
-            "crazy_climber",
-            "demon_attack",
-            "freeway",
-            "frostbite",
-            "gopher",
-            "hero",
-            "jamesbond",
-            "kangaroo",
-            "krull",
-            "kung_fu_master",
-            "ms_pacman",
-            "pong",
-            "private_eye",
-            "qbert",
-            "road_runner",
-            "seaquest",
-            "up_n_down",
-        ],
+        "environments": _list_atari100k_games(),
     },
     "craftax": {
         "label": "Craftax",

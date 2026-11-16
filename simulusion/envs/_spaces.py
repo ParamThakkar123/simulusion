@@ -21,6 +21,11 @@ class OneHotActionSpace(gym.spaces.Box):
     :func:`simulusion.envs._actions.encode_discrete_action`.
     """
 
+    # Marks the Box as a one-hot discrete choice, so agents that pick their
+    # policy from the action space use a categorical one, not a Gaussian (as
+    # the BSuite, DMLab and Minecraft spaces do).
+    one_hot = True
+
     def __init__(self, n: int, seed: int | None = None):
         self.n = int(n)
         self._rng = np.random.default_rng(seed)

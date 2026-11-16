@@ -9,6 +9,7 @@ which ships with ale-py.
 from __future__ import annotations
 
 import enum
+import importlib.machinery
 import importlib.util
 import math
 import sys
@@ -92,9 +93,16 @@ class _FakeCrafterEnv:
         return self._frame(), 1.0 if self.kwargs["reward"] else 0.0, dead or over, info
 
 
+def _fake_module(name: str) -> types.ModuleType:
+    """A stand-in package that importlib.util.find_spec accepts."""
+    module = types.ModuleType(name)
+    module.__spec__ = importlib.machinery.ModuleSpec(name, loader=None)
+    return module
+
+
 @pytest.fixture
 def fake_crafter(monkeypatch):
-    module = types.ModuleType("crafter")
+    module = _fake_module("crafter")
     module.Env = _FakeCrafterEnv
     module.constants = types.SimpleNamespace(actions=[f"a{i}" for i in range(17)])
     monkeypatch.setitem(sys.modules, "crafter", module)
@@ -577,23 +585,23 @@ class _FakeCraftaxEnv:
 
 @pytest.fixture
 def fake_craftax(monkeypatch):
-    jax = types.ModuleType("jax")
+    jax = _fake_module("jax")
     jax.jit = lambda fn: fn
     jax.random = types.SimpleNamespace(
         PRNGKey=lambda seed: seed, split=lambda k: (k + 1, k + 2)
     )
-    craftax_env = types.ModuleType("craftax.craftax_env")
+    craftax_env = _fake_module("craftax.craftax_env")
     craftax_env.make_craftax_env_from_name = lambda name, auto_reset: _FakeCraftaxEnv(
         "Pixels" in name
     )
     names = {name.upper(): i for i, name in enumerate(CRAFTER_ACHIEVEMENTS)}
-    constants = types.ModuleType("craftax.craftax_classic.constants")
+    constants = _fake_module("craftax.craftax_classic.constants")
     constants.Achievement = enum.Enum("Achievement", names)
     for name, module in {
         "jax": jax,
-        "craftax": types.ModuleType("craftax"),
+        "craftax": _fake_module("craftax"),
         "craftax.craftax_env": craftax_env,
-        "craftax.craftax_classic": types.ModuleType("craftax.craftax_classic"),
+        "craftax.craftax_classic": _fake_module("craftax.craftax_classic"),
         "craftax.craftax_classic.constants": constants,
     }.items():
         monkeypatch.setitem(sys.modules, name, module)

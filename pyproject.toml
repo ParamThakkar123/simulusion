@@ -86,8 +86,7 @@ ml-agents = [
 # dm-control requires the `labmaze` distribution, whose newest release (1.0.6)
 # publishes wheels only up to CPython 3.12. On 3.13 pip therefore builds it from
 # source, which needs Bazel and a C++ toolchain. `labmaze-new` is the same
-# package built with setuptools instead of Bazel (source in third_party/labmaze),
-# and provides the `labmaze` module that `dm_control` imports. 0.0.3 compiles the
+# package built with setuptools instead of Bazel, and provides the `labmaze` module that `dm_control` imports. 0.0.3 compiles the
 # native extension that `labmaze.RandomMaze` needs -- Memory Maze and
 # `dm_control.locomotion` mazes use it -- and falls back to pure Python without
 # a C++ compiler. `dm_control.suite` does not need the extension.

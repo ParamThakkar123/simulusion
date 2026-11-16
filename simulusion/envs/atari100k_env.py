@@ -49,38 +49,34 @@ from typing import Any
 
 import numpy as np
 
+from simulusion.configs.diamond_config import ATARI_100K_GAMES
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
 
-#: The 26 Atari 100k games, as ALE ROM ids.
-ATARI_100K_ROMS = (
-    "alien",
-    "amidar",
-    "assault",
-    "asterix",
-    "bank_heist",
-    "battle_zone",
-    "boxing",
-    "breakout",
-    "chopper_command",
-    "crazy_climber",
-    "demon_attack",
-    "freeway",
-    "frostbite",
-    "gopher",
-    "hero",
-    "jamesbond",
-    "kangaroo",
-    "krull",
-    "kung_fu_master",
-    "ms_pacman",
-    "pong",
-    "private_eye",
-    "qbert",
-    "road_runner",
-    "seaquest",
-    "up_n_down",
-)
+
+def _rom_id(game: str) -> str:
+    """Spell a game name as an ALE ROM id, without checking that it exists.
+
+    ``"ALE/MsPacman-v5"``, ``"MsPacmanNoFrameskip-v4"``, ``"MsPacman"`` and
+    ``"atari100k_ms_pacman"`` all become ``"ms_pacman"``.
+    """
+    name = str(game).strip()
+    if "/" in name:
+        name = name.split("/", 1)[1]
+    name = re.sub(r"(NoFrameskip|Deterministic)?-v\d+$", "", name)
+    for prefix in ("atari100k_", "atari_"):
+        if name.lower().startswith(prefix):
+            name = name[len(prefix) :]
+    if not name.islower():
+        # "MsPacman" -> "Ms_Pacman", "UpNDown" -> "Up_N_Down".
+        name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", name)
+    name = name.lower().replace("-", "_")
+    return {"james_bond": "jamesbond", "up_and_down": "up_n_down"}.get(name, name)
+
+
+#: The 26 Atari 100k games as ALE ROM ids, from the shared
+#: :data:`simulusion.configs.ATARI_100K_GAMES` list.
+ATARI_100K_ROMS = tuple(_rom_id(game) for game in ATARI_100K_GAMES)
 
 LIFE_LOSS_MODES = ("ignore", "terminate")
 RESIZE_MODES = ("pillow", "area")
@@ -216,19 +212,7 @@ def normalize_atari_game(game: str) -> str:
     ``"MsPacman-v5"``, ``"ms_pacman"`` and DreamerV3's ``"atari100k_ms_pacman"``.
     ``"james_bond"`` is accepted for ``"jamesbond"``.
     """
-    name = str(game).strip()
-    if "/" in name:
-        name = name.split("/", 1)[1]
-    name = re.sub(r"(NoFrameskip|Deterministic)?-v\d+$", "", name)
-    for prefix in ("atari100k_", "atari_"):
-        if name.lower().startswith(prefix):
-            name = name[len(prefix) :]
-    if not name.islower():
-        # "MsPacman" -> "Ms_Pacman", "UpNDown" -> "Up_N_Down".
-        name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", name)
-    name = name.lower().replace("-", "_")
-    aliases = {"james_bond": "jamesbond", "up_and_down": "up_n_down"}
-    name = aliases.get(name, name)
+    name = _rom_id(game)
     try:
         from ale_py import roms
 

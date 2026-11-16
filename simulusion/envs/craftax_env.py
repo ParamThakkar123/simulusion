@@ -39,6 +39,7 @@ import numpy as np
 
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
+from simulusion.envs.brax_env import _require_module
 from simulusion.envs._images import to_chw_uint8, to_hwc_uint8
 
 CRAFTAX_ENVS = (
@@ -75,15 +76,8 @@ def normalize_craftax_env(name: str) -> str:
 
 
 def _require_craftax() -> tuple[Any, Any]:
-    try:
-        jax = importlib.import_module("jax")
-        craftax_env = importlib.import_module("craftax.craftax_env")
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "The Craftax backend requires the 'craftax' package (and JAX). "
-            "Install it with `pip install simulusion[craftax]`."
-        ) from exc
-    return jax, craftax_env
+    hint = "Install it with `pip install simulusion[craftax]`."
+    return _require_module("jax", hint), _require_module("craftax.craftax_env", hint)
 
 
 def _achievement_names(env_name: str) -> list[str]:
