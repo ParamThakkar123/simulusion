@@ -15,29 +15,38 @@ import numpy as np
 class OneHotActionSpace(gym.spaces.Box):
     """A ``Box[-1, 1]^n`` space whose samples are one-hot-like discrete actions.
 
-    Simulusion's discrete image adapters expose actions this way. ``n`` is the
+    Every discrete adapter exposes actions this way: BSuite, DMLab, Minecraft
+    Diamond, Procgen, Crafter, Memory Maze, Atari 100k and Craftax. ``n`` is the
     number of discrete actions, and the adapters accept either such a vector or
     an integer index, decoded by
     :func:`simulusion.envs._actions.encode_discrete_action`.
+
+    ``sample`` draws a uniformly random action from the space's own generator,
+    so a seeded space yields the same actions every run. ``seed()`` with no
+    argument draws the next seed from that generator, keeping the sequence
+    deterministic.
     """
 
     # Marks the Box as a one-hot discrete choice, so agents that pick their
-    # policy from the action space use a categorical one, not a Gaussian (as
-    # the BSuite, DMLab and Minecraft spaces do).
+    # policy from the action space use a categorical one, not a Gaussian.
     one_hot = True
 
     def __init__(self, n: int, seed: int | None = None):
         self.n = int(n)
+        if self.n < 1:
+            raise ValueError(f"A one-hot action space needs n >= 1, got {n}.")
         self._rng = np.random.default_rng(seed)
         super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
 
     def seed(self, seed: int | None = None) -> list[int]:
         if seed is None:
-            seed = int(np.random.default_rng().integers(0, 2**31 - 1))
+            seed = int(self._rng.integers(0, 2**31 - 1))
         self._rng = np.random.default_rng(int(seed))
         return [int(seed)]
 
     def sample(self, mask: Any = None, probability: Any = None) -> np.ndarray:
+        # Masked sampling is not supported; the arguments exist for
+        # gymnasium's Space.sample signature.
         del mask, probability
         action = -np.ones((self.n,), dtype=np.float32)
         action[int(self._rng.integers(0, self.n))] = 1.0

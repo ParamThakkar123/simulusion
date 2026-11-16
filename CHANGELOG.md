@@ -52,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
 
 ### Changed
+- Every discrete adapter (BSuite, DMLab, Minecraft Diamond, Procgen and the new
+  benchmarks) uses one shared one-hot action space instead of a private copy
+  each. Procgen's now carries `one_hot = True` like the others, so agents treat
+  its actions as categorical. Seeded action samples are unchanged.
 - The `dmc` extras and `simulusion.install_dmc` require `labmaze-new>=0.0.3`,
   which builds labmaze's native extension with setuptools instead of Bazel, so
   `labmaze.RandomMaze` works on CPython 3.13, including Windows.
