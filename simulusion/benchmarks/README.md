@@ -32,6 +32,18 @@ Design Notes
 - `metrics.py` contains basic aggregate computations (mean, median, IQM) and a
   simple bootstrap CI helper.
 
+Atari 100k environments
+-----------------------
+
+`atari_100k.py` (DIAMOND) and `simulusion/training/run_atari_100k.py` (IRIS)
+train and score agents; each builds its environments through its own trainer.
+For an Atari 100k environment with a specific paper's preprocessing (IRIS,
+DIAMOND, STORM or DreamerV3 sticky actions, no-op starts, life-loss handling,
+frame limit and resize), use `simulusion.envs.Atari100kEnv(game,
+protocol=...)`, or `env_backend="atari100k"` for Dreamer. The game list and
+human/random reference scores are shared: `ATARI_100K_GAMES`, `HUMAN_SCORES`
+and `RANDOM_SCORES` in `simulusion.configs`.
+
 Extending
 ---------
 

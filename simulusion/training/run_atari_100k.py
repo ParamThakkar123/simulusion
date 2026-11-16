@@ -6,6 +6,11 @@ Computes human-normalized scores and compares to baselines.
 """
 
 from simulusion.training.train_iris import IRISTrainer
+from simulusion.configs.diamond_config import (
+    ATARI_100K_GAMES as _CONFIG_GAMES,
+    HUMAN_SCORES as _CONFIG_HUMAN,
+    RANDOM_SCORES as _CONFIG_RANDOM,
+)
 from simulusion.configs.iris_config import IRISConfig
 import numpy as np
 import json
@@ -13,98 +18,19 @@ import os
 from typing import Any, List, Dict, Optional, cast
 
 
-# Atari 100k benchmark games
-ATARI_100K_GAMES = [
-    "ALE/Alien-v5",
-    "ALE/Amidar-v5",
-    "ALE/Assault-v5",
-    "ALE/Asterix-v5",
-    "ALE/BankHeist-v5",
-    "ALE/BattleZone-v5",
-    "ALE/Boxing-v5",
-    "ALE/Breakout-v5",
-    "ALE/ChopperCommand-v5",
-    "ALE/CrazyClimber-v5",
-    "ALE/DemonAttack-v5",
-    "ALE/Freeway-v5",
-    "ALE/Frostbite-v5",
-    "ALE/Gopher-v5",
-    "ALE/Hero-v5",
-    "ALE/Jamesbond-v5",
-    "ALE/Kangaroo-v5",
-    "ALE/Krull-v5",
-    "ALE/KungFuMaster-v5",
-    "ALE/MsPacman-v5",
-    "ALE/Pong-v5",
-    "ALE/PrivateEye-v5",
-    "ALE/Qbert-v5",
-    "ALE/RoadRunner-v5",
-    "ALE/Seaquest-v5",
-    "ALE/UpNDown-v5",
-]
+def _short(game: str) -> str:
+    """``"Pong-v5"`` -> ``"Pong"``."""
+    return game.removesuffix("-v5")
 
 
-# Human scores for computing human-normalized score
-# These are from the paper (Wang et al., 2016)
-HUMAN_SCORES = {
-    "Alien": 7127.7,
-    "Amidar": 1719.5,
-    "Assault": 742.0,
-    "Asterix": 8503.3,
-    "BankHeist": 753.1,
-    "BattleZone": 37187.5,
-    "Boxing": 12.1,
-    "Breakout": 30.5,
-    "ChopperCommand": 7387.8,
-    "CrazyClimber": 35829.4,
-    "DemonAttack": 1971.0,
-    "Freeway": 29.6,
-    "Frostbite": 4334.7,
-    "Gopher": 2412.5,
-    "Hero": 30826.4,
-    "Jamesbond": 302.8,
-    "Kangaroo": 3035.0,
-    "Krull": 2665.5,
-    "KungFuMaster": 22736.3,
-    "MsPacman": 6951.6,
-    "Pong": 14.6,
-    "PrivateEye": 69571.3,
-    "Qbert": 13455.0,
-    "RoadRunner": 7845.0,
-    "Seaquest": 42054.7,
-    "UpNDown": 11693.2,
-}
+# The game list and reference scores are the shared ones in
+# simulusion.configs, re-keyed for this runner: Gymnasium ids ("ALE/Pong-v5")
+# for the games, and bare names ("Pong") for the score tables.
+ATARI_100K_GAMES = [f"ALE/{game}" for game in _CONFIG_GAMES]
 
-
-# Random baseline scores
-RANDOM_SCORES = {
-    "Alien": 227.8,
-    "Amidar": 5.8,
-    "Assault": 222.4,
-    "Asterix": 210.0,
-    "BankHeist": 14.2,
-    "BattleZone": 2360.0,
-    "Boxing": 0.1,
-    "Breakout": 1.7,
-    "ChopperCommand": 811.0,
-    "CrazyClimber": 10780.5,
-    "DemonAttack": 152.1,
-    "Freeway": 0.0,
-    "Frostbite": 65.2,
-    "Gopher": 257.6,
-    "Hero": 1027.0,
-    "Jamesbond": 29.0,
-    "Kangaroo": 52.0,
-    "Krull": 1598.0,
-    "KungFuMaster": 258.5,
-    "MsPacman": 307.3,
-    "Pong": -20.7,
-    "PrivateEye": 24.9,
-    "Qbert": 163.9,
-    "RoadRunner": 11.5,
-    "Seaquest": 68.4,
-    "UpNDown": 533.4,
-}
+# Human scores (Wang et al., 2016) and random-agent scores, keyed by game name.
+HUMAN_SCORES = {_short(game): score for game, score in _CONFIG_HUMAN.items()}
+RANDOM_SCORES = {_short(game): score for game, score in _CONFIG_RANDOM.items()}
 
 
 def game_name(game: str) -> str:
