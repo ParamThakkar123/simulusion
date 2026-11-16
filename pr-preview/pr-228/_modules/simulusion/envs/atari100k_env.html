@@ -738,38 +738,34 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.configs.diamond_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATARI_100K_GAMES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_discrete_action</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">finalize_step_info</span>
 
-<span class="c1">#: The 26 Atari 100k games, as ALE ROM ids.</span>
-<span class="n">ATARI_100K_ROMS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"alien"</span><span class="p">,</span>
-    <span class="s2">"amidar"</span><span class="p">,</span>
-    <span class="s2">"assault"</span><span class="p">,</span>
-    <span class="s2">"asterix"</span><span class="p">,</span>
-    <span class="s2">"bank_heist"</span><span class="p">,</span>
-    <span class="s2">"battle_zone"</span><span class="p">,</span>
-    <span class="s2">"boxing"</span><span class="p">,</span>
-    <span class="s2">"breakout"</span><span class="p">,</span>
-    <span class="s2">"chopper_command"</span><span class="p">,</span>
-    <span class="s2">"crazy_climber"</span><span class="p">,</span>
-    <span class="s2">"demon_attack"</span><span class="p">,</span>
-    <span class="s2">"freeway"</span><span class="p">,</span>
-    <span class="s2">"frostbite"</span><span class="p">,</span>
-    <span class="s2">"gopher"</span><span class="p">,</span>
-    <span class="s2">"hero"</span><span class="p">,</span>
-    <span class="s2">"jamesbond"</span><span class="p">,</span>
-    <span class="s2">"kangaroo"</span><span class="p">,</span>
-    <span class="s2">"krull"</span><span class="p">,</span>
-    <span class="s2">"kung_fu_master"</span><span class="p">,</span>
-    <span class="s2">"ms_pacman"</span><span class="p">,</span>
-    <span class="s2">"pong"</span><span class="p">,</span>
-    <span class="s2">"private_eye"</span><span class="p">,</span>
-    <span class="s2">"qbert"</span><span class="p">,</span>
-    <span class="s2">"road_runner"</span><span class="p">,</span>
-    <span class="s2">"seaquest"</span><span class="p">,</span>
-    <span class="s2">"up_n_down"</span><span class="p">,</span>
-<span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rom_id</span><span class="p">(</span><span class="n">game</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Spell a game name as an ALE ROM id, without checking that it exists.</span>
+
+<span class="sd">    ``"ALE/MsPacman-v5"``, ``"MsPacmanNoFrameskip-v4"``, ``"MsPacman"`` and</span>
+<span class="sd">    ``"atari100k_ms_pacman"`` all become ``"ms_pacman"``.</span>
+<span class="sd">    """</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">game</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(NoFrameskip|Deterministic)?-v\d+$"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"atari100k_"</span><span class="p">,</span> <span class="s2">"atari_"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="p">:]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">islower</span><span class="p">():</span>
+        <span class="c1"># "MsPacman" -&gt; "Ms_Pacman", "UpNDown" -&gt; "Up_N_Down".</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;=[a-z0-9])(?=[A-Z])|(?&lt;=[A-Z])(?=[A-Z][a-z])"</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"james_bond"</span><span class="p">:</span> <span class="s2">"jamesbond"</span><span class="p">,</span> <span class="s2">"up_and_down"</span><span class="p">:</span> <span class="s2">"up_n_down"</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+
+<span class="c1">#: The 26 Atari 100k games as ALE ROM ids, from the shared</span>
+<span class="c1">#: :data:`simulusion.configs.ATARI_100K_GAMES` list.</span>
+<span class="n">ATARI_100K_ROMS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_rom_id</span><span class="p">(</span><span class="n">game</span><span class="p">)</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">ATARI_100K_GAMES</span><span class="p">)</span>
 
 <span class="n">LIFE_LOSS_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="s2">"terminate"</span><span class="p">)</span>
 <span class="n">RESIZE_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pillow"</span><span class="p">,</span> <span class="s2">"area"</span><span class="p">)</span>
@@ -905,19 +901,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    ``"MsPacman-v5"``, ``"ms_pacman"`` and DreamerV3's ``"atari100k_ms_pacman"``.</span>
 <span class="sd">    ``"james_bond"`` is accepted for ``"jamesbond"``.</span>
 <span class="sd">    """</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">game</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="k">if</span> <span class="s2">"/"</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(NoFrameskip|Deterministic)?-v\d+$"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"atari100k_"</span><span class="p">,</span> <span class="s2">"atari_"</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="p">:]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">islower</span><span class="p">():</span>
-        <span class="c1"># "MsPacman" -&gt; "Ms_Pacman", "UpNDown" -&gt; "Up_N_Down".</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(?&lt;=[a-z0-9])(?=[A-Z])|(?&lt;=[A-Z])(?=[A-Z][a-z])"</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">)</span>
-    <span class="n">aliases</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"james_bond"</span><span class="p">:</span> <span class="s2">"jamesbond"</span><span class="p">,</span> <span class="s2">"up_and_down"</span><span class="p">:</span> <span class="s2">"up_n_down"</span><span class="p">}</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">aliases</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">_rom_id</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">ale_py</span><span class="w"> </span><span class="kn">import</span> <span class="n">roms</span>
 

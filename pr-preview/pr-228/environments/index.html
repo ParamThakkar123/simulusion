@@ -321,11 +321,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
-<li class="toctree-l2"><a class="reference internal" href="atari100k.html">Atari 100k</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crafter.html">Crafter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="craftax.html">Craftax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="memory_maze.html">Memory Maze</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
@@ -442,11 +438,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l1"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l1"><a class="reference internal" href="atari.html">Atari</a></li>
-<li class="toctree-l1"><a class="reference internal" href="atari100k.html">Atari 100k</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bsuite.html">BSuite</a></li>
-<li class="toctree-l1"><a class="reference internal" href="crafter.html">Crafter</a></li>
-<li class="toctree-l1"><a class="reference internal" href="craftax.html">Craftax</a></li>
-<li class="toctree-l1"><a class="reference internal" href="memory_maze.html">Memory Maze</a></li>
 <li class="toctree-l1"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
@@ -512,30 +504,6 @@
 <td><p>ALE RGB/RAM observations</p></td>
 <td><p>Discrete Atari actions</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="atari100k.html"><span class="std std-doc">Atari 100k</span></a></p></td>
-<td><p>The 26 Atari 100k games under the exact IRIS, DIAMOND, STORM or DreamerV3 preprocessing</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Atari100kEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_atari100k_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;atari100k&quot;</span></code></p></td>
-<td><p>Dict with 64x64 <code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
-<td><p>One-hot vector over the minimal action set</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="crafter.html"><span class="std std-doc">Crafter</span></a></p></td>
-<td><p>DreamerV3’s open-world survival benchmark, scored by achievement success rates</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">CrafterEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">crafter_score</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;crafter&quot;</span></code></p></td>
-<td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
-<td><p>One-hot vector over 17 actions</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="craftax.html"><span class="std std-doc">Craftax</span></a></p></td>
-<td><p>JAX Crafter and its extended version</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">CraftaxEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_craftax_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;craftax&quot;</span></code></p></td>
-<td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code>, or <code class="docutils literal notranslate"><span class="pre">state</span></code> for symbolic variants</p></td>
-<td><p>One-hot vector over 17 or 43 actions</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="memory_maze.html"><span class="std std-doc">Memory Maze</span></a></p></td>
-<td><p>Long-horizon memory: 3D navigation to remembered targets</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">MemoryMazeEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_memory_maze_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;memory_maze&quot;</span></code></p></td>
-<td><p>Dict with <code class="docutils literal notranslate"><span class="pre">image</span></code> and <code class="docutils literal notranslate"><span class="pre">target_color</span></code></p></td>
-<td><p>One-hot vector over 6 actions</p></td>
-</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="procgen.html"><span class="std std-doc">Procgen</span></a></p></td>
 <td><p>Procedurally generated benchmark games</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ProcgenImageEnv</span></code>, <code class="docutils literal notranslate"><span class="pre">make_procgen_env</span></code>, <code class="docutils literal notranslate"><span class="pre">env_backend=&quot;procgen&quot;</span></code></p></td>
@@ -586,15 +554,12 @@
 <h2>Shared conventions<a class="headerlink" href="#shared-conventions" title="Link to this heading">#</a></h2>
 <p>Most Simulusion training code expects image observations as a dictionary entry named <code class="docutils literal notranslate"><span class="pre">image</span></code> with channel-first shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code> and <code class="docutils literal notranslate"><span class="pre">uint8</span></code> values. Backend adapters that wrap vector-only environments synthesize an image representation so pixel-based agents can still run.</p>
 <p>DIAMOND-style Atari support is documented on the Atari page as a preprocessing helper for Atari rollouts. It is not a separate environment backend.</p>
-<p>Dreamer environment construction applies a standard wrapper stack after creating DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen, BSuite, Minecraft, Crafter, Memory Maze, Atari 100k, Craftax, Brax, or Unity environments:</p>
+<p>Dreamer environment construction applies a standard wrapper stack after creating DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen, BSuite, Minecraft, Brax, or Unity environments:</p>
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ActionRepeat</span></code> repeats each selected action for <code class="docutils literal notranslate"><span class="pre">cfg.action_repeat</span></code> environment steps.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NormalizeActions</span></code> exposes finite continuous action bounds as normalized <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> policy outputs.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> truncates episodes after <code class="docutils literal notranslate"><span class="pre">cfg.time_limit</span> <span class="pre">//</span> <span class="pre">cfg.action_repeat</span></code> wrapper steps.</p></li>
 </ol>
-<p>DMLab, BSuite, Minecraft, Crafter, Memory Maze, Atari 100k and Craftax are
-benchmarks that fix their own action repeat and episode length. For them
-<code class="docutils literal notranslate"><span class="pre">cfg.action_repeat</span></code> must be 1 and no <code class="docutils literal notranslate"><span class="pre">TimeLimit</span></code> is applied.</p>
 <p>Use <code class="docutils literal notranslate"><span class="pre">simulusion</span> <span class="pre">envs</span> <span class="pre">list</span></code> to print the lightweight backend catalog used by the CLI.</p>
 </section>
 </section>

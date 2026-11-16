@@ -321,11 +321,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
-<li class="toctree-l2"><a class="reference internal" href="atari100k.html">Atari 100k</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crafter.html">Crafter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="craftax.html">Craftax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="memory_maze.html">Memory Maze</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
@@ -666,106 +662,6 @@
 </table>
 </div>
 </section>
-<section id="crafter-crafter-env-py">
-<h3>Crafter (<code class="docutils literal notranslate"><span class="pre">crafter_env.py</span></code>)<a class="headerlink" href="#crafter-crafter-env-py" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Always?</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">achievements</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>Unlock count of each of the 22 achievements so far in the episode; the final step’s dict feeds <code class="docutils literal notranslate"><span class="pre">crafter_score</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inventory</span></code>, <code class="docutils literal notranslate"><span class="pre">player_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">semantic</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>Passed through from Crafter.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="memory-maze-memory-maze-env-py">
-<h3>Memory Maze (<code class="docutils literal notranslate"><span class="pre">memory_maze_env.py</span></code>)<a class="headerlink" href="#memory-maze-memory-maze-env-py" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Always?</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>The current target’s RGB colour (<code class="docutils literal notranslate"><span class="pre">target_color</span></code>).</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="atari-100k-atari100k-env-py">
-<h3>Atari 100k (<code class="docutils literal notranslate"><span class="pre">atari100k_env.py</span></code>)<a class="headerlink" href="#atari-100k-atari100k-env-py" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Always?</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lives</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>Lives left.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">life_lost</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>A life was lost during this step. With <code class="docutils literal notranslate"><span class="pre">life_loss=&quot;terminate&quot;</span></code> this also ends the episode.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">game_over</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>The game itself ended; the next reset starts a new game.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_frame_number</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>Emulator frames since the last real reset, including no-ops.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="craftax-craftax-env-py">
-<h3>Craftax (<code class="docutils literal notranslate"><span class="pre">craftax_env.py</span></code>)<a class="headerlink" href="#craftax-craftax-env-py" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Always?</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">achievements</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>1 for each achievement unlocked so far in the episode, else 0.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timestep</span></code></p></td>
-<td><p>Yes</p></td>
-<td><p>Steps taken in the episode.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">craftax_score</span></code></p></td>
-<td><p>No</p></td>
-<td><p>Craftax’s own episode score, on the final step.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vector_observation</span></code></p></td>
-<td><p>No</p></td>
-<td><p>The observation vector, for symbolic variants.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
 <section id="procgen-procgen-env-py">
 <h3>Procgen (<code class="docutils literal notranslate"><span class="pre">procgen_env.py</span></code>)<a class="headerlink" href="#procgen-procgen-env-py" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -938,10 +834,6 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmind-lab-dmlab-py">DeepMind Lab (<code class="docutils literal notranslate"><span class="pre">dmlab.py</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bsuite-bsuite-env-py">BSuite (<code class="docutils literal notranslate"><span class="pre">bsuite_env.py</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atari-diamond-diamond-atari-py">Atari / Diamond (<code class="docutils literal notranslate"><span class="pre">diamond_atari.py</span></code>)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crafter-crafter-env-py">Crafter (<code class="docutils literal notranslate"><span class="pre">crafter_env.py</span></code>)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#memory-maze-memory-maze-env-py">Memory Maze (<code class="docutils literal notranslate"><span class="pre">memory_maze_env.py</span></code>)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atari-100k-atari100k-env-py">Atari 100k (<code class="docutils literal notranslate"><span class="pre">atari100k_env.py</span></code>)</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#craftax-craftax-env-py">Craftax (<code class="docutils literal notranslate"><span class="pre">craftax_env.py</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#procgen-procgen-env-py">Procgen (<code class="docutils literal notranslate"><span class="pre">procgen_env.py</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#world-model-world-model-env-py">World Model (<code class="docutils literal notranslate"><span class="pre">world_model_env.py</span></code>)</a></li>
 </ul>

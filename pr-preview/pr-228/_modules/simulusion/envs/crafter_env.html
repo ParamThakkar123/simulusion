@@ -709,7 +709,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
@@ -717,6 +716,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_discrete_action</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">finalize_step_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs.brax_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">_require_module</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._images</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_chw_uint8</span><span class="p">,</span> <span class="n">to_hwc_uint8</span>
 
 <span class="c1">#: The 22 Crafter achievements, in the order of ``crafter.constants``.</span>
@@ -778,13 +778,10 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_require_crafter</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">"crafter"</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ModuleNotFoundError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span>
-            <span class="s2">"The Crafter backend requires the 'crafter' package. Install it with "</span>
-            <span class="s2">"`pip install simulusion[crafter]` or `pip install crafter`."</span>
-        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">_require_module</span><span class="p">(</span>
+        <span class="s2">"crafter"</span><span class="p">,</span>
+        <span class="s2">"Install it with `pip install simulusion[crafter]` or `pip install crafter`."</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">crafter_success_rates</span><span class="p">(</span>

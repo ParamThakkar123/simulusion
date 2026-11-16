@@ -18,8 +18,9 @@ install fails. Simulusion therefore leaves dm-control out of the `dmc` extra on 
 finishes the job:
 
 1. installs [`labmaze-new`](https://pypi.org/project/labmaze-new/), the same
-   package built with setuptools instead of Bazel, which provides the `labmaze`
-   module `dm_control` imports;
+   package with the Bazel extension made opt-in via
+   `LABMAZE_BUILD_BAZEL_EXTENSIONS=1`, so it installs as pure Python and provides
+   the `labmaze` module `dm_control` imports;
 2. installs `dm-control` with `--no-deps`, so pip never resolves that pin;
 3. installs dm-control's remaining dependencies explicitly.
 
@@ -44,12 +45,10 @@ pip will warn that `dm-control ... requires labmaze, which is not installed`.
 That is cosmetic: `labmaze-new` provides the module under a different
 distribution name, which pip cannot match to the requirement.
 
-`labmaze-new` 0.0.3 compiles labmaze's native extension, which provides
-`labmaze.RandomMaze` for Memory Maze and `dm_control.locomotion` mazes; that
-needs a C++17 compiler (MSVC on Windows). Without one it installs as pure
-Python, which is still enough for `dm_control.suite`, all this backend uses.
-The source is in `third_party/labmaze/`; `pip install ./third_party/labmaze`
-builds it from the repository.
+Only `dm_control.locomotion` maze generation needs labmaze's compiled extension.
+`dm_control.suite`, which is all this backend uses, does not. If you need the
+locomotion mazes, install with `LABMAZE_BUILD_BAZEL_EXTENSIONS=1` and Bazel
+available, or use a Python 3.12 environment.
 
 ## Main API
 

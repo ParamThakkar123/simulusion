@@ -321,11 +321,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gym.html">Gym and Gymnasium</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brax.html">Brax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="atari.html">Atari</a></li>
-<li class="toctree-l2"><a class="reference internal" href="atari100k.html">Atari 100k</a></li>
 <li class="toctree-l2"><a class="reference internal" href="bsuite.html">BSuite</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crafter.html">Crafter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="craftax.html">Craftax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="memory_maze.html">Memory Maze</a></li>
 <li class="toctree-l2"><a class="reference internal" href="minecraft.html">Minecraft Diamond</a></li>
 <li class="toctree-l2"><a class="reference internal" href="procgen.html">Procgen</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mujoco.html">MuJoCo</a></li>
@@ -453,8 +449,9 @@ install fails. Simulusion therefore leaves dm-control out of the <code class="do
 finishes the job:</p>
 <ol class="arabic simple">
 <li><p>installs <a class="reference external" href="https://pypi.org/project/labmaze-new/"><code class="docutils literal notranslate"><span class="pre">labmaze-new</span></code></a>, the same
-package built with setuptools instead of Bazel, which provides the <code class="docutils literal notranslate"><span class="pre">labmaze</span></code>
-module <code class="docutils literal notranslate"><span class="pre">dm_control</span></code> imports;</p></li>
+package with the Bazel extension made opt-in via
+<code class="docutils literal notranslate"><span class="pre">LABMAZE_BUILD_BAZEL_EXTENSIONS=1</span></code>, so it installs as pure Python and provides
+the <code class="docutils literal notranslate"><span class="pre">labmaze</span></code> module <code class="docutils literal notranslate"><span class="pre">dm_control</span></code> imports;</p></li>
 <li><p>installs <code class="docutils literal notranslate"><span class="pre">dm-control</span></code> with <code class="docutils literal notranslate"><span class="pre">--no-deps</span></code>, so pip never resolves that pin;</p></li>
 <li><p>installs dm-control’s remaining dependencies explicitly.</p></li>
 </ol>
@@ -475,12 +472,10 @@ For the same reason <code class="docutils literal notranslate"><span class="pre"
 <p>pip will warn that <code class="docutils literal notranslate"><span class="pre">dm-control</span> <span class="pre">...</span> <span class="pre">requires</span> <span class="pre">labmaze,</span> <span class="pre">which</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">installed</span></code>.
 That is cosmetic: <code class="docutils literal notranslate"><span class="pre">labmaze-new</span></code> provides the module under a different
 distribution name, which pip cannot match to the requirement.</p>
-<p><code class="docutils literal notranslate"><span class="pre">labmaze-new</span></code> 0.0.3 compiles labmaze’s native extension, which provides
-<code class="docutils literal notranslate"><span class="pre">labmaze.RandomMaze</span></code> for Memory Maze and <code class="docutils literal notranslate"><span class="pre">dm_control.locomotion</span></code> mazes; that
-needs a C++17 compiler (MSVC on Windows). Without one it installs as pure
-Python, which is still enough for <code class="docutils literal notranslate"><span class="pre">dm_control.suite</span></code>, all this backend uses.
-The source is in <code class="docutils literal notranslate"><span class="pre">third_party/labmaze/</span></code>; <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">./third_party/labmaze</span></code>
-builds it from the repository.</p>
+<p>Only <code class="docutils literal notranslate"><span class="pre">dm_control.locomotion</span></code> maze generation needs labmaze’s compiled extension.
+<code class="docutils literal notranslate"><span class="pre">dm_control.suite</span></code>, which is all this backend uses, does not. If you need the
+locomotion mazes, install with <code class="docutils literal notranslate"><span class="pre">LABMAZE_BUILD_BAZEL_EXTENSIONS=1</span></code> and Bazel
+available, or use a Python 3.12 environment.</p>
 </section>
 <section id="main-api">
 <h2>Main API<a class="headerlink" href="#main-api" title="Link to this heading">#</a></h2>
