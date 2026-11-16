@@ -1,19 +1,19 @@
 """Install the DeepMind Control backend, including on CPython 3.13.
 
 ``pip install simulusion[dmc]`` covers Python 3.12 and below. On 3.13 it installs
-the pure-Python ``labmaze-new`` but leaves ``dm_control`` out, because
+``labmaze-new`` but leaves ``dm_control`` out, because
 dm-control pins the ``labmaze`` distribution whose newest release (1.0.6)
 publishes wheels only through CPython 3.12. Resolving that pin on 3.13 builds
 labmaze from source with Bazel, which fails the whole install.
 
-This module finishes the job: it installs ``labmaze-new`` (same package, with the
-Bazel extension made opt-in through ``LABMAZE_BUILD_BAZEL_EXTENSIONS=1``), then
-``dm-control`` with ``--no-deps`` so pip never looks at that pin, then
-dm-control's remaining dependencies explicitly.
+This module finishes the job: it installs ``labmaze-new`` (same package, built
+with setuptools instead of Bazel), then ``dm-control`` with ``--no-deps`` so pip
+never looks at that pin, then dm-control's remaining dependencies explicitly.
 
-Only ``dm_control.locomotion`` maze generation needs labmaze's compiled
-extension. ``dm_control.suite``, which is all Simulusion's dmc backend uses, does
-not, so the pure-Python module is enough.
+``labmaze-new`` 0.0.3 compiles labmaze's native extension, which provides
+``labmaze.RandomMaze`` for Memory Maze and ``dm_control.locomotion`` mazes.
+Without a C++17 compiler it installs as pure Python, which is still enough for
+``dm_control.suite``, the only part Simulusion's dmc backend uses.
 
 Usage::
 
@@ -47,7 +47,7 @@ DM_CONTROL_DEPS: tuple[str, ...] = (
     "gymnasium>=1.2.2",
 )
 
-LABMAZE = "labmaze-new>=0.0.2"
+LABMAZE = "labmaze-new>=0.0.3"
 
 # dm-control raises its `mujoco` floor with nearly every release, and upgrading
 # mujoco to satisfy the newest one breaks other backends in the same

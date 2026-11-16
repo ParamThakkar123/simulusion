@@ -86,11 +86,11 @@ ml-agents = [
 # dm-control requires the `labmaze` distribution, whose newest release (1.0.6)
 # publishes wheels only up to CPython 3.12. On 3.13 pip therefore builds it from
 # source, which needs Bazel and a C++ toolchain. `labmaze-new` is the same
-# package with the Bazel extension made opt-in (LABMAZE_BUILD_BAZEL_EXTENSIONS=1),
-# so it installs as pure Python and provides the `labmaze` module that
-# `dm_control` imports. `dm_control.suite` -- everything Simulusion's dmc backend
-# uses -- does not need the compiled extension; only `dm_control.locomotion`
-# maze generation does.
+# package built with setuptools instead of Bazel (source in third_party/labmaze),
+# and provides the `labmaze` module that `dm_control` imports. 0.0.3 compiles the
+# native extension that `labmaze.RandomMaze` needs -- Memory Maze and
+# `dm_control.locomotion` mazes use it -- and falls back to pure Python without
+# a C++ compiler. `dm_control.suite` does not need the extension.
 #
 # pip cannot tell that `labmaze-new` satisfies dm-control's `labmaze`
 # requirement, so on 3.13 install with `make install-dmc` (see the Makefile) or
@@ -98,10 +98,10 @@ ml-agents = [
 dmc = [
     # Scoped below 3.13: declaring dm-control there makes pip resolve its
     # `labmaze` pin and fail the whole install on the Bazel build. On 3.13 this
-    # extra installs the pure-Python `labmaze-new` instead, and dm-control is
+    # extra installs `labmaze-new` instead, and dm-control is
     # added with --no-deps by `make install-dmc` / `python -m simulusion.install_dmc`.
     "dm-control>=1.0.0; python_version < '3.13'",
-    "labmaze-new>=0.0.2; python_version >= '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
     "gymnasium>=1.2.2",
 ]
 # uv-only variant: dm-control unconditionally, relying on the
@@ -110,7 +110,7 @@ dmc = [
 # `python -m simulusion.install_dmc` instead.
 dmc-uv = [
     "dm-control>=1.0.0",
-    "labmaze-new>=0.0.2; python_version >= '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
     "gymnasium>=1.2.2",
 ]
 # Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
