@@ -1,4 +1,11 @@
-# DiT: Diffusion Transformer and Diffusion Models
+---
+og:description: "DiT and DDPM in PyTorch: Diffusion Transformer and denoising diffusion models as reusable world-model components in Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "DiT and DDPM in PyTorch: Diffusion Transformer and denoising diffusion models as reusable world-model components in Simulusion."
+---
+
+# DiT in PyTorch: Diffusion Transformers and DDPM
 
 This page covers the diffusion-based models in Simulusion: DDPM for image generation,
 DiT for scalable transformer-based diffusion, and DIAMOND for diffusion world models

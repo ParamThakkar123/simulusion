@@ -1,5 +1,8 @@
-Simulusion: World Models in PyTorch
-===================================
+Simulusion: A World Models Library for PyTorch
+==============================================
+
+.. meta::
+   :description lang=en: Simulusion is a PyTorch world models library and model-based RL library: Dreamer, PlaNet, IRIS, DIAMOND, Genie, DiT and I-JEPA behind one API.
 
 .. raw:: html
 
@@ -19,7 +22,8 @@ Simulusion: World Models in PyTorch
    }
    </script>
 
-Simulusion is a modular PyTorch library for world models: agents that learn how
+Simulusion is a modular PyTorch library for world models and model-based
+reinforcement learning: agents that learn how
 their environment works, then plan, act or generate inside that learned model.
 Dreamer, PlaNet, DIAMOND, IRIS, Genie, DiT and I-JEPA share one API, and their
 encoders, dynamics backbones and decoders are reusable parts.
@@ -103,19 +107,19 @@ model under *Algorithms* in the sidebar.
    datasets_guide
    losses_guide
    plugin_registry
-   world_models_deep_dive
+   World Models deep dive <world_models_deep_dive>
 
 .. toctree::
    :maxdepth: 1
    :caption: Algorithms
 
-   dreamer
-   planet
-   jepa
-   iris
-   dit
-   diamond
-   genie
+   Dreamer <dreamer>
+   PlaNet <planet>
+   I-JEPA <jepa>
+   IRIS <iris>
+   DiT <dit>
+   DIAMOND <diamond>
+   Genie <genie>
 
 .. toctree::
    :maxdepth: 1

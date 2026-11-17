@@ -1,4 +1,11 @@
-# DIAMOND
+---
+og:description: "DIAMOND in PyTorch: a diffusion world model that generates future frames and trains an actor-critic inside them, with Simulusion."
+myst:
+  html_meta:
+    "description lang=en": "DIAMOND in PyTorch: a diffusion world model that generates future frames and trains an actor-critic inside them, with Simulusion."
+---
+
+# DIAMOND in PyTorch: Diffusion World Models
 
 DIAMOND (**DI**ffusion **A**s a **M**odel **O**f e**N**vironment **D**reams) is Simulusion's diffusion-based world-model agent for pixel-control reinforcement learning. It learns a conditional image generator that predicts the next observation from recent frames and actions, then trains an actor-critic policy inside imagined rollouts from that learned simulator.
 
