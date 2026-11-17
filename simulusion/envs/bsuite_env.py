@@ -6,6 +6,7 @@ from typing import Any
 
 from simulusion.envs._contract import finalize_step_info
 from simulusion.envs._observations import add_optional_state_space
+from simulusion.envs._spaces import OneHotActionSpace
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -69,31 +70,6 @@ def list_bsuite_settings(environment: str) -> list[str]:
 def make_bsuite_env(bsuite_id: str, **kwargs: Any) -> "BSuiteImageEnv":
     """Create a Dreamer-compatible image wrapper around a BSuite task."""
     return BSuiteImageEnv(bsuite_id=bsuite_id, **kwargs)
-
-
-class _BSuiteDiscreteActionSpace(gym.spaces.Box):
-    """Box action space that samples normalized one-hot actions for BSuite."""
-
-    # Marks the Box as a one-hot discrete choice, so agents that pick their
-    # policy from the action space use a categorical one, not a Gaussian.
-    one_hot = True
-
-    def __init__(self, n: int, seed: int | None = None):
-        self.n = int(n)
-        self._rng = np.random.default_rng(seed)
-        super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
-
-    def seed(self, seed: int | None = None) -> list[int]:
-        self._rng = np.random.default_rng(seed)
-        return [seed] if seed is not None else []
-
-    def sample(
-        self, mask: Any | None = None, probability: Any | None = None
-    ) -> np.ndarray:
-        del mask, probability
-        action: np.ndarray = np.full((self.n,), -1.0, dtype=np.float32)
-        action[self._rng.integers(self.n)] = 1.0
-        return action
 
 
 class BSuiteImageEnv:
@@ -237,7 +213,7 @@ class BSuiteImageEnv:
         # this wrapper compatible with Gym-style callers.
         if seed is not None:
             self._seed = int(seed)
-            if isinstance(self._action_space, _BSuiteDiscreteActionSpace):
+            if isinstance(self._action_space, OneHotActionSpace):
                 self._action_space.seed(seed)
         if self._pending_reset_time_step is not None:
             time_step = self._pending_reset_time_step
@@ -293,7 +269,7 @@ class BSuiteImageEnv:
         if num_values is not None:
             n = int(num_values)
             self._discrete_n = n
-            return _BSuiteDiscreteActionSpace(n, seed=self._seed)
+            return OneHotActionSpace(n, seed=self._seed)
 
         minimum = np.asarray(getattr(action_spec, "minimum", -1.0), dtype=np.float32)
         maximum = np.asarray(getattr(action_spec, "maximum", 1.0), dtype=np.float32)

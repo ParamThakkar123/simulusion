@@ -115,7 +115,9 @@ def _has_discrete_actions(env: Any) -> bool:
 # Benchmarks whose environment defines the action repeat and episode length,
 # as in the DreamerV3 reference, which adds neither on top: DMLab levels end
 # their own episodes, Minecraft ends after minecraft_length steps and BSuite
-# episodes end by themselves. make_env applies no time_limit to them.
+# episodes end by themselves. Crafter (10000 steps), Memory Maze (its task
+# time limit), Craftax (its max_timesteps) and Atari 100k (the protocol's frame
+# limit and frame skip) do the same. make_env applies no time_limit to them.
 BENCHMARK_PROTOCOL_BACKENDS = frozenset(
     {
         "dmlab",
@@ -127,6 +129,12 @@ BENCHMARK_PROTOCOL_BACKENDS = frozenset(
         "bsuite",
         "behavior_suite",
         "behaviour_suite",
+        "crafter",
+        "memory_maze",
+        "memory-maze",
+        "atari100k",
+        "atari_100k",
+        "craftax",
     }
 )
 
@@ -135,14 +143,17 @@ def make_env(args: Any, evaluation: bool = False) -> Any:
     """Construct a Dreamer-compatible environment from `DreamerConfig` options.
 
     Supports DMC, DMLab, Gym/Gymnasium, MuJoCo, Gymnasium Robotics, Procgen,
-    Brax, BSuite, Minecraft Diamond, and Unity ML-Agents backends
-    and applies the standard wrapper stack: action repeat, action normalization,
-    and time limit.
+    Brax, BSuite, Minecraft Diamond, Crafter, Memory Maze, Atari 100k, Craftax
+    and Unity ML-Agents backends and applies the standard wrapper stack: action
+    repeat, action normalization, and time limit.
 
     ``evaluation=True`` builds an evaluation environment: it does not record
-    BSuite results, which must contain the training episodes only.
+    BSuite results, which must contain the training episodes only, and Atari
+    100k switches to the protocol's ``-eval`` variant when one exists (IRIS and
+    DIAMOND evaluate without life-loss episode ends).
 
-    DMLab, Minecraft and BSuite (:data:`BENCHMARK_PROTOCOL_BACKENDS`) keep the
+    DMLab, Minecraft, BSuite, Crafter, Memory Maze, Atari 100k and Craftax
+    (:data:`BENCHMARK_PROTOCOL_BACKENDS`) keep the
     reference's protocol: ``action_repeat`` must be 1 and ``time_limit`` is
     not applied, since the environment ends its own episodes.
     """
@@ -243,6 +254,28 @@ def make_env(args: Any, evaluation: bool = False) -> Any:
             break_speed=float(getattr(args, "minecraft_break_speed", 100.0)),
             length=int(getattr(args, "minecraft_length", 36000)),
         )
+    elif backend == "crafter":
+        from simulusion.envs.crafter_env import CrafterEnv
+
+        env = CrafterEnv(args.env, seed=args.seed, size=size)
+    elif backend in {"memory_maze", "memory-maze"}:
+        from simulusion.envs.memory_maze_env import MemoryMazeEnv
+
+        env = MemoryMazeEnv(args.env, seed=args.seed, size=size)
+    elif backend in {"atari100k", "atari_100k"}:
+        from simulusion.envs.atari100k_env import (
+            ATARI_100K_PROTOCOLS,
+            Atari100kEnv,
+        )
+
+        atari_protocol = str(getattr(args, "atari100k_protocol", "atari100k"))
+        if evaluation and f"{atari_protocol}-eval" in ATARI_100K_PROTOCOLS:
+            atari_protocol = f"{atari_protocol}-eval"
+        env = Atari100kEnv(args.env, protocol=atari_protocol, seed=args.seed, size=size)
+    elif backend == "craftax":
+        from simulusion.envs.craftax_env import CraftaxEnv
+
+        env = CraftaxEnv(args.env, seed=args.seed, size=size)
     elif backend in {"brax", "jax_brax"}:
         from simulusion.envs.brax_env import BraxImageEnv
 
@@ -281,7 +314,8 @@ def make_env(args: Any, evaluation: bool = False) -> Any:
     else:
         raise ValueError(
             f"Unknown env_backend='{backend}'. Use one of: dmc, dmlab, gym, mujoco, "
-            "robotics, procgen, bsuite, minecraft, brax, unity_mlagents."
+            "robotics, procgen, bsuite, minecraft, crafter, memory_maze, "
+            "atari100k, craftax, brax, unity_mlagents."
         )
 
     protocol = backend in BENCHMARK_PROTOCOL_BACKENDS and env_instance is None
@@ -290,7 +324,8 @@ def make_env(args: Any, evaluation: bool = False) -> Any:
             f"env_backend={backend!r} is a benchmark that fixes its own action "
             f"repeat, so action_repeat must be 1 (got {args.action_repeat}). "
             "DMLab repeats each action dmlab_action_repeat frames (4) inside "
-            "the environment; Minecraft and BSuite act on every step."
+            "the environment, as Atari 100k does with its protocol's frame "
+            "skip; the other benchmarks act on every step."
         )
     env = env_wrapper.ActionRepeat(env, int(args.action_repeat))
     if _has_discrete_actions(env):

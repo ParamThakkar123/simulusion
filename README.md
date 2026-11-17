@@ -1,7 +1,7 @@
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/simulusion-logo-dark.svg">
-    <img alt="Simulusion" src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/simulusion-logo-light.svg" height="72">
+    <img alt="Simulusion" src="https://raw.githubusercontent.com/ParamThakkar123/simulusion/main/docs/source/_static/simulusion-logo-light.svg" height="56">
   </picture>
 </h1>
 

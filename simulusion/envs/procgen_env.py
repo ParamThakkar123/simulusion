@@ -9,6 +9,7 @@ from typing import Any
 
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
+from simulusion.envs._spaces import OneHotActionSpace
 import gymnasium as gym
 import numpy as np
 from numpy.typing import NDArray
@@ -110,28 +111,6 @@ def normalize_procgen_env_name(env: str) -> str:
     return name
 
 
-class _ProcgenActionSpace(gym.spaces.Box):
-    """One-hot-like continuous action space for discrete Procgen actions."""
-
-    def __init__(self, n: int, seed: int = 0):
-        self.n = int(n)
-        self._rng = np.random.default_rng(int(seed))
-        super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
-
-    def seed(self, seed: int | None = None) -> list[int]:
-        if seed is None:
-            seed = int(self._rng.integers(0, 2**31 - 1))
-        self._rng = np.random.default_rng(int(seed))
-        return [int(seed)]
-
-    def sample(self, mask: Any = None, probability: Any = None) -> NDArray[np.float32]:
-        del mask, probability
-        idx = int(self._rng.integers(0, self.n))
-        action: NDArray[np.float32] = -np.ones((self.n,), dtype=np.float32)
-        action[idx] = 1.0
-        return action
-
-
 def make_procgen_env(env: str, **kwargs: Any) -> "ProcgenImageEnv":
     """Create a single-environment Procgen adapter.
 
@@ -186,7 +165,7 @@ class ProcgenImageEnv:
         if base_action_space is not None and hasattr(base_action_space, "n"):
             action_n = int(base_action_space.n)
         self._discrete_n = int(action_n)
-        self._action_space = _ProcgenActionSpace(self._discrete_n, seed=self._seed)
+        self._action_space = OneHotActionSpace(self._discrete_n, seed=self._seed)
         self._observation_space = gym.spaces.Dict(
             {
                 "image": gym.spaces.Box(
@@ -205,7 +184,7 @@ class ProcgenImageEnv:
         return self._observation_space
 
     @property
-    def action_space(self) -> _ProcgenActionSpace:
+    def action_space(self) -> OneHotActionSpace:
         return self._action_space
 
     @property

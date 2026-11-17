@@ -58,12 +58,20 @@ from simulusion.data.lerobot import LeRobotEpisodes as LeRobotEpisodes
 from simulusion.envs.ale_atari_env import list_available_atari_envs as list_available_atari_envs
 from simulusion.envs.ale_atari_env import make_atari_env as make_atari_env
 from simulusion.envs.ale_atari_vector_env import make_atari_vector_env as make_atari_vector_env
+from simulusion.envs.atari100k_env import ATARI_100K_PROTOCOLS as ATARI_100K_PROTOCOLS
+from simulusion.envs.atari100k_env import Atari100kEnv as Atari100kEnv
+from simulusion.envs.atari100k_env import make_atari100k_env as make_atari100k_env
 from simulusion.envs.brax_env import BraxImageEnv as BraxImageEnv
 from simulusion.envs.brax_env import make_brax_env as make_brax_env
 from simulusion.envs.bsuite_env import BSuiteImageEnv as BSuiteImageEnv
 from simulusion.envs.bsuite_env import list_available_bsuite_ids as list_available_bsuite_ids
 from simulusion.envs.bsuite_env import list_bsuite_settings as list_bsuite_settings
 from simulusion.envs.bsuite_env import make_bsuite_env as make_bsuite_env
+from simulusion.envs.craftax_env import CraftaxEnv as CraftaxEnv
+from simulusion.envs.craftax_env import make_craftax_env as make_craftax_env
+from simulusion.envs.crafter_env import CrafterEnv as CrafterEnv
+from simulusion.envs.crafter_env import crafter_score as crafter_score
+from simulusion.envs.crafter_env import make_crafter_env as make_crafter_env
 from simulusion.envs.diamond_atari import make_diamond_atari_env as make_diamond_atari_env
 from simulusion.envs.dmc import DeepMindControlEnv as DeepMindControlEnv
 from simulusion.envs.dmlab import DMLAB30_LEVELS as DMLAB30_LEVELS
@@ -73,6 +81,8 @@ from simulusion.envs.dmlab import make_dmlab_env as make_dmlab_env
 from simulusion.envs.dmlab import resolve_dmlab_level as resolve_dmlab_level
 from simulusion.envs.gym_env import GymImageEnv as GymImageEnv
 from simulusion.envs.gym_env import make_gym_env as make_gym_env
+from simulusion.envs.memory_maze_env import MemoryMazeEnv as MemoryMazeEnv
+from simulusion.envs.memory_maze_env import make_memory_maze_env as make_memory_maze_env
 from simulusion.envs.minecraft_diamond import MinecraftDiamondEnv as MinecraftDiamondEnv
 from simulusion.envs.minecraft_diamond import make_minecraft_diamond_env as make_minecraft_diamond_env
 from simulusion.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
@@ -225,10 +235,12 @@ def __getattr__(name: str) -> Any: ...
 
 __all__ = [
     "ATARI_100K_GAMES",
+    "ATARI_100K_PROTOCOLS",
     "ActionDecoder",
     "ActionRepeat",
     "ActorCriticNetwork",
     "AdaLNNormalization",
+    "Atari100kEnv",
     "BSuiteImageEnv",
     "BraxImageEnv",
     "CEMPlanner",
@@ -238,6 +250,8 @@ __all__ = [
     "CategoricalRSSM",
     "ConvDecoder",
     "ConvEncoder",
+    "CraftaxEnv",
+    "CrafterEnv",
     "DDPM",
     "DMLAB30_LEVELS",
     "DMLAB_LEVELS",
@@ -304,6 +318,7 @@ __all__ = [
     "Logger",
     "MODEL_SPECS",
     "Memory",
+    "MemoryMazeEnv",
     "MinecraftDiamondEnv",
     "MixedPrecision",
     "ModelSpec",
@@ -360,6 +375,7 @@ __all__ = [
     "build_perceptual_loss",
     "compute_lambda_return",
     "compute_return",
+    "crafter_score",
     "create_config",
     "create_dit",
     "create_dynamics_model",
@@ -401,14 +417,18 @@ __all__ = [
     "load_exported",
     "load_jepa_encoder",
     "load_world_model",
+    "make_atari100k_env",
     "make_atari_env",
     "make_atari_vector_env",
     "make_brax_env",
     "make_bsuite_env",
+    "make_craftax_env",
+    "make_crafter_env",
     "make_diamond_atari_env",
     "make_dmlab_env",
     "make_env",
     "make_gym_env",
+    "make_memory_maze_env",
     "make_minecraft_diamond_env",
     "make_mujoco_env",
     "make_mujoco_env_from_config",

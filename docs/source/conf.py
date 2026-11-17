@@ -135,9 +135,11 @@ html_theme_options = {
     "navigation_depth": 3,
     "show_nav_level": 2,
     "logo": {
-        "image_light": "simulusion-logo-light.svg",
-        "image_dark": "simulusion-logo-dark.svg",
-        # The logo image is the wordmark, so no separate text label.
+        # The lime Lattice mark from the Simulusion site in both themes, with
+        # the name as text styled in custom.css to match the site's navbar.
+        "image_light": "lattice-mark-lime.svg",
+        "image_dark": "lattice-mark-lime.svg",
+        "text": "Simulusion",
         "alt_text": "Simulusion",
     },
     # Keep the top navbar intentionally minimal: logo, documentation search,
@@ -158,6 +160,8 @@ html_context = {"default_mode": "dark"}
 html_js_files = [
     # Small script to tidy duplicated navbar elements caused by theme options.
     "fix_navbar.js",
+    # Sets "Simulusion" in page text in the navbar wordmark style.
+    "brand_word.js",
 ]
 
 # Copy both our _static assets and the `images/` dir so images referenced from

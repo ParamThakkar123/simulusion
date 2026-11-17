@@ -203,6 +203,32 @@ def __getattr__(name: str) -> Any:
         }
         return _map[name]
 
+    _BENCHMARK_ENV_MODULES = {
+        "CRAFTER_ACHIEVEMENTS": "crafter_env",
+        "CrafterEnv": "crafter_env",
+        "crafter_score": "crafter_env",
+        "crafter_score_from_rates": "crafter_env",
+        "crafter_success_rates": "crafter_env",
+        "make_crafter_env": "crafter_env",
+        "MEMORY_MAZE_TASKS": "memory_maze_env",
+        "MemoryMazeEnv": "memory_maze_env",
+        "make_memory_maze_env": "memory_maze_env",
+        "ATARI_100K_PROTOCOLS": "atari100k_env",
+        "ATARI_100K_ROMS": "atari100k_env",
+        "Atari100kEnv": "atari100k_env",
+        "AtariProtocol": "atari100k_env",
+        "list_atari100k_games": "atari100k_env",
+        "make_atari100k_env": "atari100k_env",
+        "CRAFTAX_ENVS": "craftax_env",
+        "CraftaxEnv": "craftax_env",
+        "make_craftax_env": "craftax_env",
+    }
+    if name in _BENCHMARK_ENV_MODULES:
+        import importlib
+
+        module = importlib.import_module(f"{__name__}.{_BENCHMARK_ENV_MODULES[name]}")
+        return getattr(module, name)
+
     if name in ("DeepMindControlEnv", "make_dmc_env"):
         from .dmc import DeepMindControlEnv, make_dmc_env
 
@@ -247,6 +273,22 @@ def make_env(env_id: str, **kwargs: Any) -> Any:
         from .dmc import make_dmc_env
 
         return make_dmc_env(env_id, **kwargs)
+    if backend in {"crafter"}:
+        from .crafter_env import make_crafter_env
+
+        return make_crafter_env(env_id, **kwargs)
+    if backend in {"memory_maze", "memory-maze", "memorymaze"}:
+        from .memory_maze_env import make_memory_maze_env
+
+        return make_memory_maze_env(env_id, **kwargs)
+    if backend in {"atari100k", "atari_100k", "atari-100k"}:
+        from .atari100k_env import make_atari100k_env
+
+        return make_atari100k_env(env_id, **kwargs)
+    if backend in {"craftax"}:
+        from .craftax_env import make_craftax_env
+
+        return make_craftax_env(env_id, **kwargs)
 
     try:
         from .gym_env import make_gym_env
@@ -349,6 +391,25 @@ __all__ = [
     "list_available_bsuite_ids",
     "list_bsuite_settings",
     "normalize_bsuite_id",
+    # Benchmark environments (Crafter, Memory Maze, Atari 100k, Craftax)
+    "CRAFTER_ACHIEVEMENTS",
+    "CrafterEnv",
+    "crafter_score",
+    "crafter_score_from_rates",
+    "crafter_success_rates",
+    "make_crafter_env",
+    "MEMORY_MAZE_TASKS",
+    "MemoryMazeEnv",
+    "make_memory_maze_env",
+    "ATARI_100K_PROTOCOLS",
+    "ATARI_100K_ROMS",
+    "Atari100kEnv",
+    "AtariProtocol",
+    "list_atari100k_games",
+    "make_atari100k_env",
+    "CRAFTAX_ENVS",
+    "CraftaxEnv",
+    "make_craftax_env",
     "TimeLimit",
     "ActionRepeat",
     "NormalizeActions",

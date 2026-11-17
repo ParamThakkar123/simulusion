@@ -184,6 +184,16 @@ def _list_available_atari_envs() -> list[str]:
 ATARI_ENVS: list[str] = _list_available_atari_envs()
 
 
+def _list_atari100k_games() -> list[str]:
+    try:
+        from simulusion.envs.atari100k_env import list_atari100k_games
+
+        return list_atari100k_games()
+    except Exception:
+        logger.debug("Atari 100k games unavailable", exc_info=True)
+        return []
+
+
 def _list_available_dmlab_levels() -> list[str]:
     try:
         from simulusion.envs.dmlab import DMLAB_LEVELS
@@ -239,6 +249,31 @@ ENV_BACKENDS: dict[str, dict[str, Any]] = {
         "label": "DeepMind Lab",
         "description": "DeepMind Lab 3D navigation and puzzle tasks",
         "environments": _list_available_dmlab_levels(),
+    },
+    "crafter": {
+        "label": "Crafter",
+        "description": "Crafter open-world survival benchmark",
+        "environments": ["reward", "noreward"],
+    },
+    "memory_maze": {
+        "label": "Memory Maze",
+        "description": "Long-horizon 3D memory navigation on dm_control",
+        "environments": ["9x9", "11x11", "13x13", "15x15"],
+    },
+    "atari100k": {
+        "label": "Atari 100k",
+        "description": "The 26 Atari 100k games with paper preprocessing protocols",
+        "environments": _list_atari100k_games(),
+    },
+    "craftax": {
+        "label": "Craftax",
+        "description": "Craftax and Craftax-Classic (JAX Crafter)",
+        "environments": [
+            "Craftax-Classic-Pixels-v1",
+            "Craftax-Classic-Symbolic-v1",
+            "Craftax-Pixels-v1",
+            "Craftax-Symbolic-v1",
+        ],
     },
     "minecraft": {
         "label": "Minecraft Diamond",

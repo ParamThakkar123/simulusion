@@ -188,6 +188,30 @@ ENV_BACKEND_SPECS: dict[str, EnvBackendSpec] = {
         description="Behaviour Suite for Reinforcement Learning (BSuite) environments.",
         aliases=("behavior_suite", "behaviour_suite"),
     ),
+    "crafter": EnvBackendSpec(
+        name="crafter",
+        factory_path="simulusion.envs:make_crafter_env",
+        description="Crafter open-world survival benchmark (DreamerV3).",
+        aliases=(),
+    ),
+    "memory-maze": EnvBackendSpec(
+        name="memory-maze",
+        factory_path="simulusion.envs:make_memory_maze_env",
+        description="Memory Maze long-horizon 3D navigation (dm_control).",
+        aliases=("memory_maze", "memorymaze"),
+    ),
+    "atari100k": EnvBackendSpec(
+        name="atari100k",
+        factory_path="simulusion.envs:make_atari100k_env",
+        description="Atari 100k games with IRIS/DIAMOND/STORM/DreamerV3 preprocessing.",
+        aliases=("atari-100k", "atari_100k"),
+    ),
+    "craftax": EnvBackendSpec(
+        name="craftax",
+        factory_path="simulusion.envs:make_craftax_env",
+        description="Craftax and Craftax-Classic (JAX Crafter).",
+        aliases=(),
+    ),
     "unity": EnvBackendSpec(
         name="unity",
         factory_path="simulusion.envs:make_unity_mlagents_env",

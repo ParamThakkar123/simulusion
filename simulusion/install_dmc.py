@@ -1,25 +1,29 @@
 """Install the DeepMind Control backend, including on CPython 3.13.
 
 ``pip install simulusion[dmc]`` covers Python 3.12 and below. On 3.13 it installs
-the pure-Python ``labmaze-new`` but leaves ``dm_control`` out, because
+``labmaze-new`` but leaves ``dm_control`` out, because
 dm-control pins the ``labmaze`` distribution whose newest release (1.0.6)
 publishes wheels only through CPython 3.12. Resolving that pin on 3.13 builds
 labmaze from source with Bazel, which fails the whole install.
 
-This module finishes the job: it installs ``labmaze-new`` (same package, with the
-Bazel extension made opt-in through ``LABMAZE_BUILD_BAZEL_EXTENSIONS=1``), then
-``dm-control`` with ``--no-deps`` so pip never looks at that pin, then
-dm-control's remaining dependencies explicitly.
+This module finishes the job: it installs ``labmaze-new`` (same package, built
+with setuptools instead of Bazel), then ``dm-control`` with ``--no-deps`` so pip
+never looks at that pin, then dm-control's remaining dependencies explicitly.
 
-Only ``dm_control.locomotion`` maze generation needs labmaze's compiled
-extension. ``dm_control.suite``, which is all Simulusion's dmc backend uses, does
-not, so the pure-Python module is enough.
+``labmaze-new`` 0.0.3 compiles labmaze's native extension, which provides
+``labmaze.RandomMaze`` for Memory Maze and ``dm_control.locomotion`` mazes.
+Without a C++17 compiler it installs as pure Python, which is still enough for
+``dm_control.suite``, the only part Simulusion's dmc backend uses.
 
 Usage::
 
-    python -m simulusion.install_dmc            # install and verify
-    python -m simulusion.install_dmc --check    # verify only, install nothing
-    python -m simulusion.install_dmc --dry-run  # print the commands
+    python -m simulusion.install_dmc                # install and verify
+    python -m simulusion.install_dmc --memory-maze  # also install Memory Maze
+    python -m simulusion.install_dmc --check        # verify only, install nothing
+    python -m simulusion.install_dmc --dry-run      # print the commands
+
+``--memory-maze`` adds the ``memory-maze`` package, again with ``--no-deps``:
+its only requirement is dm-control, whose ``labmaze`` pin is the problem above.
 """
 
 from __future__ import annotations
@@ -47,7 +51,7 @@ DM_CONTROL_DEPS: tuple[str, ...] = (
     "gymnasium>=1.2.2",
 )
 
-LABMAZE = "labmaze-new>=0.0.2"
+LABMAZE = "labmaze-new>=0.0.3"
 
 # dm-control raises its `mujoco` floor with nearly every release, and upgrading
 # mujoco to satisfy the newest one breaks other backends in the same
@@ -74,6 +78,11 @@ DM_CONTROL_BY_MUJOCO: tuple[tuple[tuple[int, int, int], str], ...] = (
     ((3, 3, 2), "1.0.30"),
     ((3, 2, 7), "1.0.28"),
 )
+
+# Memory Maze's only dependency is dm-control, so it too installs with
+# --no-deps. It needs labmaze's compiled RandomMaze, which labmaze-new 0.0.3
+# builds when a C++17 compiler is available.
+MEMORY_MAZE = "memory-maze>=1.0.3"
 
 # Used when mujoco is absent, or with --upgrade-mujoco.
 NEWEST_DM_CONTROL = "dm-control>=1.0.46"
@@ -144,7 +153,9 @@ def _running_under_uv() -> bool:
         return False
 
 
-def install_steps(upgrade_mujoco: bool = False) -> list[list[str]]:
+def install_steps(
+    upgrade_mujoco: bool = False, memory_maze: bool = False
+) -> list[list[str]]:
     """The installer commands, in order."""
     pip = _pip_command()
     mujoco_version = installed_mujoco_version()
@@ -152,11 +163,14 @@ def install_steps(upgrade_mujoco: bool = False) -> list[list[str]]:
     deps: list[str] = list(DM_CONTROL_DEPS)
     if mujoco_version is None or upgrade_mujoco:
         deps.append(NEWEST_MUJOCO)
-    return [
+    steps = [
         [*pip, LABMAZE],
         [*pip, "--no-deps", dm_control],
         [*pip, *deps],
     ]
+    if memory_maze:
+        steps.append([*pip, "--no-deps", MEMORY_MAZE])
+    return steps
 
 
 def check() -> tuple[bool, str]:
@@ -170,6 +184,27 @@ def check() -> tuple[bool, str]:
     except Exception as exc:
         return False, f"dm_control.suite is not importable: {exc}"
     return True, f"{len(suite.ALL_TASKS)} DeepMind Control tasks available"
+
+
+def check_memory_maze() -> tuple[bool, str]:
+    """Report whether Memory Maze can generate mazes."""
+    try:
+        labmaze = importlib.import_module("labmaze")
+    except Exception as exc:  # pragma: no cover - depends on the environment
+        return False, f"labmaze is not importable: {exc}"
+    if getattr(labmaze, "RandomMaze", None) is None:
+        return False, (
+            "labmaze has no compiled RandomMaze, which Memory Maze needs. "
+            "Reinstall labmaze-new>=0.0.3 with a C++17 compiler available: "
+            "pip install --force-reinstall --no-cache-dir labmaze-new"
+        )
+    try:
+        from simulusion.envs.memory_maze_env import _require_memory_maze_tasks
+
+        _require_memory_maze_tasks()
+    except Exception as exc:
+        return False, f"memory_maze is not importable: {exc}"
+    return True, "Memory Maze available"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -191,11 +226,19 @@ def main(argv: list[str] | None = None) -> int:
             "installed mujoco is kept and dm-control is matched to it."
         ),
     )
+    parser.add_argument(
+        "--memory-maze",
+        action="store_true",
+        help="also install Memory Maze (memory-maze, with --no-deps)",
+    )
     args = parser.parse_args(argv)
 
     if args.check:
         ok, message = check()
         print(message)
+        if ok and args.memory_maze:
+            ok, message = check_memory_maze()
+            print(message)
         return 0 if ok else 1
 
     mujoco_version = installed_mujoco_version()
@@ -206,7 +249,9 @@ def main(argv: list[str] | None = None) -> int:
             + "; matching dm-control to it (--upgrade-mujoco to do the opposite)"
         )
 
-    for command in install_steps(upgrade_mujoco=args.upgrade_mujoco):
+    for command in install_steps(
+        upgrade_mujoco=args.upgrade_mujoco, memory_maze=args.memory_maze
+    ):
         printable = " ".join(command)
         if args.dry_run:
             print(printable)
@@ -228,6 +273,9 @@ def main(argv: list[str] | None = None) -> int:
             "docs/source/environments/dmc.md for the Python 3.12 fallback.",
             file=sys.stderr,
         )
+    elif args.memory_maze:
+        ok, message = check_memory_maze()
+        print(message, file=sys.stdout if ok else sys.stderr)
     return 0 if ok else 1
 
 

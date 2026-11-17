@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Crafter** (`CrafterEnv`, `env_backend="crafter"`): DreamerV3's Crafter
+  benchmark with the `reward` and `noreward` tasks. `crafter_score` computes
+  the benchmark score, the geometric mean of the 22 achievement success rates.
+- **Memory Maze** (`MemoryMazeEnv`, `env_backend="memory_maze"`): the 9x9 to
+  15x15 long-horizon memory tasks, with the target colour as an observation.
+  `python -m simulusion.install_dmc --memory-maze` installs it on CPython 3.13.
+- **Atari 100k protocols** (`Atari100kEnv`, `env_backend="atari100k"`): the 26
+  games driven through ALE with the exact preprocessing of IRIS, DIAMOND, STORM
+  or DreamerV3, taken from their reference code (sticky actions, no-op starts,
+  life-loss episode ends, frame limit, resize filter and order), plus the IRIS
+  and DIAMOND evaluation settings, which Dreamer's evaluation env uses.
+- **Craftax** (`CraftaxEnv`, `env_backend="craftax"`): Craftax and
+  Craftax-Classic, pixel and symbolic, through jitted single-env steps.
+- Extras `crafter`, `craftax`, `memory-maze` and `atari100k`.
 - **Minecraft Diamond** (`MinecraftDiamondEnv`, `env_backend="minecraft"`): the
   DreamerV3 benchmark environment on MineRL 0.4.4, following the reference code:
   25 flat actions with abstract crafting, +1 per milestone item once per episode,
@@ -40,6 +54,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `obs_type="state"` (Dreamer configs: `dmc_obs_type="state"`), which returns
   the task's state flattened into `obs["state"]` and skips rendering, for the
   Proprio Control benchmark. Pixel observations now carry `obs["state"]` too.
+
+### Changed
+- Every discrete adapter (BSuite, DMLab, Minecraft Diamond, Procgen and the new
+  benchmarks) uses one shared one-hot action space instead of a private copy
+  each. Procgen's now carries `one_hot = True` like the others, so agents treat
+  its actions as categorical. Seeded action samples are unchanged.
+- The `dmc` extras and `simulusion.install_dmc` require `labmaze-new>=0.0.3`,
+  which builds labmaze's native extension with setuptools instead of Bazel, so
+  `labmaze.RandomMaze` works on CPython 3.13, including Windows.
 
 ### Fixed
 - DreamerV3 updates were bound by kernel launches (about 90 small kernels per
