@@ -32,6 +32,7 @@ _SNAKE_TO_UPPER = {
     "class_dropout_prob": "CLASS_DROPOUT_PROB",
     "learn_sigma": "LEARN_SIGMA",
     "weight_decay": "WEIGHT_DECAY",
+    "optimizer": "OPTIMIZER",
 }
 
 # Table 1 of the paper: the four transformer configs, which jointly scale depth,
@@ -63,6 +64,7 @@ class DiTConfig(SerializableConfigMixin):
     EPOCHS: int = 3
     LR: float = 1e-4  # paper 4: constant 1e-4, no warmup
     WEIGHT_DECAY: float = 0.0  # paper 4: "no weight decay"
+    OPTIMIZER: str = "adamw"
     IMG_SIZE: int = 32
     CHANNELS: int = 3
     PATCH: int = 4
