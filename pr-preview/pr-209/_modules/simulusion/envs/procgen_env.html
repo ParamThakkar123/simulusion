@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=eaa1d750" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8f4a504d" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
@@ -405,6 +405,7 @@ window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulusion/envs/procgen_env';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="../../../_static/fix_navbar.js?v=7a566309"></script>
+    <script src="../../../_static/brand_word.js?v=63fe9a7b"></script>
     <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-209/_modules/simulusion/envs/procgen_env.html" />
     <link rel="icon" href="../../../_static/simulusion-favicon.svg"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -482,9 +483,11 @@ window.runMermaid = runMermaid;</script>
     
     
     
-    <img src="../../../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
-    <img src="../../../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+    <img src="../../../_static/lattice-mark-lime.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../../../_static/lattice-mark-lime.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
+  
+    <p class="title logo__title">Simulusion</p>
   
 </a></div>
     
@@ -695,6 +698,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._actions</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_discrete_action</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">finalize_step_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.envs._spaces</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotActionSpace</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
@@ -802,28 +806,6 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_ProcgenActionSpace</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""One-hot-like continuous action space for discrete Procgen actions."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">low</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">31</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
-        <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)]</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">probability</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
-        <span class="k">del</span> <span class="n">mask</span><span class="p">,</span> <span class="n">probability</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span>
-        <span class="n">action</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="n">action</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
-        <span class="k">return</span> <span class="n">action</span>
-
-
 <div class="viewcode-block" id="make_procgen_env">
 <a class="viewcode-back" href="../../../api_reference.html#simulusion.envs.procgen_env.make_procgen_env">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_procgen_env</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ProcgenImageEnv"</span><span class="p">:</span>
@@ -883,7 +865,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">base_action_space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base_action_space</span><span class="p">,</span> <span class="s2">"n"</span><span class="p">):</span>
             <span class="n">action_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">base_action_space</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_discrete_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">action_n</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_action_space</span> <span class="o">=</span> <span class="n">_ProcgenActionSpace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discrete_n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_action_space</span> <span class="o">=</span> <span class="n">OneHotActionSpace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discrete_n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observation_space</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">"image"</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
@@ -902,7 +884,7 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_space</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ProcgenActionSpace</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OneHotActionSpace</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_action_space</span>
 
     <span class="nd">@property</span>

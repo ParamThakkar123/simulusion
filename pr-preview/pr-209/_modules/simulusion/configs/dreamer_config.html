@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=eaa1d750" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=8f4a504d" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
@@ -405,6 +405,7 @@ window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulusion/configs/dreamer_config';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="../../../_static/fix_navbar.js?v=7a566309"></script>
+    <script src="../../../_static/brand_word.js?v=63fe9a7b"></script>
     <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-209/_modules/simulusion/configs/dreamer_config.html" />
     <link rel="icon" href="../../../_static/simulusion-favicon.svg"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -482,9 +483,11 @@ window.runMermaid = runMermaid;</script>
     
     
     
-    <img src="../../../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
-    <img src="../../../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+    <img src="../../../_static/lattice-mark-lime.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../../../_static/lattice-mark-lime.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
+  
+    <p class="title logo__title">Simulusion</p>
   
 </a></div>
     
@@ -760,6 +763,11 @@ window.runMermaid = runMermaid;</script>
     <span class="n">minecraft_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">36000</span>
 
     <span class="c1"># Procgen options. Use env values like "coinrun" or "procgen-coinrun-v0".</span>
+    <span class="c1"># Atari 100k preprocessing protocol for env_backend="atari100k": one of</span>
+    <span class="c1"># simulusion.envs.ATARI_100K_PROTOCOLS ("atari100k" = "dreamerv3", "iris",</span>
+    <span class="c1"># "diamond", "storm", and the "-eval" variants). Frame skip happens inside</span>
+    <span class="c1"># the environment, so action_repeat must be 1.</span>
+    <span class="n">atari100k_protocol</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"atari100k"</span>
     <span class="n">procgen_distribution_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"easy"</span>
     <span class="n">procgen_num_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">procgen_start_level</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>

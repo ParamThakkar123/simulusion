@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=eaa1d750" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=8f4a504d" />
   
   <!-- So that users can add custom icons -->
   <script defer src="../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
@@ -405,6 +405,7 @@ window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/simulusion/envs';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <script src="../../_static/fix_navbar.js?v=7a566309"></script>
+    <script src="../../_static/brand_word.js?v=63fe9a7b"></script>
     <link rel="canonical" href="https://paramthakkar123.github.io/simulusion/pr-preview/pr-209/_modules/simulusion/envs.html" />
     <link rel="icon" href="../../_static/simulusion-favicon.svg"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -482,9 +483,11 @@ window.runMermaid = runMermaid;</script>
     
     
     
-    <img src="../../_static/simulusion-logo-dark.svg" class="logo__image only-dark" alt="Simulusion"/>
-    <img src="../../_static/simulusion-logo-light.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
+    <img src="../../_static/lattice-mark-lime.svg" class="logo__image only-dark" alt="Simulusion"/>
+    <img src="../../_static/lattice-mark-lime.svg" class="logo__image only-light pst-js-only" alt="Simulusion"/>
   
+  
+    <p class="title logo__title">Simulusion</p>
   
 </a></div>
     
@@ -886,6 +889,32 @@ window.runMermaid = runMermaid;</script>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">_map</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
 
+    <span class="n">_BENCHMARK_ENV_MODULES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"CRAFTER_ACHIEVEMENTS"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"CrafterEnv"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"crafter_score"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"crafter_score_from_rates"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"crafter_success_rates"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"make_crafter_env"</span><span class="p">:</span> <span class="s2">"crafter_env"</span><span class="p">,</span>
+        <span class="s2">"MEMORY_MAZE_TASKS"</span><span class="p">:</span> <span class="s2">"memory_maze_env"</span><span class="p">,</span>
+        <span class="s2">"MemoryMazeEnv"</span><span class="p">:</span> <span class="s2">"memory_maze_env"</span><span class="p">,</span>
+        <span class="s2">"make_memory_maze_env"</span><span class="p">:</span> <span class="s2">"memory_maze_env"</span><span class="p">,</span>
+        <span class="s2">"ATARI_100K_PROTOCOLS"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"ATARI_100K_ROMS"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"Atari100kEnv"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"AtariProtocol"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"list_atari100k_games"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"make_atari100k_env"</span><span class="p">:</span> <span class="s2">"atari100k_env"</span><span class="p">,</span>
+        <span class="s2">"CRAFTAX_ENVS"</span><span class="p">:</span> <span class="s2">"craftax_env"</span><span class="p">,</span>
+        <span class="s2">"CraftaxEnv"</span><span class="p">:</span> <span class="s2">"craftax_env"</span><span class="p">,</span>
+        <span class="s2">"make_craftax_env"</span><span class="p">:</span> <span class="s2">"craftax_env"</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_BENCHMARK_ENV_MODULES</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+
+        <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">_BENCHMARK_ENV_MODULES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"DeepMindControlEnv"</span><span class="p">,</span> <span class="s2">"make_dmc_env"</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.dmc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeepMindControlEnv</span><span class="p">,</span> <span class="n">make_dmc_env</span>
 
@@ -932,6 +961,22 @@ window.runMermaid = runMermaid;</script>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.dmc</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_dmc_env</span>
 
         <span class="k">return</span> <span class="n">make_dmc_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"crafter"</span><span class="p">}:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.crafter_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_crafter_env</span>
+
+        <span class="k">return</span> <span class="n">make_crafter_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"memory_maze"</span><span class="p">,</span> <span class="s2">"memory-maze"</span><span class="p">,</span> <span class="s2">"memorymaze"</span><span class="p">}:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.memory_maze_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_memory_maze_env</span>
+
+        <span class="k">return</span> <span class="n">make_memory_maze_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"atari100k"</span><span class="p">,</span> <span class="s2">"atari_100k"</span><span class="p">,</span> <span class="s2">"atari-100k"</span><span class="p">}:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.atari100k_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_atari100k_env</span>
+
+        <span class="k">return</span> <span class="n">make_atari100k_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"craftax"</span><span class="p">}:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.craftax_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_craftax_env</span>
+
+        <span class="k">return</span> <span class="n">make_craftax_env</span><span class="p">(</span><span class="n">env_id</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.gym_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_gym_env</span>
@@ -1035,6 +1080,25 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"list_available_bsuite_ids"</span><span class="p">,</span>
     <span class="s2">"list_bsuite_settings"</span><span class="p">,</span>
     <span class="s2">"normalize_bsuite_id"</span><span class="p">,</span>
+    <span class="c1"># Benchmark environments (Crafter, Memory Maze, Atari 100k, Craftax)</span>
+    <span class="s2">"CRAFTER_ACHIEVEMENTS"</span><span class="p">,</span>
+    <span class="s2">"CrafterEnv"</span><span class="p">,</span>
+    <span class="s2">"crafter_score"</span><span class="p">,</span>
+    <span class="s2">"crafter_score_from_rates"</span><span class="p">,</span>
+    <span class="s2">"crafter_success_rates"</span><span class="p">,</span>
+    <span class="s2">"make_crafter_env"</span><span class="p">,</span>
+    <span class="s2">"MEMORY_MAZE_TASKS"</span><span class="p">,</span>
+    <span class="s2">"MemoryMazeEnv"</span><span class="p">,</span>
+    <span class="s2">"make_memory_maze_env"</span><span class="p">,</span>
+    <span class="s2">"ATARI_100K_PROTOCOLS"</span><span class="p">,</span>
+    <span class="s2">"ATARI_100K_ROMS"</span><span class="p">,</span>
+    <span class="s2">"Atari100kEnv"</span><span class="p">,</span>
+    <span class="s2">"AtariProtocol"</span><span class="p">,</span>
+    <span class="s2">"list_atari100k_games"</span><span class="p">,</span>
+    <span class="s2">"make_atari100k_env"</span><span class="p">,</span>
+    <span class="s2">"CRAFTAX_ENVS"</span><span class="p">,</span>
+    <span class="s2">"CraftaxEnv"</span><span class="p">,</span>
+    <span class="s2">"make_craftax_env"</span><span class="p">,</span>
     <span class="s2">"TimeLimit"</span><span class="p">,</span>
     <span class="s2">"ActionRepeat"</span><span class="p">,</span>
     <span class="s2">"NormalizeActions"</span><span class="p">,</span>
