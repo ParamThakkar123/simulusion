@@ -306,18 +306,18 @@ def test_memory_maze_reserves_its_own_options(fake_memory_maze):
 
 
 def test_memory_maze_explains_a_missing_extension(monkeypatch):
-    import builtins
+    import simulusion.envs.memory_maze_env as memory_maze_env
 
-    real_import = builtins.__import__
+    real_import = memory_maze_env.importlib.import_module
 
     def broken(name, *args, **kwargs):
+        # memory_maze subclasses labmaze.RandomMaze, which is None when
+        # labmaze has no compiled extension.
         if name.startswith("memory_maze"):
             raise TypeError("NoneType takes no arguments")
         return real_import(name, *args, **kwargs)
 
-    monkeypatch.delitem(sys.modules, "memory_maze", raising=False)
-    monkeypatch.delitem(sys.modules, "memory_maze.tasks", raising=False)
-    monkeypatch.setattr(builtins, "__import__", broken)
+    monkeypatch.setattr(memory_maze_env.importlib, "import_module", broken)
     with pytest.raises(ImportError, match="compiled RandomMaze"):
         MemoryMazeEnv()
 
