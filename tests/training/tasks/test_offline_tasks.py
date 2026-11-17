@@ -70,6 +70,47 @@ def test_dit_trains_and_exports_a_loadable_model(
     assert resumed.iterations == 4
 
 
+def test_dit_muon_optimizer(
+    tmp_path: Path, trainer_overrides, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _image_folder(tmp_path / "imgs")
+    base_args = [
+        *trainer_overrides,
+        "model.DATASET=imagefolder",
+        f"model.ROOT_PATH={root.as_posix()}",
+        "image_folder=train",
+        "model.VAL_SPLIT=0.25",
+        "model.BATCH=4",
+        "model.IMG_SIZE=32",
+        "model.PATCH=8",
+        "model.WIDTH=32",
+        "model.DEPTH=1",
+        "model.HEADS=2",
+        "model.TIMESTEPS=10",
+        "model.NUM_WORKERS=0",
+        "val_batches=1",
+        "trainer.max_steps=2",
+        "trainer.eval_every=2",
+    ]
+    with pytest.raises(ValueError, match="Unknown DiT optimizer"):
+        run(overrides=[*base_args, "model.OPTIMIZER=sgd"], task="dit")
+
+    with monkeypatch.context() as mp:
+        mp.delattr(torch.optim, "Muon", raising=False)
+        with pytest.raises(RuntimeError, match="torch.optim.Muon"):
+            run(overrides=[*base_args, "model.OPTIMIZER=muon"], task="dit")
+
+    if hasattr(torch.optim, "Muon"):
+        muon_args = [*base_args, "model.OPTIMIZER=muon"]
+        result = run(overrides=muon_args, task="dit")
+        assert result.iterations == 2
+        resumed = run(
+            overrides=[*muon_args, "trainer.max_steps=3", "trainer.resume=auto"],
+            task="dit",
+        )
+        assert resumed.iterations == 3
+
+
 def test_jepa_trains_with_ema_target_and_resumes(
     tmp_path: Path, trainer_overrides
 ) -> None:

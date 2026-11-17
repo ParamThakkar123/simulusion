@@ -38,6 +38,54 @@ class DiTTaskConfig:
     val_batches: int = 8
 
 
+class _MuonWithAdamW:
+    """Pairs ``torch.optim.Muon`` (2-D weights) with ``AdamW`` (other params)."""
+
+    def __init__(
+        self,
+        muon_params: list[torch.nn.Parameter],
+        adamw_params: list[torch.nn.Parameter],
+        *,
+        lr: float,
+        weight_decay: float,
+    ) -> None:
+        self._muon = torch.optim.Muon(muon_params, lr=lr, weight_decay=weight_decay)
+        self._adamw = (
+            torch.optim.AdamW(adamw_params, lr=lr, weight_decay=weight_decay)
+            if adamw_params
+            else None
+        )
+
+    @property
+    def param_groups(self) -> list[dict[str, Any]]:
+        groups = list(self._muon.param_groups)
+        if self._adamw is not None:
+            groups.extend(self._adamw.param_groups)
+        return groups
+
+    def zero_grad(self, set_to_none: bool = True) -> None:
+        self._muon.zero_grad(set_to_none=set_to_none)
+        if self._adamw is not None:
+            self._adamw.zero_grad(set_to_none=set_to_none)
+
+    def step(self, closure: Any = None) -> Any:
+        loss = self._muon.step(closure)
+        if self._adamw is not None:
+            self._adamw.step()
+        return loss
+
+    def state_dict(self) -> dict[str, Any]:
+        return {
+            "muon": self._muon.state_dict(),
+            "adamw": self._adamw.state_dict() if self._adamw is not None else None,
+        }
+
+    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
+        self._muon.load_state_dict(state_dict["muon"])
+        if self._adamw is not None and state_dict.get("adamw") is not None:
+            self._adamw.load_state_dict(state_dict["adamw"])
+
+
 @register_task("dit")
 class DiTTask(TrainingTask):
     """DiT with DDPM's L_simple, an EMA shadow model and gradient clipping at 1.
@@ -111,9 +159,33 @@ class DiTTask(TrainingTask):
                 p.requires_grad = False
         self.model = trainer.prepare_module(net)
         # Paper 4: constant learning rate, no weight decay, no warmup.
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
-        )
+        opt_name = str(c.OPTIMIZER).strip().lower()
+        if opt_name == "adamw":
+            optimizer = torch.optim.AdamW(
+                self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
+            )
+        elif opt_name == "muon":
+            if not hasattr(torch.optim, "Muon"):
+                raise RuntimeError(
+                    "OPTIMIZER='muon' requires PyTorch >= 2.9 (torch.optim.Muon is unavailable)."
+                )
+            muon_params = [p for p in self.model.parameters() if p.ndim == 2]
+            adamw_params = [p for p in self.model.parameters() if p.ndim != 2]
+            if muon_params:
+                optimizer = _MuonWithAdamW(
+                    muon_params,
+                    adamw_params,
+                    lr=c.LR,
+                    weight_decay=c.WEIGHT_DECAY,
+                )
+            else:
+                optimizer = torch.optim.AdamW(
+                    adamw_params, lr=c.LR, weight_decay=c.WEIGHT_DECAY
+                )
+        else:
+            raise ValueError(
+                f"Unknown DiT optimizer {c.OPTIMIZER!r}. Expected 'adamw' or 'muon'."
+            )
         self.update = trainer.gradient_update(
             optimizer, self.model.parameters(), max_grad_norm=1.0
         )
