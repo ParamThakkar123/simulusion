@@ -869,6 +869,30 @@ window.runMermaid = runMermaid;</script>
         <span class="n">description</span><span class="o">=</span><span class="s2">"Behaviour Suite for Reinforcement Learning (BSuite) environments."</span><span class="p">,</span>
         <span class="n">aliases</span><span class="o">=</span><span class="p">(</span><span class="s2">"behavior_suite"</span><span class="p">,</span> <span class="s2">"behaviour_suite"</span><span class="p">),</span>
     <span class="p">),</span>
+    <span class="s2">"crafter"</span><span class="p">:</span> <span class="n">EnvBackendSpec</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"crafter"</span><span class="p">,</span>
+        <span class="n">factory_path</span><span class="o">=</span><span class="s2">"simulusion.envs:make_crafter_env"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Crafter open-world survival benchmark (DreamerV3)."</span><span class="p">,</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">(),</span>
+    <span class="p">),</span>
+    <span class="s2">"memory-maze"</span><span class="p">:</span> <span class="n">EnvBackendSpec</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"memory-maze"</span><span class="p">,</span>
+        <span class="n">factory_path</span><span class="o">=</span><span class="s2">"simulusion.envs:make_memory_maze_env"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Memory Maze long-horizon 3D navigation (dm_control)."</span><span class="p">,</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">(</span><span class="s2">"memory_maze"</span><span class="p">,</span> <span class="s2">"memorymaze"</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"atari100k"</span><span class="p">:</span> <span class="n">EnvBackendSpec</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"atari100k"</span><span class="p">,</span>
+        <span class="n">factory_path</span><span class="o">=</span><span class="s2">"simulusion.envs:make_atari100k_env"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Atari 100k games with IRIS/DIAMOND/STORM/DreamerV3 preprocessing."</span><span class="p">,</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">(</span><span class="s2">"atari-100k"</span><span class="p">,</span> <span class="s2">"atari_100k"</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="s2">"craftax"</span><span class="p">:</span> <span class="n">EnvBackendSpec</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"craftax"</span><span class="p">,</span>
+        <span class="n">factory_path</span><span class="o">=</span><span class="s2">"simulusion.envs:make_craftax_env"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Craftax and Craftax-Classic (JAX Crafter)."</span><span class="p">,</span>
+        <span class="n">aliases</span><span class="o">=</span><span class="p">(),</span>
+    <span class="p">),</span>
     <span class="s2">"unity"</span><span class="p">:</span> <span class="n">EnvBackendSpec</span><span class="p">(</span>
         <span class="n">name</span><span class="o">=</span><span class="s2">"unity"</span><span class="p">,</span>
         <span class="n">factory_path</span><span class="o">=</span><span class="s2">"simulusion.envs:make_unity_mlagents_env"</span><span class="p">,</span>
