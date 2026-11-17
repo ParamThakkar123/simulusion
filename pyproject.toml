@@ -86,11 +86,10 @@ ml-agents = [
 # dm-control requires the `labmaze` distribution, whose newest release (1.0.6)
 # publishes wheels only up to CPython 3.12. On 3.13 pip therefore builds it from
 # source, which needs Bazel and a C++ toolchain. `labmaze-new` is the same
-# package with the Bazel extension made opt-in (LABMAZE_BUILD_BAZEL_EXTENSIONS=1),
-# so it installs as pure Python and provides the `labmaze` module that
-# `dm_control` imports. `dm_control.suite` -- everything Simulusion's dmc backend
-# uses -- does not need the compiled extension; only `dm_control.locomotion`
-# maze generation does.
+# package built with setuptools instead of Bazel, and provides the `labmaze` module that `dm_control` imports. 0.0.3 compiles the
+# native extension that `labmaze.RandomMaze` needs -- Memory Maze and
+# `dm_control.locomotion` mazes use it -- and falls back to pure Python without
+# a C++ compiler. `dm_control.suite` does not need the extension.
 #
 # pip cannot tell that `labmaze-new` satisfies dm-control's `labmaze`
 # requirement, so on 3.13 install with `make install-dmc` (see the Makefile) or
@@ -98,10 +97,10 @@ ml-agents = [
 dmc = [
     # Scoped below 3.13: declaring dm-control there makes pip resolve its
     # `labmaze` pin and fail the whole install on the Bazel build. On 3.13 this
-    # extra installs the pure-Python `labmaze-new` instead, and dm-control is
+    # extra installs `labmaze-new` instead, and dm-control is
     # added with --no-deps by `make install-dmc` / `python -m simulusion.install_dmc`.
     "dm-control>=1.0.0; python_version < '3.13'",
-    "labmaze-new>=0.0.2; python_version >= '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
     "gymnasium>=1.2.2",
 ]
 # uv-only variant: dm-control unconditionally, relying on the
@@ -110,7 +109,7 @@ dmc = [
 # `python -m simulusion.install_dmc` instead.
 dmc-uv = [
     "dm-control>=1.0.0",
-    "labmaze-new>=0.0.2; python_version >= '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
     "gymnasium>=1.2.2",
 ]
 # Genie's TinyWorlds clips are HDF5 files pulled from HuggingFace. Without
@@ -150,6 +149,34 @@ brax = [
 # interpreter procgen supports.
 bsuite = [
     "bsuite>=0.3.5",
+]
+# Crafter (DreamerV3's Crafter benchmark). Pure Python, CPU-only.
+crafter = [
+    "crafter>=1.8.3",
+    "gymnasium>=1.2.2",
+]
+# Craftax and Craftax-Classic, JAX reimplementations of Crafter.
+craftax = [
+    "craftax>=1.5.0",
+    "jax>=0.10.1",
+    "gymnasium>=1.2.2",
+]
+# Memory Maze needs labmaze's compiled RandomMaze. memory-maze depends on
+# dm-control, whose `labmaze` pin has no CPython 3.13 wheel (see the dmc extra),
+# so on 3.13 this extra installs `labmaze-new` (which compiles the extension)
+# and `python -m simulusion.install_dmc --memory-maze` adds dm-control and
+# memory-maze with --no-deps.
+memory-maze = [
+    "memory-maze>=1.0.3; python_version < '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
+    "gymnasium>=1.2.2",
+]
+# Atari 100k with the IRIS/DIAMOND/STORM/DreamerV3 protocols. OpenCV provides
+# the INTER_AREA resize of the DIAMOND and STORM protocols.
+atari100k = [
+    "ale-py>=0.10.1",
+    "opencv-python>=4.12.0.88",
+    "gymnasium>=1.2.2",
 ]
 # No `minerl` / `minedojo` extras: neither is installable on the Python versions
 # Simulusion supports. MineRL 1.x has no release compatible with Python >= 3.11,
@@ -201,7 +228,7 @@ dev = [
     "ruff==0.16.8",
 ]
 all = [
-    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,lerobot,dev,docs]",
+    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,crafter,craftax,memory-maze,atari100k,lerobot,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",

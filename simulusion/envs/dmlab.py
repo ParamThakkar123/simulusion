@@ -9,6 +9,7 @@ from typing import Any
 
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
+from simulusion.envs._spaces import OneHotActionSpace
 import gymnasium as gym
 import numpy as np
 from PIL import Image
@@ -196,36 +197,6 @@ def make_dmlab_env(level: str, **kwargs: Any) -> "DMLabEnv":
     return DMLabEnv(level=level, **kwargs)
 
 
-class _OneHotActionSpace(gym.spaces.Box):
-    """Box action space that samples normalized one-hot vectors."""
-
-    # Marks the Box as a one-hot discrete choice (categorical, not Gaussian).
-    one_hot = True
-
-    def __init__(self, actions: int, seed: int = 0):
-        self._actions = int(actions)
-        self._rng = np.random.default_rng(int(seed))
-        super().__init__(
-            low=-1.0,
-            high=1.0,
-            shape=(self._actions,),
-            dtype=np.float32,
-        )
-
-    def seed(self, seed: int | None = None) -> list[int]:
-        if seed is None:
-            seed = int(self._rng.integers(0, 2**31 - 1))
-        self._rng = np.random.default_rng(int(seed))
-        return [int(seed)]
-
-    def sample(self, mask: None = None, probability: None = None) -> np.ndarray:
-        if mask is not None or probability is not None:
-            raise ValueError("DMLab action sampling does not support masks.")
-        action: np.ndarray = -np.ones((self._actions,), dtype=np.float32)
-        action[int(self._rng.integers(0, self._actions))] = 1.0
-        return action
-
-
 class DMLabEnv:
     """Gym-style adapter for DeepMind Lab 3D environments.
 
@@ -321,7 +292,7 @@ class DMLabEnv:
         )
         self._last_obs: dict[str, np.ndarray] | None = None
 
-        self._action_space = _OneHotActionSpace(
+        self._action_space = OneHotActionSpace(
             self._action_set.shape[0], seed=self._seed
         )
         self._observation_space = self._build_observation_space()
@@ -390,7 +361,7 @@ class DMLabEnv:
         return self._observation_space
 
     @property
-    def action_space(self) -> _OneHotActionSpace:
+    def action_space(self) -> OneHotActionSpace:
         return self._action_space
 
     @property

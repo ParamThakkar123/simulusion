@@ -48,6 +48,7 @@ from PIL import Image
 
 from simulusion.envs._actions import encode_discrete_action
 from simulusion.envs._contract import finalize_step_info
+from simulusion.envs._spaces import OneHotActionSpace
 
 __all__ = [
     "BASIC_ACTIONS",
@@ -178,27 +179,6 @@ class _HealthReward:
         reward = self.scale * (health - self.previous)
         self.previous = health
         return reward
-
-
-class _OneHotActionSpace(gym.spaces.Box):
-    """Box of one-hot vectors in ``[-1, 1]``; sampling draws a random action."""
-
-    one_hot = True  # a one-hot discrete choice (categorical, not Gaussian)
-
-    def __init__(self, n: int, seed: int | None = None):
-        self.n = int(n)
-        self._rng = np.random.default_rng(seed)
-        super().__init__(low=-1.0, high=1.0, shape=(self.n,), dtype=np.float32)
-
-    def seed(self, seed: int | None = None) -> list[int]:
-        self._rng = np.random.default_rng(seed)
-        return [seed] if seed is not None else []
-
-    def sample(self, mask: Any = None, probability: Any = None) -> np.ndarray:
-        del mask, probability
-        action = np.full((self.n,), -1.0, dtype=np.float32)
-        action[int(self._rng.integers(self.n))] = 1.0
-        return action
 
 
 def _flatten(tree: Any, prefix: str = "") -> dict[str, Any]:
@@ -411,7 +391,7 @@ class MinecraftDiamondEnv:
         # Send only the fields the backend declares (it has no "sprint").
         self._native_keys = set(native_keys) or set(NOOP)
 
-        self._action_space = _OneHotActionSpace(len(self.action_names), seed=seed)
+        self._action_space = OneHotActionSpace(len(self.action_names), seed=seed)
         n_inv, n_equip = len(self._inv_keys), len(self._equip_enum)
 
         def vector(n: int, high: float = np.inf) -> gym.spaces.Box:
@@ -447,7 +427,7 @@ class MinecraftDiamondEnv:
         return self._observation_space
 
     @property
-    def action_space(self) -> _OneHotActionSpace:
+    def action_space(self) -> OneHotActionSpace:
         return self._action_space
 
     @property
