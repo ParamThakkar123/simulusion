@@ -1246,6 +1246,21 @@ window.runMermaid = runMermaid;</script>
             <span class="p">},</span>
         <span class="p">),</span>
         <span class="n">Benchmark</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"crafter"</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="s2">"Crafter: the open-world survival game, 1M steps, scored by "</span>
+                <span class="s2">"achievement success rates."</span>
+            <span class="p">),</span>
+            <span class="n">tasks</span><span class="o">=</span><span class="p">(</span><span class="s2">"reward"</span><span class="p">,),</span>
+            <span class="n">env_steps</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">,</span>
+            <span class="n">action_repeat</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">overrides</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"env_backend"</span><span class="p">:</span> <span class="s2">"crafter"</span><span class="p">,</span>
+                <span class="c1"># Crafter ends its own episodes (death or 10000 steps).</span>
+                <span class="s2">"time_limit"</span><span class="p">:</span> <span class="mi">10_000</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">),</span>
+        <span class="n">Benchmark</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">"minecraft"</span><span class="p">,</span>
             <span class="n">description</span><span class="o">=</span><span class="p">(</span>
                 <span class="s2">"Minecraft Diamond: 12 milestone rewards, 36000-step episodes, "</span>

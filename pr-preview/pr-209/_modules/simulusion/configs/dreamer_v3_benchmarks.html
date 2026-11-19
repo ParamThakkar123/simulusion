@@ -778,6 +778,10 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"dmlab"</span><span class="p">:</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
     <span class="s2">"bsuite"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
     <span class="s2">"minecraft"</span><span class="p">:</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
+    <span class="c1"># Crafter is not in Table 2 of the published paper; this row is Table A.1</span>
+    <span class="c1"># of its first arXiv version (1 instance, train ratio 512, the XL model,</span>
+    <span class="c1"># whose closest preset here is 200m).</span>
+    <span class="s2">"crafter"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s2">"replay_ratio"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"model_size"</span><span class="p">:</span> <span class="s2">"200m"</span><span class="p">}),</span>
 <span class="p">}</span>
 
 <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">_config</span> <span class="ow">in</span> <span class="n">_TABLE_2</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
