@@ -28,7 +28,7 @@ Benchmark suites
 
 `suites.py` is the one place each benchmark's environments are defined,
 for every model: the task lists (DMC, Atari 57 / 100k, ProcGen, DMLab-30,
-BSuite, Minecraft), each protocol's step budget, action repeat and environment
+BSuite, Minecraft, Crafter), each protocol's step budget, action repeat and environment
 options (`BENCHMARKS`, `get_benchmark`), and the Atari human/random scores
 (`human_normalized_score`). Model code adds only its own settings on top, e.g.
 `simulusion/configs/dreamer_v3_benchmarks.py` adds DreamerV3's replay ratio and

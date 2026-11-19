@@ -92,6 +92,10 @@ _TABLE_2: dict[str, tuple[int, dict[str, Any]]] = {
     "dmlab": (16, {"replay_ratio": 32, "model_size": "200m"}),
     "bsuite": (1, {"replay_ratio": 1024, "model_size": "200m"}),
     "minecraft": (64, {"replay_ratio": 32, "model_size": "200m"}),
+    # Crafter is not in Table 2 of the published paper; this row is Table A.1
+    # of its first arXiv version (1 instance, train ratio 512, the XL model,
+    # whose closest preset here is 200m).
+    "crafter": (1, {"replay_ratio": 512, "model_size": "200m"}),
 }
 
 for _, _config in _TABLE_2.values():

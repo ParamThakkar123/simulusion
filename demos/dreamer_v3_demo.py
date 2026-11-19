@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -71,8 +72,6 @@ def train(args: argparse.Namespace) -> None:
         args.benchmark,
         args.task,
         total_steps=steps,
-        # Only what the run stores; the 5M default reserves memory up front.
-        buffer_size=steps // 2 + 1000,
         checkpoint_interval=args.eval_every,
         test_interval=args.eval_every,
         test_episodes=args.eval_episodes,
@@ -82,6 +81,13 @@ def train(args: argparse.Namespace) -> None:
         **overrides,
         **restore,
     )
+    # Only what the run stores; the 5M default reserves memory up front. The
+    # buffer holds one record per agent step, and each agent step spans
+    # `action_repeat` frames (DMLab repeats inside Lab instead).
+    frames_per_record = cfg.action_repeat * (
+        cfg.dmlab_action_repeat if cfg.env_backend == "dmlab" else 1
+    )
+    cfg = replace(cfg, buffer_size=steps // max(1, frames_per_record) + 1000)
     print(
         f"{args.benchmark}/{cfg.env}: model {cfg.model_size}, replay ratio "
         f"{cfg.replay_ratio} ({cfg.update_steps} updates per {cfg.collect_steps} "

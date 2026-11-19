@@ -542,6 +542,21 @@ BENCHMARKS: dict[str, Benchmark] = {
             },
         ),
         Benchmark(
+            name="crafter",
+            description=(
+                "Crafter: the open-world survival game, 1M steps, scored by "
+                "achievement success rates."
+            ),
+            tasks=("reward",),
+            env_steps=1_000_000,
+            action_repeat=1,
+            overrides={
+                "env_backend": "crafter",
+                # Crafter ends its own episodes (death or 10000 steps).
+                "time_limit": 10_000,
+            },
+        ),
+        Benchmark(
             name="minecraft",
             description=(
                 "Minecraft Diamond: 12 milestone rewards, 36000-step episodes, "

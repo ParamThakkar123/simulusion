@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **DreamerV3 Crafter preset.** `benchmark_config("crafter")` and the shared
+  `crafter` benchmark: 1M steps, action repeat 1, one environment, replay ratio
+  512 and the 200m model, from Table A.1 of the paper's first arXiv version (the
+  published Table 2 has no Crafter row).
 - **Crafter** (`CrafterEnv`, `env_backend="crafter"`): DreamerV3's Crafter
   benchmark with the `reward` and `noreward` tasks. `crafter_score` computes
   the benchmark score, the geometric mean of the 22 achievement success rates.
@@ -65,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `labmaze.RandomMaze` works on CPython 3.13, including Windows.
 
 ### Fixed
+- `demos/dreamer_v3_demo.py` sized its replay buffer for an action repeat of 2,
+  so Atari100k runs (repeat 4) reserved twice the records they can store and
+  ran out of memory on a 16 GB machine. The buffer now holds one record per
+  agent step of the run.
 - DreamerV3 updates were bound by kernel launches (about 90 small kernels per
   recurrent step): 2.4 s per update on an RTX 3050 laptop with the GPU mostly
   idle. The observe rollout (forward and backward) and imagination now replay

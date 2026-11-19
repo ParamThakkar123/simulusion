@@ -21,6 +21,8 @@ TABLE_2 = {
     "minecraft": (1, 100_000_000, 1, 64, 32, "200m"),
     "dmc-proprio": (18, 500_000, 2, 16, 512, "12m"),
     "dmc-visual": (20, 1_000_000, 2, 16, 512, "12m"),
+    # Not in the published Table 2: Table A.1 of the first arXiv version.
+    "crafter": (1, 1_000_000, 1, 1, 512, "200m"),
 }
 
 
@@ -145,7 +147,7 @@ def test_aliases_and_errors():
     assert benchmark_config("dmlab30").dmlab_action_repeat == 4
     assert benchmark_config("minecraft-diamond").env_backend == "minecraft"
     with pytest.raises(ValueError, match="Unknown benchmark"):
-        benchmark_config("crafter")
+        benchmark_config("nethack")
     with pytest.raises(ValueError, match="not_a_field"):
         benchmark_config("dmc-proprio", not_a_field=1)
 
