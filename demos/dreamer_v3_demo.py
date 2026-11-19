@@ -87,7 +87,11 @@ def train(args: argparse.Namespace) -> None:
     frames_per_record = cfg.action_repeat * (
         cfg.dmlab_action_repeat if cfg.env_backend == "dmlab" else 1
     )
-    cfg = replace(cfg, buffer_size=steps // max(1, frames_per_record) + 1000)
+    buffer_size = steps // max(1, frames_per_record) + 1000
+    if args.buffer_size:
+        # Keep only the newest records, to fit a machine with little RAM.
+        buffer_size = min(buffer_size, args.buffer_size)
+    cfg = replace(cfg, buffer_size=buffer_size)
     print(
         f"{args.benchmark}/{cfg.env}: model {cfg.model_size}, replay ratio "
         f"{cfg.replay_ratio} ({cfg.update_steps} updates per {cfg.collect_steps} "
@@ -218,6 +222,12 @@ def main() -> None:
     )
     t.add_argument("--eval-every", type=int, default=10_000)
     t.add_argument("--eval-episodes", type=int, default=3)
+    t.add_argument(
+        "--buffer-size",
+        type=int,
+        default=None,
+        help="cap replay at this many agent steps (default: the whole run)",
+    )
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--run", default="demos/runs/dreamer_v3")
     t.add_argument(
