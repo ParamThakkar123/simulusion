@@ -11,6 +11,10 @@ from typing import Any
 
 _EXPORTS = {
     "DreamerConfig": "simulusion.configs.dreamer_config",
+    "DreamerV3Config": "simulusion.configs.dreamer_v3_config",
+    "MODEL_SIZES": "simulusion.configs.dreamer_v3_config",
+    "BENCHMARKS": "simulusion.configs.dreamer_v3_benchmarks",
+    "benchmark_config": "simulusion.configs.dreamer_v3_benchmarks",
     "JEPAConfig": "simulusion.configs.jepa_config",
     "DiTConfig": "simulusion.configs.dit_config",
     "get_dit_config": "simulusion.configs.dit_config",

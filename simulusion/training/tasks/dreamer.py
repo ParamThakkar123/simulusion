@@ -211,9 +211,12 @@ class DreamerTask(TrainingTask):
         torch.save(
             {
                 "seeded": self.seeded,
+                # Dreamer V1/V2 keep optimizer state in GradientUpdate objects;
+                # DreamerV3 has none and saves its optimizers in dreamer.pt.
                 "updates": {
                     name: getattr(self.dreamer, f"{name}_update").state_dict()
                     for name in ("world_model", "actor", "value")
+                    if hasattr(self.dreamer, f"{name}_update")
                 },
             },
             directory / "task.pt",

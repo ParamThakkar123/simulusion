@@ -160,12 +160,21 @@ _REPLAY_ARRAYS = ("observations", "actions", "rewards", "terminals", "terminated
 def save_replay(buffer: Any, path: Path) -> None:
     """Write the filled part of a ring replay buffer, plus its write position."""
     n = buffer.size if buffer.full else buffer.idx
+    names = getattr(buffer, "replay_arrays", _REPLAY_ARRAYS)
     arrays = {
         name: getattr(buffer, name)[:n]
-        for name in _REPLAY_ARRAYS
-        if hasattr(buffer, name)
+        for name in names
+        if hasattr(buffer, name) and len(getattr(buffer, name)) >= n
     }
-    state = np.array([buffer.idx, int(buffer.full), buffer.steps, buffer.episodes])
+    state = np.array(
+        [
+            buffer.idx,
+            int(buffer.full),
+            buffer.steps,
+            buffer.episodes,
+            int(getattr(buffer, "records", 0)),
+        ]
+    )
     np.savez(path, state=state, **arrays)
 
 
@@ -177,16 +186,19 @@ def load_replay(buffer: Any, path: Path) -> None:
             raise ValueError(
                 f"The saved replay holds {n} transitions; this buffer holds {buffer.size}."
             )
-        for name in _REPLAY_ARRAYS:
+        for name in getattr(buffer, "replay_arrays", _REPLAY_ARRAYS):
             if name in data.files and hasattr(buffer, name):
                 getattr(buffer, name)[:n] = data[name]
-        idx, full, steps, episodes = (int(v) for v in data["state"])
+        state = [int(v) for v in data["state"]]
+    idx, full, steps, episodes = state[:4]
     buffer.idx, buffer.full, buffer.steps, buffer.episodes = (
         idx,
         bool(full),
         steps,
         episodes,
     )
+    if len(state) > 4 and hasattr(buffer, "records"):
+        buffer.records = state[4]
 
 
 def mean_metrics(rows: List[dict]) -> dict:
