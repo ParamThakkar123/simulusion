@@ -168,3 +168,15 @@ class TestModelSizeChanges:
 
         cfg = simulusion.create_config("dreamer-v3", model_size="25m")
         assert cfg.hidden_size == MODEL_SIZES["25m"]["hidden_size"]
+
+
+@pytest.mark.parametrize(
+    ("name", "frames_per_step"),
+    [("bsuite", 1), ("dmc-proprio", 2), ("atari100k", 4), ("dmlab", 4)],
+)
+def test_prefill_is_one_batch_of_agent_steps(name, frames_per_step):
+    # The reference trains once replay holds batch_size x batch_length agent
+    # steps, with no separate random prefill; seed_steps counts frames.
+    cfg = benchmark_config(name)
+    assert cfg.seed_steps == cfg.batch_size * cfg.train_seq_len * frames_per_step
+    assert benchmark_config(name, seed_steps=123).seed_steps == 123

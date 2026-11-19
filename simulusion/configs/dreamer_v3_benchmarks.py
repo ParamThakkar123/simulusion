@@ -131,4 +131,14 @@ def benchmark_config(
     spec = BENCHMARKS[get_benchmark(benchmark).name]
     fields: dict[str, Any] = {**spec.config, **spec.env_fields(task), **overrides}
     _check_fields(fields)
-    return replace(DreamerV3Config(), **fields)
+    cfg = replace(DreamerV3Config(), **fields)
+    if "seed_steps" not in overrides:
+        # The reference collects no random prefill: the agent acts from the
+        # start and trains once replay holds one batch of agent steps
+        # (batch size x sequence length). seed_steps counts frames.
+        inner = cfg.dmlab_action_repeat if cfg.env_backend == "dmlab" else 1
+        frames_per_step = cfg.action_repeat * inner
+        cfg = replace(
+            cfg, seed_steps=cfg.batch_size * cfg.train_seq_len * frames_per_step
+        )
+    return cfg

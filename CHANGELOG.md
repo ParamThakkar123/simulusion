@@ -73,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   so Atari100k runs (repeat 4) reserved twice the records they can store and
   ran out of memory on a 16 GB machine. The buffer now holds one record per
   agent step of the run.
+- DreamerV3 benchmark presets collected 5000 frames with a random policy
+  before training. The reference has no random prefill: the agent acts from
+  the start and trains once replay holds one batch (16 x 64 agent steps).
+  `benchmark_config` now sets `seed_steps` to that batch, in frames. This
+  matters most for BSuite, whose score counts every episode: bandit spent half
+  of its 10,000-episode budget acting at random.
 - DreamerV3 updates were bound by kernel launches (about 90 small kernels per
   recurrent step): 2.4 s per update on an RTX 3050 laptop with the GPU mostly
   idle. The observe rollout (forward and backward) and imagination now replay
