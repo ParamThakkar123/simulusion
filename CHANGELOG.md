@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- DreamerV3 demo results on Atari100k Boxing (83.3 at 400K frames with the 12M
+  model; the paper reports 78 with 200M), a reduced Crafter run and BSuite
+  (bandit, umbrella_length, memory_len), with gallery media and README clips.
+  `demos/bsuite_scores.py` scores BSuite runs with BSuite's own analysis.
+  BSuite mnist is not learned at 12M or 25M model size.
 - **DreamerV3 Crafter preset.** `benchmark_config("crafter")` and the shared
   `crafter` benchmark: 1M steps, action repeat 1, one environment, replay ratio
   512 and the 200m model, from Table A.1 of the paper's first arXiv version (the
