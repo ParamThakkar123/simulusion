@@ -1027,6 +1027,9 @@ window.runMermaid = runMermaid;</script>
             <span class="n">activation</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">activation</span><span class="p">),</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"reference_init"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reference_init</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">"policy_outscale"</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">world_model_modules</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span><span class="p">,</span>
@@ -1445,10 +1448,15 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_capture</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">build</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Build a CUDA graph, or turn graphs off (with a warning) if that fails."""</span>
         <span class="n">stream</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_stream</span><span class="p">()</span>
+        <span class="n">failed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">graph</span> <span class="o">=</span> <span class="n">build</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"CUDA graph capture failed; running eagerly: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+            <span class="n">failed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">failed</span><span class="p">:</span>
+            <span class="c1"># Outside the except block, so the exception's frames (which hold</span>
+            <span class="c1"># the half-built graph and its memory pool) can be collected.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">cuda_graphs</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">_recover_from_failed_capture</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1885,6 +1893,32 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">posterior</span><span class="p">,</span> <span class="n">action</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reference_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">policy_outscale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Initialize as the reference code does (``trunc_normal_in``, outscales).</span>
+
+<span class="sd">        Every layer is trunc_normal with fan-in scaling; the policy's output</span>
+<span class="sd">        layer is scaled by ``policy_outscale`` (0.01), so the initial policy is</span>
+<span class="sd">        near uniform and, under adaptive gradient clipping, commits only as</span>
+<span class="sd">        fast as its small output weights allow; the reward and critic outputs</span>
+<span class="sd">        are zero; the continue head and decoder keep scale 1.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">simulusion.layers.initializers</span><span class="w"> </span><span class="kn">import</span> <span class="n">dreamer_v3_init_</span><span class="p">,</span> <span class="n">scale_output_</span>
+
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_encoder</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rssm</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obs_decoder</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">continue_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">dreamer_v3_init_</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        <span class="n">scale_output_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward_model</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">scale_output_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_model</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">scale_output_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor</span><span class="o">.</span><span class="n">model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">policy_outscale</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slow_value_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_initial_action</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
@@ -2216,9 +2250,16 @@ window.runMermaid = runMermaid;</script>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">stream</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
-            <span class="k">return</span>
+            <span class="k">break</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
             <span class="k">continue</span>
+    <span class="c1"># The failed capture's graph and its private memory pool are only</span>
+    <span class="c1"># unreachable once the exception's frames are gone; collect them and hand</span>
+    <span class="c1"># the pool back, or eager training starts with the GPU already full.</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+
+    <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_actor_dist</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -2230,6 +2271,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    recognised directly.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"discrete_actions"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"onehot"</span>
+    <span class="c1"># The benchmark adapters (Crafter, Craftax, Atari 100k, ...) expose their</span>
+    <span class="c1"># discrete actions as a one-hot Box marked ``one_hot = True``.</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"action_space"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">"one_hot"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">"onehot"</span>
     <span class="k">return</span> <span class="s2">"onehot"</span> <span class="k">if</span> <span class="n">_has_discrete_actions</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"normal"</span>
 

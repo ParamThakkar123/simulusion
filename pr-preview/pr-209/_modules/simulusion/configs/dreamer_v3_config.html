@@ -793,6 +793,11 @@ window.runMermaid = runMermaid;</script>
     <span class="c1"># Uniform mixture for world model latents and the discrete policy, which</span>
     <span class="c1"># keeps categorical distributions from becoming deterministic.</span>
     <span class="n">unimix</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="c1"># Weight initialization of the reference code: every layer trunc_normal</span>
+    <span class="c1"># (fan-in), the policy's output layer scaled by policy_outscale, the reward</span>
+    <span class="c1"># and critic outputs zero. False keeps PyTorch's default initialization.</span>
+    <span class="n">reference_init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">policy_outscale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
     <span class="c1"># "auto" resolves to "onehot" or "normal" from the environment action space.</span>
     <span class="n">actor_dist</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span>
     <span class="n">actor_min_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>

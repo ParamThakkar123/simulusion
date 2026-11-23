@@ -819,7 +819,27 @@ window.runMermaid = runMermaid;</script>
     <span class="n">spec</span> <span class="o">=</span> <span class="n">BENCHMARKS</span><span class="p">[</span><span class="n">get_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
     <span class="n">fields</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">spec</span><span class="o">.</span><span class="n">env_fields</span><span class="p">(</span><span class="n">task</span><span class="p">),</span> <span class="o">**</span><span class="n">overrides</span><span class="p">}</span>
     <span class="n">_check_fields</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="p">(),</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span></div>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">DreamerV3Config</span><span class="p">(),</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"collect_steps"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">overrides</span> <span class="ow">and</span> <span class="s2">"update_steps"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">overrides</span><span class="p">:</span>
+        <span class="c1"># The reference interleaves training with acting: it steps the</span>
+        <span class="c1"># environment and trains at the replay ratio as it goes. Collecting</span>
+        <span class="c1"># one batch's worth of policy steps per update matches that; a long</span>
+        <span class="c1"># burst of updates on a fixed policy lets the actor exploit world</span>
+        <span class="c1"># model errors before new data corrects them (BSuite's 1000 updates</span>
+        <span class="c1"># per 1000 steps collapsed the mnist policy within one burst).</span>
+        <span class="n">batch_steps</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">cfg</span><span class="o">.</span><span class="n">train_seq_len</span>
+        <span class="n">policy_steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">batch_steps</span> <span class="o">/</span> <span class="n">cfg</span><span class="o">.</span><span class="n">replay_ratio</span><span class="p">))</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">collect_steps</span><span class="o">=</span><span class="n">policy_steps</span> <span class="o">*</span> <span class="n">cfg</span><span class="o">.</span><span class="n">action_repeat</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"seed_steps"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">overrides</span><span class="p">:</span>
+        <span class="c1"># The reference collects no random prefill: the agent acts from the</span>
+        <span class="c1"># start and trains once replay holds one batch of agent steps</span>
+        <span class="c1"># (batch size x sequence length). seed_steps counts frames.</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">dmlab_action_repeat</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">env_backend</span> <span class="o">==</span> <span class="s2">"dmlab"</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">frames_per_step</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">action_repeat</span> <span class="o">*</span> <span class="n">inner</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span> <span class="n">seed_steps</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">*</span> <span class="n">cfg</span><span class="o">.</span><span class="n">train_seq_len</span> <span class="o">*</span> <span class="n">frames_per_step</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">cfg</span></div>
 
 </pre></div>
 
