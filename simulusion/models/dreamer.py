@@ -1552,7 +1552,7 @@ class DreamerAgent(ExportableAgentMixin):
             max_steps=int(total_steps if total_steps is not None else args.total_steps),
             device=self.dreamer.device,
             seed=args.seed,
-            log_every=int(getattr(args, "log_every", 1_000)),
+            log_every=int(getattr(args, "log_every", 0)),
             eval_every=args.test_interval,
             checkpoint_every=args.checkpoint_interval,
             early_stopping_metric="eval_avg_reward" if early else None,

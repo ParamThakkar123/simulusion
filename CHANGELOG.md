@@ -86,8 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - DreamerV3 benchmark presets train while they act, as the reference does:
   one update per batch's worth of policy steps (`collect_steps` = 16 x 64 /
   replay ratio, in frames), instead of collecting 1000 frames and then running
-  every update in one burst. Training metrics are averaged over `log_every`
-  frames (1000) before logging.
+  every update in one burst. Those presets also average training metrics
+  over `log_every` frames (1000) before logging; `log_every` defaults to 0,
+  logging every training step as before.
 - A failed DreamerV3 CUDA graph capture no longer keeps the half-built graph's
   memory pool, which left the GPU full when training fell back to eager mode.
 - `demos/dreamer_v3_demo.py` takes `--no-cuda-graphs`, for model sizes whose

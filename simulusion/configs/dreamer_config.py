@@ -218,6 +218,8 @@ class DreamerConfig(SerializableConfigMixin):
     enable_jsonl: bool = True
     jsonl_filename: str = "metrics.jsonl"
     log_system_stats_freq: int = 1_000
-    # Environment steps between logged (averaged) training metrics.
-    log_every: int = 1_000
+    # Environment steps between logged (averaged) training metrics; 0 logs
+    # every training step. The DreamerV3 benchmark presets, which train every
+    # few frames, set 1000.
+    log_every: int = 0
     detect_anomaly: bool = False

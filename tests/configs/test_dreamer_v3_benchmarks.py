@@ -68,6 +68,10 @@ def test_presets_interleave_one_update_per_batch_of_policy_steps(name, collect):
     # one update per 1024 / r policy steps (x action repeat in frames).
     cfg = benchmark_config(name)
     assert cfg.collect_steps == collect and cfg.update_steps == 1
+    # Steps are a few frames each, so metrics are averaged over 1000 frames;
+    # a plain config keeps logging every step.
+    assert cfg.log_every == 1000
+    assert benchmark_config(name, collect_steps=1000).log_every == 0
 
 
 def test_proprio_and_visual_control_differ_in_inputs_and_tasks():

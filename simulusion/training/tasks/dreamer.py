@@ -206,7 +206,7 @@ class DreamerTask(TrainingTask):
         window = getattr(self, "_agent_window", [])
         window.append(dict(metrics))
         self._agent_window = window
-        every = int(getattr(self.config.model, "log_every", 1_000))
+        every = int(getattr(self.config.model, "log_every", 0))
         if every <= 0 or self.progress() // every > before // every:
             self._to_agent_logger(mean_metrics(window))
             self._agent_window = []

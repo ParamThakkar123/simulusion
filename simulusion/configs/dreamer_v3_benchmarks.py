@@ -142,6 +142,9 @@ def benchmark_config(
         batch_steps = cfg.batch_size * cfg.train_seq_len
         policy_steps = max(1, round(batch_steps / cfg.replay_ratio))
         cfg = replace(cfg, collect_steps=policy_steps * cfg.action_repeat)
+        if "log_every" not in overrides:
+            # A training step is now a few frames: average metrics over 1000.
+            cfg = replace(cfg, log_every=1_000)
     if "seed_steps" not in overrides:
         # The reference collects no random prefill: the agent acts from the
         # start and trains once replay holds one batch of agent steps
