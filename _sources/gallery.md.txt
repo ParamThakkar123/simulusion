@@ -2,9 +2,11 @@
 
 What every model in Simulusion looks like in action. Each clip below was produced by
 the scripts in [`demos/`](https://github.com/ParamThakkar123/simulusion/tree/main/demos),
-trained from scratch on a single **laptop GPU (RTX 3050, 4 GB)** for one to two
-hours. They show what the library does in a short budget, not the paper results,
-which need far more compute. Every section ends with the commands that
+trained from scratch on a single **laptop GPU (RTX 3050, 4 GB)**, most of them for
+one to two hours. They show what the library does in a short budget, not the
+paper results, which need far more compute. The exception is
+{ref}`DreamerV3 <gallery-dreamer-v3>`, whose proprioceptive run follows the
+paper's protocol for its task. Every section ends with the commands that
 reproduce it, and most of the trained models can be
 {ref}`downloaded <gallery-pretrained-checkpoints>` instead.
 
@@ -13,6 +15,10 @@ reproduce it, and most of the trained models can be
   <a class="demo-card" href="#gallery-dreamer">
     <video src="_static/gallery/dreamer_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
     <span class="demo-card-body"><span class="demo-card-title">Dreamer</span><span class="demo-card-text">Learns a world model from pixels and trains its policy inside it.</span></span>
+  </a>
+  <a class="demo-card" href="#gallery-dreamer-v3">
+    <video src="_static/gallery/dreamer_v3_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <span class="demo-card-body"><span class="demo-card-title">DreamerV3</span><span class="demo-card-text">One fixed configuration across domains, from pixels or joint states.</span></span>
   </a>
   <a class="demo-card" href="#gallery-planet">
     <video src="_static/gallery/planet_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
@@ -112,6 +118,78 @@ python demos/dreamer_demo.py record --run demos/runs/dreamer_v2
 ```
 
 See {doc}`dreamer` for the method and the full API.
+
+---
+
+(gallery-dreamer-v3)=
+## DreamerV3
+
+DreamerV3 trains with one set of hyperparameters across domains, and its
+benchmark presets set each benchmark's protocol from Table 2 of the paper (step
+budget, action repeat, replay ratio and model size). Both runs below use the
+12M model on *cartpole swing-up*, the same task as Dreamer above, whose
+maximum return is roughly 880.
+
+**From joint states (Proprio Control).** The paper's protocol: 500k
+environment steps, action repeat 2, replay ratio 512. Evaluation return passed
+840 by 60k steps and held between 857 and 866 from 210k steps to the end; the
+final evaluation scored 866 and the recorded episode 865. Training took about
+13 hours.
+
+```{raw} html
+<div class="demo-pair">
+  <figure class="demo-media">
+    <video src="_static/gallery/dreamer_v3_proprio_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <figcaption>The policy, trained on joint positions and velocities, swinging the pole up and balancing it.</figcaption>
+  </figure>
+  <figure class="demo-media">
+    <img src="_static/gallery/dreamer_v3_proprio_curve.png" alt="DreamerV3 proprio evaluation return over training" loading="lazy">
+    <figcaption>Evaluation return over 500k environment steps.</figcaption>
+  </figure>
+</div>
+```
+
+**From pixels (Visual Control).** 300k of the protocol's 1M environment steps,
+at replay ratio 128 instead of 512, to fit the run into about 5 hours.
+Evaluation return climbed from 21 to between 740 and 840 over the last
+50k steps. The world model, given 5 real frames, keeps tracking the cart and
+pole through all 45 imagined steps of the clip.
+
+```{raw} html
+<figure class="demo-media">
+  <video src="_static/gallery/dreamer_v3_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>Left: the real environment. Right: DreamerV3's world model, given 5 real frames and then imagining the next 45 open loop from the policy's actions.</figcaption>
+</figure>
+<div class="demo-pair">
+  <figure class="demo-media">
+    <video src="_static/gallery/dreamer_v3_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <figcaption>The pixel-based policy in the real environment.</figcaption>
+  </figure>
+  <figure class="demo-media">
+    <img src="_static/gallery/dreamer_v3_curve.png" alt="DreamerV3 visual evaluation return over training" loading="lazy">
+    <figcaption>Evaluation return over 300k environment steps.</figcaption>
+  </figure>
+</div>
+```
+
+Each run is a single seed on a single task, so neither is a benchmark score.
+The proprio run was interrupted by the machine running out of memory and
+resumed from its checkpoints four times; checkpoints keep the weights and
+optimizers but not the replay buffer, so each resume refilled replay from
+fresh experience. The evaluation return did not drop across the restarts.
+
+```bash
+python demos/dreamer_v3_demo.py train --benchmark dmc-proprio --task cartpole-swingup \
+    --steps 500000 --run demos/runs/dreamer_v3_proprio
+python demos/dreamer_v3_demo.py record --run demos/runs/dreamer_v3_proprio
+
+python demos/dreamer_v3_demo.py train --benchmark dmc-visual --task cartpole-swingup \
+    --steps 300000 --replay-ratio 128 --run demos/runs/dreamer_v3
+python demos/dreamer_v3_demo.py record --run demos/runs/dreamer_v3
+```
+
+Add `--resume` to continue an interrupted run. See {doc}`dreamer_v3` for the
+method, the presets and the full API.
 
 ---
 

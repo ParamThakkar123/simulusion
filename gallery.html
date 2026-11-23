@@ -10,12 +10,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://paramthakkar123.github.io/simulusion/gallery.html" />
 <meta property="og:site_name" content="Simulusion Documentation" />
-<meta property="og:description" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB) for one to two hours. They s..." />
+<meta property="og:description" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB), most of them for one to two..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
 <meta property="og:image" content="https://paramthakkar123.github.io/simulusion/_images/social_previews/summary_gallery_427b073e.png" />
-<meta property="og:image:alt" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB) for one to two hours. They s..." />
-<meta name="description" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB) for one to two hours. They s..." />
+<meta property="og:image:alt" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB), most of them for one to two..." />
+<meta name="description" content="What every model in Simulusion looks like in action. Each clip below was produced by the scripts in demos/, trained from scratch on a single laptop GPU (RTX 3050, 4 GB), most of them for one to two..." />
 <meta name="twitter:card" content="summary_large_image" />
 
     <title>Gallery &#8212; Simulusion</title>
@@ -332,6 +332,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Algorithms</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="dreamer.html">Dreamer: Model-Based RL with Latent Dynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dreamer_v3.html">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="planet.html">PlaNet</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jepa.html">JEPA: Joint Embedding Predictive Architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="iris.html">IRIS: Transformers for Sample-Efficient World Models</a></li>
@@ -412,15 +413,21 @@
 <h1>Gallery<a class="headerlink" href="#gallery" title="Link to this heading">#</a></h1>
 <p>What every model in Simulusion looks like in action. Each clip below was produced by
 the scripts in <a class="reference external" href="https://github.com/ParamThakkar123/simulusion/tree/main/demos"><code class="docutils literal notranslate"><span class="pre">demos/</span></code></a>,
-trained from scratch on a single <strong>laptop GPU (RTX 3050, 4 GB)</strong> for one to two
-hours. They show what the library does in a short budget, not the paper results,
-which need far more compute. Every section ends with the commands that
+trained from scratch on a single <strong>laptop GPU (RTX 3050, 4 GB)</strong>, most of them for
+one to two hours. They show what the library does in a short budget, not the
+paper results, which need far more compute. The exception is
+<a class="reference internal" href="#gallery-dreamer-v3"><span class="std std-ref">DreamerV3</span></a>, whose proprioceptive run follows the
+paper’s protocol for its task. Every section ends with the commands that
 reproduce it, and most of the trained models can be
 <a class="reference internal" href="#gallery-pretrained-checkpoints"><span class="std std-ref">downloaded</span></a> instead.</p>
 <div class="demo-grid">
   <a class="demo-card" href="#gallery-dreamer">
     <video src="_static/gallery/dreamer_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
     <span class="demo-card-body"><span class="demo-card-title">Dreamer</span><span class="demo-card-text">Learns a world model from pixels and trains its policy inside it.</span></span>
+  </a>
+  <a class="demo-card" href="#gallery-dreamer-v3">
+    <video src="_static/gallery/dreamer_v3_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <span class="demo-card-body"><span class="demo-card-title">DreamerV3</span><span class="demo-card-text">One fixed configuration across domains, from pixels or joint states.</span></span>
   </a>
   <a class="demo-card" href="#gallery-planet">
     <video src="_static/gallery/planet_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
@@ -503,6 +510,63 @@ python<span class="w"> </span>demos/dreamer_demo.py<span class="w"> </span>recor
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="dreamer.html"><span class="doc">Dreamer: Model-Based RL with Latent Dynamics</span></a> for the method and the full API.</p>
+<hr class="docutils" />
+</section>
+<section id="gallery-dreamer-v3">
+<span id="dreamerv3"></span><h2>DreamerV3<a class="headerlink" href="#gallery-dreamer-v3" title="Link to this heading">#</a></h2>
+<p>DreamerV3 trains with one set of hyperparameters across domains, and its
+benchmark presets set each benchmark’s protocol from Table 2 of the paper (step
+budget, action repeat, replay ratio and model size). Both runs below use the
+12M model on <em>cartpole swing-up</em>, the same task as Dreamer above, whose
+maximum return is roughly 880.</p>
+<p><strong>From joint states (Proprio Control).</strong> The paper’s protocol: 500k
+environment steps, action repeat 2, replay ratio 512. Evaluation return passed
+840 by 60k steps and held between 857 and 866 from 210k steps to the end; the
+final evaluation scored 866 and the recorded episode 865. Training took about
+13 hours.</p>
+<div class="demo-pair">
+  <figure class="demo-media">
+    <video src="_static/gallery/dreamer_v3_proprio_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <figcaption>The policy, trained on joint positions and velocities, swinging the pole up and balancing it.</figcaption>
+  </figure>
+  <figure class="demo-media">
+    <img src="_static/gallery/dreamer_v3_proprio_curve.png" alt="DreamerV3 proprio evaluation return over training" loading="lazy">
+    <figcaption>Evaluation return over 500k environment steps.</figcaption>
+  </figure>
+</div><p><strong>From pixels (Visual Control).</strong> 300k of the protocol’s 1M environment steps,
+at replay ratio 128 instead of 512, to fit the run into about 5 hours.
+Evaluation return climbed from 21 to between 740 and 840 over the last
+50k steps. The world model, given 5 real frames, keeps tracking the cart and
+pole through all 45 imagined steps of the clip.</p>
+<figure class="demo-media">
+  <video src="_static/gallery/dreamer_v3_dream.mp4" autoplay loop muted playsinline preload="metadata"></video>
+  <figcaption>Left: the real environment. Right: DreamerV3's world model, given 5 real frames and then imagining the next 45 open loop from the policy's actions.</figcaption>
+</figure>
+<div class="demo-pair">
+  <figure class="demo-media">
+    <video src="_static/gallery/dreamer_v3_policy.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <figcaption>The pixel-based policy in the real environment.</figcaption>
+  </figure>
+  <figure class="demo-media">
+    <img src="_static/gallery/dreamer_v3_curve.png" alt="DreamerV3 visual evaluation return over training" loading="lazy">
+    <figcaption>Evaluation return over 300k environment steps.</figcaption>
+  </figure>
+</div><p>Each run is a single seed on a single task, so neither is a benchmark score.
+The proprio run was interrupted by the machine running out of memory and
+resumed from its checkpoints four times; checkpoints keep the weights and
+optimizers but not the replay buffer, so each resume refilled replay from
+fresh experience. The evaluation return did not drop across the restarts.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>demos/dreamer_v3_demo.py<span class="w"> </span>train<span class="w"> </span>--benchmark<span class="w"> </span>dmc-proprio<span class="w"> </span>--task<span class="w"> </span>cartpole-swingup<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--steps<span class="w"> </span><span class="m">500000</span><span class="w"> </span>--run<span class="w"> </span>demos/runs/dreamer_v3_proprio
+python<span class="w"> </span>demos/dreamer_v3_demo.py<span class="w"> </span>record<span class="w"> </span>--run<span class="w"> </span>demos/runs/dreamer_v3_proprio
+
+python<span class="w"> </span>demos/dreamer_v3_demo.py<span class="w"> </span>train<span class="w"> </span>--benchmark<span class="w"> </span>dmc-visual<span class="w"> </span>--task<span class="w"> </span>cartpole-swingup<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--steps<span class="w"> </span><span class="m">300000</span><span class="w"> </span>--replay-ratio<span class="w"> </span><span class="m">128</span><span class="w"> </span>--run<span class="w"> </span>demos/runs/dreamer_v3
+python<span class="w"> </span>demos/dreamer_v3_demo.py<span class="w"> </span>record<span class="w"> </span>--run<span class="w"> </span>demos/runs/dreamer_v3
+</pre></div>
+</div>
+<p>Add <code class="docutils literal notranslate"><span class="pre">--resume</span></code> to continue an interrupted run. See <a class="reference internal" href="dreamer_v3.html"><span class="doc">DreamerV3: Mastering Diverse Domains with Fixed Hyperparameters</span></a> for the
+method, the presets and the full API.</p>
 <hr class="docutils" />
 </section>
 <section id="gallery-planet">
@@ -805,6 +869,7 @@ for details and per-demo options.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-read-the-world-model-clips">How to read the world-model clips</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-dreamer">Dreamer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-dreamer-v3">DreamerV3</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-planet">PlaNet</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-diamond">DIAMOND</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gallery-iris">IRIS</a></li>
