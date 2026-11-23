@@ -1036,6 +1036,21 @@ class TestActorDistResolution:
         assert _resolve_actor_dist(wrappers.TimeLimit(one_hot, 10)) == "onehot"
         assert _resolve_actor_dist(stacked) == "onehot"
 
+    def test_one_hot_box_of_benchmark_adapters_resolves_to_onehot(self):
+        # Crafter, Craftax and Atari 100k expose discrete actions as a one-hot
+        # Box marked one_hot=True, without a discrete_actions attribute; they
+        # used to get a Gaussian policy.
+        from simulusion.envs import wrappers
+        from simulusion.envs._spaces import OneHotActionSpace
+
+        class OneHotBoxEnv:
+            action_space = OneHotActionSpace(17)
+
+        env = OneHotBoxEnv()
+        assert not hasattr(env, "discrete_actions")
+        assert _resolve_actor_dist(env) == "onehot"
+        assert _resolve_actor_dist(wrappers.ActionRepeat(env, 1)) == "onehot"
+
     @pytest.mark.parametrize(
         ("env_id", "expected"), [("CartPole-v1", "onehot"), ("Pendulum-v1", "normal")]
     )

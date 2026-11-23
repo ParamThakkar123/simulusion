@@ -1532,6 +1532,10 @@ def _resolve_actor_dist(env: Any) -> str:
     """
     if getattr(env, "discrete_actions", False) is True:
         return "onehot"
+    # The benchmark adapters (Crafter, Craftax, Atari 100k, ...) expose their
+    # discrete actions as a one-hot Box marked ``one_hot = True``.
+    if getattr(getattr(env, "action_space", None), "one_hot", False) is True:
+        return "onehot"
     return "onehot" if _has_discrete_actions(env) else "normal"
 
 

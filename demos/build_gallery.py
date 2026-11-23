@@ -39,6 +39,12 @@ MEDIA = [
     ("dreamer_v3", "curve.png", "dreamer_v3_curve"),
     ("dreamer_v3_proprio", "policy.mp4", "dreamer_v3_proprio_policy"),
     ("dreamer_v3_proprio", "curve.png", "dreamer_v3_proprio_curve"),
+    ("dreamer_v3_boxing", "dream.mp4", "dreamer_v3_boxing_dream"),
+    ("dreamer_v3_boxing", "policy.mp4", "dreamer_v3_boxing_policy"),
+    ("dreamer_v3_boxing", "curve.png", "dreamer_v3_boxing_curve"),
+    ("dreamer_v3_crafter", "dream.mp4", "dreamer_v3_crafter_dream"),
+    ("dreamer_v3_crafter", "policy.mp4", "dreamer_v3_crafter_policy"),
+    ("dreamer_v3_crafter", "curve.png", "dreamer_v3_crafter_curve"),
     ("planet", "dream.mp4", "planet_dream"),
     ("planet", "policy.mp4", "planet_policy"),
     ("planet", "curve.png", "planet_curve"),
@@ -63,13 +69,14 @@ README_GIFS = {
     "dreamer_dream",
     "dreamer_v3_dream",
     "dreamer_v3_proprio_policy",
+    "dreamer_v3_boxing_policy",
     "planet_dream",
     "diamond_dream",
     "iris_dream",
     "genie_replay",
 }
 # Clips whose GIF needs longer than the default 6 s to show the point.
-GIF_SECONDS = {"dreamer_v3_proprio_policy": 10.0}
+GIF_SECONDS = {"dreamer_v3_proprio_policy": 10.0, "dreamer_v3_boxing_policy": 10.0}
 
 
 def _ffmpeg() -> str:

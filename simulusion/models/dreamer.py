@@ -334,6 +334,11 @@ def make_env(args: Any, evaluation: bool = False) -> Any:
         # action interface across every backend. Action normalization would
         # remap the [0, 1] one-hot space and is skipped.
         env = env_wrapper.OneHotAction(env)
+    elif getattr(env.action_space, "one_hot", False) is True:
+        # Benchmark adapters (Crafter, Craftax, Atari 100k) already expose a
+        # one-hot Box in [-1, 1]. NormalizeActions would replace it with a
+        # plain Box and drop the `one_hot` marker the agents read.
+        pass
     else:
         env = env_wrapper.NormalizeActions(env)
     frame_stack = max(1, int(getattr(args, "frame_stack", 1)))

@@ -69,6 +69,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `labmaze.RandomMaze` works on CPython 3.13, including Windows.
 
 ### Fixed
+- DreamerV3 used a Gaussian policy on Crafter, Craftax and the native Atari
+  100k protocol: their one-hot action Box (`one_hot = True`) was not
+  recognised as discrete, and `make_env` replaced it with a plain Box through
+  `NormalizeActions`. One-hot spaces now keep their marker and get the
+  categorical policy, as BSuite, DMLab and Minecraft already did.
 - DreamerV3 initializes its networks as the reference code does
   (`simulusion.layers.initializers`): every layer trunc-normal with fan-in
   scaling, the policy output scaled by `policy_outscale` (0.01), the reward
