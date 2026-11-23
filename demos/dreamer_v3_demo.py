@@ -31,6 +31,7 @@ import json
 import sys
 from dataclasses import replace
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -123,6 +124,9 @@ def record(args: argparse.Namespace) -> None:
 
     run = Path(args.run)
     out = run / "media"
+    if getattr(args, "curve_only", False):
+        _write_curve(run, out)
+        return
     ckpt = Path(args.checkpoint) if args.checkpoint else _checkpoints(run)[-1][1]
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
     model = DreamerV3.from_pretrained(
@@ -196,16 +200,70 @@ def record(args: argparse.Namespace) -> None:
     print(f"policy return over {len(frames)} steps: {total:.1f}")
     print("wrote", write_mp4(frames, out / "policy.mp4", fps=args.fps))
 
+    _write_curve(run, out, model.args)
+
+
+def _write_curve(run: Path, out: Path, model_args: Any = None) -> None:
+    """``curve.png``: training-episode and evaluation return over training."""
+    if model_args is None:
+        import yaml
+
+        model_args = argparse.Namespace(**yaml.safe_load((run / "config.yaml").read_text()))
+    curves = {}
+    train_steps, train_returns = _train_curve(run)
+    if train_steps:
+        curves["training episodes (smoothed)"] = (train_steps, train_returns)
     steps, returns = _eval_curve(run)
     if steps:
+        curves["evaluation"] = (steps, returns)
+    if curves:
+        backend = str(getattr(model_args, "env_backend", ""))
+        task = str(model_args.env)
+        name = task if backend in ("", "dmc", "gym") else f"{backend} ({task})"
         plot_curves(
-            {"eval return": (steps, returns)},
+            curves,
             out / "curve.png",
-            title=f"DreamerV3 on {model.args.env}",
+            title=f"DreamerV3 on {name}",
             xlabel="environment steps",
             ylabel="episode return",
         )
         print("wrote", out / "curve.png")
+
+
+def _train_curve(run: Path, window: int = 10) -> tuple[list[float], list[float]]:
+    """Training-episode return against global step, stitched and smoothed.
+
+    The stochastic training policy's returns, which the paper reports; the
+    evaluation points use a few deterministic episodes and are noisier.
+    """
+    from _media import read_metrics
+
+    segments = _segments(run)
+    steps: list[float] = []
+    values: list[float] = []
+    for i, seg in enumerate(segments):
+        end = segments[i + 1]["offset"] if i + 1 < len(segments) else float("inf")
+        path = run / seg["dir"] / "metrics.jsonl"
+        if not path.exists():
+            continue
+        seg_steps: list[float] = []
+        seg_values: list[float] = []
+        for row in read_metrics(path):
+            step = seg["offset"] + row.get("step", 0)
+            if "train_avg_reward" not in row or step >= end:
+                continue
+            if seg_steps and step < seg_steps[-1]:
+                # A retried resume appended a second run to this segment's
+                # log; keep only the last one.
+                seg_steps, seg_values = [], []
+            seg_steps.append(step)
+            seg_values.append(float(row["train_avg_reward"]))
+        steps += seg_steps
+        values += seg_values
+    smoothed = [
+        float(np.mean(values[max(0, i - window + 1) : i + 1])) for i in range(len(values))
+    ]
+    return steps, smoothed
 
 
 def main() -> None:
@@ -253,6 +311,9 @@ def main() -> None:
     r.add_argument("--fps", type=int, default=15)
     r.add_argument("--seed", type=int, default=7)
     r.add_argument("--device", default=None)
+    r.add_argument(
+        "--curve-only", action="store_true", help="only redraw curve.png"
+    )
 
     args = parser.parse_args()
     {"train": train, "record": record}[args.command](args)
