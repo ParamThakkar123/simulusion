@@ -34,6 +34,17 @@ MEDIA = [
     ("dreamer_v2", "dream.mp4", "dreamer_v2_dream"),
     ("dreamer_v2", "policy.mp4", "dreamer_v2_policy"),
     ("dreamer_v2", "curve.png", "dreamer_v2_curve"),
+    ("dreamer_v3", "dream.mp4", "dreamer_v3_dream"),
+    ("dreamer_v3", "policy.mp4", "dreamer_v3_policy"),
+    ("dreamer_v3", "curve.png", "dreamer_v3_curve"),
+    ("dreamer_v3_proprio", "policy.mp4", "dreamer_v3_proprio_policy"),
+    ("dreamer_v3_proprio", "curve.png", "dreamer_v3_proprio_curve"),
+    ("dreamer_v3_boxing", "dream.mp4", "dreamer_v3_boxing_dream"),
+    ("dreamer_v3_boxing", "policy.mp4", "dreamer_v3_boxing_policy"),
+    ("dreamer_v3_boxing", "curve.png", "dreamer_v3_boxing_curve"),
+    ("dreamer_v3_crafter", "dream.mp4", "dreamer_v3_crafter_dream"),
+    ("dreamer_v3_crafter", "policy.mp4", "dreamer_v3_crafter_policy"),
+    ("dreamer_v3_crafter", "curve.png", "dreamer_v3_crafter_curve"),
     ("planet", "dream.mp4", "planet_dream"),
     ("planet", "policy.mp4", "planet_policy"),
     ("planet", "curve.png", "planet_curve"),
@@ -56,11 +67,17 @@ MEDIA = [
 ]
 README_GIFS = {
     "dreamer_dream",
+    "dreamer_v3_dream",
+    "dreamer_v3_proprio_policy",
+    "dreamer_v3_boxing_policy",
+    "dreamer_v3_boxing_dream",
     "planet_dream",
     "diamond_dream",
     "iris_dream",
     "genie_replay",
 }
+# Clips whose GIF needs longer than the default 6 s to show the point.
+GIF_SECONDS = {"dreamer_v3_proprio_policy": 10.0, "dreamer_v3_boxing_policy": 10.0}
 
 
 def _ffmpeg() -> str:
@@ -125,7 +142,9 @@ def main() -> None:
         if src.suffix == ".mp4":
             compress_mp4(src, dst)
             if name in README_GIFS:
-                gif_from_mp4(src, GALLERY / f"{name}.gif")
+                gif_from_mp4(
+                    src, GALLERY / f"{name}.gif", seconds=GIF_SECONDS.get(name, 6.0)
+                )
         else:
             shutil.copyfile(src, dst)
         print(f"{dst.relative_to(ROOT)}  {dst.stat().st_size / 1024:.0f} KB")

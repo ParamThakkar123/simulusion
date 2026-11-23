@@ -50,9 +50,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "Dreamer": "simulusion.models",
     "DreamerV1": "simulusion.models",
     "DreamerV2": "simulusion.models",
+    "DreamerV3": "simulusion.models",
     "DreamerAgent": "simulusion.models",
     "DreamerV1Agent": "simulusion.models",
     "DreamerV2Agent": "simulusion.models",
+    "DreamerV3Agent": "simulusion.models",
     "Planet": "simulusion.models",
     "JEPAAgent": "simulusion.models",
     "IRISAgent": "simulusion.models",
@@ -74,12 +76,17 @@ _LAZY_EXPORTS: dict[str, str] = {
     "create_dynamics_model": "simulusion.models",
     # State-space models.
     "RSSM": "simulusion.models",
+    "CategoricalRSSM": "simulusion.models",
     "RecurrentStateSpaceModel": "simulusion.models",
     # ``dreamer_rssm`` defines the class as ``RSSM``; ``simulusion.models``
     # is what exposes it under the ``DreamerRSSM`` alias.
     "DreamerRSSM": "simulusion.models",
     # Vision components.
     "ConvEncoder": "simulusion.vision",
+    "DreamerV3Encoder": "simulusion.vision",
+    "DreamerV3Decoder": "simulusion.vision",
+    "DreamerV3Head": "simulusion.vision",
+    "DreamerV3Actor": "simulusion.vision",
     "CNNEncoder": "simulusion.vision",
     "ConvDecoder": "simulusion.vision",
     "CNNDecoder": "simulusion.vision",
@@ -95,6 +102,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "VectorQuantizerEMA": "simulusion.vision",
     # Memory.
     "ReplayBuffer": "simulusion.memory",
+    "DreamerV3ReplayBuffer": "simulusion.memory",
     "Memory": "simulusion.memory",
     "Episode": "simulusion.memory",
     "IRISReplayBuffer": "simulusion.memory",
@@ -127,6 +135,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CNNFeatureExtractor": "simulusion.controller",
     # Configs.
     "DreamerConfig": "simulusion.configs",
+    "DreamerV3Config": "simulusion.configs",
     "JEPAConfig": "simulusion.configs",
     "DiTConfig": "simulusion.configs",
     "dit_preset_config": "simulusion.configs",

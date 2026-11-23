@@ -1,7 +1,7 @@
 # Simulusion demos
 
-One script per model. Each trains the model from scratch on a single GPU in one
-to two hours and then records what it learned as video, images and a learning
+One script per model. Each trains the model from scratch on a single GPU, most
+in one to two hours, and then records what it learned as video, images and a learning
 curve. The results are shown in the
 [documentation gallery](https://paramthakkar123.github.io/simulusion/gallery.html).
 
@@ -9,6 +9,8 @@ curve. The results are shown in the
 |---|---|---|---|---|
 | Dreamer | `dreamer_demo.py` | DMC cartpole swing-up | 60k env steps | real vs imagined, policy, curve |
 | DreamerV2 | `dreamer_demo.py --algo dreamer-v2` | DMC cartpole swing-up | 60k env steps | real vs imagined, policy, curve |
+| DreamerV3 | `dreamer_v3_demo.py --benchmark dmc-visual` | DMC cartpole swing-up, pixels | 300k env steps, ratio 128 (~5 h) | real vs imagined, policy, curve |
+| DreamerV3 | `dreamer_v3_demo.py --benchmark dmc-proprio` | DMC cartpole swing-up, joint states | paper protocol: 500k env steps (~13 h) | policy, curve |
 | PlaNet | `planet_demo.py` | DMC cartpole swing-up | 75 min | real vs imagined, CEM planner, curve |
 | ModularRSSM | `modular_rssm_demo.py` | DMC cartpole swing-up, random actions | 25 min per backbone | real vs GRU vs LSTM, curve |
 | DIAMOND | `diamond_demo.py` | Atari Breakout | 21 epochs | real vs diffusion dream, agent in the dream, curve |
@@ -47,7 +49,8 @@ python demos/build_gallery.py            # compress media into docs/source/_stat
 Dreamer demos continue from their newest checkpoint (`dreamer_demo.py train
 --resume`): weights and optimizers are restored, the replay buffer refills from
 fresh experience, and the learning curve is stitched across the restart. Other
-demos that were interrupted start training again.
+demos that were interrupted start training again. `dreamer_v3_demo.py train
+--resume` works the same way.
 
 ## Requirements
 
