@@ -105,6 +105,11 @@ class DreamerV3Config(DreamerConfig):
     # Uniform mixture for world model latents and the discrete policy, which
     # keeps categorical distributions from becoming deterministic.
     unimix: float = 0.01
+    # Weight initialization of the reference code: every layer trunc_normal
+    # (fan-in), the policy's output layer scaled by policy_outscale, the reward
+    # and critic outputs zero. False keeps PyTorch's default initialization.
+    reference_init: bool = True
+    policy_outscale: float = 0.01
     # "auto" resolves to "onehot" or "normal" from the environment action space.
     actor_dist: str = "auto"
     actor_min_std: float = 0.1

@@ -54,9 +54,20 @@ def test_configs_carry_the_protocol(name):
 
 
 def test_replay_ratio_sets_the_update_steps():
-    cfg = benchmark_config("dmc-proprio", "walker-walk")
+    cfg = benchmark_config("dmc-proprio", "walker-walk", collect_steps=1000)
     # 1000 frames / action repeat 2 = 500 policy steps, x512 / (16 x 64).
     assert cfg.update_steps == 250
+
+
+@pytest.mark.parametrize(
+    ("name", "collect"),
+    [("bsuite", 1), ("dmc-proprio", 4), ("atari100k", 32), ("crafter", 2)],
+)
+def test_presets_interleave_one_update_per_batch_of_policy_steps(name, collect):
+    # The reference trains as it acts: at replay ratio r and 16 x 64 batches,
+    # one update per 1024 / r policy steps (x action repeat in frames).
+    cfg = benchmark_config(name)
+    assert cfg.collect_steps == collect and cfg.update_steps == 1
 
 
 def test_proprio_and_visual_control_differ_in_inputs_and_tasks():

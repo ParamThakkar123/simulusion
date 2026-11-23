@@ -64,6 +64,9 @@ def train(args: argparse.Namespace) -> None:
         overrides["model_size"] = args.model_size
     if args.replay_ratio:
         overrides["replay_ratio"] = args.replay_ratio
+    if args.no_cuda_graphs:
+        # Larger models' graph memory pools can exceed a small GPU.
+        overrides["cuda_graphs"] = False
     if args.benchmark == "bsuite":
         # BSuite scores a run from its own CSV log. A resumed run cannot add to
         # it (the episode budget restarts), so BSuite refuses an existing log.
@@ -227,6 +230,11 @@ def main() -> None:
         type=int,
         default=None,
         help="cap replay at this many agent steps (default: the whole run)",
+    )
+    t.add_argument(
+        "--no-cuda-graphs",
+        action="store_true",
+        help="run updates eagerly (less GPU memory, slower)",
     )
     t.add_argument("--seed", type=int, default=1)
     t.add_argument("--run", default="demos/runs/dreamer_v3")

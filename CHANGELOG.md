@@ -69,6 +69,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `labmaze.RandomMaze` works on CPython 3.13, including Windows.
 
 ### Fixed
+- DreamerV3 initializes its networks as the reference code does
+  (`simulusion.layers.initializers`): every layer trunc-normal with fan-in
+  scaling, the policy output scaled by `policy_outscale` (0.01), the reward
+  and critic outputs zero. `reference_init=False` keeps PyTorch's defaults.
+- DreamerV3 benchmark presets train while they act, as the reference does:
+  one update per batch's worth of policy steps (`collect_steps` = 16 x 64 /
+  replay ratio, in frames), instead of collecting 1000 frames and then running
+  every update in one burst. Training metrics are averaged over `log_every`
+  frames (1000) before logging.
+- A failed DreamerV3 CUDA graph capture no longer keeps the half-built graph's
+  memory pool, which left the GPU full when training fell back to eager mode.
+- `demos/dreamer_v3_demo.py` takes `--no-cuda-graphs`, for model sizes whose
+  graph memory pools do not fit a small GPU.
 - `demos/dreamer_v3_demo.py` sized its replay buffer for an action repeat of 2,
   so Atari100k runs (repeat 4) reserved twice the records they can store and
   ran out of memory on a 16 GB machine. The buffer now holds one record per

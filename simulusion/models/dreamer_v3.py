@@ -339,6 +339,9 @@ class DreamerV3:
             activation=str(args.activation),
         ).to(self.device)
 
+        if bool(getattr(args, "reference_init", True)):
+            self._reference_init(float(getattr(args, "policy_outscale", 0.01)))
+
         self.world_model_modules: list[nn.Module] = [
             self.rssm,
             self.obs_encoder,
@@ -736,10 +739,15 @@ class DreamerV3:
     def _capture(self, name: str, build: Any) -> Any:
         """Build a CUDA graph, or turn graphs off (with a warning) if that fails."""
         stream = torch.cuda.current_stream()
+        failed = False
         try:
             graph = build()
         except RuntimeError as exc:
             logger.warning("CUDA graph capture failed; running eagerly: %s", exc)
+            failed = True
+        if failed:
+            # Outside the except block, so the exception's frames (which hold
+            # the half-built graph and its memory pool) can be collected.
             self.args.cuda_graphs = False
             _recover_from_failed_capture(stream)
             return None
@@ -1161,6 +1169,32 @@ class DreamerV3:
             )
         return posterior, action
 
+    def _reference_init(self, policy_outscale: float) -> None:
+        """Initialize as the reference code does (``trunc_normal_in``, outscales).
+
+        Every layer is trunc_normal with fan-in scaling; the policy's output
+        layer is scaled by ``policy_outscale`` (0.01), so the initial policy is
+        near uniform and, under adaptive gradient clipping, commits only as
+        fast as its small output weights allow; the reward and critic outputs
+        are zero; the continue head and decoder keep scale 1.
+        """
+        from simulusion.layers.initializers import dreamer_v3_init_, scale_output_
+
+        for module in (
+            self.obs_encoder,
+            self.rssm,
+            self.obs_decoder,
+            self.reward_model,
+            self.continue_model,
+            self.value_model,
+            self.actor,
+        ):
+            dreamer_v3_init_(module)
+        scale_output_(self.reward_model.model[-1], 0.0)
+        scale_output_(self.value_model.model[-1], 0.0)
+        scale_output_(self.actor.model[-1], policy_outscale)
+        self.slow_value_model.load_state_dict(self.value_model.state_dict())
+
     def _initial_action(self) -> torch.Tensor:
         return torch.zeros(1, self.action_size, device=self.device)
 
@@ -1476,9 +1510,16 @@ def _recover_from_failed_capture(stream: torch.cuda.Stream) -> None:
     for _ in range(2):
         try:
             torch.zeros(1, device=stream.device).add_(1).cpu()
-            return
+            break
         except RuntimeError:
             continue
+    # The failed capture's graph and its private memory pool are only
+    # unreachable once the exception's frames are gone; collect them and hand
+    # the pool back, or eager training starts with the GPU already full.
+    import gc
+
+    gc.collect()
+    torch.cuda.empty_cache()
 
 
 def _resolve_actor_dist(env: Any) -> str:

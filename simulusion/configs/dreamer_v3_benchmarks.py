@@ -132,6 +132,16 @@ def benchmark_config(
     fields: dict[str, Any] = {**spec.config, **spec.env_fields(task), **overrides}
     _check_fields(fields)
     cfg = replace(DreamerV3Config(), **fields)
+    if "collect_steps" not in overrides and "update_steps" not in overrides:
+        # The reference interleaves training with acting: it steps the
+        # environment and trains at the replay ratio as it goes. Collecting
+        # one batch's worth of policy steps per update matches that; a long
+        # burst of updates on a fixed policy lets the actor exploit world
+        # model errors before new data corrects them (BSuite's 1000 updates
+        # per 1000 steps collapsed the mnist policy within one burst).
+        batch_steps = cfg.batch_size * cfg.train_seq_len
+        policy_steps = max(1, round(batch_steps / cfg.replay_ratio))
+        cfg = replace(cfg, collect_steps=policy_steps * cfg.action_repeat)
     if "seed_steps" not in overrides:
         # The reference collects no random prefill: the agent acts from the
         # start and trains once replay holds one batch of agent steps
