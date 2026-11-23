@@ -70,6 +70,7 @@ README_GIFS = {
     "dreamer_v3_dream",
     "dreamer_v3_proprio_policy",
     "dreamer_v3_boxing_policy",
+    "dreamer_v3_boxing_dream",
     "planet_dream",
     "diamond_dream",
     "iris_dream",
