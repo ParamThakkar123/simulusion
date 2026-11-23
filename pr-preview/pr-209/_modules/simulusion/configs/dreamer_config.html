@@ -906,8 +906,10 @@ window.runMermaid = runMermaid;</script>
     <span class="n">enable_jsonl</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">jsonl_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"metrics.jsonl"</span>
     <span class="n">log_system_stats_freq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1_000</span>
-    <span class="c1"># Environment steps between logged (averaged) training metrics.</span>
-    <span class="n">log_every</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1_000</span>
+    <span class="c1"># Environment steps between logged (averaged) training metrics; 0 logs</span>
+    <span class="c1"># every training step. The DreamerV3 benchmark presets, which train every</span>
+    <span class="c1"># few frames, set 1000.</span>
+    <span class="n">log_every</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">detect_anomaly</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 </pre></div>
