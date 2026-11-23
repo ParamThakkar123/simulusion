@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-11-23
+
 ### Added
 - DreamerV3 demo results on Atari100k Boxing (83.3 at 400K frames with the 12M
   model; the paper reports 78 with 200M), a reduced Crafter run and BSuite
