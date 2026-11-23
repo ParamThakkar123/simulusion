@@ -208,7 +208,9 @@ def _write_curve(run: Path, out: Path, model_args: Any = None) -> None:
     if model_args is None:
         import yaml
 
-        model_args = argparse.Namespace(**yaml.safe_load((run / "config.yaml").read_text()))
+        model_args = argparse.Namespace(
+            **yaml.safe_load((run / "config.yaml").read_text())
+        )
     curves = {}
     train_steps, train_returns = _train_curve(run)
     if train_steps:
@@ -261,7 +263,8 @@ def _train_curve(run: Path, window: int = 10) -> tuple[list[float], list[float]]
         steps += seg_steps
         values += seg_values
     smoothed = [
-        float(np.mean(values[max(0, i - window + 1) : i + 1])) for i in range(len(values))
+        float(np.mean(values[max(0, i - window + 1) : i + 1]))
+        for i in range(len(values))
     ]
     return steps, smoothed
 
@@ -311,9 +314,7 @@ def main() -> None:
     r.add_argument("--fps", type=int, default=15)
     r.add_argument("--seed", type=int, default=7)
     r.add_argument("--device", default=None)
-    r.add_argument(
-        "--curve-only", action="store_true", help="only redraw curve.png"
-    )
+    r.add_argument("--curve-only", action="store_true", help="only redraw curve.png")
 
     args = parser.parse_args()
     {"train": train, "record": record}[args.command](args)

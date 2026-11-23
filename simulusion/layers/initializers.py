@@ -21,7 +21,9 @@ TRUNC_NORMAL_UNIT_SCALE = 1.1368
 
 
 @torch.no_grad()
-def trunc_normal_in_(weight: torch.Tensor, fan_in: int, scale: float = 1.0) -> torch.Tensor:
+def trunc_normal_in_(
+    weight: torch.Tensor, fan_in: int, scale: float = 1.0
+) -> torch.Tensor:
     """Fill ``weight`` with ``trunc_normal(-2, 2) * 1.1368 * sqrt(1 / fan_in) * scale``."""
     nn.init.trunc_normal_(weight, mean=0.0, std=1.0, a=-2.0, b=2.0)
     weight.mul_(TRUNC_NORMAL_UNIT_SCALE * math.sqrt(1.0 / max(1, int(fan_in))) * scale)

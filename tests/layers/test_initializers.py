@@ -75,5 +75,7 @@ def test_dreamer_v3_starts_with_a_near_uniform_policy_and_zero_heads():
         output = head.model[-1]
         assert isinstance(output, nn.Linear)
         assert float(output.weight.abs().max()) == 0.0
-    for a, b in zip(model.value_model.parameters(), model.slow_value_model.parameters()):
+    for a, b in zip(
+        model.value_model.parameters(), model.slow_value_model.parameters()
+    ):
         assert torch.equal(a, b)
