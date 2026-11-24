@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   pixels with two losses: next-embedding prediction and SIGReg, which keeps the
   embeddings an isotropic Gaussian so they cannot collapse, with no EMA target,
   stop-gradient or decoder. Its parts are library components: `LeWMEncoder`
-  (ViT with a CLS token), `BNProjector`, `ActionEmbedder`, `ARPredictor` (a
+  (ViT with a CLS token, in `simulusion.vision`), `CausalAttention` (in
+  `simulusion.blocks`), `BNProjector`, `ActionEmbedder`, `ARPredictor` (a
   causal transformer whose blocks are conditioned on the action through
   AdaLN-zero), `SIGReg` and `epps_pulley`. Defaults (`LeWMConfig`) follow the
   paper, including its SIGReg weight of 0.1 (Fig. 16 peaks near 0.09, the

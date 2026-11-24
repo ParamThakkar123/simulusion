@@ -171,7 +171,6 @@ from simulusion.models.lewm import ARPredictor as ARPredictor
 from simulusion.models.lewm import ActionEmbedder as ActionEmbedder
 from simulusion.models.lewm import BNProjector as BNProjector
 from simulusion.models.lewm import LeWM as LeWM
-from simulusion.models.lewm import LeWMEncoder as LeWMEncoder
 from simulusion.models.lewm import SIGReg as SIGReg
 from simulusion.models.lewm import epps_pulley as epps_pulley
 from simulusion.models.lewm import temporal_straightness as temporal_straightness
@@ -226,6 +225,7 @@ from simulusion.vision.dreamer_v3_nets import DreamerV3Encoder as DreamerV3Encod
 from simulusion.vision.dreamer_v3_nets import DreamerV3Head as DreamerV3Head
 from simulusion.vision.iris_decoder import IRISDecoder as IRISDecoder
 from simulusion.vision.iris_encoder import IRISEncoder as IRISEncoder
+from simulusion.vision.lewm_encoder import LeWMEncoder as LeWMEncoder
 from simulusion.vision.perceptual_loss import LPIPSPerceptualLoss as LPIPSPerceptualLoss
 from simulusion.vision.perceptual_loss import build_perceptual_loss as build_perceptual_loss
 from simulusion.vision.planet_decoder import CNNDecoder as CNNDecoder

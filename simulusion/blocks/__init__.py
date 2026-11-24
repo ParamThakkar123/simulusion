@@ -31,6 +31,7 @@ __all__ = [
     # Attention
     "MultiHeadSelfAttention",
     "MultiHeadAttention",
+    "CausalAttention",
     # Normalization
     "RMSNorm",
     "AdaLNNormalization",
@@ -69,6 +70,10 @@ def __getattr__(name: str) -> Any:
         from .mhsa import MultiHeadSelfAttention
 
         return MultiHeadSelfAttention
+    if name == "CausalAttention":
+        from .causal_attention import CausalAttention
+
+        return CausalAttention
 
     # Normalization
     if name == "RMSNorm":
