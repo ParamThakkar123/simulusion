@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Goal-conditioned environments** (`simulusion.envs.goal`): the tasks on
+  which reward-free world models (LeWM, DINO-WM, PLDM) are evaluated by
+  planning to a goal image. `GoalEnv` is the shared contract: `reset` takes a
+  start `state` and a `goal_state`, `get_state` / `set_state` expose the full
+  physical state, `goal_observation()` renders the goal, and every step
+  reports `success`, `goal_distance` and `state`. `make_goal_env(name)` and
+  `make_env(..., backend=...)` create them.
+  - `TwoRoomEnv`: point-mass navigation between two rooms through a door, as
+    specified by PLDM (Sobal et al., 2025): no momentum, steps up to 2.45,
+    moves that hit a wall stop there. Pure NumPy.
+  - `PushTEnv`: Push-T (Chi et al., 2023) implemented on pymunk; a
+    PD-controlled pusher and a T block, with DINO-WM's goal-reaching success
+    (block pose and pusher). Extra `pusht`.
+  - `OGBenchCubeEnv`: OGBench's cube manipulation (1 to 4 cubes) with pixel
+    frames, arbitrary goal states and OGBench's 4 cm success. Extra `ogbench`;
+    on Python 3.13, `python -m simulusion.install_dmc --ogbench`.
+  - `ReacherGoalEnv`: DMC Reacher where the whole arm must match a goal pose
+    (DINO-WM), with the target sphere hidden.
+
+  Success thresholds the papers do not state (Two-Room radius, Push-T and
+  Reacher tolerances) are arguments with documented defaults.
+- **Offline data collection** for these environments:
+  `simulusion.data.collect.collect_goal_episodes` and
+  `simulusion datasets collect ENV OUT`, with scripted policies in
+  `simulusion.envs.goal_policies` (PLDM's von Mises walk and a door-seeking
+  heuristic for Two-Room, a block-seeking pusher for Push-T, OGBench's own
+  cube oracle, and a PD pose-seeker for Reacher). Episodes record every
+  frame's true state as `observations["state"]` and train like any episode
+  folder.
+- **Goal-reaching benchmark** (`simulusion.benchmarks.goal_reaching`): start
+  in a logged state, reach the state `goal_offset` steps later within a step
+  budget, scored by success rate. `GOAL_REACHING` holds LeWorldModel's
+  settings (Two-Room 100 ahead in 150 steps; Push-T, Cube and Reacher 25
+  ahead in 50). Any agent with `reset(goal)` and `act(observation)` can be
+  evaluated; `RandomGoalAgent` gives the chance level.
+
 ## [1.2.0] — 2026-11-23
 
 ### Added

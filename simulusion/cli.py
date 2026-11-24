@@ -371,6 +371,69 @@ def datasets_import(
     _echo_dataset_info(out)
 
 
+@datasets_app.command("collect")
+@click.argument(
+    "env",
+    type=click.Choice(["two_room", "pusht", "cube", "reacher_goal"]),
+)
+@click.argument("out_dir", type=click.Path(path_type=Path))
+@click.option("--episodes", default=100, show_default=True, help="Episodes to collect.")
+@click.option(
+    "--length",
+    default=100,
+    show_default=True,
+    help="Frames per episode (fewer when the policy ends one early).",
+)
+@click.option("--size", default=None, type=int, help="Frame size in pixels.")
+@click.option(
+    "--policy",
+    default=None,
+    help="random, von_mises, door, block_pusher, cube_oracle or pose_seeker "
+    "(default: the environment's own).",
+)
+@click.option("--seed", default=0, show_default=True)
+def datasets_collect(
+    env: str,
+    out_dir: Path,
+    episodes: int,
+    length: int,
+    size: int | None,
+    policy: str | None,
+    seed: int,
+) -> None:
+    """Collect episodes in a goal environment with a scripted policy.
+
+    The episodes record every frame's true state, which goal-reaching
+    evaluation needs. The folder trains like any other (`data.path=OUT_DIR`).
+
+    \b
+    Examples:
+        simulusion datasets collect two_room data/two_room --episodes 10000 --length 200
+        simulusion datasets collect pusht data/pusht --episodes 1000 --size 224
+    """
+    from simulusion.data.collect import collect_goal_episodes
+
+    def progress(done: int, total: int) -> None:
+        if done == total or done % max(1, total // 20) == 0:
+            click.echo(f"  {done}/{total} episodes")
+
+    try:
+        out = collect_goal_episodes(
+            env,
+            out_dir,
+            episodes=episodes,
+            length=length,
+            policy=policy,
+            seed=seed,
+            env_kwargs={"size": size} if size else None,
+            progress=progress,
+        )
+    except (ImportError, ValueError) as exc:
+        _echo_error(str(exc))
+        raise click.exceptions.Exit(1)
+    _echo_dataset_info(out)
+
+
 @datasets_app.command("info")
 @click.argument("path", type=click.Path(exists=True, path_type=Path))
 def datasets_info(path: Path) -> None:

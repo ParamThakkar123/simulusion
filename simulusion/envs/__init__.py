@@ -222,6 +222,18 @@ def __getattr__(name: str) -> Any:
         "CRAFTAX_ENVS": "craftax_env",
         "CraftaxEnv": "craftax_env",
         "make_craftax_env": "craftax_env",
+        "GOAL_ENVS": "goal",
+        "GoalEnv": "goal",
+        "goal_env_name": "goal",
+        "make_goal_env": "goal",
+        "TwoRoomEnv": "two_room",
+        "make_two_room_env": "two_room",
+        "PushTEnv": "pusht",
+        "make_pusht_env": "pusht",
+        "OGBenchCubeEnv": "ogbench_cube",
+        "make_ogbench_cube_env": "ogbench_cube",
+        "ReacherGoalEnv": "reacher_goal",
+        "make_reacher_goal_env": "reacher_goal",
     }
     if name in _BENCHMARK_ENV_MODULES:
         import importlib
@@ -289,6 +301,22 @@ def make_env(env_id: str, **kwargs: Any) -> Any:
         from .craftax_env import make_craftax_env
 
         return make_craftax_env(env_id, **kwargs)
+    if backend in {"two_room", "two-room", "tworoom"}:
+        from .two_room import make_two_room_env
+
+        return make_two_room_env(env_id, **kwargs)
+    if backend in {"pusht", "push_t", "push-t"}:
+        from .pusht import make_pusht_env
+
+        return make_pusht_env(env_id, **kwargs)
+    if backend in {"ogbench_cube", "ogbench-cube", "cube"}:
+        from .ogbench_cube import make_ogbench_cube_env
+
+        return make_ogbench_cube_env(env_id, **kwargs)
+    if backend in {"reacher_goal", "reacher-goal"}:
+        from .reacher_goal import make_reacher_goal_env
+
+        return make_reacher_goal_env(env_id, **kwargs)
 
     try:
         from .gym_env import make_gym_env
@@ -410,6 +438,19 @@ __all__ = [
     "CRAFTAX_ENVS",
     "CraftaxEnv",
     "make_craftax_env",
+    # Goal-conditioned environments (Two-Room, Push-T, OGBench Cube, Reacher)
+    "GOAL_ENVS",
+    "GoalEnv",
+    "goal_env_name",
+    "make_goal_env",
+    "TwoRoomEnv",
+    "make_two_room_env",
+    "PushTEnv",
+    "make_pusht_env",
+    "OGBenchCubeEnv",
+    "make_ogbench_cube_env",
+    "ReacherGoalEnv",
+    "make_reacher_goal_env",
     "TimeLimit",
     "ActionRepeat",
     "NormalizeActions",

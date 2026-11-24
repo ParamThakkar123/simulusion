@@ -47,6 +47,14 @@ def __getattr__(name: str) -> Any:
         "compute_aggregate_metrics": ".metrics",
         "bootstrap_ci": ".metrics",
         "iqm_of_array": ".metrics",
+        "GOAL_REACHING": ".goal_reaching",
+        "GoalReachingResult": ".goal_reaching",
+        "GoalReachingSetup": ".goal_reaching",
+        "GoalTrial": ".goal_reaching",
+        "RandomGoalAgent": ".goal_reaching",
+        "evaluate_goal_reaching": ".goal_reaching",
+        "run_goal_reaching": ".goal_reaching",
+        "sample_goal_trials": ".goal_reaching",
     }
     if name not in _lazy:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -83,4 +91,12 @@ __all__ = [
     "compute_aggregate_metrics",
     "bootstrap_ci",
     "iqm_of_array",
+    "GOAL_REACHING",
+    "GoalReachingResult",
+    "GoalReachingSetup",
+    "GoalTrial",
+    "RandomGoalAgent",
+    "evaluate_goal_reaching",
+    "run_goal_reaching",
+    "sample_goal_trials",
 ]

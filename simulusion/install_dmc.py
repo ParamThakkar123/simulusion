@@ -19,11 +19,14 @@ Usage::
 
     python -m simulusion.install_dmc                # install and verify
     python -m simulusion.install_dmc --memory-maze  # also install Memory Maze
+    python -m simulusion.install_dmc --ogbench      # also install OGBench (Cube)
     python -m simulusion.install_dmc --check        # verify only, install nothing
     python -m simulusion.install_dmc --dry-run      # print the commands
 
 ``--memory-maze`` adds the ``memory-maze`` package, again with ``--no-deps``:
 its only requirement is dm-control, whose ``labmaze`` pin is the problem above.
+``--ogbench`` adds ``ogbench`` (the Cube goal environment) the same way; its
+other requirements, mujoco and gymnasium, come with this backend.
 """
 
 from __future__ import annotations
@@ -83,6 +86,9 @@ DM_CONTROL_BY_MUJOCO: tuple[tuple[tuple[int, int, int], str], ...] = (
 # --no-deps. It needs labmaze's compiled RandomMaze, which labmaze-new 0.0.3
 # builds when a C++17 compiler is available.
 MEMORY_MAZE = "memory-maze>=1.0.3"
+
+# OGBench needs dm-control too; mujoco and gymnasium are already installed.
+OGBENCH = "ogbench>=1.2.2"
 
 # Used when mujoco is absent, or with --upgrade-mujoco.
 NEWEST_DM_CONTROL = "dm-control>=1.0.46"
@@ -154,7 +160,7 @@ def _running_under_uv() -> bool:
 
 
 def install_steps(
-    upgrade_mujoco: bool = False, memory_maze: bool = False
+    upgrade_mujoco: bool = False, memory_maze: bool = False, ogbench: bool = False
 ) -> list[list[str]]:
     """The installer commands, in order."""
     pip = _pip_command()
@@ -170,6 +176,8 @@ def install_steps(
     ]
     if memory_maze:
         steps.append([*pip, "--no-deps", MEMORY_MAZE])
+    if ogbench:
+        steps.append([*pip, "--no-deps", OGBENCH])
     return steps
 
 
@@ -207,6 +215,17 @@ def check_memory_maze() -> tuple[bool, str]:
     return True, "Memory Maze available"
 
 
+def check_ogbench() -> tuple[bool, str]:
+    """Report whether OGBench's Cube environment can be created."""
+    try:
+        from simulusion.envs.ogbench_cube import _require_ogbench_cube
+
+        _require_ogbench_cube()
+    except Exception as exc:
+        return False, f"ogbench is not importable: {exc}"
+    return True, "OGBench available"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Install the DeepMind Control backend for Simulusion"
@@ -231,6 +250,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also install Memory Maze (memory-maze, with --no-deps)",
     )
+    parser.add_argument(
+        "--ogbench",
+        action="store_true",
+        help="also install OGBench, for the Cube goal environment (with --no-deps)",
+    )
     args = parser.parse_args(argv)
 
     if args.check:
@@ -238,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
         print(message)
         if ok and args.memory_maze:
             ok, message = check_memory_maze()
+            print(message)
+        if ok and args.ogbench:
+            ok, message = check_ogbench()
             print(message)
         return 0 if ok else 1
 
@@ -250,7 +277,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     for command in install_steps(
-        upgrade_mujoco=args.upgrade_mujoco, memory_maze=args.memory_maze
+        upgrade_mujoco=args.upgrade_mujoco,
+        memory_maze=args.memory_maze,
+        ogbench=args.ogbench,
     ):
         printable = " ".join(command)
         if args.dry_run:
@@ -273,9 +302,14 @@ def main(argv: list[str] | None = None) -> int:
             "docs/source/environments/dmc.md for the Python 3.12 fallback.",
             file=sys.stderr,
         )
-    elif args.memory_maze:
-        ok, message = check_memory_maze()
-        print(message, file=sys.stdout if ok else sys.stderr)
+    else:
+        for wanted, extra_check in (
+            (args.memory_maze, check_memory_maze),
+            (args.ogbench, check_ogbench),
+        ):
+            if ok and wanted:
+                ok, message = extra_check()
+                print(message, file=sys.stdout if ok else sys.stderr)
     return 0 if ok else 1
 
 
