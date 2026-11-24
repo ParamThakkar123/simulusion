@@ -10,7 +10,7 @@ import copy
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import torch
 
@@ -49,7 +49,9 @@ class _MuonWithAdamW:
         lr: float,
         weight_decay: float,
     ) -> None:
-        self._muon = torch.optim.Muon(muon_params, lr=lr, weight_decay=weight_decay)
+        self._muon: torch.optim.Optimizer = torch.optim.Muon(
+            muon_params, lr=lr, weight_decay=weight_decay
+        )
         self._adamw = (
             torch.optim.AdamW(adamw_params, lr=lr, weight_decay=weight_decay)
             if adamw_params
@@ -160,6 +162,7 @@ class DiTTask(TrainingTask):
         self.model = trainer.prepare_module(net)
         # Paper 4: constant learning rate, no weight decay, no warmup.
         opt_name = str(c.OPTIMIZER).strip().lower()
+        optimizer: torch.optim.Optimizer
         if opt_name == "adamw":
             optimizer = torch.optim.AdamW(
                 self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
@@ -172,11 +175,16 @@ class DiTTask(TrainingTask):
             muon_params = [p for p in self.model.parameters() if p.ndim == 2]
             adamw_params = [p for p in self.model.parameters() if p.ndim != 2]
             if muon_params:
-                optimizer = _MuonWithAdamW(
-                    muon_params,
-                    adamw_params,
-                    lr=c.LR,
-                    weight_decay=c.WEIGHT_DECAY,
+                # The pair provides the optimizer interface the trainer uses
+                # (step, zero_grad, param_groups, state_dict, load_state_dict).
+                optimizer = cast(
+                    torch.optim.Optimizer,
+                    _MuonWithAdamW(
+                        muon_params,
+                        adamw_params,
+                        lr=c.LR,
+                        weight_decay=c.WEIGHT_DECAY,
+                    ),
                 )
             else:
                 optimizer = torch.optim.AdamW(
