@@ -8,9 +8,20 @@ dataset.
 
 from simulusion.agents.planning import (
     CEMPlanner,
+    GoalCEMPlanner,
+    GoalPlanningAgent,
     PlanningAgent,
     expand_state,
     run_episode,
+    run_goal_episode,
 )
 
-__all__ = ["CEMPlanner", "PlanningAgent", "expand_state", "run_episode"]
+__all__ = [
+    "CEMPlanner",
+    "GoalCEMPlanner",
+    "GoalPlanningAgent",
+    "PlanningAgent",
+    "expand_state",
+    "run_episode",
+    "run_goal_episode",
+]

@@ -242,6 +242,7 @@ or `simulusion.create_config(...)`. Run `simulusion.list_models()` for the live 
 | `modular-rssm` | **ModularRSSM** | Composable recurrent state-space model | Swappable priors/posteriors, custom heads |
 | `iris` | **IRIS** | Sample-efficient RL with Transformers | Discrete VAEs, world models |
 | `jepa` | **JEPA** | Self-supervised visual representations | Masked prediction, ViT |
+| `lewm` | **LeWorldModel** | JEPA world model trained end to end from pixels, planned to goal images | SIGReg anti-collapse, AdaLN action conditioning, CEM goal planning |
 | `dit` | **DiT** | Diffusion Transformer workflows | Patch embeddings, diffusion backbones |
 | `diamond` | **DIAMOND** | Diffusion world model for pixel-control RL | EDM sampling, Atari imagination rollouts |
 | `genie` | **Genie** | Generative interactive environments from video | Latent actions, spatiotemporal transformer |

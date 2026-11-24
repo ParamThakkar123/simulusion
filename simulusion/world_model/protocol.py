@@ -126,7 +126,7 @@ class WorldModelSpec:
 
     Attributes:
         family: ``"dreamer"``, ``"planet"``, ``"iris"``, ``"diamond"``,
-            ``"genie"`` or ``"world-models"``.
+            ``"genie"``, ``"world-models"`` or ``"lewm"``.
         obs_shape: ``(C, H, W)`` of the frames it reads and decodes.
         action: The actions :meth:`WorldModel.step` accepts.
         context_frames: The fewest frames :meth:`WorldModel.encode` needs.

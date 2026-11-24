@@ -119,6 +119,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         description="Diffusion Transformer (DiT) image denoising model.",
         aliases=("diffusion-transformer", "diffusion_transformer"),
     ),
+    "lewm": ModelSpec(
+        name="lewm",
+        import_path="simulusion.models.lewm:LeWM",
+        config_path="simulusion.configs.lewm_config:LeWMConfig",
+        description="LeWorldModel: JEPA world model trained end to end from pixels with SIGReg.",
+        aliases=("leworldmodel", "le-wm"),
+    ),
     "modular-rssm": ModelSpec(
         name="modular-rssm",
         import_path="simulusion.models.modular_rssm:create_modular_rssm",

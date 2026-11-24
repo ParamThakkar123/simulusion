@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **LeWorldModel** (`create_model("lewm")`, aliases `leworldmodel` and `le-wm`;
+  Maes et al., arXiv 2603.19312). A JEPA world model trained end to end from
+  pixels with two losses: next-embedding prediction and SIGReg, which keeps the
+  embeddings an isotropic Gaussian so they cannot collapse, with no EMA target,
+  stop-gradient or decoder. Its parts are library components: `LeWMEncoder`
+  (ViT with a CLS token), `BNProjector`, `ActionEmbedder`, `ARPredictor` (a
+  causal transformer whose blocks are conditioned on the action through
+  AdaLN-zero), `SIGReg` and `epps_pulley`. Defaults (`LeWMConfig`) follow the
+  paper, including its SIGReg weight of 0.1 (Fig. 16 peaks near 0.09, the
+  value the authors' code ships), and the authors' code where the paper is
+  silent; SIGReg, the predictor, the action embedder and the projector match
+  the reference module output for output.
+- `LeWMWorldModel` (`lewm` family): LeWM behind the `WorldModel` protocol, with
+  `encode_goal` and `goal_cost` for planning to a goal image. It has no
+  decoder.
+- **Goal-conditioned planning** for latent world models: `GoalCEMPlanner`
+  (CEM over z-scored action sequences, minimizing the distance to the goal
+  embedding), `GoalPlanningAgent` (receding horizon) and `run_goal_episode`.
+- `simulusion train lewm` (`LeWMTask`): offline, reward-free training on
+  episode folders or LeRobot datasets such as PushT, with the paper's AdamW,
+  1% warmup, cosine decay and gradient clipping; the run exports a `lewm`
+  world model.
+- Latent-trajectory diagnostics from the paper: `temporal_straightness`, and
+  `surprise` in `simulusion.models.lewm`.
+
 ## [1.2.0] — 2026-11-23
 
 ### Added
