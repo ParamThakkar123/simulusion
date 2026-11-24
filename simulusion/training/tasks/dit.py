@@ -10,7 +10,7 @@ import copy
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import torch
 
@@ -36,6 +36,91 @@ class DiTTaskConfig:
     model: DiTConfig = field(default_factory=DiTConfig)
     image_folder: Optional[str] = None
     val_batches: int = 8
+
+
+def _muon_param_split(
+    net: torch.nn.Module,
+) -> tuple[list[torch.nn.Parameter], list[torch.nn.Parameter]]:
+    """Split ``net``'s trainable parameters into Muon's and AdamW's.
+
+    Muon orthogonalizes the updates of hidden-layer weight matrices, so it
+    takes the 2-D weights of the transformer body. Everything else stays on
+    AdamW, as in the usual Muon recipe: the class-label embedding table and
+    the final layer (both 2-D, but an embedding and the output head), and all
+    biases, norms and the patch-embedding convolution. Frozen parameters are
+    left out. Call it on the unwrapped model so module types are visible.
+    """
+    adamw_ids = {
+        id(p) for p in getattr(net, "final_layer", torch.nn.Module()).parameters()
+    }
+    adamw_ids |= {
+        id(m.weight) for m in net.modules() if isinstance(m, torch.nn.Embedding)
+    }
+    trainable = [p for p in net.parameters() if p.requires_grad]
+    muon = [p for p in trainable if p.ndim == 2 and id(p) not in adamw_ids]
+    adamw = [p for p in trainable if p.ndim != 2 or id(p) in adamw_ids]
+    return muon, adamw
+
+
+class _MuonWithAdamW:
+    """Pairs ``torch.optim.Muon`` (hidden weight matrices) with ``AdamW`` (the rest).
+
+    Muon uses ``adjust_lr_fn="match_rms_adamw"``, which scales its
+    orthogonalized update to AdamW's update RMS, so both halves share DiT's
+    learning rate and weight decay. With PyTorch's default (``"original"``)
+    the same learning rate would leave the weight matrices barely trained.
+    """
+
+    def __init__(
+        self,
+        muon_params: list[torch.nn.Parameter],
+        adamw_params: list[torch.nn.Parameter],
+        *,
+        lr: float,
+        weight_decay: float,
+    ) -> None:
+        self._muon: torch.optim.Optimizer = torch.optim.Muon(
+            muon_params,
+            lr=lr,
+            weight_decay=weight_decay,
+            adjust_lr_fn="match_rms_adamw",
+        )
+        self._adamw = (
+            torch.optim.AdamW(adamw_params, lr=lr, weight_decay=weight_decay)
+            if adamw_params
+            else None
+        )
+
+    @property
+    def param_groups(self) -> list[dict[str, Any]]:
+        groups = list(self._muon.param_groups)
+        if self._adamw is not None:
+            groups.extend(self._adamw.param_groups)
+        return groups
+
+    def zero_grad(self, set_to_none: bool = True) -> None:
+        self._muon.zero_grad(set_to_none=set_to_none)
+        if self._adamw is not None:
+            self._adamw.zero_grad(set_to_none=set_to_none)
+
+    def step(self, closure: Any = None) -> Any:
+        # The closure (if any) runs once, through Muon; AdamW then steps on the
+        # gradients it left. The trainer's GradientUpdate never passes one.
+        loss = self._muon.step(closure)
+        if self._adamw is not None:
+            self._adamw.step()
+        return loss
+
+    def state_dict(self) -> dict[str, Any]:
+        return {
+            "muon": self._muon.state_dict(),
+            "adamw": self._adamw.state_dict() if self._adamw is not None else None,
+        }
+
+    def load_state_dict(self, state_dict: dict[str, Any]) -> None:
+        self._muon.load_state_dict(state_dict["muon"])
+        if self._adamw is not None and state_dict.get("adamw") is not None:
+            self._adamw.load_state_dict(state_dict["adamw"])
 
 
 @register_task("dit")
@@ -111,9 +196,40 @@ class DiTTask(TrainingTask):
                 p.requires_grad = False
         self.model = trainer.prepare_module(net)
         # Paper 4: constant learning rate, no weight decay, no warmup.
-        optimizer = torch.optim.AdamW(
-            self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
-        )
+        opt_name = str(c.OPTIMIZER).strip().lower()
+        optimizer: torch.optim.Optimizer
+        if opt_name == "adamw":
+            optimizer = torch.optim.AdamW(
+                self.model.parameters(), lr=c.LR, weight_decay=c.WEIGHT_DECAY
+            )
+        elif opt_name == "muon":
+            if not hasattr(torch.optim, "Muon"):
+                raise RuntimeError(
+                    "OPTIMIZER='muon' requires PyTorch >= 2.9 (torch.optim.Muon is unavailable)."
+                )
+            # Split on the unwrapped net: prepare_module moves it in place, so
+            # its parameters are the ones self.model trains.
+            muon_params, adamw_params = _muon_param_split(net)
+            if muon_params:
+                # The pair provides the optimizer interface the trainer uses
+                # (step, zero_grad, param_groups, state_dict, load_state_dict).
+                optimizer = cast(
+                    torch.optim.Optimizer,
+                    _MuonWithAdamW(
+                        muon_params,
+                        adamw_params,
+                        lr=c.LR,
+                        weight_decay=c.WEIGHT_DECAY,
+                    ),
+                )
+            else:
+                optimizer = torch.optim.AdamW(
+                    adamw_params, lr=c.LR, weight_decay=c.WEIGHT_DECAY
+                )
+        else:
+            raise ValueError(
+                f"Unknown DiT optimizer {c.OPTIMIZER!r}. Expected 'adamw' or 'muon'."
+            )
         self.update = trainer.gradient_update(
             optimizer, self.model.parameters(), max_grad_norm=1.0
         )
