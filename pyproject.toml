@@ -178,6 +178,22 @@ atari100k = [
     "opencv-python>=4.12.0.88",
     "gymnasium>=1.2.2",
 ]
+# Push-T goal environment: Simulusion's own implementation on pymunk.
+pusht = [
+    "pymunk>=6.6.0",
+    "pillow>=10.0.0",
+    "gymnasium>=1.2.2",
+]
+# OGBench, for the Cube goal environment. OGBench requires dm-control, so on
+# CPython 3.13 it has the dmc extra's labmaze problem: there this extra installs
+# labmaze-new, and `python -m simulusion.install_dmc --ogbench` adds dm-control
+# and ogbench with --no-deps.
+ogbench = [
+    "ogbench>=1.2.2; python_version < '3.13'",
+    "labmaze-new>=0.0.3; python_version >= '3.13'",
+    "mujoco>=3.1.6",
+    "gymnasium>=1.2.2",
+]
 # No `minerl` / `minedojo` extras: neither is installable on the Python versions
 # Simulusion supports. MineRL 1.x has no release compatible with Python >= 3.11,
 # and MineDojo pins `gym==0.21.0`, whose sdist no longer builds under modern
@@ -228,7 +244,7 @@ dev = [
     "ruff==0.16.8",
 ]
 all = [
-    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,crafter,craftax,memory-maze,atari100k,lerobot,dev,docs]",
+    "simulusion[gym,dmc,viz,worldmodels,ml,ml-agents,mujoco,robotics,brax,bsuite,crafter,craftax,memory-maze,atari100k,pusht,ogbench,lerobot,dev,docs]",
 ]
 docs = [
     "sphinx>=8.0.0,<9.0.0",

@@ -79,6 +79,8 @@ from simulusion.envs.dmlab import DMLAB_LEVELS as DMLAB_LEVELS
 from simulusion.envs.dmlab import DMLabEnv as DMLabEnv
 from simulusion.envs.dmlab import make_dmlab_env as make_dmlab_env
 from simulusion.envs.dmlab import resolve_dmlab_level as resolve_dmlab_level
+from simulusion.envs.goal import GoalEnv as GoalEnv
+from simulusion.envs.goal import make_goal_env as make_goal_env
 from simulusion.envs.gym_env import GymImageEnv as GymImageEnv
 from simulusion.envs.gym_env import make_gym_env as make_gym_env
 from simulusion.envs.memory_maze_env import MemoryMazeEnv as MemoryMazeEnv
@@ -89,9 +91,13 @@ from simulusion.envs.mujoco_env import MuJoCoImageEnv as MuJoCoImageEnv
 from simulusion.envs.mujoco_env import MuJoCoImageEnv as MujocoEnv
 from simulusion.envs.mujoco_env import make_mujoco_env as make_mujoco_env
 from simulusion.envs.mujoco_env import make_mujoco_env_from_config as make_mujoco_env_from_config
+from simulusion.envs.ogbench_cube import OGBenchCubeEnv as OGBenchCubeEnv
+from simulusion.envs.pusht import PushTEnv as PushTEnv
+from simulusion.envs.reacher_goal import ReacherGoalEnv as ReacherGoalEnv
 from simulusion.envs.robotics_env import list_gymnasium_robotics_envs as list_gymnasium_robotics_envs
 from simulusion.envs.robotics_env import make_robotics_env as make_robotics_env
 from simulusion.envs.robotics_env import register_gymnasium_robotics_envs as register_gymnasium_robotics_envs
+from simulusion.envs.two_room import TwoRoomEnv as TwoRoomEnv
 from simulusion.envs.unity_env import UnityMLAgentsEnv as UnityMLAgentsEnv
 from simulusion.envs.unity_env import make_unity_mlagents_env as make_unity_mlagents_env
 from simulusion.envs.world_model_env import WorldModelEnv as WorldModelEnv
@@ -293,6 +299,7 @@ __all__ = [
     "Genie",
     "GenieConfig",
     "GenieSmallConfig",
+    "GoalEnv",
     "GradientUpdate",
     "GymImageEnv",
     "HUMAN_SCORES",
@@ -328,16 +335,19 @@ __all__ = [
     "MultiHeadAttention",
     "MultiHeadSelfAttention",
     "NormalizeActions",
+    "OGBenchCubeEnv",
     "ObsDict",
     "OneHotAction",
     "PatchEmbed",
     "PatchUnEmbed",
     "Planet",
     "PlanningAgent",
+    "PushTEnv",
     "RANDOM_SCORES",
     "RMSNorm",
     "RSSM",
     "RSSMPolicy",
+    "ReacherGoalEnv",
     "RecurrentStateSpaceModel",
     "RenderImage",
     "ReplayBuffer",
@@ -358,6 +368,7 @@ __all__ = [
     "Trainer",
     "TrainerConfig",
     "TrainingTask",
+    "TwoRoomEnv",
     "UnityMLAgentsEnv",
     "ValueModel",
     "VectorQuantizer",
@@ -427,6 +438,7 @@ __all__ = [
     "make_diamond_atari_env",
     "make_dmlab_env",
     "make_env",
+    "make_goal_env",
     "make_gym_env",
     "make_memory_maze_env",
     "make_minecraft_diamond_env",
