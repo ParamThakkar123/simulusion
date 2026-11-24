@@ -127,7 +127,8 @@ class OGBenchCubeEnv(GoalEnv):
     def _sample_goal(self) -> np.ndarray:
         goal = self._get_state()
         for addr in self.cube_qpos:
-            xy = self.np_random.uniform(*self._target_bounds)
+            low, high = self._target_bounds
+            xy = np.asarray(self.np_random.uniform(low, high), np.float64)
             goal[addr : addr + 3] = (xy[0], xy[1], 0.02)
             goal[addr + 3 : addr + 7] = (1.0, 0.0, 0.0, 0.0)
         goal[self._nq :] = 0.0
