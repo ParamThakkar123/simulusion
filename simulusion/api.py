@@ -54,6 +54,17 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         description="DreamerV2 world model (symlog two-hot heads, balanced KL).",
         aliases=("dreamerv2",),
     ),
+    "dreamer-v3": ModelSpec(
+        name="dreamer-v3",
+        import_path="simulusion.models.dreamer_v3:DreamerV3Agent",
+        config_path="simulusion.configs.dreamer_v3_config:DreamerV3Config",
+        description=(
+            "DreamerV3 agent: categorical latents with free bits, symexp two-hot "
+            "reward and critic heads, percentile return normalization, and "
+            "LaProp with adaptive gradient clipping."
+        ),
+        aliases=("dreamerv3",),
+    ),
     "planet": ModelSpec(
         name="planet",
         import_path="simulusion.models.planet:Planet",

@@ -33,6 +33,10 @@ class DreamerConfig(SerializableConfigMixin):
     env_instance: Any = field(default=None, metadata={"serialize": False})
     image_size: tuple[int, int] = (64, 64)
     gym_render_mode: str = "rgb_array"
+    # Extra keyword arguments for gym.make when `env` is an id, e.g.
+    # {"frameskip": 1, "repeat_action_probability": 0.25} for ALE games, whose
+    # v5 ids otherwise skip 4 frames before Dreamer's action repeat.
+    gym_make_kwargs: Any = None
     frame_stack: int = 1
 
     # DeepMind Control observations: "pixels" renders an image each step
@@ -214,4 +218,8 @@ class DreamerConfig(SerializableConfigMixin):
     enable_jsonl: bool = True
     jsonl_filename: str = "metrics.jsonl"
     log_system_stats_freq: int = 1_000
+    # Environment steps between logged (averaged) training metrics; 0 logs
+    # every training step. The DreamerV3 benchmark presets, which train every
+    # few frames, set 1000.
+    log_every: int = 0
     detect_anomaly: bool = False

@@ -133,6 +133,7 @@ class DreamerTask(TrainingTask):
     def train_step(self) -> Metrics:
         args = self.config.model
         metrics: dict[str, float] = {}
+        before = self.progress()
         if not self.seeded:
             rewards = self.dreamer.collect_random_episodes(
                 self.train_env, args.seed_steps // self._frames_per_step()
@@ -163,7 +164,7 @@ class DreamerTask(TrainingTask):
                 "replay/episodes": float(buffer.episodes),
             }
         )
-        self._to_agent_logger(metrics)
+        self._to_agent_logger_windowed(metrics, before)
         return metrics
 
     def evaluate(self) -> Metrics:
@@ -194,6 +195,22 @@ class DreamerTask(TrainingTask):
                 )
         return metrics
 
+    def _to_agent_logger_windowed(self, metrics: Metrics, before: int) -> None:
+        """Average training metrics over ``log_every`` frames, then log them.
+
+        With small collection chunks a training step is a few frames, so
+        logging every step would write a line per frame.
+        """
+        if self._agent is None:
+            return
+        window = getattr(self, "_agent_window", [])
+        window.append(dict(metrics))
+        self._agent_window = window
+        every = int(getattr(self.config.model, "log_every", 0))
+        if every <= 0 or self.progress() // every > before // every:
+            self._to_agent_logger(mean_metrics(window))
+            self._agent_window = []
+
     def _to_agent_logger(self, metrics: Metrics) -> None:
         """Send metrics to the adopted agent's own logger, as its loop did."""
         if self._agent is None:
@@ -211,9 +228,12 @@ class DreamerTask(TrainingTask):
         torch.save(
             {
                 "seeded": self.seeded,
+                # Dreamer V1/V2 keep optimizer state in GradientUpdate objects;
+                # DreamerV3 has none and saves its optimizers in dreamer.pt.
                 "updates": {
                     name: getattr(self.dreamer, f"{name}_update").state_dict()
                     for name in ("world_model", "actor", "value")
+                    if hasattr(self.dreamer, f"{name}_update")
                 },
             },
             directory / "task.pt",

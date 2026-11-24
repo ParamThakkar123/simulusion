@@ -6,36 +6,35 @@ Computes human-normalized scores and compares to baselines.
 """
 
 from simulusion.training.train_iris import IRISTrainer
-from simulusion.configs.diamond_config import (
-    ATARI_100K_GAMES as _CONFIG_GAMES,
-    HUMAN_SCORES as _CONFIG_HUMAN,
-    RANDOM_SCORES as _CONFIG_RANDOM,
-)
 from simulusion.configs.iris_config import IRISConfig
+from simulusion.benchmarks import (
+    ATARI100K_GAMES as _GAMES,
+    ATARI_HUMAN_SCORES,
+    ATARI_RANDOM_SCORES,
+    atari_env_id,
+    atari_game,
+    human_normalized_score,
+)
 import numpy as np
 import json
 import os
 from typing import Any, List, Dict, Optional, cast
 
 
-def _short(game: str) -> str:
-    """``"Pong-v5"`` -> ``"Pong"``."""
-    return game.removesuffix("-v5")
-
-
-# The game list and reference scores are the shared ones in
-# simulusion.configs, re-keyed for this runner: Gymnasium ids ("ALE/Pong-v5")
-# for the games, and bare names ("Pong") for the score tables.
-ATARI_100K_GAMES = [f"ALE/{game}" for game in _CONFIG_GAMES]
-
-# Human scores (Wang et al., 2016) and random-agent scores, keyed by game name.
-HUMAN_SCORES = {_short(game): score for game, score in _CONFIG_HUMAN.items()}
-RANDOM_SCORES = {_short(game): score for game, score in _CONFIG_RANDOM.items()}
-
-
 def game_name(game: str) -> str:
     """``"ALE/MsPacman-v5"`` -> ``"MsPacman"``: the key of the score tables."""
     return game.replace("ALE/", "").replace("-v5", "")
+
+
+# Atari 100k games and reference scores (Wang et al., 2016), from the shared
+# benchmark tables (simulusion.benchmarks), keyed as IRIS names them.
+ATARI_100K_GAMES = [atari_env_id(g) for g in _GAMES]
+HUMAN_SCORES = {
+    game_name(g): ATARI_HUMAN_SCORES[atari_game(g)] for g in ATARI_100K_GAMES
+}
+RANDOM_SCORES = {
+    game_name(g): ATARI_RANDOM_SCORES[atari_game(g)] for g in ATARI_100K_GAMES
+}
 
 
 def compute_human_normalized_score(score: float, game: str) -> float:
@@ -51,13 +50,7 @@ def compute_human_normalized_score(score: float, game: str) -> float:
             f"No human/random reference score for '{game}'; known games: "
             f"{', '.join(sorted(HUMAN_SCORES))}."
         )
-    human = HUMAN_SCORES[game]
-    random = RANDOM_SCORES[game]
-
-    if human == random:
-        return 0.0
-
-    return (score - random) / (human - random)
+    return human_normalized_score(score, game)
 
 
 def interquartile_mean(values: List[float]) -> float:
