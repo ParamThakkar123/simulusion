@@ -57,6 +57,16 @@ _LAZY_EXPORTS: dict[str, str] = {
     "DreamerV3Agent": "simulusion.models",
     "Planet": "simulusion.models",
     "JEPAAgent": "simulusion.models",
+    # LeWorldModel and its components.
+    "LeWM": "simulusion.models.lewm",
+    "LeWMConfig": "simulusion.configs.lewm_config",
+    "LeWMEncoder": "simulusion.models.lewm",
+    "ARPredictor": "simulusion.models.lewm",
+    "ActionEmbedder": "simulusion.models.lewm",
+    "BNProjector": "simulusion.models.lewm",
+    "SIGReg": "simulusion.models.lewm",
+    "epps_pulley": "simulusion.models.lewm",
+    "temporal_straightness": "simulusion.models.lewm",
     "IRISAgent": "simulusion.models",
     "IRISTransformer": "simulusion.models",
     "IRISWorldModel": "simulusion.models",
@@ -271,6 +281,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LeRobotEpisodes": "simulusion.data",
     # Agents that act through any world model.
     "CEMPlanner": "simulusion.agents",
+    "GoalCEMPlanner": "simulusion.agents",
+    "GoalPlanningAgent": "simulusion.agents",
+    "run_goal_episode": "simulusion.agents",
     "PlanningAgent": "simulusion.agents",
 }
 

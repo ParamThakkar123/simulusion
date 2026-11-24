@@ -208,6 +208,170 @@ def run_episode(env: Any, agent: PlanningAgent, *, max_steps: int = 1000) -> flo
     return total
 
 
+@dataclass
+class GoalCEMPlanner:
+    """Cross-entropy-method planning towards a goal in a world model's latent space.
+
+    For reward-free world models that expose ``goal_cost(state, goal)``
+    (LeWM): each of ``iterations`` rounds samples ``candidates`` action
+    sequences of ``horizon`` steps, rolls them all out at once, scores each by
+    the cost of its final state against the goal, and refits a Gaussian to the
+    ``elites`` with the lowest cost (mean and population standard deviation,
+    no floor or smoothing). The first candidate of every round is the current
+    mean. The plan is the final mean.
+
+    Sampling happens in z-scored action units when the model has
+    ``action_mean`` / ``action_std`` (its training statistics), starting from
+    mean 0 and standard deviation ``init_std``, so the defaults fit any
+    action scale. This is LeWM's planner (Appendix B and D; the CEM solver of
+    stable-worldmodel): 300 candidates, 30 elites, 30 iterations, horizon 5.
+
+    Attributes:
+        horizon: Model steps per plan.
+        candidates: Sequences per round.
+        iterations: Refitting rounds.
+        elites: Lowest-cost sequences each refit uses.
+        init_std: Initial standard deviation, in z-scored units.
+    """
+
+    horizon: int = 5
+    candidates: int = 300
+    iterations: int = 30
+    elites: int = 30
+    init_std: float = 1.0
+
+    @torch.no_grad()
+    def plan(self, model: Any, state: State, goal: torch.Tensor) -> torch.Tensor:
+        """The best ``(horizon, A)`` action sequence from ``state`` towards ``goal``.
+
+        ``state`` is a batch of one; ``goal`` is a goal embedding ``(D,)`` or
+        ``(1, D)`` (``model.encode_goal(goal_frame)``). Actions are in the
+        model's own (raw) units.
+        """
+        if not hasattr(model, "goal_cost"):
+            raise TypeError(
+                f"{type(model).__name__} has no goal_cost; goal planning needs a "
+                "latent world model such as LeWM."
+            )
+        if model.spec.action.kind != "continuous":
+            raise ValueError("Goal CEM plans continuous actions.")
+        if self.elites > self.candidates:
+            raise ValueError("elites cannot exceed candidates.")
+        device = model.device
+        H, N, A = self.horizon, self.candidates, model.spec.action.n
+        centre = getattr(model, "action_mean", None)
+        scale = getattr(model, "action_std", None)
+        centre = torch.zeros(A, device=device) if centre is None else centre.to(device)
+        scale = torch.ones(A, device=device) if scale is None else scale.to(device)
+        batch = expand_state(state, N)
+        goal = goal.reshape(1, -1).to(device)
+        mean = torch.zeros(H, A, device=device)
+        std = torch.full((H, A), float(self.init_std), device=device)
+        for _ in range(self.iterations):
+            z = mean + std * torch.randn(N, H, A, device=device)
+            z[0] = mean
+            out = model.rollout(batch, centre + z * scale, decode=False)
+            cost = model.goal_cost(out.state, goal)
+            elite = z[cost.topk(self.elites, largest=False).indices]
+            mean = elite.mean(0)
+            std = elite.std(0, correction=0)
+        return centre + mean * scale
+
+
+class GoalPlanningAgent:
+    """Reach a goal frame with receding-horizon planning in a latent world model.
+
+    Plans ``planner.horizon`` model steps from the current frame and executes
+    the first ``execute`` of them (all by default, as LeWM's evaluation does)
+    before planning again. One model step spans ``frameskip`` environment
+    steps, so its action block is split into that many environment actions.
+
+    It follows the goal-reaching protocol of
+    :mod:`simulusion.benchmarks.goal_reaching`: ``reset(goal)`` starts a trial
+    with a new goal frame and ``act(observation)`` returns the next action.
+
+    Args:
+        model: A latent world model with ``goal_cost`` and ``encode_goal`` (LeWM).
+        goal: The goal frame, ``(C, H, W)`` / ``(H, W, C)`` array or tensor, or
+            ``{"image": ...}``; it can also be given later to :meth:`reset`.
+        planner: A :class:`GoalCEMPlanner`.
+        frameskip: Environment steps per model step.
+        execute: Model steps executed per plan.
+    """
+
+    def __init__(
+        self,
+        model: Any,
+        goal: Any = None,
+        planner: Optional[GoalCEMPlanner] = None,
+        *,
+        frameskip: int = 1,
+        execute: Optional[int] = None,
+    ) -> None:
+        self.model = model
+        self.planner = planner if planner is not None else GoalCEMPlanner()
+        self.frameskip = int(frameskip)
+        self.execute = int(execute or self.planner.horizon)
+        if model.spec.action.n % self.frameskip:
+            raise ValueError(
+                f"An action block of {model.spec.action.n} values does not split "
+                f"into {self.frameskip} environment actions."
+            )
+        self.goal: Optional[torch.Tensor] = None
+        if goal is not None:
+            self.set_goal(goal)
+        self._queue: Deque[np.ndarray] = deque()
+
+    def set_goal(self, goal: Any) -> None:
+        """Plan towards ``goal`` (a frame, or ``{"image": ...}``) from now on."""
+        self.goal = self.model.encode_goal(_frame(goal))
+        self._queue = deque()
+
+    def reset(self, goal: Any = None) -> None:
+        """Start a new trial, towards ``goal`` if given (else the current one)."""
+        if goal is not None:
+            self.set_goal(goal)
+        self._queue.clear()
+
+    def act(self, observation: Any) -> np.ndarray:
+        """The environment action to take now."""
+        if self.goal is None:
+            raise RuntimeError("No goal: pass one to the agent or to reset(goal).")
+        if not self._queue:
+            state = self.model.encode(_frame(observation))
+            plan = self.planner.plan(self.model, state, self.goal)
+            per_step = self.model.spec.action.n // self.frameskip
+            for block in plan[: self.execute].cpu().numpy():
+                self._queue.extend(block.reshape(self.frameskip, per_step))
+        return self._queue.popleft()
+
+
+def run_goal_episode(
+    env: Any,
+    agent: GoalPlanningAgent,
+    *,
+    max_steps: int = 50,
+    success: Optional[Any] = None,
+) -> dict[str, Any]:
+    """Run ``agent`` in a Gymnasium-style ``env`` for at most ``max_steps``.
+
+    Stops when ``success(info)`` is true (or ``info["success"]`` when no
+    callable is given), or the episode ends. Returns ``success`` and ``steps``.
+    """
+    observation, info = env.reset()
+    agent.reset()
+    reached = False
+    steps = 0
+    for steps in range(1, max_steps + 1):
+        observation, _, terminated, truncated, info = env.step(agent.act(observation))
+        reached = bool(
+            success(info) if success is not None else info.get("success", False)
+        )
+        if reached or terminated or truncated:
+            break
+    return {"success": reached, "steps": steps}
+
+
 def expand_state(state: State, n: int) -> State:
     """Repeat a batch-of-one state ``n`` times along the batch dimension."""
     out: State = {}
@@ -236,4 +400,12 @@ def _zero_action(model: WorldModel) -> np.ndarray:
     return np.zeros(spec.n, dtype=np.float32)
 
 
-__all__ = ["CEMPlanner", "PlanningAgent", "expand_state", "run_episode"]
+__all__ = [
+    "CEMPlanner",
+    "GoalCEMPlanner",
+    "GoalPlanningAgent",
+    "PlanningAgent",
+    "expand_state",
+    "run_episode",
+    "run_goal_episode",
+]

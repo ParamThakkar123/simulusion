@@ -149,6 +149,35 @@ def _world_models():
     return ConvVAE(img_channels=3, latent_size=8), MDRNN(8, 3, 16, 2)
 
 
+def _lewm():
+    from simulusion.configs.lewm_config import LeWMConfig
+    from simulusion.models.lewm import LeWM
+
+    return LeWM(
+        LeWMConfig(
+            img_size=28,
+            patch_size=14,
+            encoder_dim=32,
+            embed_dim=32,
+            encoder_depth=1,
+            encoder_heads=2,
+            projector_hidden_dim=16,
+            action_dim=2,
+            frameskip=2,
+            history_size=3,
+            predictor_depth=1,
+            predictor_heads=2,
+            predictor_dim_head=8,
+            predictor_mlp_dim=16,
+            sigreg_num_proj=16,
+        )
+    )
+
+
+#: Families that predict latents only; their tests compare embeddings, not frames.
+NO_DECODER = {"lewm"}
+
+
 BUILDERS = {
     "dreamer": _dreamer,
     "planet": _planet,
@@ -156,12 +185,20 @@ BUILDERS = {
     "diamond": _diamond,
     "genie": _genie,
     "world-models": _world_models,
+    "lewm": _lewm,
 }
 
 
 def _build(family, **kwargs):
     torch.manual_seed(0)
     return as_world_model(BUILDERS[family](), **kwargs)
+
+
+def _readout(model, state):
+    """What a state shows: its frame, or its latent embedding without a decoder."""
+    if model.spec.family in NO_DECODER:
+        return model.embedding(state)
+    return model.decode(state)
 
 
 def _frames(model, steps=None, seed=0):
@@ -217,6 +254,10 @@ def test_encode_step_decode(family):
     else:
         assert out.terminated is None
 
+    if spec.family in NO_DECODER:
+        with pytest.raises(NotImplementedError):
+            model.decode(out.state)
+        return
     image = model.decode(out.state)
     assert image.shape == (B, *spec.obs_shape)
     assert image.dtype == torch.float32
@@ -226,7 +267,9 @@ def test_encode_step_decode(family):
 def test_encode_without_actions(family):
     model = _build(family)
     state = model.encode(_frames(model))
-    assert model.decode(state).shape == (B, *model.spec.obs_shape)
+    assert _readout(model, state).shape[0] == B
+    if family not in NO_DECODER:
+        assert model.decode(state).shape == (B, *model.spec.obs_shape)
 
 
 def test_rollout_is_repeated_steps(family):
@@ -235,21 +278,31 @@ def test_rollout_is_repeated_steps(family):
     state = model.encode(_frames(model))
     actions = _actions(spec.action, B, HORIZON, seed=1)
 
+    decodes = family not in NO_DECODER
     torch.manual_seed(5)
-    traj = model.rollout(state, actions)
+    traj = model.rollout(state, actions, decode=decodes)
     assert isinstance(traj, Rollout)
-    assert traj.frames is not None
-    assert traj.frames.shape == (B, HORIZON, *spec.obs_shape)
+    if decodes:
+        assert traj.frames is not None
+        assert traj.frames.shape == (B, HORIZON, *spec.obs_shape)
+    else:
+        assert traj.frames is None
 
     torch.manual_seed(5)
     current, frames, rewards = state, [], []
     for t in range(HORIZON):
         out = model.step(current, actions[:, t])
         current = out.state
-        frames.append(model.decode(current))
+        if decodes:
+            frames.append(model.decode(current))
         if out.reward is not None:
             rewards.append(out.reward)
-    torch.testing.assert_close(traj.frames, torch.stack(frames, 1))
+    if decodes:
+        torch.testing.assert_close(traj.frames, torch.stack(frames, 1))
+    else:
+        torch.testing.assert_close(
+            _readout(model, traj.state), _readout(model, current)
+        )
     if spec.has_reward:
         assert traj.rewards is not None
         torch.testing.assert_close(traj.rewards, torch.stack(rewards, 1))
@@ -270,9 +323,9 @@ def test_seed_makes_steps_repeatable(family):
     state = model.encode(_frames(model))
     action = _actions(model.spec.action, B)
     torch.manual_seed(3)
-    a = model.decode(model.step(state, action).state)
+    a = _readout(model, model.step(state, action).state)
     torch.manual_seed(3)
-    b = model.decode(model.step(state, action).state)
+    b = _readout(model, model.step(state, action).state)
     torch.testing.assert_close(a, b)
 
 
@@ -290,8 +343,12 @@ def test_save_and_load_round_trip(family, tmp_path):
     results = []
     for m in (model, loaded):
         torch.manual_seed(7)
-        results.append(m.rollout(m.encode(frames), actions))
-    torch.testing.assert_close(results[0].frames, results[1].frames)
+        if family in NO_DECODER:
+            traj = m.rollout(m.encode(frames), actions, decode=False)
+            results.append(_readout(m, traj.state))
+        else:
+            results.append(m.rollout(m.encode(frames), actions).frames)
+    torch.testing.assert_close(results[0], results[1])
 
 
 def test_single_action_is_broadcast(family):

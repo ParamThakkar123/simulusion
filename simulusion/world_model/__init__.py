@@ -24,11 +24,14 @@ shared by every family. Supported families:
 ``diamond``               :class:`DiamondWorldModel`
 ``genie``                 :class:`GenieWorldModel` (latent actions)
 ``world-models``          :class:`MDRNNWorldModel` (ConvVAE + MDN-RNN)
+``lewm``                  :class:`LeWMWorldModel` (JEPA latents, no decoder)
 ========================  =================================================
 
-JEPA and DiT are not world models in this sense: I-JEPA learns image
+I-JEPA and DiT are not world models in this sense: I-JEPA learns image
 representations without actions, and DiT generates images from a class
 label, so neither predicts what an action does. They have no adapter.
+LeWM is a JEPA too, but an action-conditioned one: it predicts the next
+frame's embedding from the action, so it is a world model (``lewm``).
 
 The protocol covers the model, not the agent: policies, planners and
 trainers stay with each family. Steppers
@@ -60,6 +63,7 @@ if TYPE_CHECKING:
     from simulusion.world_model.genie import GenieWorldModel
     from simulusion.world_model.iris import IRISTokenWorldModel
     from simulusion.world_model.planet import PlanetWorldModel
+    from simulusion.world_model.lewm import LeWMWorldModel
     from simulusion.world_model.vae_mdrnn import MDRNNWorldModel
 
 _FAMILIES: Mapping[str, tuple[str, str]] = {
@@ -69,6 +73,7 @@ _FAMILIES: Mapping[str, tuple[str, str]] = {
     "diamond": ("simulusion.world_model.diamond", "DiamondWorldModel"),
     "genie": ("simulusion.world_model.genie", "GenieWorldModel"),
     "world-models": ("simulusion.world_model.vae_mdrnn", "MDRNNWorldModel"),
+    "lewm": ("simulusion.world_model.lewm", "LeWMWorldModel"),
 }
 
 #: Accepted spellings of each family name.
@@ -78,6 +83,8 @@ _ALIASES = {
     "dreamer-v2": "dreamer",
     "dreamerv2": "dreamer",
     "worldmodels": "world-models",
+    "leworldmodel": "lewm",
+    "le-wm": "lewm",
     "vae-mdrnn": "world-models",
     "mdrnn": "world-models",
 }
@@ -169,6 +176,8 @@ def _detect_family(model: Any) -> str:
             f"{name} has no world model adapter: {_NOT_WORLD_MODELS[name]}, so "
             "it does not predict what an action does."
         )
+    if all(hasattr(model, a) for a in ("sigreg", "predictor", "action_encoder")):
+        return "lewm"
     if hasattr(model, "video_tokenizer") and hasattr(model, "dynamics_model"):
         return "genie"
     if hasattr(model, "diffusion_model") and hasattr(model, "sampler"):
@@ -204,6 +213,7 @@ __all__: Sequence[str] = [
     "DreamerWorldModel",
     "GenieWorldModel",
     "IRISTokenWorldModel",
+    "LeWMWorldModel",
     "MDRNNWorldModel",
     "PlanetWorldModel",
     "Rollout",

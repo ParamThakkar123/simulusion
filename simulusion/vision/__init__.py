@@ -35,6 +35,7 @@ __all__ = [
     "CNNEncoder",
     "IRISEncoder",
     "DreamerV3Encoder",
+    "LeWMEncoder",
     # Decoders
     "ConvDecoder",
     "CNNDecoder",
@@ -77,6 +78,10 @@ def __getattr__(name: str) -> Any:
         from .dreamer_v3_nets import DreamerV3Encoder
 
         return DreamerV3Encoder
+    if name == "LeWMEncoder":
+        from .lewm_encoder import LeWMEncoder
+
+        return LeWMEncoder
 
     # Perceptual loss
     if name == "LPIPSPerceptualLoss":

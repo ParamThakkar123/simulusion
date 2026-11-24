@@ -11,7 +11,10 @@ from typing import Any
 from simulusion import api as api
 
 from simulusion.agents.planning import CEMPlanner as CEMPlanner
+from simulusion.agents.planning import GoalCEMPlanner as GoalCEMPlanner
+from simulusion.agents.planning import GoalPlanningAgent as GoalPlanningAgent
 from simulusion.agents.planning import PlanningAgent as PlanningAgent
+from simulusion.agents.planning import run_goal_episode as run_goal_episode
 from simulusion.api import ENV_BACKEND_SPECS as ENV_BACKEND_SPECS
 from simulusion.api import EnvBackendSpec as EnvBackendSpec
 from simulusion.api import MODEL_SPECS as MODEL_SPECS
@@ -46,6 +49,7 @@ from simulusion.configs.genie_config import STTransformerConfig as STTransformer
 from simulusion.configs.genie_config import VideoTokenizerConfig as VideoTokenizerConfig
 from simulusion.configs.iris_config import IRISConfig as IRISConfig
 from simulusion.configs.jepa_config import JEPAConfig as JEPAConfig
+from simulusion.configs.lewm_config import LeWMConfig as LeWMConfig
 from simulusion.controller.iris_policy import CNNFeatureExtractor as CNNFeatureExtractor
 from simulusion.controller.iris_policy import IRISActor as IRISActor
 from simulusion.controller.iris_policy import IRISCritic as IRISCritic
@@ -163,6 +167,13 @@ from simulusion.models.iris_transformer import IRISWorldModel as IRISWorldModel
 from simulusion.models.jepa_agent import JEPAAgent as JEPAAgent
 from simulusion.models.latent_action_model import LatentActionModel as LatentActionModel
 from simulusion.models.latent_action_model import create_latent_action_model as create_latent_action_model
+from simulusion.models.lewm import ARPredictor as ARPredictor
+from simulusion.models.lewm import ActionEmbedder as ActionEmbedder
+from simulusion.models.lewm import BNProjector as BNProjector
+from simulusion.models.lewm import LeWM as LeWM
+from simulusion.models.lewm import SIGReg as SIGReg
+from simulusion.models.lewm import epps_pulley as epps_pulley
+from simulusion.models.lewm import temporal_straightness as temporal_straightness
 from simulusion.models.modular_rssm import ModularRSSM as ModularRSSM
 from simulusion.models.modular_rssm import create_modular_rssm as create_modular_rssm
 from simulusion.models.planet import Planet as Planet
@@ -214,6 +225,7 @@ from simulusion.vision.dreamer_v3_nets import DreamerV3Encoder as DreamerV3Encod
 from simulusion.vision.dreamer_v3_nets import DreamerV3Head as DreamerV3Head
 from simulusion.vision.iris_decoder import IRISDecoder as IRISDecoder
 from simulusion.vision.iris_encoder import IRISEncoder as IRISEncoder
+from simulusion.vision.lewm_encoder import LeWMEncoder as LeWMEncoder
 from simulusion.vision.perceptual_loss import LPIPSPerceptualLoss as LPIPSPerceptualLoss
 from simulusion.vision.perceptual_loss import build_perceptual_loss as build_perceptual_loss
 from simulusion.vision.planet_decoder import CNNDecoder as CNNDecoder
@@ -234,13 +246,16 @@ def __getattr__(name: str) -> Any: ...
 
 
 __all__ = [
+    "ARPredictor",
     "ATARI_100K_GAMES",
     "ATARI_100K_PROTOCOLS",
     "ActionDecoder",
+    "ActionEmbedder",
     "ActionRepeat",
     "ActorCriticNetwork",
     "AdaLNNormalization",
     "Atari100kEnv",
+    "BNProjector",
     "BSuiteImageEnv",
     "BraxImageEnv",
     "CEMPlanner",
@@ -293,6 +308,8 @@ __all__ = [
     "Genie",
     "GenieConfig",
     "GenieSmallConfig",
+    "GoalCEMPlanner",
+    "GoalPlanningAgent",
     "GradientUpdate",
     "GymImageEnv",
     "HUMAN_SCORES",
@@ -315,6 +332,9 @@ __all__ = [
     "LatentActionModel",
     "LatentActionModelConfig",
     "LeRobotEpisodes",
+    "LeWM",
+    "LeWMConfig",
+    "LeWMEncoder",
     "Logger",
     "MODEL_SPECS",
     "Memory",
@@ -346,6 +366,7 @@ __all__ = [
     "RewardObs",
     "RewardTerminationModel",
     "RolloutGenerator",
+    "SIGReg",
     "STKVCache",
     "STTransformer",
     "STTransformerConfig",
@@ -393,6 +414,7 @@ __all__ = [
     "deregister_world_model",
     "dit_preset_config",
     "enable_performance_defaults",
+    "epps_pulley",
     "export_any",
     "export_model",
     "get_dit_config",
@@ -447,9 +469,11 @@ __all__ = [
     "register_world_model",
     "resolve_dmlab_level",
     "rollout_drift",
+    "run_goal_episode",
     "run_training",
     "save_bundle",
     "sinusoidal_time_embedding",
+    "temporal_straightness",
     "tensor_nbytes",
     "to_channels_last",
     "verify_export",
