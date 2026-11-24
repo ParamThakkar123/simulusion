@@ -70,7 +70,7 @@ def test_dit_trains_and_exports_a_loadable_model(
     assert resumed.iterations == 4
 
 
-def test_dit_muon_optimizer(
+def test_dit_optimizer_validation(
     tmp_path: Path, trainer_overrides, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     root = _image_folder(tmp_path / "imgs")
@@ -100,15 +100,104 @@ def test_dit_muon_optimizer(
         with pytest.raises(RuntimeError, match="torch.optim.Muon"):
             run(overrides=[*base_args, "model.OPTIMIZER=muon"], task="dit")
 
-    if hasattr(torch.optim, "Muon"):
-        muon_args = [*base_args, "model.OPTIMIZER=muon"]
-        result = run(overrides=muon_args, task="dit")
-        assert result.iterations == 2
-        resumed = run(
-            overrides=[*muon_args, "trainer.max_steps=3", "trainer.resume=auto"],
-            task="dit",
-        )
-        assert resumed.iterations == 3
+
+_NO_MUON = pytest.mark.skipif(
+    not hasattr(torch.optim, "Muon"), reason="torch.optim.Muon needs PyTorch >= 2.9"
+)
+
+
+def _tiny_dit():
+    from simulusion.models.diffusion.DiT import DiT
+
+    return DiT(
+        img_size=32,
+        patch_size=8,
+        in_channels=3,
+        d_model=32,
+        depth=1,
+        heads=2,
+        t_dim=256,
+        num_classes=2,
+    )
+
+
+def test_muon_takes_only_hidden_weight_matrices() -> None:
+    from simulusion.training.tasks.dit import _muon_param_split
+
+    net = _tiny_dit()
+    frozen = next(p for p in net.transformer_blocks.parameters() if p.ndim == 2)
+    frozen.requires_grad = False
+    muon, adamw = _muon_param_split(net)
+    muon_ids, adamw_ids = {id(p) for p in muon}, {id(p) for p in adamw}
+
+    assert muon and all(p.ndim == 2 for p in muon)
+    assert not muon_ids & adamw_ids
+    # The label embedding and the output head stay on AdamW.
+    assert id(net.y_embedder.embedding_table.weight) in adamw_ids
+    assert {id(p) for p in net.final_layer.parameters()} <= adamw_ids
+    # Frozen parameters go to neither; every trainable one goes to exactly one.
+    assert id(frozen) not in muon_ids | adamw_ids
+    trainable = {id(p) for p in net.parameters() if p.requires_grad}
+    assert muon_ids | adamw_ids == trainable
+
+
+@_NO_MUON
+def test_muon_pair_matches_adamw_rms_and_restores_its_state() -> None:
+    from simulusion.training.tasks.dit import _MuonWithAdamW, _muon_param_split
+
+    def make(net):
+        muon, adamw = _muon_param_split(net)
+        return _MuonWithAdamW(muon, adamw, lr=1e-3, weight_decay=0.0)
+
+    torch.manual_seed(0)
+    net = _tiny_dit()
+    opt = make(net)
+    assert opt._muon.param_groups[0]["adjust_lr_fn"] == "match_rms_adamw"
+    for p in net.parameters():
+        p.grad = torch.randn_like(p)
+    opt.step()
+
+    fresh = _tiny_dit()
+    fresh.load_state_dict(net.state_dict())
+    restored = make(fresh)
+    restored.load_state_dict(opt.state_dict())
+    buffers = [s["momentum_buffer"] for s in restored._muon.state.values()]
+    originals = [s["momentum_buffer"] for s in opt._muon.state.values()]
+    assert buffers and len(buffers) == len(originals)
+    for a, b in zip(buffers, originals):
+        torch.testing.assert_close(a, b)
+    assert restored._adamw is not None and restored._adamw.state
+
+
+@_NO_MUON
+def test_dit_trains_and_resumes_with_muon(tmp_path: Path, trainer_overrides) -> None:
+    root = _image_folder(tmp_path / "imgs")
+    muon_args = [
+        *trainer_overrides,
+        "model.DATASET=imagefolder",
+        f"model.ROOT_PATH={root.as_posix()}",
+        "image_folder=train",
+        "model.VAL_SPLIT=0.25",
+        "model.BATCH=4",
+        "model.IMG_SIZE=32",
+        "model.PATCH=8",
+        "model.WIDTH=32",
+        "model.DEPTH=1",
+        "model.HEADS=2",
+        "model.TIMESTEPS=10",
+        "model.NUM_WORKERS=0",
+        "model.OPTIMIZER=muon",
+        "val_batches=1",
+        "trainer.max_steps=2",
+        "trainer.eval_every=2",
+    ]
+    result = run(overrides=muon_args, task="dit")
+    assert result.iterations == 2
+    resumed = run(
+        overrides=[*muon_args, "trainer.max_steps=3", "trainer.resume=auto"],
+        task="dit",
+    )
+    assert resumed.iterations == 3
 
 
 def test_jepa_trains_with_ema_target_and_resumes(

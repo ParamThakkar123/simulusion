@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Muon optimizer for DiT** (#138): `DiTConfig.OPTIMIZER` picks `"adamw"`
+  (default, as in the paper) or `"muon"` (`model.OPTIMIZER=muon` on the
+  `dit` task). Muon (`torch.optim.Muon`, PyTorch >= 2.9) trains the
+  transformer's hidden weight matrices; the class-label embedding, the final
+  layer, biases, norms and the patch embedding stay on AdamW. Muon uses
+  `adjust_lr_fn="match_rms_adamw"`, so both share DiT's learning rate and
+  weight decay. Checkpoints save and restore both optimizers' state. An
+  unknown name, or `"muon"` on an older PyTorch, raises a clear error.
+
 ## [1.2.0] — 2026-11-23
 
 ### Added

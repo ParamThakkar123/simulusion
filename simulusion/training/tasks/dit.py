@@ -38,8 +38,38 @@ class DiTTaskConfig:
     val_batches: int = 8
 
 
+def _muon_param_split(
+    net: torch.nn.Module,
+) -> tuple[list[torch.nn.Parameter], list[torch.nn.Parameter]]:
+    """Split ``net``'s trainable parameters into Muon's and AdamW's.
+
+    Muon orthogonalizes the updates of hidden-layer weight matrices, so it
+    takes the 2-D weights of the transformer body. Everything else stays on
+    AdamW, as in the usual Muon recipe: the class-label embedding table and
+    the final layer (both 2-D, but an embedding and the output head), and all
+    biases, norms and the patch-embedding convolution. Frozen parameters are
+    left out. Call it on the unwrapped model so module types are visible.
+    """
+    adamw_ids = {
+        id(p) for p in getattr(net, "final_layer", torch.nn.Module()).parameters()
+    }
+    adamw_ids |= {
+        id(m.weight) for m in net.modules() if isinstance(m, torch.nn.Embedding)
+    }
+    trainable = [p for p in net.parameters() if p.requires_grad]
+    muon = [p for p in trainable if p.ndim == 2 and id(p) not in adamw_ids]
+    adamw = [p for p in trainable if p.ndim != 2 or id(p) in adamw_ids]
+    return muon, adamw
+
+
 class _MuonWithAdamW:
-    """Pairs ``torch.optim.Muon`` (2-D weights) with ``AdamW`` (other params)."""
+    """Pairs ``torch.optim.Muon`` (hidden weight matrices) with ``AdamW`` (the rest).
+
+    Muon uses ``adjust_lr_fn="match_rms_adamw"``, which scales its
+    orthogonalized update to AdamW's update RMS, so both halves share DiT's
+    learning rate and weight decay. With PyTorch's default (``"original"``)
+    the same learning rate would leave the weight matrices barely trained.
+    """
 
     def __init__(
         self,
@@ -50,7 +80,10 @@ class _MuonWithAdamW:
         weight_decay: float,
     ) -> None:
         self._muon: torch.optim.Optimizer = torch.optim.Muon(
-            muon_params, lr=lr, weight_decay=weight_decay
+            muon_params,
+            lr=lr,
+            weight_decay=weight_decay,
+            adjust_lr_fn="match_rms_adamw",
         )
         self._adamw = (
             torch.optim.AdamW(adamw_params, lr=lr, weight_decay=weight_decay)
@@ -71,6 +104,8 @@ class _MuonWithAdamW:
             self._adamw.zero_grad(set_to_none=set_to_none)
 
     def step(self, closure: Any = None) -> Any:
+        # The closure (if any) runs once, through Muon; AdamW then steps on the
+        # gradients it left. The trainer's GradientUpdate never passes one.
         loss = self._muon.step(closure)
         if self._adamw is not None:
             self._adamw.step()
@@ -172,8 +207,9 @@ class DiTTask(TrainingTask):
                 raise RuntimeError(
                     "OPTIMIZER='muon' requires PyTorch >= 2.9 (torch.optim.Muon is unavailable)."
                 )
-            muon_params = [p for p in self.model.parameters() if p.ndim == 2]
-            adamw_params = [p for p in self.model.parameters() if p.ndim != 2]
+            # Split on the unwrapped net: prepare_module moves it in place, so
+            # its parameters are the ones self.model trains.
+            muon_params, adamw_params = _muon_param_split(net)
             if muon_params:
                 # The pair provides the optimizer interface the trainer uses
                 # (step, zero_grad, param_groups, state_dict, load_state_dict).
